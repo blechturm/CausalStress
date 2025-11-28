@@ -88,3 +88,67 @@ cs_run_single <- function(
     att_abs_error = att_abs_error
   )
 }
+
+#' Run a DGP × estimator combination over multiple seeds
+#'
+#' This function repeatedly calls [cs_run_single()] for a given DGP and
+#' estimator, using a vector of seeds. It returns a tibble with one row
+#' per seed and the same columns as [cs_run_single()].
+#'
+#' @param dgp_id Character scalar, identifier of the DGP (e.g., "synth_baseline").
+#' @param estimator_id Character scalar, identifier of the estimator (e.g., "oracle_att").
+#' @param n Integer, number of observations to generate per seed.
+#' @param seeds Integer vector of seeds to use. Each seed produces one row
+#'   in the output tibble.
+#' @param tau Numeric vector of quantile levels. Passed through to the
+#'   estimator via [cs_run_single()]. Default is [cs_tau_oracle].
+#' @param config List of estimator-specific configuration options. Passed
+#'   through to the estimator via [cs_run_single()].
+#'
+#' @return A tibble with one row per seed and at least the columns returned
+#'   by [cs_run_single()], including `dgp_id`, `estimator_id`, `n`, `seed`,
+#'   `oracle`, `supports_qst`, `true_att`, `est_att`, `att_error`,
+#'   `att_abs_error`.
+#'
+#' @export
+cs_run_seeds <- function(
+  dgp_id,
+  estimator_id,
+  n,
+  seeds,
+  tau    = cs_tau_oracle,
+  config = list()
+) {
+  if (length(seeds) == 0L) {
+    rlang::abort(
+      message = "`seeds` must have length >= 1.",
+      class   = "causalstress_runner_error"
+    )
+  }
+  if (!is.numeric(seeds) && !is.integer(seeds)) {
+    rlang::abort(
+      message = "`seeds` must be numeric or integer.",
+      class   = "causalstress_runner_error"
+    )
+  }
+  if (any(!is.finite(seeds))) {
+    rlang::abort(
+      message = "`seeds` must be finite.",
+      class   = "causalstress_runner_error"
+    )
+  }
+  seeds <- as.integer(seeds)
+
+  rows <- lapply(seeds, function(s) {
+    cs_run_single(
+      dgp_id       = dgp_id,
+      estimator_id = estimator_id,
+      n            = n,
+      seed         = s,
+      tau          = tau,
+      config       = config
+    )
+  })
+
+  tibble::as_tibble(do.call(rbind, rows))
+}
