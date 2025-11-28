@@ -15,6 +15,8 @@ cs_run_grid <- function(dgp_ids,
                         n,
                         seeds,
                         tau = NULL,
+                        bootstrap = FALSE,
+                        B = 200L,
                         config = list()) {
   cs_chk_scalar_numeric(n, "n")
   if (n <= 0) {
@@ -47,6 +49,8 @@ cs_run_grid <- function(dgp_ids,
         estimator_id = grid$estimator_id[i],
         n            = n,
         seeds        = seeds,
+        bootstrap    = bootstrap,
+        B            = B,
         config       = config
       )
     } else {
@@ -56,6 +60,8 @@ cs_run_grid <- function(dgp_ids,
         n            = n,
         seeds        = seeds,
         tau          = tau,
+        bootstrap    = bootstrap,
+        B            = B,
         config       = config
       )
     }

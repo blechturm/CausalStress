@@ -32,7 +32,8 @@ cs_summarise_runs <- function(runs) {
     "dgp_id", "estimator_id", "n",
     "oracle", "supports_qst",
     "true_att", "est_att",
-    "att_error", "att_abs_error"
+    "att_error", "att_abs_error",
+    "att_covered", "att_ci_width"
   )
 
   missing <- setdiff(required_cols, names(runs))
@@ -61,6 +62,8 @@ cs_summarise_runs <- function(runs) {
       sd_error       = stats::sd(att_error),
       mean_abs_error = mean(att_abs_error),
       max_abs_error  = max(att_abs_error),
+      mean_att_covered = if (all(is.na(att_covered))) NA_real_ else mean(att_covered, na.rm = TRUE),
+      mean_att_ci_width = if (all(is.na(att_ci_width))) NA_real_ else mean(att_ci_width, na.rm = TRUE),
       .groups = "drop"
     )
 }

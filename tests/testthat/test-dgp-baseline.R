@@ -44,3 +44,10 @@ test_that("dgp_synth_baseline returns a valid synthetic DGP", {
   # contract helper should accept this DGP (with current contract)
   expect_invisible(cs_check_dgp_synthetic(dgp))
 })
+
+test_that("baseline true_qst is oracle-based and invariant to seed", {
+  d1 <- dgp_synth_baseline(n = 100, seed = 1L)$true_qst
+  d2 <- dgp_synth_baseline(n = 150, seed = 99L)$true_qst
+
+  expect_equal(d1$value, d2$value, tolerance = 1e-6)
+})

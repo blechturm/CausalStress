@@ -4,7 +4,16 @@
 \alias{cs_run_grid}
 \title{Run a DGP × estimator grid over multiple seeds}
 \usage{
-cs_run_grid(dgp_ids, estimator_ids, n, seeds, tau = NULL, config = list())
+cs_run_grid(
+  dgp_ids,
+  estimator_ids,
+  n,
+  seeds,
+  tau = NULL,
+  bootstrap = FALSE,
+  B = 200L,
+  config = list()
+)
 }
 \arguments{
 \item{dgp_ids}{Character vector of DGP IDs (must exist in cs_dgp_registry()).}

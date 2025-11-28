@@ -6,8 +6,10 @@ cs_run_single <- function(
   estimator_id,
   n,
   seed,
-  config = list(),
-  tau   = cs_tau_oracle,
+  tau       = cs_tau_oracle,
+  bootstrap = FALSE,
+  B         = 200L,
+  config    = list(),
   ...
 ) {
   cs_chk_scalar_numeric(n, "n")
@@ -22,21 +24,31 @@ cs_run_single <- function(
   dgp_desc <- cs_get_dgp(dgp_id)
   est_desc <- cs_get_estimator(estimator_id)
 
-  # Generate data
   dgp <- dgp_desc$generator(n = n, seed = seed)
   cs_check_dgp_synthetic(dgp)
 
-  df        <- dgp$df
+  df_raw    <- dgp$df
   true_att  <- dgp$true_att
+
+  oracle_allowed <- isTRUE(est_desc$oracle) || isTRUE(config$use_oracle)
+  if (!oracle_allowed) {
+    drop_cols <- c("y0", "y1", "p", "structural_te")
+    keep <- setdiff(names(df_raw), drop_cols)
+    df_run <- df_raw[, keep, drop = FALSE]
+    attr(df_run, "structural_te") <- NULL
+    attr(df_run, "params") <- NULL
+  } else {
+    df_run <- df_raw
+  }
 
   # Run estimator
   res <- est_desc$generator(
-    df     = df,
+    df     = df_run,
     config = config,
     tau    = tau,
     ...
   )
-  cs_check_estimator_output(res, require_qst = FALSE)
+  cs_check_estimator_output(res, require_qst = est_desc$supports_qst, tau = tau)
 
   # Extract ATT estimate (works for tibble or list)
   att <- res$att
@@ -44,6 +56,30 @@ cs_run_single <- function(
     est_att <- att[["estimate"]]
   } else {
     est_att <- att$estimate
+  }
+
+  ci_lo_att <- NA_real_
+  ci_hi_att <- NA_real_
+  n_ok <- 0L
+  if (bootstrap) {
+    n_obs <- nrow(df_run)
+    boot_att <- numeric(B)
+    for (b in seq_len(B)) {
+      idx_b <- sample.int(n_obs, size = n_obs, replace = TRUE)
+      df_b  <- df_run[idx_b, , drop = FALSE]
+      res_b <- try(est_desc$generator(df = df_b, config = config, tau = tau, ...), silent = TRUE)
+      if (inherits(res_b, "try-error")) next
+      att_b <- if (is.data.frame(res_b$att)) res_b$att[["estimate"]] else res_b$att$estimate
+      if (is.finite(att_b)) {
+        n_ok <- n_ok + 1L
+        boot_att[n_ok] <- att_b
+      }
+    }
+    if (n_ok > 0L) {
+      boot_att <- boot_att[seq_len(n_ok)]
+      ci_lo_att <- stats::quantile(boot_att, 0.025, na.rm = TRUE)
+      ci_hi_att <- stats::quantile(boot_att, 0.975, na.rm = TRUE)
+    }
   }
 
   att_error      <- est_att - true_att
@@ -63,18 +99,35 @@ cs_run_single <- function(
 
   estimator_pkgs <- paste0(names(pkg_versions), "=", pkg_versions, collapse = ";")
 
+  att_covered <- if (!is.na(ci_lo_att) && !is.na(ci_hi_att)) {
+    true_att >= ci_lo_att && true_att <= ci_hi_att
+  } else {
+    NA
+  }
+
+  att_ci_width <- if (!is.na(ci_lo_att) && !is.na(ci_hi_att)) {
+    ci_hi_att - ci_lo_att
+  } else {
+    NA
+  }
+
   tibble::tibble(
-    dgp_id            = dgp_id,
-    estimator_id      = estimator_id,
-    n                 = as.integer(n),
-    seed              = as.integer(seed),
-    oracle            = est_desc$oracle,
-    supports_qst      = est_desc$supports_qst,
-    true_att          = true_att,
-    est_att           = est_att,
-    att_error         = att_error,
-    att_abs_error     = att_abs_error,
-    estimator_pkgs    = estimator_pkgs
+    dgp_id         = dgp_id,
+    estimator_id   = estimator_id,
+    n              = as.integer(n),
+    seed           = as.integer(seed),
+    oracle         = est_desc$oracle,
+    supports_qst   = est_desc$supports_qst,
+    true_att       = true_att,
+    est_att        = est_att,
+    att_error      = att_error,
+    att_abs_error  = att_abs_error,
+    att_ci_lo      = ci_lo_att,
+    att_ci_hi      = ci_hi_att,
+    att_covered    = att_covered,
+    att_ci_width   = att_ci_width,
+    n_boot_ok      = n_ok,
+    estimator_pkgs = estimator_pkgs
   )
 }
 
@@ -106,8 +159,10 @@ cs_run_seeds <- function(
   estimator_id,
   n,
   seeds,
-  tau    = cs_tau_oracle,
-  config = list()
+  tau       = cs_tau_oracle,
+  bootstrap = FALSE,
+  B         = 200L,
+  config    = list()
 ) {
   if (length(seeds) == 0L) {
     rlang::abort(
@@ -136,6 +191,8 @@ cs_run_seeds <- function(
       n            = n,
       seed         = s,
       tau          = tau,
+      bootstrap    = bootstrap,
+      B            = B,
       config       = config
     )
   })

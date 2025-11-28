@@ -29,3 +29,10 @@ test_that("dgp_synth_heavytail has heavier tails than baseline on large n", {
 
   expect_gt(max_abs_ht, max_abs_base)
 })
+
+test_that("heavytail true_qst is oracle-based and invariant to seed", {
+  d1 <- dgp_synth_heavytail(n = 100, seed = 1L)$true_qst
+  d2 <- dgp_synth_heavytail(n = 150, seed = 99L)$true_qst
+
+  expect_equal(d1$value, d2$value, tolerance = 1e-6)
+})

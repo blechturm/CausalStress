@@ -10,6 +10,8 @@ cs_run_seeds(
   n,
   seeds,
   tau = cs_tau_oracle,
+  bootstrap = FALSE,
+  B = 200L,
   config = list()
 )
 }

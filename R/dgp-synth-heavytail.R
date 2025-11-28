@@ -56,7 +56,7 @@ dgp_synth_heavytail <- function(n, seed = NULL) {
   y <- ifelse(w == 1L, y1, y0)
 
   true_att <- cs_true_att(structural_te = tau, w = w)
-  true_qst <- cs_true_qst(y0 = y0, y1 = y1, w = w, tau = cs_tau_oracle)
+  true_qst <- cs_get_oracle_qst("synth_heavytail")
 
   out <- list(
     df = tibble::tibble(

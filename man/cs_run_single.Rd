@@ -9,8 +9,10 @@ cs_run_single(
   estimator_id,
   n,
   seed,
-  config = list(),
   tau = cs_tau_oracle,
+  bootstrap = FALSE,
+  B = 200L,
+  config = list(),
   ...
 )
 }

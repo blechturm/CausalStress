@@ -18,6 +18,9 @@ test_that("cs_summarise_runs gives zero error summaries for oracle_att", {
   expect_true(summ$oracle)
   expect_false(summ$supports_qst)
   expect_equal(summ$n_runs, length(seeds))
+  expect_true(all(c("mean_att_covered", "mean_att_ci_width") %in% names(summ)))
+  expect_true(is.na(summ$mean_att_covered))
+  expect_true(is.na(summ$mean_att_ci_width))
 
   expect_equal(summ$mean_error, 0, tolerance = 1e-12)
   expect_equal(summ$sd_error, 0, tolerance = 1e-12)
@@ -49,6 +52,7 @@ test_that("cs_summarise_runs works for lm_att and returns non-trivial errors", {
   expect_true(is.finite(summ$mean_abs_error))
   expect_true(is.finite(summ$max_abs_error))
   expect_true(summ$max_abs_error >= 0)
+  expect_true(all(c("mean_att_covered", "mean_att_ci_width") %in% names(summ)))
 })
 
 test_that("cs_summarise_runs fails if required columns are missing", {
