@@ -10,6 +10,7 @@ cs_chk_scalar_numeric <- function(x, arg) {
 
 #' @noRd
 cs_check_dgp_synthetic <- function(dgp) {
+  # top-level structure
   if (!is.list(dgp)) {
     rlang::abort(
       message = "`dgp` must be a list returned by a DGP generator.",
@@ -29,15 +30,19 @@ cs_check_dgp_synthetic <- function(dgp) {
   }
 
   # df checks
-  if (!is.data.frame(dgp$df)) {
+  df <- dgp$df
+  if (!is.data.frame(df)) {
     rlang::abort(
       message = "`df` must be a data.frame (or tibble).",
       class   = "causalstress_dgp_error"
     )
   }
 
-  required_cols <- c("y", "w", "y0", "y1", "structural_te")
-  missing_cols <- setdiff(required_cols, names(dgp$df))
+  n <- nrow(df)
+
+  # required core columns per registry: y, w, y0, y1, p
+  required_cols <- c("y", "w", "y0", "y1", "p")
+  missing_cols <- setdiff(required_cols, names(df))
   if (length(missing_cols) > 0) {
     rlang::abort(
       message = glue::glue(
@@ -47,14 +52,25 @@ cs_check_dgp_synthetic <- function(dgp) {
     )
   }
 
-  if (anyNA(dgp$df[required_cols])) {
+  if (anyNA(df[required_cols])) {
     rlang::abort(
-      message = "Core DGP columns `y`, `w`, `y0`, `y1`, `structural_te` must not contain NA.",
+      message = "Core DGP columns `y`, `w`, `y0`, `y1`, `p` must not contain NA.",
       class   = "causalstress_dgp_error"
     )
   }
 
-  w_vals <- dgp$df$w
+  # structural_te column is optional but, if present, must be non-NA
+  if ("structural_te" %in% names(df)) {
+    if (anyNA(df[["structural_te"]])) {
+      rlang::abort(
+        message = "Column `structural_te` must not contain NA when present.",
+        class   = "causalstress_dgp_error"
+      )
+    }
+  }
+
+  # treatment indicator well-formed
+  w_vals <- df$w
   if (!(is.numeric(w_vals) || is.integer(w_vals)) || !all(w_vals %in% c(0, 1))) {
     rlang::abort(
       message = "`w` must be numeric/integer and contain only 0/1.",
@@ -66,26 +82,27 @@ cs_check_dgp_synthetic <- function(dgp) {
   cs_chk_scalar_numeric(dgp$true_att, "true_att")
 
   # true_qst
-  if (!tibble::is_tibble(dgp$true_qst)) {
+  tq <- dgp$true_qst
+  if (!tibble::is_tibble(tq)) {
     rlang::abort(
       message = "`true_qst` must be a tibble with columns `tau` and `value`.",
       class   = "causalstress_dgp_error"
     )
   }
-  if (!all(c("tau", "value") %in% names(dgp$true_qst))) {
+  if (!all(c("tau", "value") %in% names(tq))) {
     rlang::abort(
       message = "`true_qst` must have columns `tau` and `value`.",
       class   = "causalstress_dgp_error"
     )
   }
-  if (!is.numeric(dgp$true_qst$tau) ||
-      length(dgp$true_qst$tau) != length(dgp$true_qst$value)) {
+  if (!is.numeric(tq$tau) ||
+      length(tq$tau) != length(tq$value)) {
     rlang::abort(
       message = "`true_qst$tau` must be numeric and match length of `true_qst$value`.",
       class   = "causalstress_dgp_error"
     )
   }
-  if (!all(dgp$true_qst$tau %in% cs_tau_oracle)) {
+  if (!all(tq$tau %in% cs_tau_oracle)) {
     rlang::abort(
       message = "`true_qst$tau` must be a subset of the oracle tau grid.",
       class   = "causalstress_dgp_error"
@@ -93,27 +110,65 @@ cs_check_dgp_synthetic <- function(dgp) {
   }
 
   # meta
-  if (!is.list(dgp$meta)) {
+  meta <- dgp$meta
+  if (!is.list(meta)) {
     rlang::abort(
       message = "`meta` must be a list.",
       class   = "causalstress_dgp_error"
     )
   }
-  if (!is.character(dgp$meta$dgp_id) || length(dgp$meta$dgp_id) != 1L) {
+  if (!is.character(meta$dgp_id) || length(meta$dgp_id) != 1L) {
     rlang::abort(
       message = "`meta$dgp_id` must be a character scalar.",
       class   = "causalstress_dgp_error"
     )
   }
-  if (!identical(dgp$meta$type, "synthetic")) {
+  if (!identical(meta$type, "synthetic")) {
     rlang::abort(
       message = "`meta$type` must be \"synthetic\" for synthetic DGPs.",
       class   = "causalstress_dgp_error"
     )
   }
 
+  # meta$structural_te is required for synthetic DGPs
+  if (is.null(meta$structural_te)) {
+    rlang::abort(
+      message = "`meta$structural_te` must be provided for synthetic DGPs.",
+      class   = "causalstress_dgp_error"
+    )
+  }
+  if (!is.numeric(meta$structural_te)) {
+    rlang::abort(
+      message = "`meta$structural_te` must be a numeric vector.",
+      class   = "causalstress_dgp_error"
+    )
+  }
+  if (length(meta$structural_te) != n) {
+    rlang::abort(
+      message = "`meta$structural_te` must have length equal to nrow(df).",
+      class   = "causalstress_dgp_error"
+    )
+  }
+  if (anyNA(meta$structural_te)) {
+    rlang::abort(
+      message = "`meta$structural_te` must not contain NA.",
+      class   = "causalstress_dgp_error"
+    )
+  }
+
+  # if df also has structural_te, enforce consistency
+  if ("structural_te" %in% names(df)) {
+    if (!isTRUE(all.equal(meta$structural_te, df$structural_te))) {
+      rlang::abort(
+        message = "`meta$structural_te` must match `df$structural_te` when both are present.",
+        class   = "causalstress_dgp_error"
+      )
+    }
+  }
+
   invisible(TRUE)
 }
+
 
 #' @noRd
 cs_check_estimator_output <- function(res, require_qst = FALSE, tau = NULL) {
