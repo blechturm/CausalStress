@@ -2,43 +2,18 @@
 % Please edit documentation in R/cs-runner.R
 \name{cs_run_single}
 \alias{cs_run_single}
-\title{Run a single DGP × estimator combination}
+\title{Run a single DGP/estimator combination for one seed}
 \usage{
 cs_run_single(
   dgp_id,
   estimator_id,
   n,
-  seed = NULL,
+  seed,
+  config = list(),
   tau = cs_tau_oracle,
-  config = list()
+  ...
 )
 }
-\arguments{
-\item{dgp_id}{Character scalar, identifier of the DGP (e.g., "synth_baseline").}
-
-\item{estimator_id}{Character scalar, identifier of the estimator (e.g., "oracle_att").}
-
-\item{n}{Integer, number of observations to generate.}
-
-\item{seed}{Optional integer seed passed to the DGP generator.}
-
-\item{tau}{Numeric vector of quantile levels. Passed to the estimator
-for interface compatibility. Default is \code{cs_tau_oracle}.}
-
-\item{config}{List of estimator-specific configuration options.}
-}
-\value{
-A tibble with one row and columns including:
-\itemize{
-\item dgp_id, estimator_id
-\item n, seed
-\item oracle, supports_qst
-\item true_att, est_att
-\item att_error, att_abs_error
-}
-}
 \description{
-This helper looks up a DGP and an estimator via their registries,
-generates a synthetic dataset, runs the estimator, and returns a
-one-row tibble summarizing truth and estimates.
+Run a single DGP/estimator combination for one seed
 }

@@ -1,11 +1,32 @@
+#' Internal DGP registry
+#'
+#' This registry defines all available data-generating processes (DGPs)
+#' for CausalStress. Each row corresponds to one DGP and specifies its
+#' identifier, type, generator function, version, and a short description.
+#'
 #' @noRd
 cs_dgp_registry <- function() {
   tibble::tibble(
-    dgp_id = "synth_baseline",
-    type = "synthetic",
-    generator = list(dgp_synth_baseline),
-    registry_version = "1.3.0",
-    description = "Baseline 5D Gaussian DGP with linear treatment effect and moderate overlap."
+    dgp_id = c(
+      "synth_baseline",
+      "synth_heavytail"
+    ),
+    type = c(
+      "synthetic",
+      "synthetic"
+    ),
+    generator = list(
+      dgp_synth_baseline,
+      dgp_synth_heavytail
+    ),
+    version = c(
+      "1.3.0",
+      "1.3.0"
+    ),
+    description = c(
+      "Baseline linear DGP with Gaussian noise (sanity check).",
+      "Same linear signal as synth_baseline but with heavy-tailed noise: 0.8 * N(0, 0.5) + 0.2 * Cauchy(0, 1); robustness (L2 break)."
+    )
   )
 }
 
@@ -46,10 +67,10 @@ cs_get_dgp <- function(dgp_id) {
   }
 
   list(
-    dgp_id = row$dgp_id,
-    type = row$type,
-    generator = row$generator[[1L]],
-    registry_version = row$registry_version,
+    dgp_id     = row$dgp_id,
+    type       = row$type,
+    generator  = row$generator[[1L]],
+    version    = row$version,
     description = row$description
   )
 }

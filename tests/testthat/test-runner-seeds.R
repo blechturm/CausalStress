@@ -36,7 +36,8 @@ test_that("cs_run_seeds works for lm_att and returns reasonable structure", {
     "n", "seed",
     "oracle", "supports_qst",
     "true_att", "est_att",
-    "att_error", "att_abs_error"
+    "att_error", "att_abs_error",
+    "estimator_pkgs"
   )
   expect_true(all(expected_cols %in% names(res)))
 

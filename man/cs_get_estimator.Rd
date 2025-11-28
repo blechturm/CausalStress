@@ -14,11 +14,14 @@ cs_get_estimator(estimator_id)
 A list with elements:
 \itemize{
 \item estimator_id: character scalar
+\item type: character scalar
 \item fn: function(df, tau, config) returning an estimator result
 \item oracle: logical, TRUE if this is an oracle estimator
 \item supports_qst: logical, TRUE if estimator returns QST
 \item version: character scalar
 \item description: character scalar
+\item source: character scalar indicating origin (core/optional/external)
+\item requires_pkgs: character vector of required packages
 }
 }
 \description{
