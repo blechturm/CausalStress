@@ -1,0 +1,118 @@
+This is **Version 1.7.0 (Immutable Gold Standard)**.
+
+This version is the "pedant-proof" final authority. It locks down the exact QST grid rows, standardizes Confidence Interval mechanics for the Gatekeeper, and explicitly bans "ghost variation" from system-level R settings.
+
+### File: `CAUSALSTRESS_CONSTITUTION.md`
+
+\`\`\`markdown \# CAUSALSTRESS CONSTITUTION
+
+**Version:** 1.7.0\
+**Date:** 2025-11-28\
+**Status:** Ratified (Immutable Gold Standard)
+
+------------------------------------------------------------------------
+
+## Preamble
+
+`CausalStress` is a scientific instrument, not just a software library. To ensure that benchmarks remain comparable across time, machines, and estimators, this Constitution defines the invariant laws of the framework. Code contributions that violate these articles must be rejected.
+
+------------------------------------------------------------------------
+
+## Article I: The Definition of Truth
+
+To prevent ambiguity between "Signal" and "Noise," all Synthetic DGPs must adhere to the **Two-Tier Truth Contract**.
+
+### Section 1.1: Structural ATT
+
+The Average Treatment Effect on the Treated (ATT) is defined strictly on the **noise-free structural component**. $$ATT_{true} = \frac{1}{N_{treated}} \sum_{i: W_i=1} \mathbb{E}[Y_1 - Y_0 \mid X_i]$$ \* **Constraint:** For Synthetic DGPs, the structural treatment effect $\tau(X)$ MUST be a deterministic measurable function of covariates $X$ only. It MUST NOT depend on treatment assignment $W$, propensity $p(X)$, or realized sample noise. \* **Prohibition:** Truth must never be calculated as the sample mean of realized differences ($y_1 - y_0$) in heavy-tailed settings. \* **Real Data:** For Real DGPs, Truth must be defined externally (e.g., Experimental Benchmark) and never regenerated.
+
+### Section 1.2: Distributional QST
+
+The Quantile Shift (QST) is defined on the **full realized distribution** (Signal + Noise). $$QST(u) = Q_u(Y_1 \mid W=1) - Q_u(Y_0 \mid W=1)$$ \* **Grid:** The canonical truth grid is invariant: $u \in \{0.01, 0.02, \dots, 0.99\}$. \* **Computation:** For synthetic data, this **must** be computed via Oracle Monte Carlo ($N=10^6$) or analytic derivation matching oracle precision ($< 10^{-5}$). The oracle size $N=10^6$ is immutable for v1.x.y. \* **Independence:** Noise MUST be drawn independently across units unless explicitly specified.
+
+------------------------------------------------------------------------
+## Article II: Immutability and Reproducibility
+
+Scientific benchmarks are worthless if the ground moves under our feet. To ensure that "Truth" remains identical across time, machines, and R versions, the computational substrate must be frozen.
+
+### Section 2.1: The Frozen Logic Clause
+
+Once a DGP ID and Version is released, its logic, parameters, and truth definitions are **Immutable**.
+
+* **Prohibition:** You cannot "fix" or "improve" a DGP in place. Any change to parameters or logic requires a version increment.
+* **RNG Stationarity:** To prevent "Dependency Rot" (e.g., changes in sampling algorithms between R versions), all synthetic data generation **MUST** occur within a fixed RNG context.
+    * **Mandated State:** `RNGkind(kind = "Mersenne-Twister", normal.kind = "Inversion", sample.kind = "Rounding")`.
+    * *Rationale:* This enforces the "classic" R behavior (pre-3.6.0), ensuring that a seed used in 2025 produces the exact same dataset in 2030.
+* **Side-Effect Isolation:** Aside from the mandated RNG lock, DGPs **MUST NOT** modify external system state, including:
+    * `options()` (e.g., numeric precision).
+    * System time or locale settings.
+    * Parallel backend configurations (BLAS/LAPACK threads).
+
+### Section 2.2: The Seeding Mandate
+
+Reproducibility is not optional; it is the primary function of the instrument.
+
+* **Explicit Arguments:** All DGPs **must** accept a `seed` argument.
+* **Internal Setting:** If provided, the DGP **must** call `set.seed(seed)` internally, immediately after establishing the RNG context defined in Section 2.1.
+* **Traceability:** The Runner **must** capture and store the seed in the result metadata.
+* **Bitwise Identity:** Two runs with the same `DGP ID`, `Version`, and `Seed` must produce **bitwise identical** dataframes and truth tables, regardless of the operating system or R version used.
+
+------------------------------------------------------------------------
+
+## Article III: The Interoperability Contracts
+
+### Section 3.1: The Estimator Contract
+
+Every estimator function must conform to: `function(df, tau, config) -> list(att, qst, meta)`.
+
+-   **Covariate Access:** The Runner MUST physically sanitize `y0`, `y1`, `p`, and `structural_te` from the input dataframe before execution. Estimators will not receive these columns unless explicitly configured as Oracle
+    -   *Exception:* Estimators explicitly configured as "Oracle" (e.g., `config$use_true_propensity = TRUE`) MAY access `p`.
+-   **Tau Compliance:** Estimators **MUST** calculate QST only for the `tau` values provided by the Runner. The canonical grid applies to truth tables, not estimator inputs.
+-   **Confidence Intervals:**
+    -   Gatekeeper testing applies primarily to ATT.
+    -   If an estimator reports CIs, they **MUST** be Bootstrap-based (default) unless the estimator explicitly declares an alternative valid methodology (e.g., Asymptotic, Bayesian) in `meta$ci_type`.
+
+### Section 3.2: The DGP Contract (Bifurcated)
+
+**A. Synthetic DGPs (`type="synthetic"`)** MUST return: \* `df`: Tibble including `y`, `w`, `p`, `y0`, `y1`, and covariates named `x1...xk`. \* `true_att`: Numeric scalar. \* `true_qst`: Tibble with columns `tau` (numeric) and `value` (numeric). \* **Strict Alignment:** This table **MUST** be evaluated exactly at the canonical grid $\{0.01, \dots, 0.99\}$. Any deviation in grid points renders the DGP unconstitutional. \* `meta$structural_te`: Numeric vector matching `nrow(df)`.
+
+**B. Real DGPs (`type="real"`)** MUST return: \* `df`: Tibble including `y`, `w`, and covariates. **MUST NOT** include `y0`, `y1`. \* `true_att`: Numeric scalar (if benchmark available) OR `NA`. \* `true_qst`: **MUST** be `NULL`. \* `meta$structural_te`: **MUST** be `NULL`. \* `meta$params`: Empty list `list()` or citation metadata only.
+
+------------------------------------------------------------------------
+
+## Article IV: The Placebo Gatekeeper
+
+To prevent the proliferation of estimators that hallucinate effects.
+
+### Section 4.1: The Sharp Null (Pathwise Identity)
+
+All DGPs in the Placebo Suite must enforce the **Sharp Null Hypothesis** via pathwise identity: $$Y_1 \equiv Y_0$$ \* **Implementation:** $Y_1$ is a copy by reference of $Y_0$. No independent noise is drawn for $Y_1$. \* **Rationale:** This ensures $QST(u) \equiv 0$ exactly (zero variance in the estimand), detecting estimators that hallucinate signal from noise variance ("Variance Hallucination").
+
+### Section 4.2: The Gatekeeper Protocol
+
+Any estimator that claims "robustness" must implicitly pass the Placebo Suite. \* **Criterion:** Estimators must not systematically report non-zero effects. \* **Definition:** "Systematic Deviation" is defined as rejecting the Sharp Null (Confidence Interval excludes 0) in \>10% of runs at significance level $\alpha = 0.05$. \* **Application:** This test applies to the ATT estimate. If the estimator also supplies CIs for QST, the test applies to the Mean Absolute Bias across quantiles. \* **Requirement:** Estimators incapable of producing Confidence Intervals cannot be validated by the Gatekeeper and are marked "Unverified."
+
+------------------------------------------------------------------------
+
+## Article V: Computational Safety
+
+### Section 5.1: The "Wide & Shallow" Concurrency Rule
+
+-   **Runner Responsibility:** The Runner manages parallelism at the process level (Wide).
+-   **Estimator Responsibility:**
+    -   If `config$num_threads == 1`, the Estimator **MUST** restrict internal parallelism to 1 thread.
+    -   If `config$num_threads > 1`, the Estimator **MAY** use up to that many threads.
+
+### Section 5.2: The Granularity Rule
+
+To prevent data loss: \* Results **must** be persisted (pinned) at the granularity of a single run (DGP × Estimator × Seed). \* Aggregation into suites happens only *after* secure storage of atomic results.
+
+## **Article VI: The Law of Atomic Persistence** 
+
+To ensure the integrity of the benchmark registry during massively parallel execution:
+
+-   **Atomicity:** Every simulation result (DGP × Estimator × Seed) must be persisted to a unique storage location or identifiable partition. Workers must never overwrite, append to, or modify existing result pins.
+
+-   **Isolation:** Parallel workers are **strictly prohibited** from modifying shared board state (e.g., updating manifests, indices, or registries).
+
+-   **Serialization:** Any operation that modifies the shared registry index (e.g., `write_board_manifest`) **must** be executed serially by the controller process only after all workers have terminated.
