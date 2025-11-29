@@ -78,6 +78,44 @@ Every result includes:
 
 So you can always reproduce or load old runs.
 
+### Architecture
+
+``` mermaid
+flowchart LR
+    %% Style Definitions
+    classDef input fill:#D1E8E2,stroke:#333,stroke-width:1px;
+    classDef safe fill:#FFD1D1,stroke:#333,stroke-width:1px;
+    classDef store fill:#FFE4B5,stroke:#333,stroke-width:1px;
+    classDef view fill:#E6E6FA,stroke:#333,stroke-width:1px;
+
+    subgraph Registries ["1. Registries"]
+        direction TB
+        DGP["DGP<br/>(Formula + Truth)"]:::input
+        Est["Estimator<br/>(Function)"]:::input
+    end
+
+    subgraph Runner ["2. Constitutional Runner"]
+        direction TB
+        Gen((Generate))
+        Airlock{{"🔒 AIRLOCK<br/>(Strip y0, y1, p)"}}:::safe
+        Boot((Bootstrap))
+        
+        Gen --> Airlock
+        Airlock --> Boot
+    end
+
+    subgraph Output ["3. Output"]
+        Pins[("💾 Persistence<br/>(Pins Board)")]:::store
+        Tidy["📄 cs_tidy()<br/>(Analysis Table)"]:::view
+    end
+
+    %% Connections
+    DGP --> Gen
+    Est --> Boot
+    Boot --> Pins
+    Boot --> Tidy
+```
+
 ------------------------------------------------------------------------
 
 # Installation
@@ -191,11 +229,11 @@ history %>%
 #> # A tibble: 5 × 5
 #>   dgp_id         estimator_id  seed git_hash                           timestamp
 #>   <chr>          <chr>        <int> <chr>                                  <dbl>
-#> 1 synth_baseline ipw_att          1 74c258b51257910d76449d255136e4429…    1.76e9
-#> 2 synth_baseline ipw_att          2 74c258b51257910d76449d255136e4429…    1.76e9
-#> 3 synth_baseline ipw_att          3 74c258b51257910d76449d255136e4429…    1.76e9
-#> 4 synth_baseline ipw_att          4 74c258b51257910d76449d255136e4429…    1.76e9
-#> 5 synth_baseline ipw_att          5 74c258b51257910d76449d255136e4429…    1.76e9
+#> 1 synth_baseline ipw_att          1 fafb97f733af6a380194256380950241e…    1.76e9
+#> 2 synth_baseline ipw_att          2 fafb97f733af6a380194256380950241e…    1.76e9
+#> 3 synth_baseline ipw_att          3 fafb97f733af6a380194256380950241e…    1.76e9
+#> 4 synth_baseline ipw_att          4 fafb97f733af6a380194256380950241e…    1.76e9
+#> 5 synth_baseline ipw_att          5 fafb97f733af6a380194256380950241e…    1.76e9
 ```
 
 You can retrieve any run from any git commit, ever.
@@ -224,9 +262,9 @@ CausalStress:::cs_estimator_registry()
 #> # A tibble: 3 × 9
 #>   estimator_id type   generator oracle supports_qst version description   source
 #>   <chr>        <chr>  <list>    <lgl>  <lgl>        <chr>   <chr>         <chr> 
-#> 1 oracle_att   oracle <fn>      TRUE   FALSE        0.1.0   Oracle ATT u… core  
-#> 2 lm_att       gcomp  <fn>      FALSE  FALSE        0.1.0   Linear outco… core  
-#> 3 ipw_att      ipw    <fn>      FALSE  FALSE        0.1.0   Inverse-prob… core  
+#> 1 oracle_att   oracle <fn>      TRUE   FALSE        0.1.1   Oracle ATT u… core  
+#> 2 lm_att       gcomp  <fn>      FALSE  FALSE        0.1.1   Linear outco… core  
+#> 3 ipw_att      ipw    <fn>      FALSE  FALSE        0.1.1   Inverse-prob… core  
 #> # ℹ 1 more variable: requires_pkgs <list>
 ```
 

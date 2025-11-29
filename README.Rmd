@@ -83,6 +83,44 @@ Every result includes:
 
 So you can always reproduce or load old runs.
 
+### Architecture
+
+``` mermaid
+flowchart LR
+    %% Style Definitions
+    classDef input fill:#D1E8E2,stroke:#333,stroke-width:1px;
+    classDef safe fill:#FFD1D1,stroke:#333,stroke-width:1px;
+    classDef store fill:#FFE4B5,stroke:#333,stroke-width:1px;
+    classDef view fill:#E6E6FA,stroke:#333,stroke-width:1px;
+
+    subgraph Registries ["1. Registries"]
+        direction TB
+        DGP["DGP<br/>(Formula + Truth)"]:::input
+        Est["Estimator<br/>(Function)"]:::input
+    end
+
+    subgraph Runner ["2. Constitutional Runner"]
+        direction TB
+        Gen((Generate))
+        Airlock{{"🔒 AIRLOCK<br/>(Strip y0, y1, p)"}}:::safe
+        Boot((Bootstrap))
+        
+        Gen --> Airlock
+        Airlock --> Boot
+    end
+
+    subgraph Output ["3. Output"]
+        Pins[("💾 Persistence<br/>(Pins Board)")]:::store
+        Tidy["📄 cs_tidy()<br/>(Analysis Table)"]:::view
+    end
+
+    %% Connections
+    DGP --> Gen
+    Est --> Boot
+    Boot --> Pins
+    Boot --> Tidy
+```
+
 ------------------------------------------------------------------------
 
 # Installation
@@ -128,8 +166,6 @@ runs <- cs_run_grid(
 )
 ```
 
-
-
 ------------------------------------------------------------------------
 
 ## 2. Tidy the Results
@@ -143,7 +179,6 @@ runs_tidy %>%
   head(6)
 ```
 
-
 ------------------------------------------------------------------------
 
 ## 3. Scorecard Summary
@@ -154,8 +189,6 @@ summary <- cs_summarise_runs(runs_tidy)
 summary %>% 
   select(dgp_id, estimator_id, RMSE = mean_error, Coverage = mean_att_covered)
 ```
-
-
 
 ------------------------------------------------------------------------
 
@@ -168,7 +201,6 @@ history %>%
   select(dgp_id, estimator_id, seed, git_hash, timestamp) %>%
   head(5)
 ```
-
 
 You can retrieve any run from any git commit, ever.
 
@@ -184,13 +216,11 @@ CausalStress maintains two central registries:
 CausalStress:::cs_dgp_registry()
 ```
 
-
 ### Estimator Registry
 
 ```{r}
 CausalStress:::cs_estimator_registry()
 ```
-
 
 DGPs and Estimators can be added via:
 
@@ -268,7 +298,6 @@ with_progress({
 })
 ```
 
-
 Thanks to atomic seeds, this is **race-free, deterministic, and resume-safe**.
 
 ------------------------------------------------------------------------
@@ -281,8 +310,6 @@ See:
 
 vignette("from-run-to-history", package = "CausalStress")
 ```
-
-
 
 ------------------------------------------------------------------------
 
