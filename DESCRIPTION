@@ -1,9 +1,14 @@
 Package: CausalStress
-Title: What the Package Does (One Line, Title Case)
+Title: CausalStress: A Constitutional Framework for Causal Benchmarking
 Version: 0.1.1
 Authors@R: 
-    person("First", "Last", , "first.last@example.com", role = c("aut", "cre"))
-Description: What the package does (one paragraph).
+    person("Maximilian", "Thomasberger", , "max@blechturm.com", role = c("aut", "cre"))
+Description: A rigorous framework for benchmarking causal inference estimators under
+    controlled conditions. It implements a "Constitutional" architecture that enforces
+    strict data separation ("Airlocks") between estimators and ground truth, ensuring
+    no data leakage. The package features atomic persistence for crash resilience,
+    provenance tracking via Git hashes, and a standardized interface for comparing
+    estimators across diverse synthetic data-generating processes.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
