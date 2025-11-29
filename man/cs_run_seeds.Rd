@@ -14,7 +14,8 @@ cs_run_seeds(
   B = 200L,
   config = list(),
   board = NULL,
-  skip_existing = FALSE
+  skip_existing = FALSE,
+  show_progress = TRUE
 )
 }
 \arguments{

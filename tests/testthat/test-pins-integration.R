@@ -24,4 +24,8 @@ test_that("cs_run_seeds persists rich results to a pins board", {
   expect_true(all(c("att", "qst", "boot_draws", "meta") %in% names(res)))
   expect_true(is.list(res$att))
   expect_true(is.list(res$meta))
+
+  meta <- pins::pin_meta(board, pin_names[1])
+  md <- if (!is.null(meta$metadata)) meta$metadata else meta$user
+  expect_true("git_hash" %in% names(md))
 })

@@ -45,6 +45,7 @@ cs_run_grid <- function(dgp_ids,
   )
 
   runs <- lapply(seq_len(nrow(grid)), function(i) {
+    message(glue::glue("Running batch: {grid$dgp_id[i]} x {grid$estimator_id[i]}"))
     if (is.null(tau)) {
       cs_run_seeds(
         dgp_id       = grid$dgp_id[i],

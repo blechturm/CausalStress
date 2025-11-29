@@ -231,7 +231,8 @@ cs_run_seeds <- function(
   B         = 200L,
   config    = list(),
   board     = NULL,
-  skip_existing = FALSE
+  skip_existing = FALSE,
+  show_progress = TRUE
 ) {
   if (length(seeds) == 0L) {
     rlang::abort(
@@ -253,30 +254,42 @@ cs_run_seeds <- function(
   }
   seeds <- as.integer(seeds)
 
-  rows <- lapply(seeds, function(s) {
-    if (!is.null(board) && isTRUE(skip_existing)) {
-      if (cs_pin_exists(board, dgp_id, estimator_id, n, s)) {
-        name <- glue::glue(
-          "results__dgp={dgp_id}__est={estimator_id}__n={n}__seed={s}"
-        )
-        cached <- pins::pin_read(board, name)
-        return(cs_result_to_row(cached))
+  run_block <- function() {
+    p <- progressr::progressor(steps = length(seeds))
+
+    rows <- lapply(seeds, function(s) {
+      msg <- glue::glue("{dgp_id} | {estimator_id} | seed {s}")
+      on.exit(p(message = msg), add = TRUE)
+      if (!is.null(board) && isTRUE(skip_existing)) {
+        if (cs_pin_exists(board, dgp_id, estimator_id, n, s)) {
+          name <- glue::glue(
+            "results__dgp={dgp_id}__est={estimator_id}__n={n}__seed={s}"
+          )
+          cached <- pins::pin_read(board, name)
+          return(cs_result_to_row(cached))
+        }
       }
-    }
 
-    res <- cs_run_single(
-      dgp_id       = dgp_id,
-      estimator_id = estimator_id,
-      n            = n,
-      seed         = s,
-      tau          = tau,
-      bootstrap    = bootstrap,
-      B            = B,
-      config       = config,
-      board        = board
-    )
-    cs_result_to_row(res)
-  })
+      res <- cs_run_single(
+        dgp_id       = dgp_id,
+        estimator_id = estimator_id,
+        n            = n,
+        seed         = s,
+        tau          = tau,
+        bootstrap    = bootstrap,
+        B            = B,
+        config       = config,
+        board        = board
+      )
+      cs_result_to_row(res)
+    })
 
-  tibble::as_tibble(do.call(rbind, rows))
+    tibble::as_tibble(do.call(rbind, rows))
+  }
+
+  if (isTRUE(show_progress)) {
+    progressr::with_progress(run_block())
+  } else {
+    run_block()
+  }
 }
