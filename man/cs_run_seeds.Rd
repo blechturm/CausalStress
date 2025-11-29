@@ -12,7 +12,9 @@ cs_run_seeds(
   tau = cs_tau_oracle,
   bootstrap = FALSE,
   B = 200L,
-  config = list()
+  config = list(),
+  board = NULL,
+  skip_existing = FALSE
 )
 }
 \arguments{

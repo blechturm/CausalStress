@@ -17,7 +17,9 @@ cs_run_grid <- function(dgp_ids,
                         tau = NULL,
                         bootstrap = FALSE,
                         B = 200L,
-                        config = list()) {
+                        config = list(),
+                        board = NULL,
+                        skip_existing = FALSE) {
   cs_chk_scalar_numeric(n, "n")
   if (n <= 0) {
     rlang::abort("`n` must be a positive scalar.", class = "causalstress_contract_error")
@@ -51,7 +53,9 @@ cs_run_grid <- function(dgp_ids,
         seeds        = seeds,
         bootstrap    = bootstrap,
         B            = B,
-        config       = config
+        config       = config,
+        board        = board,
+        skip_existing = skip_existing
       )
     } else {
       cs_run_seeds(
@@ -62,7 +66,9 @@ cs_run_grid <- function(dgp_ids,
         tau          = tau,
         bootstrap    = bootstrap,
         B            = B,
-        config       = config
+        config       = config,
+        board        = board,
+        skip_existing = skip_existing
       )
     }
   })

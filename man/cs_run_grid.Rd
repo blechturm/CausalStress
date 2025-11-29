@@ -12,7 +12,9 @@ cs_run_grid(
   tau = NULL,
   bootstrap = FALSE,
   B = 200L,
-  config = list()
+  config = list(),
+  board = NULL,
+  skip_existing = FALSE
 )
 }
 \arguments{

@@ -192,8 +192,7 @@ cs_run_single <- function(
   )
 
   if (!is.null(board)) {
-    # placeholder for future pin persistence
-    invisible(board)
+    cs_pin_write(board = board, result = result)
   }
 
   result
@@ -230,7 +229,9 @@ cs_run_seeds <- function(
   tau       = cs_tau_oracle,
   bootstrap = FALSE,
   B         = 200L,
-  config    = list()
+  config    = list(),
+  board     = NULL,
+  skip_existing = FALSE
 ) {
   if (length(seeds) == 0L) {
     rlang::abort(
@@ -253,6 +254,16 @@ cs_run_seeds <- function(
   seeds <- as.integer(seeds)
 
   rows <- lapply(seeds, function(s) {
+    if (!is.null(board) && isTRUE(skip_existing)) {
+      if (cs_pin_exists(board, dgp_id, estimator_id, n, s)) {
+        name <- glue::glue(
+          "results__dgp={dgp_id}__est={estimator_id}__n={n}__seed={s}"
+        )
+        cached <- pins::pin_read(board, name)
+        return(cs_result_to_row(cached))
+      }
+    }
+
     res <- cs_run_single(
       dgp_id       = dgp_id,
       estimator_id = estimator_id,
@@ -262,7 +273,7 @@ cs_run_seeds <- function(
       bootstrap    = bootstrap,
       B            = B,
       config       = config,
-      board        = NULL
+      board        = board
     )
     cs_result_to_row(res)
   })
