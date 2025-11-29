@@ -61,7 +61,10 @@ data:
 
     y0, y1, p, structural_te
 
-Leakage becomes impossible by construction.
+Leakage is prevented for estimators that respect the CausalStress
+interface: forbidden columns (`y0`, `y1`, `p`, `structural_te`) are
+stripped before data reach the estimator. Bypassing this requires
+*deliberate* violation of the framework’s conventions.
 
 ### **3. Atomic Persistence (Article VI)**
 
@@ -229,11 +232,11 @@ history %>%
 #> # A tibble: 5 × 5
 #>   dgp_id         estimator_id  seed git_hash                           timestamp
 #>   <chr>          <chr>        <int> <chr>                                  <dbl>
-#> 1 synth_baseline ipw_att          1 fafb97f733af6a380194256380950241e…    1.76e9
-#> 2 synth_baseline ipw_att          2 fafb97f733af6a380194256380950241e…    1.76e9
-#> 3 synth_baseline ipw_att          3 fafb97f733af6a380194256380950241e…    1.76e9
-#> 4 synth_baseline ipw_att          4 fafb97f733af6a380194256380950241e…    1.76e9
-#> 5 synth_baseline ipw_att          5 fafb97f733af6a380194256380950241e…    1.76e9
+#> 1 synth_baseline ipw_att          1 b8c95618823bbfcfed5e1cc2e5e05ffc9…    1.76e9
+#> 2 synth_baseline ipw_att          2 b8c95618823bbfcfed5e1cc2e5e05ffc9…    1.76e9
+#> 3 synth_baseline ipw_att          3 b8c95618823bbfcfed5e1cc2e5e05ffc9…    1.76e9
+#> 4 synth_baseline ipw_att          4 b8c95618823bbfcfed5e1cc2e5e05ffc9…    1.76e9
+#> 5 synth_baseline ipw_att          5 b8c95618823bbfcfed5e1cc2e5e05ffc9…    1.76e9
 ```
 
 You can retrieve any run from any git commit, ever.
@@ -368,7 +371,7 @@ vignette("from-run-to-history", package = "CausalStress")
 
 If you use CausalStress, please cite:
 
-> Thomasberger, M. (2025). *CausalStress: A Constitutional Framework for
+> Thomasberger, M. (2025). *CausalStress: A Rules based Framework for
 > Causal Benchmarking.* R package version 0.1.0.
 
 \`\`\`

@@ -66,7 +66,7 @@ Forbidden columns are physically removed before any estimator sees the data:
 y0, y1, p, structural_te
 ```
 
-Leakage becomes impossible by construction.
+Leakage is prevented for estimators that respect the CausalStress interface: forbidden columns (`y0`, `y1`, `p`, `structural_te`) are stripped before data reach the estimator. Bypassing this requires *deliberate* violation of the framework’s conventions.
 
 ### **3. Atomic Persistence (Article VI)**
 
@@ -317,6 +317,6 @@ vignette("from-run-to-history", package = "CausalStress")
 
 If you use CausalStress, please cite:
 
-> Thomasberger, M. (2025). *CausalStress: A Constitutional Framework for Causal Benchmarking.* R package version 0.1.0.
+> Thomasberger, M. (2025). *CausalStress: A Rules based Framework for Causal Benchmarking.* R package version 0.1.0.
 
 \`\`\`
