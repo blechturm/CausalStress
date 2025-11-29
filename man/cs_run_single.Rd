@@ -11,8 +11,9 @@ cs_run_single(
   seed,
   tau = cs_tau_oracle,
   bootstrap = FALSE,
-  B = 200L,
+  B = 0L,
   config = list(),
+  board = NULL,
   ...
 )
 }

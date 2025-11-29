@@ -25,7 +25,7 @@ test_that("cs_run_grid returns expected rows and structure", {
     "oracle", "supports_qst",
     "true_att", "est_att", "att_error", "att_abs_error",
     "att_ci_lo", "att_ci_hi", "att_covered", "att_ci_width", "n_boot_ok",
-    "estimator_pkgs"
+    "estimator_pkgs", "log"
   )
   expect_true(all(expected_cols %in% names(runs)))
 })
