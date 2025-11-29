@@ -1,5 +1,5 @@
 Package: CausalStress
-Title: CausalStress: A Constitutional Framework for Causal Benchmarking
+Title: CausalStress: A Rules based Framework for Causal Benchmarking
 Version: 0.1.1
 Authors@R: 
     person("Maximilian", "Thomasberger", , "max@blechturm.com", role = c("aut", "cre"))
