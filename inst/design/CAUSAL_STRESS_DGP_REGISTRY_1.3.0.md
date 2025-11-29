@@ -131,6 +131,8 @@ Real datasets conform to `type="real"`. In this spec, "real" means "truth is ext
 ### 4.1 Truth Definitions (Benchmarking Convention)
 The field `true_att` **MUST** be present in the return object.
 
+Note for v0.2: Ensure strict separation between DW subset (N=445) and Full NSW (N=722). Truth differs by ~$900.
+
 * **`lalonde_nsw`:** $1794$ (Experimental).
 * **`lalonde_dw`:** $1794$ (Target).
 * **`lalonde_cps`:** $1794$ (Target).

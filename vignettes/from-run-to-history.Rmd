@@ -1,0 +1,174 @@
+---
+title: "from-run-to-history"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{from-run-to-history}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+This vignette demonstrates the **Constitutional Workflow** of CausalStress:
+
+1.  **Run:** Execute simulations with strict guarantees.
+
+2.  **Persist:** Save every seed atomically to disk.
+
+3.  **Audit:** Query the history of your experiments.
+
+4.  **Tidy:** Flatten complex results for analysis.
+
+We will compare two estimators (`lm_att`, `ipw_att`) on two data-generating processes (`synth_baseline`, `synth_heavytail`).
+
+## 1. Setup: The Environment
+
+First, we load the package and set up a **Board**. In `CausalStress`, results are never just "returned" to the console—they are persisted to a storage backend (local folder, S3, etc.).
+
+For this tutorial, we use a temporary board.
+
+```{r setup}
+library(CausalStress)
+library(dplyr)
+library(pins)
+
+# In a real project, use board_folder("experiments") or board_s3(...)
+board <- pins::board_temp()
+```
+
+## 2. The Atomic Building Block: `cs_run_single()`
+
+The smallest unit of work in `CausalStress` is a single seed. This function returns a **Rich Object** containing the estimate, bootstrap distribution, and metadata.
+
+```{r}
+# Run one specific configuration
+run_1 <- cs_run_single(
+  dgp_id       = "synth_baseline",
+  estimator_id = "lm_att",
+  n            = 500,
+  seed         = 123,
+  bootstrap    = TRUE,
+  B            = 100,
+  board        = board  # <--- Persist this run immediately
+)
+
+# Inspect the Rich Object (It's a list)
+str(run_1, max.level = 1)
+```
+
+While rich objects are great for storage, they are annoying for analysis. We use `cs_tidy()` to flatten them.
+
+```{r}
+
+run_1 %>%
+cs_tidy() %>%
+  select(dgp_id, estimator_id, seed, est_att, att_ci_width)
+
+```
+
+## 3. Scaling Up: `cs_run_grid()`
+
+Real benchmarks involve running many seeds across many scenarios. `cs_run_grid()` orchestrates this.
+
+Crucially, it supports **Atomic Persistence** and **Crash Recovery**.
+
+```{r}
+
+  # Define the benchmark grid
+# 2 DGPs x 2 Estimators x 5 Seeds = 20 Runs
+runs <- cs_run_grid(
+  dgp_ids       = c("synth_baseline", "synth_heavytail"),
+  estimator_ids = c("lm_att", "ipw_att"),
+  n             = 500,
+  seeds         = 1:5,
+  bootstrap     = TRUE,
+  B             = 100,
+  board         = board,        # Save every seed
+  skip_existing = TRUE          # Enable Crash Recovery
+)
+```
+
+### The "Free Lunch" (Crash & Resume)
+
+Because we set `skip_existing = TRUE`, we can re-run the exact same command, and `CausalStress` will detect that the work is already done.
+
+```{r}
+
+
+system.time({
+  runs_resume <- cs_run_grid(
+    dgp_ids       = c("synth_baseline", "synth_heavytail"),
+    estimator_ids = c("lm_att", "ipw_att"),
+    n             = 500,
+    seeds         = 1:5,
+    board         = board,
+    skip_existing = TRUE
+  )
+})
+```
+
+The second run finishes almost instantly. In a real campaign on a cluster, this means you can interrupt and resume your work at any time without losing progress.
+
+## 4. The Scorecard
+
+Once the grid is done, we tidy the results and compute the benchmark metrics.
+
+```{r}
+
+  # 1. Tidy (Flatten lists to rows)
+runs_tidy <- runs %>%
+        cs_tidy()
+
+# 2. Summarise (Compute Bias, RMSE, Coverage)
+scorecard <- runs_tidy %>%
+        cs_summarise_runs
+
+scorecard %>%
+        select(dgp_id, estimator_id, RMSE = mean_error, Coverage = mean_att_covered)
+```
+
+## 5. Provenance: The "Time Machine"
+
+Imagine you ran an experiment last week, but you forgot which Git commit you used. Or you want to load a specific result from a month ago or a paper you published years ago.
+
+`cs_audit()` turns your `pins` board into a searchable database of your research history.
+
+```{r}
+history <- cs_audit(board)
+
+# What have we run so far?
+history %>%
+  select(dgp_id, estimator_id, seed, timestamp, git_hash) %>%
+  head(5)
+```
+
+### Loading a specific past run
+
+You can filter this history to find a specific artifact and load it back into R.
+
+```{r}
+# "Find that specific run I did for the heavy tail scenario..."
+target <- history %>%
+  filter(dgp_id == "synth_heavytail", estimator_id == "lm_att", seed == 1)
+
+# Load the full rich object
+old_result <- pins::pin_read(board, target$pin_name)
+
+# Verify it matches
+cs_tidy(old_result)$est_att
+```
+
+## Summary
+
+This workflow ensures that your research is:
+
+1.  **Safe:** No data leakage (Airlock).
+
+2.  **Durable:** No lost work (Atomic Persistence).
+
+3.  **Reproducible:** Exact provenance tracking (Audit).
