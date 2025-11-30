@@ -182,7 +182,7 @@ More are coming soon, including **theory-backed stress DGPs** and **famous datas
 
 ## 1. Run a Campaign
 
-```{r}
+```{r, include = TRUE, echo = TRUE}
 library(CausalStress)
 library(dplyr)
 library(pins)

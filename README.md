@@ -248,12 +248,12 @@ runs_tidy %>%
 #> # A tibble: 6 × 6
 #>   dgp_id          estimator_id  seed est_att att_ci_width att_covered
 #>   <chr>           <chr>        <int>   <dbl>        <dbl> <lgl>      
-#> 1 synth_baseline  lm_att           1   1.04         0.229 TRUE       
+#> 1 synth_baseline  lm_att           1   1.04         0.238 TRUE       
 #> 2 synth_baseline  lm_att           2   1.12         0.228 TRUE       
 #> 3 synth_baseline  lm_att           3   1.26         0.245 TRUE       
 #> 4 synth_baseline  lm_att           4   1.11         0.242 TRUE       
 #> 5 synth_baseline  lm_att           5   1.18         0.214 TRUE       
-#> 6 synth_heavytail lm_att           1   0.106        2.28  TRUE
+#> 6 synth_heavytail lm_att           1   0.106        2.47  FALSE
 ```
 
 ------------------------------------------------------------------------
@@ -271,7 +271,7 @@ summary %>%
 #> 1 synth_baseline  ipw_att      -0.0116      0.8
 #> 2 synth_baseline  lm_att        0.0178      1  
 #> 3 synth_heavytail ipw_att       1.95        0.6
-#> 4 synth_heavytail lm_att        2.17        0.6
+#> 4 synth_heavytail lm_att        2.17        0.4
 ```
 
 ------------------------------------------------------------------------
@@ -285,13 +285,13 @@ history %>%
   select(dgp_id, estimator_id, seed, git_hash, timestamp) %>%
   head(5)
 #> # A tibble: 5 × 5
-#>   dgp_id         estimator_id  seed git_hash                           timestamp
-#>   <chr>          <chr>        <int> <chr>                                  <dbl>
-#> 1 synth_baseline ipw_att          1 885aa736ac3f0fe66772ea4772cd585e0…    1.76e9
-#> 2 synth_baseline ipw_att          2 885aa736ac3f0fe66772ea4772cd585e0…    1.76e9
-#> 3 synth_baseline ipw_att          3 885aa736ac3f0fe66772ea4772cd585e0…    1.76e9
-#> 4 synth_baseline ipw_att          4 885aa736ac3f0fe66772ea4772cd585e0…    1.76e9
-#> 5 synth_baseline ipw_att          5 885aa736ac3f0fe66772ea4772cd585e0…    1.76e9
+#>   dgp_id         estimator_id  seed git_hash                 timestamp          
+#>   <chr>          <chr>        <int> <chr>                    <dttm>             
+#> 1 synth_baseline ipw_att          1 5ee9e4a75c561411e22e568… 2025-11-30 22:55:34
+#> 2 synth_baseline ipw_att          2 5ee9e4a75c561411e22e568… 2025-11-30 22:55:34
+#> 3 synth_baseline ipw_att          3 5ee9e4a75c561411e22e568… 2025-11-30 22:55:35
+#> 4 synth_baseline ipw_att          4 5ee9e4a75c561411e22e568… 2025-11-30 22:55:36
+#> 5 synth_baseline ipw_att          5 5ee9e4a75c561411e22e568… 2025-11-30 22:55:36
 ```
 
 You can retrieve any run from any git commit, ever.
@@ -306,21 +306,22 @@ CausalStress maintains two central registries:
 
 ``` r
 CausalStress:::cs_dgp_registry()
-#> # A tibble: 12 × 5
-#>    dgp_id                          type      generator version description      
-#>    <chr>                           <chr>     <list>    <chr>   <chr>            
-#>  1 synth_baseline                  synthetic <fn>      1.3.0   Baseline linear …
-#>  2 synth_heavytail                 synthetic <fn>      1.3.0   Same linear sign…
-#>  3 synth_placebo_tau0              synthetic <fn>      1.3.0   Sharp-null place…
-#>  4 synth_qte1                      synthetic <fn>      1.3.0   Sign-flip QTE DG…
-#>  5 synth_nonlinear_heteroskedastic synthetic <fn>      1.3.0   Nonlinear hetero…
-#>  6 synth_overlap_stressed          synthetic <fn>      1.3.0   Overlap-stressed…
-#>  7 synth_tilt_mild                 synthetic <fn>      1.3.0   Mildly tilted pr…
-#>  8 synth_placebo_nonlinear         synthetic <fn>      1.3.0   Placebo nonlinea…
-#>  9 synth_placebo_heavytail         synthetic <fn>      1.3.0   Placebo heavy-ta…
-#> 10 synth_placebo_tilted            synthetic <fn>      1.3.0   Placebo tilted: …
-#> 11 synth_placebo_kangschafer       synthetic <fn>      1.4.0   Kang–Schafer mis…
-#> 12 synth_hd_sparse_plm             synthetic <fn>      1.4.0   High-dim sparse …
+#> # A tibble: 12 × 9
+#>    dgp_id                   type  generator version description status rationale
+#>    <chr>                    <chr> <list>    <chr>   <chr>       <chr>  <chr>    
+#>  1 synth_baseline           synt… <fn>      1.3.0   Baseline l… stable Validate…
+#>  2 synth_heavytail          synt… <fn>      1.3.0   Same linea… stable Validate…
+#>  3 synth_placebo_tau0       synt… <fn>      1.3.0   Sharp-null… exper… Pending …
+#>  4 synth_qte1               synt… <fn>      1.3.0   Sign-flip … exper… Pending …
+#>  5 synth_nonlinear_heteros… synt… <fn>      1.3.0   Nonlinear … exper… Pending …
+#>  6 synth_overlap_stressed   synt… <fn>      1.3.0   Overlap-st… exper… Pending …
+#>  7 synth_tilt_mild          synt… <fn>      1.3.0   Mildly til… exper… Pending …
+#>  8 synth_placebo_nonlinear  synt… <fn>      1.3.0   Placebo no… exper… Pending …
+#>  9 synth_placebo_heavytail  synt… <fn>      1.3.0   Placebo he… exper… Pending …
+#> 10 synth_placebo_tilted     synt… <fn>      1.3.0   Placebo ti… exper… Pending …
+#> 11 synth_placebo_kangschaf… synt… <fn>      1.4.0   Kang-Schaf… exper… Pending …
+#> 12 synth_hd_sparse_plm      synt… <fn>      1.4.0   High-dim s… exper… Pending …
+#> # ℹ 2 more variables: date_status_changed <chr>, design_spec <chr>
 ```
 
 ### Estimator Registry
