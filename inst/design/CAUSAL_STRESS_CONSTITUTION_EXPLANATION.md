@@ -1,171 +1,180 @@
-# **CausalStress Constitution (Condensed Edition)**
-
+# **CausalStress Constitution (Condensed Edition)**  
 ### *Why these rules exist, and what they protect.*
 
-CausalStress is not just an R package.\
-It is a **scientific instrument** for comparing causal inference methods.\
-Like a scale or a thermometer, it only works if we all use it **the same way**.
+CausalStress is not just an R package.  
+It is a **scientific instrument** for comparing causal inference methods.  
+Like a calibrated scale or thermometer, it only works if every user follows the **same rules**.
 
-This Constitution explains, in plain language, the core principles that keep the framework mathematically valid, reproducible, and fair.
+These principles explain — in plain language — the rules that keep the system reproducible, comparable, and scientifically defensible.
 
-# **1. What counts as “truth” (and why we define it so strictly)**
+---
 
-### **Rule:**
+# **1. What counts as “truth” (and why it must be defined so strictly)**
 
-Synthetic datasets must separate the **true effect** (signal) from the **random noise** we add.
+### **Rule:**  
+Synthetic datasets must cleanly separate:
 
-### **Why:**
+- **Structural truth** (the signal), from  
+- **Random noise** (the variability)
 
-If truth included random noise, different seeds or sample sizes would change the “right answer,” making method comparisons meaningless.
+### **Why:**  
+If truth depended on random noise, then each seed or machine would produce a *different* “correct answer,” making comparisons meaningless.
 
-### **How:**
+### **How:**  
 
--    *Structural truth* (the true ATT) is calculated only from the noise-free treatment effect τ(X).
+- **Structural truth (ATT)** is computed only from the deterministic treatment effect τ(X).  
+  Noise plays **no role** in defining truth.
 
--    *Distributional truth* (QST) uses the full noisy outcomes but is computed once via a large Monte Carlo oracle so every estimator compares to the **same** target.
+- **Distributional truth (QST)** uses the full noisy outcomes, but is computed **once** using a large Monte-Carlo oracle (1,000,000 draws) so every estimator compares to the **same fixed truth**.
 
-**This ensures all methods compete against the same scoreboard.**
+**This creates a universal scoreboard that never changes.**
 
-# **2. Data Generating Processes must be frozen and reproducible**
+---
 
-### **Rule:**
+# **2. DGPs must be frozen and fully reproducible**
 
-Once a DGP is released, its behavior can never change.\
-Parameters, formulas, noise distributions, dimensionality — all fixed forever.
+### **Rule:**  
+When a DGP is released (ID + version), its behavior is **frozen forever**.
 
-### **Why:**
+### **Why:**  
+Changing a DGP breaks old results, invalidates comparisons, and destroys historical reproducibility.
 
-If the data changes, historical benchmarks break, papers become incomparable, and gains/losses in estimator performance become meaningless.
+### **How:**  
 
-### **How:**
+- A DGP must accept a `seed` and call `set.seed()` internally.
+- Parameters, formulas, and noise distributions can never change.
+- DGPs cannot read external state (system time, BLAS threads, locale, options).
+- Any change requires a **new version** or a **new DGP ID**.
 
--    DGPs accept a `seed` and must call `set.seed()` inside.
+**Run the same DGP with the same seed in 2025 or 2035 → identical, bit-for-bit.**
 
--   Changing the seed changes only random draws, not parameters.
+### **Governance:**  
+Only maintainers may define new DGP IDs.  
+Community DGPs must pass constitutional validation.
 
--   DGPs cannot read external state (files, system time, RNGkind, locale, BLAS threads).
+---
 
--   If anything must change, it becomes a new version or a new ID.
+# **3. Standard interfaces protect fairness and interoperability**
 
-**This ensures reproducibility across machines, years, and contributors.**
-
-# **3. Standard interfaces for DGPs and estimators**
-
-### **Rule:**
-
-All estimators follow the same function signature.\
-All DGPs return the same fields.
-
-### **Why:**
-
-Without a strict interface, running 10,000 experiments across dozens of estimators becomes chaotic and error-prone.
+### **Rule:**  
+All estimators and DGPs follow strict contracts.
 
 ### **How (Estimators):**
 
-Every estimator gets `(df, tau, config)` and returns:
+Every estimator receives `(df, tau, config)` and returns:
 
--    `att`
+- `att`
+- optional `qst`
+- `meta`
 
--    optional `qst`
+The Runner automatically removes:
 
--    `meta`
+- `y0`, `y1`  
+- true propensity `p`  
+- structural treatment effect `tau(X)`  
 
-**Importantly:** Estimators are forbidden from using y0, y1, or true propensity p in the DGP output unless explicitly marked “Oracle”.
+unless the estimator is explicitly marked **Oracle**.
+
+This prevents accidental or intentional cheating.
 
 ### **How (DGPs):**
 
-Synthetic DGPs must include y0, y1, p, and structural treatment effects.\
-Real DGPs must NOT include them.
+- Synthetic DGPs must include `y0`, `y1`, `p`, and structural τ(X).  
+- Real DGPs must NOT include them.
 
-**This ensures fairness (no cheating) and interoperability.**
+**This ensures fairness, consistency, and plug-and-play interoperability.**
+
+---
 
 # **4. Placebos protect us from hallucinated effects**
 
-### **Rule:**
+### **Rule:**  
+Placebo DGPs enforce the **Sharp Null**:  
+**Y1 is a bitwise identical copy of Y0.**
 
-A special family of DGPs sets Y1 = Y0 exactly.\
-The true effect is zero. Always.
+### **Why:**  
+If a method finds a non-zero effect where the true effect is *exactly* zero, it is unsafe.
 
-### **Why:**
+Placebos reveal:
 
-If a method produces non-zero effects on placebos, it is untrustworthy.\
-This catches:
+- overfitting  
+- model misspecification  
+- unstable weighting  
+- “variance hallucination” where noise appears as a treatment effect  
 
--    overfitting
+### **Gatekeeper (Aligned with Constitution 1.7.2)**
 
--    sensitivity to model misspecification
+An estimator **passes** the Gatekeeper if:
 
--    noise-induced bias
+- **ATT:**  
+  In at least **90%** of runs, the **95% CI** includes zero.
 
--    “variance hallucination” problems
+- **QST (the “10/10 Rule”):**  
+  A run fails if the CI excludes zero for  
+  **more than 10%** of quantiles (>9 of the 99-point grid).  
+  The estimator must not fail more than **10%** of runs.
 
-### **How:**
+Estimators without CIs are labeled **Unverified**, not penalized.
 
--    Y1 is literally a copy of Y0 (pathwise identity).
+**This ensures that estimators do not imagine patterns where no effect exists.**
 
--    QST truth is exactly zero for all quantiles.
-
--    Estimators must not reject zero \>10% of the time at 5% significance.
-
-**This ensures methods don’t find effects when none exist.**
+---
 
 # **5. Concurrency and computational safety**
 
-### **Rule:**
+### **Rule:**  
+Parallelism follows the **Wide & Shallow** pattern:
 
-Parallelism must be controlled:
+- Runners parallelize **across** tasks  
+- Estimators must respect the thread budget in `config$num_threads`
 
--    Runner parallelizes **across** runs (“wide”).
+### **Why:**  
+Uncontrolled threading leads to:
 
--    Estimators must stay **within** their thread budget (“shallow”).
+- race conditions  
+- nondeterministic results  
+- crashes  
+- irreproducibility  
 
-### **Why:**
+### **Current Status:**  
+v0.1.x runs **serially**.  
+These rules define how parallelism must behave once implemented.
 
-Uncontrolled threading creates race conditions, crashes, and nondeterministic results.
+---
 
-### **How:**
+# **6. Atomic persistence ensures data integrity**
 
-If the runner sets `config$num_threads = 1`, estimators must obey it.
+### **Rule:**  
+Each run (DGP × Estimator × Seed) is saved independently.
 
-**This ensures stable large-scale benchmarking without thread chaos.**
+### **Why:**  
+Benchmarking jobs can run for hours or days; crashes must not erase progress.
 
-# **6. Persistence and data integrity**
+### **How:**  
 
-### **Rule:**
+- After each run, results are pinned immediately.  
+- Aggregation happens only *after* all atomic units are safely stored.  
+- Parallel workers may never overwrite or modify existing pins.
 
-Each run (Estimator × DGP × Seed) gets its own save file.
+**This guarantees fault tolerance and long-run reproducibility.**
 
-### **Why:**
-
-Large benchmarking campaigns (thousands of runs) crash sometimes.\
-You must never lose 90% of your progress because one run failed.
-
-### **How:**
-
--   Results are pinned after every single run.
-
--    Aggregation happens only after all atomic runs are stored safely.
-
-**This ensures fault-tolerance and reproducibility.**
+---
 
 # **Why these rules matter**
 
-### Because causal inference is fragile.
+### **Because causal inference is fragile.**  
+Small deviations in noise, seeds, or DGP logic can create misleading results.
 
-Small violations, using the wrong seed, silently changing a DGP, using hidden covariates, create irreproducible results and false conclusions.
+### **Because benchmarking must be scientific.**  
+Two researchers using the same estimator on the same DGP should get **identical numbers**, down to the decimal.
 
-### Because benchmarking must be scientific.
+### **Because the field has no standard.**  
+CausalStress aims to become the **default test suite** for causal inference — like ImageNet, GLUE, or MMLU in other fields.
 
-Two researchers in different countries should get the **same answer** from the same estimator on the same DGP, down to the decimal.
+### **Because loose rules produce unsafe estimators.**  
+The Placebo Suite prevents unreliable methods from being used in real research or policy.
 
-### Because the field lacks standards.
+---
 
-CausalStress aims to become the **baseline**, the **test suite**, the **stress harness** everyone uses to validate new estimators, like ImageNet, GLUE, or MMLU for their fields.
-
-### Because loose standards lead to bad methods.
-
-The Placebo Suite prevents unsafe estimators from being used in real research or policy.
-
-# **Summary: The Constitution in a sentence**
-
-> **CausalStress is governed by strict, frozen, reproducible, interoperable, and fairness-preserving rules to ensure trustworthy causal benchmarking across time, estimators, and contributors.**
+# **Summary (One Sentence)**  
+> **CausalStress enforces strict, reproducible, fair, and interoperable rules so causal estimators can be evaluated scientifically, consistently, and safely across time and implementations.**

@@ -4,12 +4,12 @@
 \name{CausalStress-package}
 \alias{CausalStress}
 \alias{CausalStress-package}
-\title{CausalStress: What the Package Does (One Line, Title Case)}
+\title{CausalStress: CausalStress: A rigorous benchmarking framework built on a Constitutional architecture.}
 \description{
-What the package does (one paragraph).
+A rigorous framework for benchmarking causal inference estimators under controlled conditions. It implements a "Constitutional" architecture that enforces strict data separation ("Airlocks") between estimators and ground truth, ensuring no data leakage. The package features atomic persistence for crash resilience, provenance tracking via Git hashes, and a standardized interface for comparing estimators across diverse synthetic data-generating processes.
 }
 \author{
-\strong{Maintainer}: First Last \email{first.last@example.com}
+\strong{Maintainer}: Maximilian Thomasberger \email{max@blechturm.com}
 
 }
 \keyword{internal}

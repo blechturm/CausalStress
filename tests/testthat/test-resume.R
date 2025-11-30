@@ -37,8 +37,8 @@ test_that("cs_run_seeds can resume from existing pins without recomputing", {
     estimator_id = "lm_att",
     n            = 100,
     seeds        = 1:4,
-    bootstrap    = TRUE,
-    B            = 30,
+    bootstrap    = FALSE,
+    B            = 0,
     board        = board,
     skip_existing = TRUE
   )

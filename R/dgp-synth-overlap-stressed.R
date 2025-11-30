@@ -1,17 +1,21 @@
-#' Sign-flip QTE synthetic DGP
+#' Overlap-stressed synthetic DGP for CausalStress
 #'
-#' Generates a synthetic DGP with treatment effect heterogeneity driven by a
-#' sign flip on X1: tau(X) = +1 if X1 > 0, else -1. Noise is Student-t with
-#' df = 4 scaled to sigma = 0.5 to induce heavier tails and heterogeneity in
-#' the QST curve.
+#' Implements the `synth_overlap_stressed` design from the DGP registry.
+#' Shares covariates, baseline outcome, treatment effect, and Gaussian noise
+#' with `synth_baseline`, but uses a sharper propensity to stress overlap:
+#' p = plogis(3 * X1 + 3 * X2).
 #'
 #' @param n Integer, number of observations.
 #' @param seed Optional seed for reproducibility (passed to `cs_set_rng()`).
 #'
-#' @return A list with components `df`, `true_att`, `true_qst`, and `meta`
-#'   following the synthetic DGP contract.
+#' @return A list with:
+#'   - df: tibble with columns `y`, `w`, `y0`, `y1`, `p`, `structural_te`,
+#'     `X1`, `X2`, `X3`, `X4`, `X5`
+#'   - true_att: numeric scalar (ATT on treated units)
+#'   - true_qst: tibble with columns `tau`, `value`
+#'   - meta: list with fields `dgp_id`, `type`, `structural_te`
 #' @export
-dgp_synth_qte1 <- function(n, seed = NULL) {
+dgp_synth_overlap_stressed <- function(n, seed = NULL) {
   if (!is.null(seed)) {
     cs_set_rng(seed)
   }
@@ -23,20 +27,20 @@ dgp_synth_qte1 <- function(n, seed = NULL) {
   X5 <- stats::rnorm(n, mean = 0, sd = 1)
 
   mu0 <- 1 + X1 + 0.5 * X2
-  tau <- ifelse(X1 > 0, 1, -1)
-  p   <- stats::plogis(0.5 * X1 - 0.5 * X2)
+  tau <- 1 + 0.5 * X1
+  p   <- stats::plogis(3.0 * X1 + 3.0 * X2)
 
   w <- stats::rbinom(n, size = 1L, prob = p)
 
-  eps0 <- 0.5 * stats::rt(n, df = 4)
-  eps1 <- 0.5 * stats::rt(n, df = 4)
+  eps0 <- stats::rnorm(n, mean = 0, sd = 0.5)
+  eps1 <- stats::rnorm(n, mean = 0, sd = 0.5)
 
   y0 <- mu0 + eps0
   y1 <- mu0 + tau + eps1
   y  <- ifelse(w == 1L, y1, y0)
 
   true_att <- cs_true_att(structural_te = tau, w = w)
-  true_qst <- cs_get_oracle_qst("synth_qte1")
+  true_qst <- cs_get_oracle_qst("synth_overlap_stressed")
 
   out <- list(
     df = tibble::tibble(
@@ -55,7 +59,7 @@ dgp_synth_qte1 <- function(n, seed = NULL) {
     true_att = true_att,
     true_qst = true_qst,
     meta = list(
-      dgp_id        = "synth_qte1",
+      dgp_id        = "synth_overlap_stressed",
       type          = "synthetic",
       structural_te = tau
     )

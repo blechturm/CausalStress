@@ -3,7 +3,7 @@
 
 # CausalStress
 
-> **⚠️ Early Access (v0.1.1)**  
+> **⚠️ Early Access (v0.1.2)**  
 > CausalStress is currently in **Alpha**.  
 > The **architecture is stable and fully tested**, but the **DGP and
 > Estimator libraries are minimal** in this release.  
@@ -21,6 +21,9 @@ It enforces strict *Constitutional Guarantees* to ensure:
 - crash resilience
 
 even as estimators and DGPs grow increasingly complex.
+
+> **Note:** v0.1.x is **serial-only**.  
+> Parallel execution is scheduled for **v0.2.0**.
 
 ------------------------------------------------------------------------
 
@@ -147,97 +150,44 @@ generators).
 
 ## 1. Run a Campaign
 
-``` r
-library(CausalStress)
-library(dplyr)
-#> 
-#> Attaching package: 'dplyr'
-#> The following objects are masked from 'package:stats':
-#> 
-#>     filter, lag
-#> The following objects are masked from 'package:base':
-#> 
-#>     intersect, setdiff, setequal, union
-library(pins)
-#> Warning: package 'pins' was built under R version 4.5.2
-
-board <- pins::board_temp()
-
-runs <- cs_run_grid(
-  dgp_ids       = c("synth_baseline", "synth_heavytail"),
-  estimator_ids = c("lm_att", "ipw_att"),
-  n             = 500,
-  seeds         = 1:5,
-  bootstrap     = TRUE,
-  B             = 100,
-  board         = board,
-  skip_existing = TRUE
-)
-#> Running batch: synth_baseline x lm_att
-#> Running batch: synth_heavytail x lm_att
-#> Running batch: synth_baseline x ipw_att
-#> Running batch: synth_heavytail x ipw_att
-```
-
 ------------------------------------------------------------------------
 
 ## 2. Tidy the Results
 
-``` r
-runs_tidy <- runs %>%
-  cs_tidy()
-
-runs_tidy %>%
-  select(dgp_id, estimator_id, seed, est_att, att_ci_width, att_covered) %>%
-  head(6)
-#> # A tibble: 6 × 6
-#>   dgp_id          estimator_id  seed est_att att_ci_width att_covered
-#>   <chr>           <chr>        <int>   <dbl>        <dbl> <lgl>      
-#> 1 synth_baseline  lm_att           1   1.04         0.229 TRUE       
-#> 2 synth_baseline  lm_att           2   1.12         0.228 TRUE       
-#> 3 synth_baseline  lm_att           3   1.26         0.245 TRUE       
-#> 4 synth_baseline  lm_att           4   1.11         0.242 TRUE       
-#> 5 synth_baseline  lm_att           5   1.18         0.214 TRUE       
-#> 6 synth_heavytail lm_att           1   0.106        2.28  TRUE
-```
+    #> # A tibble: 6 × 6
+    #>   dgp_id          estimator_id  seed est_att att_ci_width att_covered
+    #>   <chr>           <chr>        <int>   <dbl>        <dbl> <lgl>      
+    #> 1 synth_baseline  lm_att           1   1.04         0.229 TRUE       
+    #> 2 synth_baseline  lm_att           2   1.12         0.228 TRUE       
+    #> 3 synth_baseline  lm_att           3   1.26         0.245 TRUE       
+    #> 4 synth_baseline  lm_att           4   1.11         0.242 TRUE       
+    #> 5 synth_baseline  lm_att           5   1.18         0.214 TRUE       
+    #> 6 synth_heavytail lm_att           1   0.106        2.28  TRUE
 
 ------------------------------------------------------------------------
 
 ## 3. Scorecard Summary
 
-``` r
-summary <- cs_summarise_runs(runs_tidy)
-
-summary %>% 
-  select(dgp_id, estimator_id, RMSE = mean_error, Coverage = mean_att_covered)
-#> # A tibble: 4 × 4
-#>   dgp_id          estimator_id    RMSE Coverage
-#>   <chr>           <chr>          <dbl>    <dbl>
-#> 1 synth_baseline  ipw_att      -0.0116      0.8
-#> 2 synth_baseline  lm_att        0.0178      1  
-#> 3 synth_heavytail ipw_att       1.95        0.6
-#> 4 synth_heavytail lm_att        2.17        0.6
-```
+    #> # A tibble: 4 × 4
+    #>   dgp_id          estimator_id    RMSE Coverage
+    #>   <chr>           <chr>          <dbl>    <dbl>
+    #> 1 synth_baseline  ipw_att      -0.0116      0.8
+    #> 2 synth_baseline  lm_att        0.0178      1  
+    #> 3 synth_heavytail ipw_att       1.95        0.6
+    #> 4 synth_heavytail lm_att        2.17        0.6
 
 ------------------------------------------------------------------------
 
 ## 4. Audit and Time Travel
 
-``` r
-history <- cs_audit(board)
-
-history %>%
-  select(dgp_id, estimator_id, seed, git_hash, timestamp) %>%
-  head(5)
-#> # A tibble: 5 × 5
-#>   dgp_id         estimator_id  seed git_hash                           timestamp
-#>   <chr>          <chr>        <int> <chr>                                  <dbl>
-#> 1 synth_baseline ipw_att          1 b8c95618823bbfcfed5e1cc2e5e05ffc9…    1.76e9
-#> 2 synth_baseline ipw_att          2 b8c95618823bbfcfed5e1cc2e5e05ffc9…    1.76e9
-#> 3 synth_baseline ipw_att          3 b8c95618823bbfcfed5e1cc2e5e05ffc9…    1.76e9
-#> 4 synth_baseline ipw_att          4 b8c95618823bbfcfed5e1cc2e5e05ffc9…    1.76e9
-#> 5 synth_baseline ipw_att          5 b8c95618823bbfcfed5e1cc2e5e05ffc9…    1.76e9
-```
+    #> # A tibble: 5 × 5
+    #>   dgp_id         estimator_id  seed git_hash                           timestamp
+    #>   <chr>          <chr>        <int> <chr>                                  <dbl>
+    #> 1 synth_baseline ipw_att          1 92705e6d100eb23c15bba39f7a97dd112…    1.76e9
+    #> 2 synth_baseline ipw_att          2 92705e6d100eb23c15bba39f7a97dd112…    1.76e9
+    #> 3 synth_baseline ipw_att          3 92705e6d100eb23c15bba39f7a97dd112…    1.76e9
+    #> 4 synth_baseline ipw_att          4 92705e6d100eb23c15bba39f7a97dd112…    1.76e9
+    #> 5 synth_baseline ipw_att          5 92705e6d100eb23c15bba39f7a97dd112…    1.76e9
 
 You can retrieve any run from any git commit, ever.
 
@@ -249,27 +199,31 @@ CausalStress maintains two central registries:
 
 ### DGP Registry
 
-``` r
-CausalStress:::cs_dgp_registry()
-#> # A tibble: 2 × 5
-#>   dgp_id          type      generator version description                       
-#>   <chr>           <chr>     <list>    <chr>   <chr>                             
-#> 1 synth_baseline  synthetic <fn>      1.3.0   Baseline linear DGP with Gaussian…
-#> 2 synth_heavytail synthetic <fn>      1.3.0   Same linear signal as synth_basel…
-```
+    #> # A tibble: 12 × 5
+    #>    dgp_id                          type      generator version description      
+    #>    <chr>                           <chr>     <list>    <chr>   <chr>            
+    #>  1 synth_baseline                  synthetic <fn>      1.3.0   Baseline linear …
+    #>  2 synth_heavytail                 synthetic <fn>      1.3.0   Same linear sign…
+    #>  3 synth_placebo_tau0              synthetic <fn>      1.3.0   Sharp-null place…
+    #>  4 synth_qte1                      synthetic <fn>      1.3.0   Sign-flip QTE DG…
+    #>  5 synth_nonlinear_heteroskedastic synthetic <fn>      1.3.0   Nonlinear hetero…
+    #>  6 synth_overlap_stressed          synthetic <fn>      1.3.0   Overlap-stressed…
+    #>  7 synth_tilt_mild                 synthetic <fn>      1.3.0   Mildly tilted pr…
+    #>  8 synth_placebo_nonlinear         synthetic <fn>      1.3.0   Placebo nonlinea…
+    #>  9 synth_placebo_heavytail         synthetic <fn>      1.3.0   Placebo heavy-ta…
+    #> 10 synth_placebo_tilted            synthetic <fn>      1.3.0   Placebo tilted: …
+    #> 11 synth_placebo_kangschafer       synthetic <fn>      1.4.0   Kang–Schafer mis…
+    #> 12 synth_hd_sparse_plm             synthetic <fn>      1.4.0   High-dim sparse …
 
 ### Estimator Registry
 
-``` r
-CausalStress:::cs_estimator_registry()
-#> # A tibble: 3 × 9
-#>   estimator_id type   generator oracle supports_qst version description   source
-#>   <chr>        <chr>  <list>    <lgl>  <lgl>        <chr>   <chr>         <chr> 
-#> 1 oracle_att   oracle <fn>      TRUE   FALSE        0.1.1   Oracle ATT u… core  
-#> 2 lm_att       gcomp  <fn>      FALSE  FALSE        0.1.1   Linear outco… core  
-#> 3 ipw_att      ipw    <fn>      FALSE  FALSE        0.1.1   Inverse-prob… core  
-#> # ℹ 1 more variable: requires_pkgs <list>
-```
+    #> # A tibble: 3 × 9
+    #>   estimator_id type   generator oracle supports_qst version description   source
+    #>   <chr>        <chr>  <list>    <lgl>  <lgl>        <chr>   <chr>         <chr> 
+    #> 1 oracle_att   oracle <fn>      TRUE   FALSE        0.1.1   Oracle ATT u… core  
+    #> 2 lm_att       gcomp  <fn>      FALSE  FALSE        0.1.1   Linear outco… core  
+    #> 3 ipw_att      ipw    <fn>      FALSE  FALSE        0.1.1   Inverse-prob… core  
+    #> # ℹ 1 more variable: requires_pkgs <list>
 
 DGPs and Estimators can be added via:
 
@@ -323,36 +277,31 @@ languages.
 
 ------------------------------------------------------------------------
 
-# Parallelization (Constitutional Requirement)
+# Parallelization
 
-Parallel execution is explicitly part of the Constitution (Article V:
-*Computational Safety*).
+CausalStress defines, in the Constitution (Article V), how **parallel
+execution must behave once implemented**. These rules govern thread
+safety, deterministic RNG behavior, and protection against race
+conditions.
 
-**Why not in the MVP?**  
-Parallelism touches:
+However:
 
-- RNG determinism  
-- Progress bars  
-- Atomic writes  
-- Resume logic  
-- Future cluster safety
+> **v0.1.x is strictly serial-only.**  
+> The parallel rules are *normative*, not currently active.
 
-Now that all foundations are stable, parallelization is coming in
-**v0.2.0**.
+Parallel execution affects: - RNG determinism across processes  
+- Atomic persistence and crash recovery  
+- Progress signaling  
+- Resume logic stability  
+- Interactions with estimator thread settings
 
-Planned API:
+Because these pieces are foundational, parallelism will be introduced
+carefully in **v0.2.0**, fully compliant with Article V.
 
-``` r
-library(future)
-plan(multisession)
+### Planned API (v0.2.0)
 
-with_progress({
-  cs_run_grid(..., parallel = TRUE)
-})
-```
-
-Thanks to atomic seeds, this is **race-free, deterministic, and
-resume-safe**.
+Parallel execution will be **deterministic, race-free, and resume-safe**
+once implemented.
 
 ------------------------------------------------------------------------
 
@@ -360,18 +309,14 @@ resume-safe**.
 
 See:
 
-``` r
-
-vignette("from-run-to-history", package = "CausalStress")
-```
-
 ------------------------------------------------------------------------
 
 # Citation
 
 If you use CausalStress, please cite:
 
-> Thomasberger, M. (2025). *CausalStress: A Rules based Framework for
-> Causal Benchmarking.* R package version 0.1.0.
+> Thomasberger, M. (2025). *CausalStress: A rigorous benchmarking
+> framework built on a Constitutional architecture.* R package version
+> 0.1.0.
 
 \`\`\`
