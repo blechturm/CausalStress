@@ -9,33 +9,62 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
   fig.path = "man/figures/README-",
-  out.width = "100%",
-  echo = FALSE,
-  message = FALSE,
-  warning = FALSE
+  out.width = "100%"
 )
 ```
 
 # CausalStress
 
-> **⚠️ Early Access (v0.1.2)**\
+> **⚠️ Early Access (v0.1.x)**\
 > CausalStress is currently in **Alpha**.\
 > The **architecture is stable and fully tested**, but the **DGP and Estimator libraries are minimal** in this release.\
 > We encourage experimentation, but **do not use for production research** until v0.2.0.
 
+## ⚠️ Important Disclaimer (DGP Library Status: Experimental)
+
+CausalStress v0.1.x ships with an expanded *DGP zoo*, but **these DGPs have not yet undergone full human validation**. All implementations currently pass the Constitutional test suite (Airlock, truth separation, determinism, reproducible contracts), but they have **not yet been manually reviewed for scientific interpretation, historical correctness, or citation-accurate replication**.
+
+Accordingly:
+
+-   **Do not write papers or draw scientific conclusions based on the current DGP zoo.**
+-   The only DGPs considered *validated* in v0.1.x are:
+    -   `synth_baseline`
+    -   `synth_heavytail`
+-   All other DGPs are **experimental** and may change in minor ways during the validation process (vignettes, plots, theoretical motivations, and source citations will be added in upcoming versions).
+
+A full DGP validation wave is planned for **v0.3.x**, after the entire suite is complete and stable.
+
+------------------------------------------------------------------------
+
+## Note on LLM-Assisted Code Generation
+
+CausalStress is developed at high velocity, and part of that productivity comes from using LLMs **as drafting assistants** mainly for generating boilerplate R code, templates, and scaffolding for DGPs and internal helpers.
+
+Two clarifications are important:
+
+1.  **LLMs do not define or validate the scientific content.**\
+    All generated code is rewritten, integrated, and then constrained by the CausalStress *Constitution*: deterministic RNG, strict truth separation, Airlock enforcement, reproducibility guarantees, versioned registries, and a comprehensive test suite.\
+    The **framework**, not the LLM, is the source of correctness.
+
+2.  **LLM-generated code is never accepted without human oversight.**\
+    Until every DGP is manually validated, all LLM-assisted DGPs remain **experimental**. A dedicated vignette will accompany each one, providing plots, structural formulas, references, and a motivation for what the DGP is meant to stress-test.
+
+Using modern tooling accelerates development, but the **governance, scientific responsibility, and quality control remain human-driven**. Once validation is complete, the "experimental" label will be removed.
+
+For now, **no published research should rely on unvalidated DGPs.**
+
+# What is CausalStress?
+
 **CausalStress** is a **scientific instrument** for benchmarking causal inference estimators.\
 It enforces strict *Constitutional Guarantees* to ensure:
 
--   reproducibility\
--   comparability\
--   fairness\
--   version safety\
+-   reproducibility
+-   comparability
+-   fairness
+-   version safety
 -   crash resilience
 
 even as estimators and DGPs grow increasingly complex.
-
-> **Note:** v0.1.x is **serial-only**.  
-> Parallel execution is scheduled for **v0.2.0**.  
 
 ------------------------------------------------------------------------
 
@@ -278,27 +307,22 @@ This ensures **fairness, reproducibility, and no leakage** across languages.
 
 ------------------------------------------------------------------------
 
-# Parallelization
+# Parallelization (Constitutional Requirement)
 
-CausalStress defines, in the Constitution (Article V), how **parallel execution must behave once implemented**.
-These rules govern thread safety, deterministic RNG behavior, and protection against race conditions.
+Parallel execution is explicitly part of the Constitution (Article V: *Computational Safety*).
 
-However:
+**Why not in the MVP?**\
+Parallelism touches:
 
-> **v0.1.x is strictly serial-only.**  
-> The parallel rules are *normative*, not currently active.
+-   RNG determinism\
+-   Progress bars\
+-   Atomic writes\
+-   Resume logic\
+-   Future cluster safety
 
-Parallel execution affects:
-- RNG determinism across processes  
-- Atomic persistence and crash recovery  
-- Progress signaling  
-- Resume logic stability  
-- Interactions with estimator thread settings  
+Now that all foundations are stable, parallelization is coming in **v0.2.0**.
 
-Because these pieces are foundational, parallelism will be introduced carefully in **v0.2.0**, fully compliant with Article V.
-
-
-### Planned API (v0.2.0)
+Planned API:
 
 ```{r, eval = FALSE}
 library(future)
@@ -309,7 +333,7 @@ with_progress({
 })
 ```
 
-Parallel execution will be **deterministic, race-free, and resume-safe** once implemented.
+Thanks to atomic seeds, this is **race-free, deterministic, and resume-safe**.
 
 ------------------------------------------------------------------------
 
@@ -328,6 +352,6 @@ vignette("from-run-to-history", package = "CausalStress")
 
 If you use CausalStress, please cite:
 
-> Thomasberger, M. (2025). *CausalStress: A rigorous benchmarking framework built on a Constitutional architecture.* R package version 0.1.0.
+> Thomasberger, M. (2025). *CausalStress: A rigorous benchmarking framework built on a Constitutional architecture..* R package version 0.1.x.
 
 \`\`\`

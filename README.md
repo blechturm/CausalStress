@@ -3,27 +3,79 @@
 
 # CausalStress
 
-> **⚠️ Early Access (v0.1.2)**  
+> **⚠️ Early Access (v0.1.x)**  
 > CausalStress is currently in **Alpha**.  
 > The **architecture is stable and fully tested**, but the **DGP and
 > Estimator libraries are minimal** in this release.  
 > We encourage experimentation, but **do not use for production
 > research** until v0.2.0.
 
+## ⚠️ Important Disclaimer (DGP Library Status: Experimental)
+
+CausalStress v0.1.x ships with an expanded *DGP zoo*, but **these DGPs
+have not yet undergone full human validation**. All implementations
+currently pass the Constitutional test suite (Airlock, truth separation,
+determinism, reproducible contracts), but they have **not yet been
+manually reviewed for scientific interpretation, historical correctness,
+or citation-accurate replication**.
+
+Accordingly:
+
+- **Do not write papers or draw scientific conclusions based on the
+  current DGP zoo.**
+- The only DGPs considered *validated* in v0.1.x are:
+  - `synth_baseline`
+  - `synth_heavytail`
+- All other DGPs are **experimental** and may change in minor ways
+  during the validation process (vignettes, plots, theoretical
+  motivations, and source citations will be added in upcoming versions).
+
+A full DGP validation wave is planned for **v0.3.x**, after the entire
+suite is complete and stable.
+
+------------------------------------------------------------------------
+
+## Note on LLM-Assisted Code Generation
+
+CausalStress is developed at high velocity, and part of that
+productivity comes from using LLMs **as drafting assistants** mainly for
+generating boilerplate R code, templates, and scaffolding for DGPs and
+internal helpers.
+
+Two clarifications are important:
+
+1.  **LLMs do not define or validate the scientific content.**  
+    All generated code is rewritten, integrated, and then constrained by
+    the CausalStress *Constitution*: deterministic RNG, strict truth
+    separation, Airlock enforcement, reproducibility guarantees,
+    versioned registries, and a comprehensive test suite.  
+    The **framework**, not the LLM, is the source of correctness.
+
+2.  **LLM-generated code is never accepted without human oversight.**  
+    Until every DGP is manually validated, all LLM-assisted DGPs remain
+    **experimental**. A dedicated vignette will accompany each one,
+    providing plots, structural formulas, references, and a motivation
+    for what the DGP is meant to stress-test.
+
+Using modern tooling accelerates development, but the **governance,
+scientific responsibility, and quality control remain human-driven**.
+Once validation is complete, the “experimental” label will be removed.
+
+For now, **no published research should rely on unvalidated DGPs.**
+
+# What is CausalStress?
+
 **CausalStress** is a **scientific instrument** for benchmarking causal
 inference estimators.  
 It enforces strict *Constitutional Guarantees* to ensure:
 
-- reproducibility  
-- comparability  
-- fairness  
-- version safety  
+- reproducibility
+- comparability
+- fairness
+- version safety
 - crash resilience
 
 even as estimators and DGPs grow increasingly complex.
-
-> **Note:** v0.1.x is **serial-only**.  
-> Parallel execution is scheduled for **v0.2.0**.
 
 ------------------------------------------------------------------------
 
@@ -150,44 +202,97 @@ generators).
 
 ## 1. Run a Campaign
 
+``` r
+library(CausalStress)
+library(dplyr)
+#> 
+#> Attaching package: 'dplyr'
+#> The following objects are masked from 'package:stats':
+#> 
+#>     filter, lag
+#> The following objects are masked from 'package:base':
+#> 
+#>     intersect, setdiff, setequal, union
+library(pins)
+#> Warning: package 'pins' was built under R version 4.5.2
+
+board <- pins::board_temp()
+
+runs <- cs_run_grid(
+  dgp_ids       = c("synth_baseline", "synth_heavytail"),
+  estimator_ids = c("lm_att", "ipw_att"),
+  n             = 500,
+  seeds         = 1:5,
+  bootstrap     = TRUE,
+  B             = 100,
+  board         = board,
+  skip_existing = TRUE
+)
+#> Running batch: synth_baseline x lm_att
+#> Running batch: synth_heavytail x lm_att
+#> Running batch: synth_baseline x ipw_att
+#> Running batch: synth_heavytail x ipw_att
+```
+
 ------------------------------------------------------------------------
 
 ## 2. Tidy the Results
 
-    #> # A tibble: 6 × 6
-    #>   dgp_id          estimator_id  seed est_att att_ci_width att_covered
-    #>   <chr>           <chr>        <int>   <dbl>        <dbl> <lgl>      
-    #> 1 synth_baseline  lm_att           1   1.04         0.229 TRUE       
-    #> 2 synth_baseline  lm_att           2   1.12         0.228 TRUE       
-    #> 3 synth_baseline  lm_att           3   1.26         0.245 TRUE       
-    #> 4 synth_baseline  lm_att           4   1.11         0.242 TRUE       
-    #> 5 synth_baseline  lm_att           5   1.18         0.214 TRUE       
-    #> 6 synth_heavytail lm_att           1   0.106        2.28  TRUE
+``` r
+runs_tidy <- runs %>%
+  cs_tidy()
+
+runs_tidy %>%
+  select(dgp_id, estimator_id, seed, est_att, att_ci_width, att_covered) %>%
+  head(6)
+#> # A tibble: 6 × 6
+#>   dgp_id          estimator_id  seed est_att att_ci_width att_covered
+#>   <chr>           <chr>        <int>   <dbl>        <dbl> <lgl>      
+#> 1 synth_baseline  lm_att           1   1.04         0.229 TRUE       
+#> 2 synth_baseline  lm_att           2   1.12         0.228 TRUE       
+#> 3 synth_baseline  lm_att           3   1.26         0.245 TRUE       
+#> 4 synth_baseline  lm_att           4   1.11         0.242 TRUE       
+#> 5 synth_baseline  lm_att           5   1.18         0.214 TRUE       
+#> 6 synth_heavytail lm_att           1   0.106        2.28  TRUE
+```
 
 ------------------------------------------------------------------------
 
 ## 3. Scorecard Summary
 
-    #> # A tibble: 4 × 4
-    #>   dgp_id          estimator_id    RMSE Coverage
-    #>   <chr>           <chr>          <dbl>    <dbl>
-    #> 1 synth_baseline  ipw_att      -0.0116      0.8
-    #> 2 synth_baseline  lm_att        0.0178      1  
-    #> 3 synth_heavytail ipw_att       1.95        0.6
-    #> 4 synth_heavytail lm_att        2.17        0.6
+``` r
+summary <- cs_summarise_runs(runs_tidy)
+
+summary %>% 
+  select(dgp_id, estimator_id, RMSE = mean_error, Coverage = mean_att_covered)
+#> # A tibble: 4 × 4
+#>   dgp_id          estimator_id    RMSE Coverage
+#>   <chr>           <chr>          <dbl>    <dbl>
+#> 1 synth_baseline  ipw_att      -0.0116      0.8
+#> 2 synth_baseline  lm_att        0.0178      1  
+#> 3 synth_heavytail ipw_att       1.95        0.6
+#> 4 synth_heavytail lm_att        2.17        0.6
+```
 
 ------------------------------------------------------------------------
 
 ## 4. Audit and Time Travel
 
-    #> # A tibble: 5 × 5
-    #>   dgp_id         estimator_id  seed git_hash                           timestamp
-    #>   <chr>          <chr>        <int> <chr>                                  <dbl>
-    #> 1 synth_baseline ipw_att          1 92705e6d100eb23c15bba39f7a97dd112…    1.76e9
-    #> 2 synth_baseline ipw_att          2 92705e6d100eb23c15bba39f7a97dd112…    1.76e9
-    #> 3 synth_baseline ipw_att          3 92705e6d100eb23c15bba39f7a97dd112…    1.76e9
-    #> 4 synth_baseline ipw_att          4 92705e6d100eb23c15bba39f7a97dd112…    1.76e9
-    #> 5 synth_baseline ipw_att          5 92705e6d100eb23c15bba39f7a97dd112…    1.76e9
+``` r
+history <- cs_audit(board)
+
+history %>%
+  select(dgp_id, estimator_id, seed, git_hash, timestamp) %>%
+  head(5)
+#> # A tibble: 5 × 5
+#>   dgp_id         estimator_id  seed git_hash                           timestamp
+#>   <chr>          <chr>        <int> <chr>                                  <dbl>
+#> 1 synth_baseline ipw_att          1 885aa736ac3f0fe66772ea4772cd585e0…    1.76e9
+#> 2 synth_baseline ipw_att          2 885aa736ac3f0fe66772ea4772cd585e0…    1.76e9
+#> 3 synth_baseline ipw_att          3 885aa736ac3f0fe66772ea4772cd585e0…    1.76e9
+#> 4 synth_baseline ipw_att          4 885aa736ac3f0fe66772ea4772cd585e0…    1.76e9
+#> 5 synth_baseline ipw_att          5 885aa736ac3f0fe66772ea4772cd585e0…    1.76e9
+```
 
 You can retrieve any run from any git commit, ever.
 
@@ -199,31 +304,37 @@ CausalStress maintains two central registries:
 
 ### DGP Registry
 
-    #> # A tibble: 12 × 5
-    #>    dgp_id                          type      generator version description      
-    #>    <chr>                           <chr>     <list>    <chr>   <chr>            
-    #>  1 synth_baseline                  synthetic <fn>      1.3.0   Baseline linear …
-    #>  2 synth_heavytail                 synthetic <fn>      1.3.0   Same linear sign…
-    #>  3 synth_placebo_tau0              synthetic <fn>      1.3.0   Sharp-null place…
-    #>  4 synth_qte1                      synthetic <fn>      1.3.0   Sign-flip QTE DG…
-    #>  5 synth_nonlinear_heteroskedastic synthetic <fn>      1.3.0   Nonlinear hetero…
-    #>  6 synth_overlap_stressed          synthetic <fn>      1.3.0   Overlap-stressed…
-    #>  7 synth_tilt_mild                 synthetic <fn>      1.3.0   Mildly tilted pr…
-    #>  8 synth_placebo_nonlinear         synthetic <fn>      1.3.0   Placebo nonlinea…
-    #>  9 synth_placebo_heavytail         synthetic <fn>      1.3.0   Placebo heavy-ta…
-    #> 10 synth_placebo_tilted            synthetic <fn>      1.3.0   Placebo tilted: …
-    #> 11 synth_placebo_kangschafer       synthetic <fn>      1.4.0   Kang–Schafer mis…
-    #> 12 synth_hd_sparse_plm             synthetic <fn>      1.4.0   High-dim sparse …
+``` r
+CausalStress:::cs_dgp_registry()
+#> # A tibble: 12 × 5
+#>    dgp_id                          type      generator version description      
+#>    <chr>                           <chr>     <list>    <chr>   <chr>            
+#>  1 synth_baseline                  synthetic <fn>      1.3.0   Baseline linear …
+#>  2 synth_heavytail                 synthetic <fn>      1.3.0   Same linear sign…
+#>  3 synth_placebo_tau0              synthetic <fn>      1.3.0   Sharp-null place…
+#>  4 synth_qte1                      synthetic <fn>      1.3.0   Sign-flip QTE DG…
+#>  5 synth_nonlinear_heteroskedastic synthetic <fn>      1.3.0   Nonlinear hetero…
+#>  6 synth_overlap_stressed          synthetic <fn>      1.3.0   Overlap-stressed…
+#>  7 synth_tilt_mild                 synthetic <fn>      1.3.0   Mildly tilted pr…
+#>  8 synth_placebo_nonlinear         synthetic <fn>      1.3.0   Placebo nonlinea…
+#>  9 synth_placebo_heavytail         synthetic <fn>      1.3.0   Placebo heavy-ta…
+#> 10 synth_placebo_tilted            synthetic <fn>      1.3.0   Placebo tilted: …
+#> 11 synth_placebo_kangschafer       synthetic <fn>      1.4.0   Kang–Schafer mis…
+#> 12 synth_hd_sparse_plm             synthetic <fn>      1.4.0   High-dim sparse …
+```
 
 ### Estimator Registry
 
-    #> # A tibble: 3 × 9
-    #>   estimator_id type   generator oracle supports_qst version description   source
-    #>   <chr>        <chr>  <list>    <lgl>  <lgl>        <chr>   <chr>         <chr> 
-    #> 1 oracle_att   oracle <fn>      TRUE   FALSE        0.1.1   Oracle ATT u… core  
-    #> 2 lm_att       gcomp  <fn>      FALSE  FALSE        0.1.1   Linear outco… core  
-    #> 3 ipw_att      ipw    <fn>      FALSE  FALSE        0.1.1   Inverse-prob… core  
-    #> # ℹ 1 more variable: requires_pkgs <list>
+``` r
+CausalStress:::cs_estimator_registry()
+#> # A tibble: 3 × 9
+#>   estimator_id type   generator oracle supports_qst version description   source
+#>   <chr>        <chr>  <list>    <lgl>  <lgl>        <chr>   <chr>         <chr> 
+#> 1 oracle_att   oracle <fn>      TRUE   FALSE        0.1.2   Oracle ATT u… core  
+#> 2 lm_att       gcomp  <fn>      FALSE  FALSE        0.1.2   Linear outco… core  
+#> 3 ipw_att      ipw    <fn>      FALSE  FALSE        0.1.2   Inverse-prob… core  
+#> # ℹ 1 more variable: requires_pkgs <list>
+```
 
 DGPs and Estimators can be added via:
 
@@ -277,37 +388,47 @@ languages.
 
 ------------------------------------------------------------------------
 
-# Parallelization
+# Parallelization (Constitutional Requirement)
 
-CausalStress defines, in the Constitution (Article V), how **parallel
-execution must behave once implemented**. These rules govern thread
-safety, deterministic RNG behavior, and protection against race
-conditions.
+Parallel execution is explicitly part of the Constitution (Article V:
+*Computational Safety*).
 
-However:
+**Why not in the MVP?**  
+Parallelism touches:
 
-> **v0.1.x is strictly serial-only.**  
-> The parallel rules are *normative*, not currently active.
+- RNG determinism  
+- Progress bars  
+- Atomic writes  
+- Resume logic  
+- Future cluster safety
 
-Parallel execution affects: - RNG determinism across processes  
-- Atomic persistence and crash recovery  
-- Progress signaling  
-- Resume logic stability  
-- Interactions with estimator thread settings
+Now that all foundations are stable, parallelization is coming in
+**v0.2.0**.
 
-Because these pieces are foundational, parallelism will be introduced
-carefully in **v0.2.0**, fully compliant with Article V.
+Planned API:
 
-### Planned API (v0.2.0)
+``` r
+library(future)
+plan(multisession)
 
-Parallel execution will be **deterministic, race-free, and resume-safe**
-once implemented.
+with_progress({
+  cs_run_grid(..., parallel = TRUE)
+})
+```
+
+Thanks to atomic seeds, this is **race-free, deterministic, and
+resume-safe**.
 
 ------------------------------------------------------------------------
 
 # Vignettes
 
 See:
+
+``` r
+
+vignette("from-run-to-history", package = "CausalStress")
+```
 
 ------------------------------------------------------------------------
 
@@ -316,7 +437,7 @@ See:
 If you use CausalStress, please cite:
 
 > Thomasberger, M. (2025). *CausalStress: A rigorous benchmarking
-> framework built on a Constitutional architecture.* R package version
-> 0.1.0.
+> framework built on a Constitutional architecture..* R package version
+> 0.1.x.
 
 \`\`\`

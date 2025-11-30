@@ -9,7 +9,7 @@
   - Contracts + tests for DGPs, estimators, runners, truth helpers
 
 
-# CausalStress 0.1.1
+# CausalStress 0.1.2
 
 * **Documentation:** Added comprehensive `README.Rmd` and "From Run to History" vignette.
 * **UX:** Implemented `cs_audit()` for provenance tracking and `cs_tidy()` for unified output.
@@ -47,4 +47,58 @@
 * Expanded internal triage roadmap with planned improvements (config 
   fingerprint, expanded provenance, parallel safety).
 * 400+ tests passing, ensuring that refactors are fully covered.
+
+## v0.1.3 – Safety & Suites (Planned)
+
+**Status:** Planned (Alpha line, still serial-only)
+
+### Goals
+
+- Tighten alignment between code and Constitutional / design specs.
+- Reduce `skip_existing` footguns via basic run fingerprinting.
+- Provide minimal, official support for test suites and basic plots.
+- Clarify documentation around experimental DGPs and LLM usage.
+
+### Planned Changes (In Scope)
+
+1. **Tau Grid & Registry Validation**
+   - Add `cs_validate_tau_grid()` and call it in relevant truth/DGP paths.
+   - Implement `cs_validate_dgp_registry()` to check schema and basic invariants.
+   - Add tests ensuring the DGP registry is Constitution-compliant.
+
+2. **Run Configuration Fingerprint (v1, Minimal)**
+   - Implement `cs_build_config_fingerprint()` capturing:
+     - `dgp_id`, `estimator_id`, `n`, `seed`, `bootstrap`, `B`, `oracle`, and (if present) `estimator_version`.
+   - Store `meta$config_fingerprint` in run metadata.
+   - On resume with `skip_existing = TRUE`, error on fingerprint mismatch
+     with a clear, user-facing message.
+
+3. **Suite Registry & Runner**
+   - Implement `cs_get_suite(suite_id)` returning DGP/estimator sets.
+   - Implement `cs_run_suite(suite_id, ...)` as a thin wrapper around `cs_run_grid()`.
+   - Provide at least:
+     - `"placebo"` suite (all sharp-null DGPs + core estimators).
+     - `"stress_basic"` suite (baseline, heavytail, overlap-stressed).
+
+4. **Minimal Plot Helpers**
+   - Add `cs_plot_att_error()` and `cs_plot_placebo()` helpers.
+   - Ensure they accept `cs_tidy()` output and return ggplot objects.
+   - Add tests that they run without error on small example runs.
+
+5. **Documentation Updates**
+   - Update README:
+     - Explicitly separate **validated** vs **experimental** DGPs.
+     - Add DGP experimental disclaimer: no publications based on unvalidated DGPs.
+     - Add short section on LLM-assisted development and human-governed validation.
+     - Add a brief explanation of `skip_existing` + configuration fingerprint behavior.
+   - Optionally update or add a short vignette:
+     - “Running Suites and Interpreting ATT Scorecards”.
+
+### Explicitly Deferred to v0.2.0+
+
+- Parallel runner and manifest-based parallel safety.
+- QST bootstrap and advanced Article IV features.
+- Rich plotting utilities and dashboards.
+- Full configuration fingerprint (all hyperparameters, tau grids, etc.).
+- Manual, citation-backed DGP validation vignettes.
 
