@@ -17,7 +17,7 @@ knitr::opts_chunk$set(
 
 > **⚠️ Early Access (v0.1.x)**\
 > CausalStress is currently in **Alpha**.\
-> The **architecture is stable and fully tested**, but the **DGP and Estimator libraries are minimal** in this release.\
+> The **architecture is stable and fully tested**, but the **DGP and Estimator libraries are not validated yet** in this release.\
 > We encourage experimentation, but **do not use for production research** until v0.2.0.
 
 ## ⚠️ Important Disclaimer (DGP Library Status: Experimental)
@@ -182,7 +182,7 @@ More are coming soon, including **theory-backed stress DGPs** and **famous datas
 
 ## 1. Run a Campaign
 
-```{r, include = TRUE, echo = TRUE}
+```{r, include = TRUE, echo = TRUE, message=FALSE, warning=FALSE}
 library(CausalStress)
 library(dplyr)
 library(pins)
@@ -219,10 +219,11 @@ runs_tidy %>%
 ## 3. Scorecard Summary
 
 ```{r}
-summary <- cs_summarise_runs(runs_tidy)
 
-summary %>% 
+runs_tidy %>%
+cs_summarise_runs() %>% 
   select(dgp_id, estimator_id, RMSE = mean_error, Coverage = mean_att_covered)
+
 ```
 
 ------------------------------------------------------------------------
@@ -230,11 +231,12 @@ summary %>%
 ## 4. Audit and Time Travel
 
 ```{r}
-history <- cs_audit(board)
 
-history %>%
+board %>%
+  cs_audit() %>%
   select(dgp_id, estimator_id, seed, git_hash, timestamp) %>%
   head(5)
+
 ```
 
 You can retrieve any run from any git commit, ever.

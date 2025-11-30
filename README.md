@@ -6,7 +6,7 @@
 > **⚠️ Early Access (v0.1.x)**  
 > CausalStress is currently in **Alpha**.  
 > The **architecture is stable and fully tested**, but the **DGP and
-> Estimator libraries are minimal** in this release.  
+> Estimator libraries are not validated yet** in this release.  
 > We encourage experimentation, but **do not use for production
 > research** until v0.2.0.
 
@@ -205,16 +205,7 @@ generators).
 ``` r
 library(CausalStress)
 library(dplyr)
-#> 
-#> Attaching package: 'dplyr'
-#> The following objects are masked from 'package:stats':
-#> 
-#>     filter, lag
-#> The following objects are masked from 'package:base':
-#> 
-#>     intersect, setdiff, setequal, union
 library(pins)
-#> Warning: package 'pins' was built under R version 4.5.2
 
 board <- pins::board_temp()
 
@@ -228,10 +219,6 @@ runs <- cs_run_grid(
   board         = board,
   skip_existing = TRUE
 )
-#> Running batch: synth_baseline x lm_att
-#> Running batch: synth_heavytail x lm_att
-#> Running batch: synth_baseline x ipw_att
-#> Running batch: synth_heavytail x ipw_att
 ```
 
 ------------------------------------------------------------------------
@@ -261,9 +248,9 @@ runs_tidy %>%
 ## 3. Scorecard Summary
 
 ``` r
-summary <- cs_summarise_runs(runs_tidy)
 
-summary %>% 
+runs_tidy %>%
+cs_summarise_runs() %>% 
   select(dgp_id, estimator_id, RMSE = mean_error, Coverage = mean_att_covered)
 #> # A tibble: 4 × 4
 #>   dgp_id          estimator_id    RMSE Coverage
@@ -279,19 +266,19 @@ summary %>%
 ## 4. Audit and Time Travel
 
 ``` r
-history <- cs_audit(board)
 
-history %>%
+board %>%
+  cs_audit() %>%
   select(dgp_id, estimator_id, seed, git_hash, timestamp) %>%
   head(5)
 #> # A tibble: 5 × 5
 #>   dgp_id         estimator_id  seed git_hash                 timestamp          
 #>   <chr>          <chr>        <int> <chr>                    <dttm>             
-#> 1 synth_baseline ipw_att          1 5ee9e4a75c561411e22e568… 2025-11-30 22:55:34
-#> 2 synth_baseline ipw_att          2 5ee9e4a75c561411e22e568… 2025-11-30 22:55:34
-#> 3 synth_baseline ipw_att          3 5ee9e4a75c561411e22e568… 2025-11-30 22:55:35
-#> 4 synth_baseline ipw_att          4 5ee9e4a75c561411e22e568… 2025-11-30 22:55:36
-#> 5 synth_baseline ipw_att          5 5ee9e4a75c561411e22e568… 2025-11-30 22:55:36
+#> 1 synth_baseline ipw_att          1 a0c3d96977275fa4343be74… 2025-11-30 23:09:32
+#> 2 synth_baseline ipw_att          2 a0c3d96977275fa4343be74… 2025-11-30 23:09:33
+#> 3 synth_baseline ipw_att          3 a0c3d96977275fa4343be74… 2025-11-30 23:09:33
+#> 4 synth_baseline ipw_att          4 a0c3d96977275fa4343be74… 2025-11-30 23:09:34
+#> 5 synth_baseline ipw_att          5 a0c3d96977275fa4343be74… 2025-11-30 23:09:35
 ```
 
 You can retrieve any run from any git commit, ever.
