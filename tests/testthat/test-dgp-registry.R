@@ -19,12 +19,22 @@ test_that("cs_dgp_registry has required columns and sane types", {
   # All current DGPs are synthetic in the MVP
   expect_true(all(reg$type == "synthetic"))
 
-  # For now, DGP registry is frozen at version 1.3.0
-  expect_true(all(reg$version == "1.3.0"))
+  # Registry versions allowed
+  expect_true(all(reg$version %in% c("1.3.0", "1.4.0")))
 
   # Known IDs must be present
   expect_true("synth_baseline"   %in% reg$dgp_id)
   expect_true("synth_heavytail"  %in% reg$dgp_id)
+  expect_true("synth_placebo_tau0" %in% reg$dgp_id)
+  expect_true("synth_qte1" %in% reg$dgp_id)
+  expect_true("synth_nonlinear_heteroskedastic" %in% reg$dgp_id)
+  expect_true("synth_overlap_stressed" %in% reg$dgp_id)
+  expect_true("synth_tilt_mild" %in% reg$dgp_id)
+  expect_true("synth_placebo_nonlinear" %in% reg$dgp_id)
+  expect_true("synth_placebo_heavytail" %in% reg$dgp_id)
+  expect_true("synth_placebo_tilted" %in% reg$dgp_id)
+  expect_true("synth_placebo_kangschafer" %in% reg$dgp_id)
+  expect_true("synth_hd_sparse_plm" %in% reg$dgp_id)
 })
 
 test_that("cs_get_dgp returns a valid descriptor for synth_baseline", {
@@ -51,6 +61,45 @@ test_that("cs_get_dgp returns a valid descriptor for synth_heavytail", {
   expect_equal(desc$version, "1.3.0")
 
   dgp <- desc$generator(n = 50, seed = 1L)
+  expect_invisible(cs_check_dgp_synthetic(dgp))
+})
+
+test_that("cs_get_dgp returns a valid descriptor for synth_placebo_tau0", {
+  desc <- cs_get_dgp("synth_placebo_tau0")
+
+  expect_type(desc, "list")
+  expect_equal(desc$dgp_id, "synth_placebo_tau0")
+  expect_identical(desc$type, "synthetic")
+  expect_true(is.function(desc$generator))
+  expect_equal(desc$version, "1.3.0")
+
+  dgp <- desc$generator(n = 50, seed = 2L)
+  expect_invisible(cs_check_dgp_synthetic(dgp))
+})
+
+test_that("cs_get_dgp returns a valid descriptor for synth_placebo_kangschafer", {
+  desc <- cs_get_dgp("synth_placebo_kangschafer")
+
+  expect_type(desc, "list")
+  expect_equal(desc$dgp_id, "synth_placebo_kangschafer")
+  expect_identical(desc$type, "synthetic")
+  expect_true(is.function(desc$generator))
+  expect_true(desc$version %in% c("1.3.0", "1.4.0"))
+
+  dgp <- desc$generator(n = 50, seed = 3L)
+  expect_invisible(cs_check_dgp_synthetic(dgp))
+})
+
+test_that("cs_get_dgp returns a valid descriptor for synth_hd_sparse_plm", {
+  desc <- cs_get_dgp("synth_hd_sparse_plm")
+
+  expect_type(desc, "list")
+  expect_equal(desc$dgp_id, "synth_hd_sparse_plm")
+  expect_identical(desc$type, "synthetic")
+  expect_true(is.function(desc$generator))
+  expect_true(desc$version %in% c("1.4.0"))
+
+  dgp <- desc$generator(n = 30, seed = 4L)
   expect_invisible(cs_check_dgp_synthetic(dgp))
 })
 

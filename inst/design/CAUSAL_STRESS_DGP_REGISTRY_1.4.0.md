@@ -1,6 +1,6 @@
 # CausalStress DGP Registry Specification
 
-**Status:** Final (Version 1.3.0) **Date:** 2025-11-28
+**Status:** Updated (Version 1.4.0) **Date:** 2025-11-29
 
 ------------------------------------------------------------------------
 
@@ -15,6 +15,9 @@
 | **`synth_overlap_stressed`** | Linear | Linear | Gaussian | Severe Overlap ($p \to 0/1$) |
 | **`synth_tilt_mild`** | Linear | Linear | Gaussian | Covariate Shift |
 | **`synth_placebo_*`** | Varies | Constant ($0$) | Varies | Gatekeeper (False Positives) |
+| **`synth_kang_schafer`**   | Linear in latent $Z$ | Constant ($0$)     | Gaussian         | Severe OR/PS misspec. (Kang–Schafer) |
+| **`synth_hd_sparse_plm`**  | Sparse linear $g(X)$ | Constant ($1.0$)   | Gaussian         | High-dim sparse nuisance (DML)        |
+
 
 *Note: Real Data Registry is defined in Section 4.*
 
@@ -137,6 +140,127 @@ Sanity check. The "Happy Path."
 -   **Propensity:** $p(X) = \text{plogis}(3.0 X_1 + 3.0 X_2)$.
 
 -   **Intention:** Pushes density to $0$ and $1$.
+
+### synth_placebo_kangschafer
+
+**Goal**  
+Canonical “both OR and PS slightly wrong but appear reasonable” misspecification trap, following Kang & Schafer (2007), adapted as a **sharp-null placebo** for causal benchmarking.
+
+**Description**  
+Data are generated from *latent* Gaussian covariates \(Z\), but the analyst only observes nonlinear transforms \(X = f(Z)\).  
+Both the true outcome regression and true propensity score are *linear in \(Z\)* but become **severely misspecified** when fit as linear models in the observed \(X\).  
+We set \(\tau(Z) \equiv 0\), turning the Kang–Schafer design into a causal placebo: any nonzero ATT estimate indicates functional form failure.
+
+**Generative Structure**
+
+- **Latent covariates (not exposed to analyst)**  
+  \[
+  Z = (Z_1, Z_2, Z_3, Z_4)^\top \sim \mathcal{N}_4(0, I_4).
+  \]
+
+- **Observed covariates (returned as X1–X4)**  
+  \[
+  \begin{aligned}
+  X_1 &= \exp(Z_1 / 2),\\
+  X_2 &= \frac{Z_2}{1 + \exp(Z_1)} + 10,\\
+  X_3 &= (Z_1 Z_3 / 25 + 0.6)^3,\\
+  X_4 &= (Z_2 + Z_4 + 20)^2.
+  \end{aligned}
+  \]
+
+- **True propensity (in latent \(Z\))**  
+  \[
+  p(Z) = \text{expit}(-Z_1 + 0.5 Z_2 - 0.25 Z_3 - 0.1 Z_4),
+  \]
+  with treatment \(W \sim \text{Bernoulli}(p(Z))\).
+
+- **True baseline outcome (in latent \(Z\))**  
+  \[
+  \mu_0(Z) = 210 + 27.4 Z_1 + 13.7 Z_2 + 13.7 Z_3 + 13.7 Z_4,
+  \quad
+  Y_0 = \mu_0(Z) + \varepsilon,\ \varepsilon \sim \mathcal{N}(0,1).
+  \]
+
+- **Treatment effect (sharp-null placebo)**  
+  \[
+  \tau(Z) \equiv 0,\quad Y_1 = Y_0,\quad Y = Y_0.
+  \]
+
+**Returned Fields (Contract)**
+
+- `df` includes at least:  
+  `y`, `w`, `y0`, `y1`, `p`, `structural_te`, `X1`, `X2`, `X3`, `X4`.  
+- `structural_te` is a length-\(n\) vector of zeros.  
+- `true_att = 0`.  
+- `true_qst` is identically zero on the canonical `cs_tau_oracle()` grid.
+
+**Challenge Character**  
+Severe and realistic **outcome + propensity misspecification**; OR and PS models look smooth but are fundamentally wrong in \(X\)-space.  
+Highly informative stress test for DR estimators and distributional methods.  
+Belongs in the **placebo suite**: any systematic deviation from zero is a red flag.
+
+---
+
+### synth_hd_sparse_plm
+
+**Goal**  
+High-dimensional sparse nuisance setting for modern ML estimators (DML, R-learner, causal forests, GenGC).  
+True signal depends on **few** coordinates in a **large**, **correlated** feature vector.
+
+**Description**  
+A partially linear structural model with \(X \in \mathbb{R}^{50}\), sparse linear outcome regression, sparse logistic propensity, and constant treatment effect.  
+Covariates follow a **Toeplitz correlation** structure to induce realistic regularization difficulty.
+
+**Generative Structure**
+
+- **Covariates (correlated Gaussian, \(p = 50\))**  
+  Let \(X = (X_1,\dots,X_{50})^\top \sim \mathcal{N}(0, \Sigma)\) with
+  \[
+  \Sigma_{ij} = 0.5^{|i-j|},\quad i,j = 1,\dots,50.
+  \]
+  Returned as columns `X1`–`X50`.
+
+- **Sparse outcome regression**  
+  Only the first five coordinates matter:
+  \[
+  \beta^{(Y)}_1 = \dots = \beta^{(Y)}_5 = 1,\quad
+  \beta^{(Y)}_j = 0\ \text{for } j \ge 6.
+  \]
+  Define
+  \[
+  \mu_0(X) = X^\top \beta^{(Y)},\quad
+  Y_0 = \mu_0(X) + \varepsilon,\ \varepsilon \sim \mathcal{N}(0,1).
+  \]
+
+- **Treatment effect (constant)**  
+  \[
+  \tau(X) \equiv 1.0,\quad
+  Y_1 = Y_0 + 1.
+  \]
+
+- **Sparse propensity**  
+  First five coordinates again:
+  \[
+  \gamma = (0.5,\ -0.5,\ 0.25,\ -0.25,\ 0.1,\ 0,\dots,0) \in \mathbb{R}^{50},
+  \]
+  \[
+  p(X) = \text{expit}(X^\top \gamma),\quad
+  W \sim \text{Bernoulli}(p(X)).
+  \]
+
+**Returned Fields (Contract)**
+
+- `df` includes:  
+  `y`, `w`, `y0`, `y1`, `p`, `structural_te`, `X1`–`X50`.  
+- `structural_te` is a length-\(n\) vector of ones.  
+- `true_att = 1.0`.  
+- `true_qst` corresponds to a constant +1 shift in the treated potential outcome distribution on `cs_tau_oracle()`.
+
+**Challenge Character**  
+High-dimensional **correlated** sparse nuisance learning.  
+Tests variable selection, regularization bias, and orthogonalization robustness for ML-based nuisance learners.  
+Designed for DML / causal forests / GenGC comparisons in a regime where \(p \gg\) effective support and predictors are **not** orthogonal.
+
 
 ------------------------------------------------------------------------
 

@@ -1,17 +1,15 @@
-#' Sign-flip QTE synthetic DGP
+#' Placebo heavy-tail synthetic DGP (sharp null)
 #'
-#' Generates a synthetic DGP with treatment effect heterogeneity driven by a
-#' sign flip on X1: tau(X) = +1 if X1 > 0, else -1. Noise is Student-t with
-#' df = 4 scaled to sigma = 0.5 to induce heavier tails and heterogeneity in
-#' the QST curve.
+#' Implements the `synth_placebo_heavytail` design: baseline outcome with
+#' heavy-tailed noise (0.8 N(0,0.5) + 0.2 Cauchy(0,1)) and sharp-null treatment
+#' effect (Y1 == Y0 pathwise).
 #'
 #' @param n Integer, number of observations.
 #' @param seed Optional seed for reproducibility (passed to `cs_set_rng()`).
 #'
-#' @return A list with components `df`, `true_att`, `true_qst`, and `meta`
-#'   following the synthetic DGP contract.
+#' @return A synthetic DGP list with df, true_att, true_qst, meta.
 #' @export
-dgp_synth_qte1 <- function(n, seed = NULL) {
+dgp_synth_placebo_heavytail <- function(n, seed = NULL) {
   if (!is.null(seed)) {
     cs_set_rng(seed)
   }
@@ -23,20 +21,24 @@ dgp_synth_qte1 <- function(n, seed = NULL) {
   X5 <- stats::rnorm(n, mean = 0, sd = 1)
 
   mu0 <- 1 + X1 + 0.5 * X2
-  tau <- ifelse(X1 > 0, 1, -1)
-  p   <- stats::plogis(0.5 * X1 - 0.5 * X2)
+  tau <- rep(0, n)
 
+  p <- stats::plogis(0.5 * X1 - 0.5 * X2)
   w <- stats::rbinom(n, size = 1L, prob = p)
 
-  eps0 <- 0.5 * stats::rt(n, df = 4)
-  eps1 <- 0.5 * stats::rt(n, df = 4)
+  mix_ind0 <- stats::rbinom(n, size = 1, prob = 0.8)
+  eps <- ifelse(
+    mix_ind0 == 1L,
+    stats::rnorm(n, mean = 0, sd = 0.5),
+    stats::rcauchy(n, location = 0, scale = 1)
+  )
 
-  y0 <- mu0 + eps0
-  y1 <- mu0 + tau + eps1
+  y0 <- mu0 + eps
+  y1 <- y0
   y  <- ifelse(w == 1L, y1, y0)
 
   true_att <- cs_true_att(structural_te = tau, w = w)
-  true_qst <- cs_get_oracle_qst("synth_qte1")
+  true_qst <- cs_get_oracle_qst("synth_placebo_heavytail")
 
   out <- list(
     df = tibble::tibble(
@@ -55,7 +57,7 @@ dgp_synth_qte1 <- function(n, seed = NULL) {
     true_att = true_att,
     true_qst = true_qst,
     meta = list(
-      dgp_id        = "synth_qte1",
+      dgp_id        = "synth_placebo_heavytail",
       type          = "synthetic",
       structural_te = tau
     )
