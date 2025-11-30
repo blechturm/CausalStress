@@ -2,24 +2,24 @@
 % Please edit documentation in R/cs-dgp-registry.R
 \name{cs_get_dgp}
 \alias{cs_get_dgp}
-\title{Get a DGP descriptor by ID}
+\title{Get a DGP descriptor by ID/version/status}
 \usage{
-cs_get_dgp(dgp_id)
+cs_get_dgp(dgp_id, version = NULL, status = "stable", quiet = FALSE)
 }
 \arguments{
-\item{dgp_id}{Character scalar, the DGP identifier (e.g., "synth_baseline").}
+\item{dgp_id}{Character scalar, the DGP identifier.}
+
+\item{version}{Character scalar or NULL. If provided, selects exact version.}
+
+\item{status}{Character scalar or NULL. If version is NULL, selection uses
+status fallback (defaults to "stable").}
+
+\item{quiet}{Logical; if FALSE (default), emit warnings for non-stable status.}
 }
 \value{
-A list with elements:
-\itemize{
-\item dgp_id: character scalar
-\item type: character scalar (e.g., "synthetic")
-\item generator: function(n, seed = NULL) returning a DGP object
-\item registry_version: character scalar
-\item description: character scalar
-}
+A single-row tibble entry from \code{cs_dgp_registry()}.
 }
 \description{
-Look up a synthetic DGP in the internal registry and return a descriptor
-containing metadata and the generator function.
+Look up a DGP in the internal registry and return a descriptor containing
+metadata and the generator function, with deterministic selection semantics.
 }

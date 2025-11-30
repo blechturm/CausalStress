@@ -25,7 +25,17 @@ test_that("cs_run_seeds can resume from existing pins without recomputing", {
       supports_qst   = FALSE,
       estimator_pkgs = "",
       n_boot_ok      = 0L,
-      log            = NA_character_
+      log            = NA_character_,
+      config_fingerprint = cs_build_config_fingerprint(
+        dgp_id = "synth_baseline",
+        estimator_id = "lm_att",
+        n = 100L,
+        seed = 1L,
+        bootstrap = FALSE,
+        B = 0L,
+        oracle = FALSE,
+        estimator_version = cs_estimator_registry()$version[cs_estimator_registry()$estimator_id == "lm_att"]
+      )
     )
   )
 
@@ -40,7 +50,9 @@ test_that("cs_run_seeds can resume from existing pins without recomputing", {
     bootstrap    = FALSE,
     B            = 0,
     board        = board,
-    skip_existing = TRUE
+    skip_existing = TRUE,
+    show_progress = FALSE,
+    quiet = TRUE
   )
 
   expect_equal(nrow(runs_resumed), 4L)
@@ -53,4 +65,78 @@ test_that("cs_run_seeds can resume from existing pins without recomputing", {
   tidy_res <- cs_tidy(runs_resumed)
   expect_s3_class(tidy_res, "tbl_df")
   expect_equal(nrow(tidy_res), 4L)
+})
+test_that("fingerprint mismatch triggers error on resume", {
+  skip_if_not_installed("pins")
+
+  board <- pins::board_temp()
+
+  # initial run (writes pins)
+  cs_run_seeds(
+    dgp_id       = "synth_baseline",
+    estimator_id = "lm_att",
+    n            = 50,
+    seeds        = 1:1,
+    bootstrap    = FALSE,
+    B            = 0,
+    board        = board,
+    skip_existing = FALSE,
+    show_progress = FALSE,
+    quiet = TRUE
+  )
+
+  # rerun with changed configuration (B) should error due to fingerprint mismatch
+  expect_error(
+    cs_run_seeds(
+      dgp_id       = "synth_baseline",
+      estimator_id = "lm_att",
+      n            = 50,
+      seeds        = 1:1,
+    bootstrap    = TRUE,
+    B            = 10,
+    board        = board,
+    skip_existing = TRUE,
+    show_progress = FALSE,
+    quiet = TRUE
+  ),
+  "Configuration fingerprint mismatch"
+)
+})
+
+test_that("force=TRUE overwrites mismatched pins", {
+  skip_if_not_installed("pins")
+
+  board <- pins::board_temp()
+
+  # initial run (writes pins)
+  cs_run_seeds(
+    dgp_id       = "synth_baseline",
+    estimator_id = "lm_att",
+    n            = 50,
+    seeds        = 1:1,
+    bootstrap    = FALSE,
+    B            = 0,
+    board        = board,
+    skip_existing = FALSE,
+    show_progress = FALSE,
+    quiet = TRUE
+  )
+
+  # rerun with changed configuration but force overwrite
+  runs <- cs_run_seeds(
+    dgp_id       = "synth_baseline",
+    estimator_id = "lm_att",
+    n            = 50,
+    seeds        = 1:1,
+    bootstrap    = TRUE,
+    B            = 10,
+    board        = board,
+    skip_existing = TRUE,
+    force         = TRUE,
+    show_progress = FALSE,
+    quiet = TRUE
+  )
+
+  expect_true(any(!is.na(runs$att_ci_lo)))
+  expect_true(any(!is.na(runs$att_ci_hi)))
 })

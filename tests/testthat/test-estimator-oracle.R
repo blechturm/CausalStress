@@ -1,6 +1,6 @@
 test_that("est_oracle_att matches structural ATT truth on synth_baseline", {
   desc <- cs_get_dgp("synth_baseline")
-  dgp  <- desc$generator(n = 500, seed = 123L)
+  dgp  <- desc$generator[[1]](n = 500, seed = 123L)
 
   df <- dgp$df
 

@@ -11,6 +11,9 @@ cs_pin_write <- function(board, result) {
     error   = function(e) NA_character_
   )
 
+  ts <- meta$timestamp %||% meta$run_timestamp %||% Sys.time()
+  ts_num <- as.numeric(ts)
+
   suppressMessages(
     pins::pin_write(
       board   = board,
@@ -24,7 +27,7 @@ cs_pin_write <- function(board, result) {
         seed         = meta$seed,
         git_hash     = git_hash,
         session_info = list(utils::sessionInfo()),
-        timestamp    = Sys.time()
+        timestamp    = ts_num
       )
     )
   )

@@ -27,7 +27,7 @@ test_that("resume refuses cached runs without bootstrap when bootstrap is reques
       skip_existing = TRUE,
       show_progress = FALSE
     ),
-    "computed without bootstrap CIs"
+    "Configuration fingerprint mismatch"
   )
 
   # Force recompute with skip_existing = FALSE

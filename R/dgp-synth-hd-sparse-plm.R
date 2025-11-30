@@ -1,4 +1,4 @@
-#' High-dimensional sparse partially linear DGP
+#' High-dimensional sparse partially linear DGP (v1.4.0)
 #'
 #' Implements the `synth_hd_sparse_plm` design from the DGP registry 1.4.0:
 #' correlated Gaussian covariates (p = 50) with sparse linear outcome and
@@ -9,7 +9,7 @@
 #'
 #' @return A synthetic DGP list with df, true_att, true_qst, and meta.
 #' @export
-dgp_synth_hd_sparse_plm <- function(n, seed = NULL) {
+dgp_synth_hd_sparse_plm_v140 <- function(n, seed = NULL) {
   if (!is.null(seed)) {
     cs_set_rng(seed)
   }
@@ -64,4 +64,9 @@ dgp_synth_hd_sparse_plm <- function(n, seed = NULL) {
 
   cs_check_dgp_synthetic(out)
   out
+}
+
+#' @export
+dgp_synth_hd_sparse_plm <- function(n, seed = NULL) {
+  dgp_synth_hd_sparse_plm_v140(n = n, seed = seed)
 }

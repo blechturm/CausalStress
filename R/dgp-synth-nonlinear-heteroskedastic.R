@@ -1,4 +1,4 @@
-#' Nonlinear heteroskedastic synthetic DGP for CausalStress
+#' Nonlinear heteroskedastic synthetic DGP for CausalStress (v1.3.0)
 #'
 #' Implements the `synth_nonlinear_heteroskedastic` design from the
 #' DGP registry. This DGP has nonlinear baseline outcome, constant
@@ -10,7 +10,7 @@
 #' @return A list with `df`, `true_att`, `true_qst`, and `meta` satisfying
 #'   the synthetic DGP contract.
 #' @export
-dgp_synth_nonlinear_heteroskedastic <- function(n, seed = NULL) {
+dgp_synth_nonlinear_heteroskedastic_v130 <- function(n, seed = NULL) {
   if (!is.null(seed)) {
     cs_set_rng(seed)
   }
@@ -62,4 +62,9 @@ dgp_synth_nonlinear_heteroskedastic <- function(n, seed = NULL) {
 
   cs_check_dgp_synthetic(out)
   out
+}
+
+#' @export
+dgp_synth_nonlinear_heteroskedastic <- function(n, seed = NULL) {
+  dgp_synth_nonlinear_heteroskedastic_v130(n = n, seed = seed)
 }

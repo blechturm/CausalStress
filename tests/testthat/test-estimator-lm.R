@@ -1,6 +1,6 @@
 test_that("est_lm_att returns a valid estimator object on synth_baseline", {
   dgp_desc <- cs_get_dgp("synth_baseline")
-  dgp      <- dgp_desc$generator(n = 500, seed = 123L)
+  dgp      <- dgp_desc$generator[[1]](n = 500, seed = 123L)
 
   df <- dgp$df
 

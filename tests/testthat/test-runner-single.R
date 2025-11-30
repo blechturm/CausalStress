@@ -175,3 +175,93 @@ test_that("cs_tidy_run flattens a single run to a one-row tibble", {
   expect_equal(nrow(row), 1L)
   expect_true(all(c("dgp_id", "estimator_id", "true_att", "est_att") %in% names(row)))
 })
+
+make_mock_registry <- function(status_value = "stable") {
+  gen_fun <- function(n, seed = NULL) {
+    if (!is.null(seed)) cs_set_rng(seed)
+    X1 <- stats::rnorm(n)
+    p  <- stats::plogis(X1)
+    w  <- stats::rbinom(n, size = 1L, prob = p)
+    y0 <- X1 + stats::rnorm(n)
+    y1 <- y0 + 1
+    y  <- ifelse(w == 1, y1, y0)
+    tau <- rep(1, n)
+    list(
+      df = tibble::tibble(y = y, w = w, y0 = y0, y1 = y1, p = p, structural_te = tau, X1 = X1),
+      true_att = cs_true_att(structural_te = tau, w = w),
+      true_qst = tibble::tibble(tau = cs_tau_oracle, value = rep(1, length(cs_tau_oracle))),
+      meta = list(dgp_id = "mock_dgp", type = "synthetic", structural_te = tau)
+    )
+  }
+  tibble::tibble(
+    dgp_id = "mock_dgp",
+    type = "synthetic",
+    generator = list(gen_fun),
+    version = "1.0.0",
+    description = "mock",
+    status = status_value,
+    rationale = ifelse(status_value %in% c("deprecated", "invalidated"), "legacy", ""),
+    date_status_changed = NA_character_,
+    design_spec = "1.0.0"
+  )
+}
+
+test_that("cs_run_single warns for non-stable DGPs via accessor", {
+  with_mocked_bindings(
+    cs_dgp_registry = function() make_mock_registry(status_value = "experimental"),
+    {
+      expect_warning(
+        cs_run_single(
+          dgp_id       = "mock_dgp",
+          estimator_id = "lm_att",
+          n            = 20,
+          seed         = 1L,
+          bootstrap    = FALSE
+        ),
+        "experimental"
+      )
+    }
+  )
+})
+
+test_that("cs_run_single errors when no stable or experimental version", {
+  with_mocked_bindings(
+    cs_dgp_registry = function() make_mock_registry(status_value = "deprecated"),
+    {
+      expect_error(
+        cs_run_single(
+          dgp_id       = "mock_dgp",
+          estimator_id = "lm_att",
+          n            = 10,
+          seed         = 1L,
+          quiet        = FALSE
+        ),
+        "No stable or experimental",
+        fixed = TRUE
+      )
+    }
+  )
+})
+
+test_that("cs_run_single runs without warnings for stable DGPs", {
+  with_mocked_bindings(
+    cs_dgp_registry = function() make_mock_registry(status_value = "stable"),
+    {
+      expect_no_warning(
+        cs_run_single(
+          dgp_id       = "mock_dgp",
+          estimator_id = "lm_att",
+          n            = 10,
+          seed         = 1L,
+          quiet        = FALSE
+        )
+      )
+    }
+  )
+})
+
+test_that("Running a real DGP does not warn for validated baseline", {
+  expect_no_warning(
+    cs_run_single("synth_baseline", "lm_att", n = 10, seed = 1, quiet = FALSE)
+  )
+})

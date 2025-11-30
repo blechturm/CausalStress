@@ -1,4 +1,4 @@
-#' Heavy-tailed synthetic DGP for CausalStress
+#' Heavy-tailed synthetic DGP for CausalStress (v1.3.0)
 #'
 #' Implements the `synth_heavytail` design from the DGP registry. This DGP
 #' shares the same covariates, baseline outcome, treatment effect, and
@@ -19,7 +19,7 @@
 #'     `structural_te = tau`
 #'
 #' @export
-dgp_synth_heavytail <- function(n, seed = NULL) {
+dgp_synth_heavytail_v130 <- function(n, seed = NULL) {
   if (!is.null(seed)) {
     cs_set_rng(seed)
   }
@@ -84,4 +84,9 @@ dgp_synth_heavytail <- function(n, seed = NULL) {
   cs_check_dgp_synthetic(out)
 
   out
+}
+
+#' @export
+dgp_synth_heavytail <- function(n, seed = NULL) {
+  dgp_synth_heavytail_v130(n = n, seed = seed)
 }

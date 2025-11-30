@@ -9,13 +9,17 @@ cs_run_seeds(
   estimator_id,
   n,
   seeds,
+  version = NULL,
+  status = "stable",
   tau = cs_tau_oracle,
   bootstrap = FALSE,
   B = 200L,
   config = list(),
   board = NULL,
+  force = FALSE,
   skip_existing = FALSE,
-  show_progress = TRUE
+  show_progress = TRUE,
+  quiet = FALSE
 )
 }
 \arguments{
@@ -28,11 +32,21 @@ cs_run_seeds(
 \item{seeds}{Integer vector of seeds to use. Each seed produces one row
 in the output tibble.}
 
+\item{version}{Optional DGP version string; forwarded to \code{\link[=cs_get_dgp]{cs_get_dgp()}}.}
+
+\item{status}{Optional DGP status filter; forwarded to \code{\link[=cs_get_dgp]{cs_get_dgp()}}.}
+
 \item{tau}{Numeric vector of quantile levels. Passed through to the
 estimator via \code{\link[=cs_run_single]{cs_run_single()}}. Default is \link{cs_tau_oracle}.}
 
 \item{config}{List of estimator-specific configuration options. Passed
 through to the estimator via \code{\link[=cs_run_single]{cs_run_single()}}.}
+
+\item{force}{Logical; if \code{TRUE}, recompute even when pins exist (alias for
+setting \code{skip_existing = FALSE}).}
+
+\item{quiet}{Logical; if \code{TRUE}, suppress DGP governance warnings inside
+per-seed runs (use with care; pre-flight still warns once).}
 }
 \value{
 A tibble with one row per seed and at least the columns returned

@@ -1,4 +1,4 @@
-#' Sharp-null placebo synthetic DGP (tau = 0)
+#' Sharp-null placebo synthetic DGP (tau = 0, v1.3.0)
 #'
 #' Generates a placebo DGP where the structural treatment effect is identically
 #' zero and the potential outcomes are pathwise identical (Y1 == Y0). This
@@ -14,7 +14,7 @@
 #'   - true_qst: tibble with columns `tau` and `value` (all zeros)
 #'   - meta: list with `dgp_id`, `type`, and `structural_te`
 #' @export
-dgp_synth_placebo_tau0 <- function(n, seed = NULL) {
+dgp_synth_placebo_tau0_v130 <- function(n, seed = NULL) {
   if (!is.null(seed)) {
     cs_set_rng(seed)
   }
@@ -65,4 +65,9 @@ dgp_synth_placebo_tau0 <- function(n, seed = NULL) {
 
   cs_check_dgp_synthetic(out)
   out
+}
+
+#' @export
+dgp_synth_placebo_tau0 <- function(n, seed = NULL) {
+  dgp_synth_placebo_tau0_v130(n = n, seed = seed)
 }

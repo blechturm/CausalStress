@@ -23,5 +23,7 @@ Config/testthat/edition: 3
 Imports: 
     glue,
     rlang,
-    progressr
+    progressr,
+    cli,
+    digest
 VignetteBuilder: knitr

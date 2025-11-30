@@ -15,6 +15,7 @@ knitr::opts_chunk$set(
   message = FALSE,
   warning = FALSE
 )
+if (!rmarkdown::pandoc_available()) knitr::knit_exit()
 ```
 
 This vignette demonstrates the **Constitutional Workflow** of CausalStress:
@@ -109,6 +110,8 @@ system.time({
     estimator_ids = c("lm_att", "ipw_att"),
     n             = 500,
     seeds         = 1:5,
+    bootstrap     = TRUE,   # match original config
+    B             = 100,    # match original config
     board         = board,
     skip_existing = TRUE
   )

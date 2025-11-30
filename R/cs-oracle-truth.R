@@ -160,6 +160,7 @@ cs_get_oracle_qst <- function(dgp_id,
       tau   = tau_grid,
       value = rep(0, length(tau_grid))
     )
+    cs_validate_tau_grid(truth)
     assign(key, truth, envir = .cs_oracle_qst_cache)
     return(truth)
   }
@@ -168,6 +169,7 @@ cs_get_oracle_qst <- function(dgp_id,
       tau   = tau_grid,
       value = rep(1, length(tau_grid))
     )
+    cs_validate_tau_grid(truth)
     assign(key, truth, envir = .cs_oracle_qst_cache)
     return(truth)
   }
@@ -195,6 +197,7 @@ cs_get_oracle_qst <- function(dgp_id,
     )
   )
 
+  cs_validate_tau_grid(truth)
   assign(key, truth, envir = .cs_oracle_qst_cache)
   truth
 }

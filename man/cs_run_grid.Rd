@@ -10,11 +10,14 @@ cs_run_grid(
   n,
   seeds,
   tau = NULL,
+  version = NULL,
+  status = "stable",
   bootstrap = FALSE,
   B = 200L,
   config = list(),
   board = NULL,
-  skip_existing = FALSE
+  skip_existing = FALSE,
+  force = FALSE
 )
 }
 \arguments{
@@ -28,7 +31,22 @@ cs_run_grid(
 
 \item{tau}{Optional numeric vector of quantile levels (forwarded to cs_run_single()).}
 
+\item{version}{Optional DGP version string; forwarded to \code{\link[=cs_get_dgp]{cs_get_dgp()}}.}
+
+\item{status}{Optional DGP status filter; forwarded to \code{\link[=cs_get_dgp]{cs_get_dgp()}}.}
+
+\item{bootstrap}{Logical, whether to run bootstrap for ATT CIs.}
+
+\item{B}{Integer, number of bootstrap replicates.}
+
 \item{config}{Optional named list of configuration settings (forwarded to cs_run_single()).}
+
+\item{board}{Optional pins board for persistence.}
+
+\item{skip_existing}{Logical, whether to resume from existing pins.}
+
+\item{force}{Logical, whether to overwrite existing pins (alias for
+\code{skip_existing = FALSE}).}
 }
 \value{
 A tibble with one row per (dgp_id, estimator_id, seed) run, including

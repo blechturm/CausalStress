@@ -1,6 +1,6 @@
 # CAUSALSTRESS CONSTITUTION
 
-**Version:** 1.7.2  
+**Version:** 1.8.0  
 **Date:** 2025-11-30  
 **Status:** Ratified (Stabilized Protocol)
 
@@ -177,3 +177,185 @@ To ensure the integrity of the benchmark registry during massively parallel exec
 -   **Isolation:** Parallel workers are **strictly prohibited** from modifying shared board state (e.g., updating manifests, indices, or registries).
 
 -   **Serialization:** Any operation that modifies the shared registry index (e.g., `write_board_manifest`) **must** be executed serially by the controller process only after all workers have terminated.
+
+
+# **Article VII — Immutable DGP Versioning & Scientific Governance**  
+
+## **VII.1. Purpose**
+
+Data-Generating Processes (DGPs) are scientific claims expressed as executable code.  
+Their evolution must be governed by principles of:
+
+- **immutability**  
+- **reproducibility**  
+- **transparent correction**  
+- **versioned provenance**  
+
+This Article defines the mandatory rules that regulate DGP lifecycles, versioning, and usage.
+
+---
+
+## **VII.2. Immutability and Versioning**
+
+**a. No mutation after release**  
+Once a DGP version is published, its implementation is **frozen forever**.  
+It MUST NOT be modified, corrected, simplified, refactored, optimized, or otherwise altered.
+
+**b. New versions only**  
+Any scientific correction, specification shift, bug fix, or conceptual improvement MUST result in a **new version**.
+
+**c. Version identity**  
+A version is uniquely identified by its `(dgp_id, version)` pair.  
+Both fields MUST be permanent, immutable, and globally unique.
+
+**d. Performance-only refactors**  
+A code change MAY keep the same version **only if** a regression corpus demonstrates **bitwise-identical outputs**.  
+The regression corpus MUST cover **both the generated data and the derived truth/oracle outputs**.  
+If full bitwise verification across seeds or parameters is not feasible, the default requirement is to **bump the version**.
+
+---
+
+## **VII.3. File Organization and Implementation Structure**
+
+**a. One file per conceptual DGP**  
+All versions of a DGP MUST reside in a single file, typically named:
+
+dgp-<dgp_id>.
+
+
+This file MUST contain:
+
+- the **immutable versioned implementations** (one function per version)
+- optional **internal core helpers**
+- no mutation of previously published functions
+
+**b. Optional parameterized core**  
+Internal helpers MAY factor out shared logic to reduce duplication, provided versioned functions remain immutable and fully reproducible.
+
+---
+
+## **VII.4. Scientific Status Codes**
+
+Each DGP version MUST carry one of the following statuses:
+
+- **stable** — validated, correct, and recommended  
+- **experimental** — under evaluation; not yet fully vetted  
+- **deprecated** — retained for backwards compatibility but superseded  
+- **invalidated** — known to be flawed; preserved only for reproducing past results
+
+**a. Status MUST be explicit**  
+Each version MUST declare a status in the registry.
+
+**b. Stability invariant**  
+For each `dgp_id`, there MUST be **0 or 1** stable versions.  
+More than one stable version per DGP is forbidden.
+
+**c. Default fallback behavior**  
+When a user requests a DGP without specifying a version:
+
+1. If a **stable** version exists → use the **highest semantic version** among those with status `stable`.  
+2. If no stable version exists →  
+   - use the highest-versioned `experimental` entry, and  
+   - emit a warning.  
+3. If neither exists → error.
+
+Semantic versioning MUST use a deterministic parser; malformed semver MUST error.
+
+**d. Warning protocol**  
+If the selected version is `deprecated` or `invalidated`, the system MUST emit a **loud warning**, including:
+
+- dgp_id  
+- version  
+- status  
+- rationale (mandatory for deprecated/invalidated)  
+- date of status change (if present)
+
+Warnings may be silenced **only if the caller explicitly sets `quiet = TRUE` on the public API**.  
+Internal runners MUST NOT silence warnings.
+
+---
+
+## **VII.5. Registry Governance**
+
+A DGP registry MUST be maintained, containing one row per `(dgp_id, version)`.  
+It MUST satisfy the following invariants:
+
+**a. Registry invariants**
+
+For every row:
+1. `dgp_id` MUST be a valid identifier.  
+2. `version` MUST follow semantic versioning.  
+3. `status ∈ {stable, experimental, deprecated, invalidated}`.  
+4. Exactly one row per `(dgp_id, version)`.  
+5. At most one stable version per `dgp_id`.  
+6. If a lookup requests a `dgp_id` absent from the registry → error.  
+7. Every versioned row MUST include:  
+   - a callable generator  
+   - a human-readable `description`  
+   - a `rationale` for deprecated/invalidated entries  
+   - optional provenance metadata  
+
+Malformed semver MUST be rejected at validation time.
+
+**b. Mixed-version warning**  
+If stable versions of a `dgp_id` span multiple design-spec lines, a warning MUST be issued.  
+Mixed spec lines among **non-stable** versions are informational only.
+
+**c. Deterministic resolution**  
+When `version = NULL`, resolution MUST follow:
+
+1. Filter by `status` (stable → experimental → error).  
+2. If multiple candidates remain:  
+   - choose the highest semantic version.  
+3. If semantic versions tie or cannot be parsed:  
+   - error.
+
+No implicit “latest” behavior is permitted outside these rules.
+
+**d. Registry is the source of truth**  
+All DGP selection and execution MUST occur via the registry.  
+Direct calls to versioned DGP functions by external code are discouraged but not forbidden; however, runners MUST always resolve via the registry.
+
+---
+
+## **VII.6. Provenance and Backwards Reproducibility**
+
+**a. Immutable historical binding**  
+Every experiment MUST record `(dgp_id, version)` permanently and unambiguously.
+
+**b. Replaying past runs**  
+Users MUST be able to reproduce any historical run exactly by invoking the recorded `(dgp_id, version)`, regardless of later changes.
+
+**c. Preservation of invalidated versions**  
+Invalidated versions MUST NOT be deleted.  
+They MUST remain executable for auditability and replication of historical results.
+
+---
+
+## **VII.7. Interaction With Other Articles**
+
+This Article complements:
+
+- **Article I – Truth**  
+  by preventing silent drift in the structural data-generating equations.
+
+- **Article II – Frozen Logic**  
+  by providing structured immutability rather than informal expectations.
+
+- **Article VI – Provenance**  
+  by ensuring that results can always be traced back to the exact code that generated them.
+
+Together, these Articles enforce the scientific guarantees required of CausalStress.
+
+---
+
+## **VII.8. Enforcement**
+
+Violations of this Article MUST trigger:
+
+- hard registry validation errors (VII.5.a)  
+- resolution-time errors (VII.5.c)  
+- or loud warnings (VII.4.d)
+
+Compliance MUST be enforced continuously by automated tests.
+

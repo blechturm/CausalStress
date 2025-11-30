@@ -44,7 +44,7 @@ test_that("cs_get_estimator returns a valid descriptor for oracle_att", {
   expect_equal(desc$source, "core")
 
   dgp_desc <- cs_get_dgp("synth_baseline")
-  dgp      <- dgp_desc$generator(n = 200, seed = 123L)
+  dgp      <- dgp_desc$generator[[1]](n = 200, seed = 123L)
   df <- dgp$df
 
   est <- desc$generator(df = df, tau = cs_tau_oracle, config = list())
@@ -75,7 +75,7 @@ test_that("cs_get_estimator returns a valid descriptor for ipw_att", {
   expect_equal(desc$source, "core")
 
   dgp_desc <- cs_get_dgp("synth_baseline")
-  dgp      <- dgp_desc$generator(n = 200, seed = 42L)
+  dgp      <- dgp_desc$generator[[1]](n = 200, seed = 42L)
   df <- dgp$df
 
   est <- desc$generator(df = df, tau = cs_tau_oracle, config = list())
