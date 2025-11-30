@@ -9,13 +9,16 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
   fig.path = "man/figures/README-",
-  out.width = "100%"
+  out.width = "100%",
+  echo = FALSE,
+  message = FALSE,
+  warning = FALSE
 )
 ```
 
 # CausalStress
 
-> **⚠️ Early Access (v0.1.1)**\
+> **⚠️ Early Access (v0.1.2)**\
 > CausalStress is currently in **Alpha**.\
 > The **architecture is stable and fully tested**, but the **DGP and Estimator libraries are minimal** in this release.\
 > We encourage experimentation, but **do not use for production research** until v0.2.0.
@@ -30,6 +33,9 @@ It enforces strict *Constitutional Guarantees* to ensure:
 -   crash resilience
 
 even as estimators and DGPs grow increasingly complex.
+
+> **Note:** v0.1.x is **serial-only**.  
+> Parallel execution is scheduled for **v0.2.0**.  
 
 ------------------------------------------------------------------------
 
@@ -272,22 +278,27 @@ This ensures **fairness, reproducibility, and no leakage** across languages.
 
 ------------------------------------------------------------------------
 
-# Parallelization (Constitutional Requirement)
+# Parallelization
 
-Parallel execution is explicitly part of the Constitution (Article V: *Computational Safety*).
+CausalStress defines, in the Constitution (Article V), how **parallel execution must behave once implemented**.
+These rules govern thread safety, deterministic RNG behavior, and protection against race conditions.
 
-**Why not in the MVP?**\
-Parallelism touches:
+However:
 
--   RNG determinism\
--   Progress bars\
--   Atomic writes\
--   Resume logic\
--   Future cluster safety
+> **v0.1.x is strictly serial-only.**  
+> The parallel rules are *normative*, not currently active.
 
-Now that all foundations are stable, parallelization is coming in **v0.2.0**.
+Parallel execution affects:
+- RNG determinism across processes  
+- Atomic persistence and crash recovery  
+- Progress signaling  
+- Resume logic stability  
+- Interactions with estimator thread settings  
 
-Planned API:
+Because these pieces are foundational, parallelism will be introduced carefully in **v0.2.0**, fully compliant with Article V.
+
+
+### Planned API (v0.2.0)
 
 ```{r, eval = FALSE}
 library(future)
@@ -298,7 +309,7 @@ with_progress({
 })
 ```
 
-Thanks to atomic seeds, this is **race-free, deterministic, and resume-safe**.
+Parallel execution will be **deterministic, race-free, and resume-safe** once implemented.
 
 ------------------------------------------------------------------------
 
@@ -317,6 +328,6 @@ vignette("from-run-to-history", package = "CausalStress")
 
 If you use CausalStress, please cite:
 
-> Thomasberger, M. (2025). *CausalStress: A Rules based Framework for Causal Benchmarking.* R package version 0.1.0.
+> Thomasberger, M. (2025). *CausalStress: A rigorous benchmarking framework built on a Constitutional architecture.* R package version 0.1.0.
 
 \`\`\`

@@ -15,7 +15,7 @@
 | **`synth_overlap_stressed`** | Linear | Linear | Gaussian | Severe Overlap ($p \to 0/1$) |
 | **`synth_tilt_mild`** | Linear | Linear | Gaussian | Covariate Shift |
 | **`synth_placebo_*`** | Varies | Constant ($0$) | Varies | Gatekeeper (False Positives) |
-| **`synth_kang_schafer`**   | Linear in latent $Z$ | Constant ($0$)     | Gaussian         | Severe OR/PS misspec. (Kang–Schafer) |
+| **`synth_placebo_kang_schafer`**   | Linear in latent $Z$ | Constant ($0$)     | Gaussian         | Severe OR/PS misspec. (Kang–Schafer) |
 | **`synth_hd_sparse_plm`**  | Sparse linear $g(X)$ | Constant ($1.0$)   | Gaussian         | High-dim sparse nuisance (DML)        |
 
 

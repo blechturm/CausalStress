@@ -1,20 +1,24 @@
-This is **Version 1.7.0 (Immutable Gold Standard)**.
+# CAUSALSTRESS CONSTITUTION
 
-This version is the "pedant-proof" final authority. It locks down the exact QST grid rows, standardizes Confidence Interval mechanics for the Gatekeeper, and explicitly bans "ghost variation" from system-level R settings.
+**Version:** 1.7.2  
+**Date:** 2025-11-30  
+**Status:** Ratified (Stabilized Protocol)
 
-### File: `CAUSALSTRESS_CONSTITUTION.md`
-
-\`\`\`markdown \# CAUSALSTRESS CONSTITUTION
-
-**Version:** 1.7.0\
-**Date:** 2025-11-28\
-**Status:** Ratified (Immutable Gold Standard)
-
-------------------------------------------------------------------------
+---
 
 ## Preamble
 
-`CausalStress` is a scientific instrument, not just a software library. To ensure that benchmarks remain comparable across time, machines, and estimators, this Constitution defines the invariant laws of the framework. Code contributions that violate these articles must be rejected.
+`CausalStress` is a scientific instrument, not merely a software library.  
+This Constitution codifies the *normative, versioned rules* that ensure 
+benchmarks remain comparable across time, machines, and estimator implementations.
+
+The Constitution is **stable but not frozen**:  
+patch-level revisions MAY clarify intent, tighten definitions, or correct ambiguities,  
+but MUST NOT change the semantic meaning of any article without a *major* version bump.
+
+All contributors must treat this document as the supreme authority.  
+Any code proposal that violates it must be rejected.
+
 
 ------------------------------------------------------------------------
 
@@ -22,11 +26,22 @@ This version is the "pedant-proof" final authority. It locks down the exact QST 
 
 To prevent ambiguity between "Signal" and "Noise," all Synthetic DGPs must adhere to the **Two-Tier Truth Contract**.
 
-### Section 1.1: Structural ATT
+### Section 1.1: Interpretation
+
+Where ambiguity exists, **the strictest interpretation prevails**, 
+favoring reproducibility, transparency, and estimator safety.
+
+### Section 1.2: Authority to Define DGPs
+
+Only the core maintainers may define new DGP IDs.  
+Community contributions MUST pass constitutional validation 
+and MUST be versioned according to Article II.
+
+### Section 1.3: Structural ATT
 
 The Average Treatment Effect on the Treated (ATT) is defined strictly on the **noise-free structural component**. $$ATT_{true} = \frac{1}{N_{treated}} \sum_{i: W_i=1} \mathbb{E}[Y_1 - Y_0 \mid X_i]$$ \* **Constraint:** For Synthetic DGPs, the structural treatment effect $\tau(X)$ MUST be a deterministic measurable function of covariates $X$ only. It MUST NOT depend on treatment assignment $W$, propensity $p(X)$, or realized sample noise. \* **Prohibition:** Truth must never be calculated as the sample mean of realized differences ($y_1 - y_0$) in heavy-tailed settings. \* **Real Data:** For Real DGPs, Truth must be defined externally (e.g., Experimental Benchmark) and never regenerated.
 
-### Section 1.2: Distributional QST
+### Section 1.4: Distributional QST
 
 The Quantile Shift (QST) is defined on the **full realized distribution** (Signal + Noise). $$QST(u) = Q_u(Y_1 \mid W=1) - Q_u(Y_0 \mid W=1)$$ \* **Grid:** The canonical truth grid is invariant: $u \in \{0.01, 0.02, \dots, 0.99\}$. \* **Computation:** For synthetic data, this **must** be computed via Oracle Monte Carlo ($N=10^6$) or analytic derivation matching oracle precision ($< 10^{-5}$). The oracle size $N=10^6$ is immutable for v1.x.y. \* **Independence:** Noise MUST be drawn independently across units unless explicitly specified.
 
@@ -90,7 +105,50 @@ All DGPs in the Placebo Suite must enforce the **Sharp Null Hypothesis** via pat
 
 ### Section 4.2: The Gatekeeper Protocol
 
-Any estimator that claims "robustness" must implicitly pass the Placebo Suite. \* **Criterion:** Estimators must not systematically report non-zero effects. \* **Definition:** "Systematic Deviation" is defined as rejecting the Sharp Null (Confidence Interval excludes 0) in \>10% of runs at significance level $\alpha = 0.05$. \* **Application:** This test applies to the ATT estimate. If the estimator also supplies CIs for QST, the test applies to the Mean Absolute Bias across quantiles. \* **Requirement:** Estimators incapable of producing Confidence Intervals cannot be validated by the Gatekeeper and are marked "Unverified."
+The Gatekeeper enforces that any estimator claiming robustness must
+demonstrate the ability to preserve the Sharp Null across the entire
+Placebo Suite.
+
+#### 4.2.1 Purpose
+The Gatekeeper detects estimators that hallucinate treatment effects in
+the absence of signal—typically due to model misspecification,
+overfitting to noise variance, or unstable weighting.
+
+#### 4.2.2 Criterion for Passing
+An estimator **passes** the Gatekeeper if it preserves the Sharp Null within nominal error rates:
+
+-   **For ATT (Scalar):**
+    The 95% confidence interval for the ATT must include zero in at least **90% of independent runs**, across the full Placebo Suite.
+
+-   **For QST (Distributional):**
+    The estimator must not systematically "hallucinate" structure where none exists.
+    A single run is considered a **Null Rejection** if the zero line ($y=0$) is excluded from the pointwise 95% confidence interval for **more than 10% of the grid points** (i.e., $>9$ out of 99 $\tau$ values).
+    
+    The rate of **Null Rejection runs** must not exceed **10%** across the Placebo Suite.
+
+*(Rationale: This "10/10 Rule" accounts for the multiple-testing inherent in checking 99 quantiles with pointwise intervals, preventing false failures while strictly penalizing estimators that detect broad "tilts" or "shifts" in placebo data.)*
+
+#### 4.2.3 Requirements
+- The Gatekeeper test **applies only to estimators that produce
+  confidence intervals** (via bootstrap or a declared alternative).
+- Estimators **MUST** declare their confidence-interval methodology in
+  `meta$ci_type`.
+- Estimators without confidence intervals are labeled **“Unverified”**
+  rather than failing.
+
+#### 4.2.4 Enforcement
+- Failing an individual placebo DGP does *not* constitute failure.
+- Systematic deviation—defined as violating the thresholds in 4.2.2—is a
+  **constitutional failure**.
+- Estimators failing the Gatekeeper MUST be marked as **Non-Robust** in
+  the registry.
+
+#### 4.2.5 Scope
+These rules apply **exclusively** to ATT and QST estimands defined in
+Article I.  
+They do not constrain heterogeneous-effect estimators or real-data
+estimators whose target estimands are not placebo-evaluatable.
+
 
 ------------------------------------------------------------------------
 
@@ -102,6 +160,9 @@ Any estimator that claims "robustness" must implicitly pass the Placebo Suite. \
 -   **Estimator Responsibility:**
     -   If `config$num_threads == 1`, the Estimator **MUST** restrict internal parallelism to 1 thread.
     -   If `config$num_threads > 1`, the Estimator **MAY** use up to that many threads.
+
+- This article specifies how parallel execution MUST behave when implemented.
+v0.1.x implements only serial execution
 
 ### Section 5.2: The Granularity Rule
 

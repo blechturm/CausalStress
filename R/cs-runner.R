@@ -51,15 +51,7 @@ cs_run_single <- function(
   true_att  <- dgp$true_att
 
   oracle_allowed <- isTRUE(est_desc$oracle) || isTRUE(config$use_oracle)
-  if (!oracle_allowed) {
-    drop_cols <- c("y0", "y1", "p", "structural_te")
-    keep <- setdiff(names(df_raw), drop_cols)
-    df_run <- df_raw[, keep, drop = FALSE]
-    attr(df_run, "structural_te") <- NULL
-    attr(df_run, "params") <- NULL
-  } else {
-    df_run <- df_raw
-  }
+  df_run <- cs_airlock(df_raw, oracle_allowed = oracle_allowed)
 
   # Run estimator
   res <- tryCatch(
@@ -266,6 +258,24 @@ cs_run_seeds <- function(
             "results__dgp={dgp_id}__est={estimator_id}__n={n}__seed={s}"
           )
           cached <- pins::pin_read(board, name)
+          has_ci <- function(run_row) {
+            n_ok <- tryCatch(run_row$n_boot_ok, error = function(...) NA)
+            lo <- tryCatch(run_row$att_ci_lo, error = function(...) NA)
+            hi <- tryCatch(run_row$att_ci_hi, error = function(...) NA)
+            if (is.null(lo) || is.null(hi)) return(FALSE)
+            if (is.na(n_ok) || n_ok == 0L) return(FALSE)
+            if (all(is.na(lo)) || all(is.na(hi))) return(FALSE)
+            TRUE
+          }
+          if (isTRUE(bootstrap) && B > 0 && !has_ci(cached)) {
+            stop(
+              "Existing run found for this (dgp_id, estimator_id, n, seed) ",
+              "but it was computed without bootstrap CIs, while you requested ",
+              "bootstrap = TRUE, B = ", B, ". Use a fresh board or set ",
+              "skip_existing = FALSE to recompute.",
+              call. = FALSE
+            )
+          }
           return(cs_result_to_row(cached))
         }
       }
@@ -292,4 +302,16 @@ cs_run_seeds <- function(
   } else {
     run_block()
   }
+}
+
+#' Run a campaign of seeds for a single DGP–estimator pair
+#'
+#' `cs_run_campaign()` is an alias for [cs_run_seeds()] kept for compatibility
+#' with design documents and early drafts of the API.
+#'
+#' @inheritParams cs_run_seeds
+#' @return A tibble of runs, identical to [cs_run_seeds()].
+#' @export
+cs_run_campaign <- function(...) {
+  cs_run_seeds(...)
 }
