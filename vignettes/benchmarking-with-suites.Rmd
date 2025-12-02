@@ -1,0 +1,136 @@
+---
+title: "Benchmarking with Suites and Visualization"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Benchmarking with Suites and Visualization}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 4
+)
+```
+
+## Introduction
+
+`CausalStress` now provides high-level **Suites** and plotting helpers so you can
+run a curated set of DGPs with a single call and immediately visualize the
+results. This vignette shows how to:
+
+1. Discover and run suites.
+2. Persist results to a pins board.
+3. Visualize placebo performance with the gatekeeper plot.
+4. Inspect runtime metadata for quick performance diagnostics.
+
+We keep the example lightweight so it is fast to run in vignette builds.
+
+```{r}
+library(CausalStress)
+library(dplyr)
+library(ggplot2)
+library(pins)
+
+# Use a temporary board for this session
+board <- pins::board_temp()
+```
+
+## 1. The Suite Concept
+
+A **suite** is a named collection of DGP IDs. You can inspect the suite registry
+and query a specific suite. The `"placebo"` suite is defined dynamically to
+include every DGP whose ID contains `"placebo"`.
+
+```{r}
+# List available suites (compact view)
+cs_suite_registry() %>%
+  select(suite_id, description)
+
+# Retrieve the placebo suite members
+cs_get_suite("placebo")
+```
+
+## 2. Running a Suite
+
+Run an entire suite with `cs_run_suite()`. We keep the configuration small for
+speed: three seeds, `n = 200`, and a modest bootstrap (`B = 30`). Results are
+pinned automatically so you can resume or audit later.
+
+```{r}
+placebo_runs <- cs_run_suite(
+  suite_id      = "placebo",
+  estimator_ids = c("lm_att", "ipw_att"),
+  n             = 200,
+  seeds         = 1:3,
+  bootstrap     = TRUE,
+  B             = 30,
+  board         = board,
+  skip_existing = TRUE
+)
+
+# Flatten to a tidy tibble
+placebo_tidy <- cs_tidy(placebo_runs)
+```
+
+## 3. Gatekeeper Plot for Placebos
+
+The gatekeeper plot highlights whether estimators stay near zero on sharp-null
+DGPs. Blue (TRUE) means the ATT CI covers zero; red (FALSE) means failure.
+
+```{r}
+p_gate <- cs_plot_placebo(placebo_tidy) +
+  ggtitle("Gatekeeper Plot: Placebo Suite")
+
+p_gate
+```
+
+You can create additional visuals. For example, ATT error distributions:
+
+```{r}
+p_att <- cs_plot_att_error(placebo_tidy) +
+  ggtitle("ATT Error by Estimator (Placebo Suite)")
+
+p_att
+```
+
+## 4. Runtime Metadata
+
+Runners now record timing information per run. You can inspect these columns in
+the tidy output to spot slow estimators or DGPs.
+
+```{r}
+placebo_tidy %>%
+  select(dgp_id, estimator_id, seed,
+         run_time_dgp, run_time_est, run_time_total) %>%
+  arrange(desc(run_time_total))
+```
+
+`run_time_dgp` captures DGP generation time, `run_time_est` covers estimator
+execution, and `run_time_total` is the full runtime for the seed. All times are
+in seconds.
+
+## 5. Gatekeeper Summary
+
+To quickly assess placebo performance, use `cs_summarise_gatekeeper()`. It
+computes coverage rates per estimator and pinpoints specific placebo DGPs that
+fall below a coverage threshold (default 0.90).
+
+```{r}
+gate <- cs_summarise_gatekeeper(placebo_runs, threshold = 0.90)
+
+gate$verdict    # estimator-level pass/fail
+gate$culprits   # specific placebo DGPs below threshold
+```
+
+## 6. Next Steps
+
+- Try other suites such as `"stress"` or `"signal"`.
+- Increase `seeds`, `n`, or `B` for more rigorous campaigns.
+- Use `cs_audit(board)` to review provenance, fingerprints, and git hashes for
+  your stored runs.
+
+Happy benchmarking!

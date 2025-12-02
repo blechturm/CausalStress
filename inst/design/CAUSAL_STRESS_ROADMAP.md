@@ -86,6 +86,10 @@ with_progress({
 
 -   Optional: `cs_with_progress(expr)` convenience wrapper.
 
+-   Campaign probes (post-v0.2):
+    -   `campaign_test()`: run small, downsampled subsets of planned grids to validate configs without heavy cost.
+    -   `campaign_cost_estimator()`: use recorded run_time meta (DGP / estimator / bootstrap, pin I/O) to estimate total campaign cost on current hardware.
+
 ------------------------------------------------------------------------
 
 ## 4. Manifest / Provenance Helpers (v0.2.x+)
@@ -144,7 +148,10 @@ cs_register_estimator(
         -   airlock behavior,
         -   how `skip_existing` interacts with run config fingerprint,
         -   recommended workflows for large campaigns.
-    -   A minimal **“quickstart” vignette** showing: run, pin, resume, audit, collect, summarise.
+    -   A minimal **"quickstart" vignette** showing: run, pin, resume, audit, collect, summarise.
+-   Planned metadata/provenance doc:
+    -   Document all meta fields written to runs/pins (fingerprints, timing, governance fields, timestamps)
+    -   Location: `inst/design/CAUSAL_STRESS_METADATA.md` (authoritative) plus a short vignette.
 
 ------------------------------------------------------------------------
 

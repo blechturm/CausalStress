@@ -1,4 +1,4 @@
-#' Sign-flip QTE synthetic DGP
+#' Sign-flip QTE synthetic DGP (v1.3.0)
 #'
 #' Generates a synthetic DGP with treatment effect heterogeneity driven by a
 #' sign flip on X1: tau(X) = +1 if X1 > 0, else -1. Noise is Student-t with
@@ -11,7 +11,7 @@
 #' @return A list with components `df`, `true_att`, `true_qst`, and `meta`
 #'   following the synthetic DGP contract.
 #' @export
-dgp_synth_qte1 <- function(n, seed = NULL) {
+dgp_synth_qte1_v130 <- function(n, seed = NULL) {
   if (!is.null(seed)) {
     cs_set_rng(seed)
   }
@@ -63,4 +63,9 @@ dgp_synth_qte1 <- function(n, seed = NULL) {
 
   cs_check_dgp_synthetic(out)
   out
+}
+
+#' @export
+dgp_synth_qte1 <- function(n, seed = NULL) {
+  dgp_synth_qte1_v130(n = n, seed = seed)
 }

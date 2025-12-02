@@ -17,6 +17,9 @@ cs_result_to_row <- function(result) {
     att_ci_hi      = att$ci_hi %||% NA_real_,
     att_covered    = att$boot_covered %||% NA,
     att_ci_width   = att$ci_width %||% NA_real_,
+    run_time_dgp   = meta$run_time_dgp %||% NA_real_,
+    run_time_est   = meta$run_time_est %||% NA_real_,
+    run_time_total = meta$run_time_total %||% NA_real_,
     n_boot_ok      = meta$n_boot_ok %||% 0L,
     estimator_pkgs = meta$estimator_pkgs %||% NA_character_,
     log            = meta$log %||% NA_character_

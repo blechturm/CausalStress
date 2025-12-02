@@ -1,4 +1,4 @@
-#' Placebo heavy-tail synthetic DGP (sharp null)
+#' Placebo heavy-tail synthetic DGP (sharp null, v1.3.0)
 #'
 #' Implements the `synth_placebo_heavytail` design: baseline outcome with
 #' heavy-tailed noise (0.8 N(0,0.5) + 0.2 Cauchy(0,1)) and sharp-null treatment
@@ -9,7 +9,7 @@
 #'
 #' @return A synthetic DGP list with df, true_att, true_qst, meta.
 #' @export
-dgp_synth_placebo_heavytail <- function(n, seed = NULL) {
+dgp_synth_placebo_heavytail_v130 <- function(n, seed = NULL) {
   if (!is.null(seed)) {
     cs_set_rng(seed)
   }
@@ -65,4 +65,9 @@ dgp_synth_placebo_heavytail <- function(n, seed = NULL) {
 
   cs_check_dgp_synthetic(out)
   out
+}
+
+#' @export
+dgp_synth_placebo_heavytail <- function(n, seed = NULL) {
+  dgp_synth_placebo_heavytail_v130(n = n, seed = seed)
 }

@@ -1,0 +1,167 @@
+---
+title: "CausalStress Caching & Resume Guide"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Caching & Resume Guide}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+``` r
+if (!rmarkdown::pandoc_available()) knitr::knit_exit()
+library(CausalStress)
+library(pins)
+```
+
+# The "3 Days of Compute" Nightmare
+
+Imagine this scenario:
+
+You are running a massive simulation campaign. It covers 10,000 seeds and is scheduled to take 3 days on your cluster. At **98% completion**, the power flickers, or R runs out of memory, or the server reboots.
+
+In many packages, you just lost 3 days of work. You have to start over from seed 1.
+
+**In CausalStress, you just run the exact same code again.** The system sees that 9,800 seeds are already safely stored on disk, instantly skips them, and finishes the last 200.
+
+This vignette teaches you how to use **Atomic Persistence** to make your research crash-proof.
+
+# 1. The Mental Model: How it Works
+
+CausalStress doesn't just "save files." It uses a **Fingerprint System** to ensure scientific integrity.
+
+Every time you ask to run a seed, the runner performs a safety check:
+
+1.  **Calculate Fingerprint:** It creates a unique hash based on the *entire* configuration (DGP, Estimator, Sample Size, Bootstrap settings, etc.).
+
+2.  **Check Board:** It looks at your storage location (local folder, S3 bucket, etc.).
+
+3.  **Decide:**
+
+    -   ✅ **Match Found:** It loads the result from disk. **Zero computation.**
+
+    -   ❌ **No Match:** It runs the simulation and saves the result immediately.
+
+This guarantees that you **never lose work** and **never accidentally mix incompatible results** (like mixing runs with `N=500` and `N=1000`).
+
+# 2. Hands-on: The "Crash Test"
+
+Let's simulate a crash to see this in action. First, we need a temporary board to store our results.
+
+```{r}
+library(CausalStress)
+library(pins)
+
+# In a real project, use board_folder("my_experiment_results")
+board <- board_temp()
+```
+
+### Step A: Do some work (and "crash")
+
+We want to run 5 seeds. But imagine our computer crashes after seed 3. We can simulate this by just asking for seeds 1–3.
+
+```{r}
+# Run seeds 1, 2, and 3
+cs_run_seeds(
+  dgp_id       = "synth_baseline",
+  estimator_id = "lm_att",
+  n            = 100,
+  seeds        = 1:3,          # <--- Only doing the first 3
+  board        = board
+)
+
+```
+
+These 3 results are now safely "pinned" to your board.
+
+### Step B: The Resume (The "Free Lunch")
+
+Now, you wake up, realize the job didn't finish, and want to complete the campaign (seeds 1–5). You don't need to figure out which ones are missing. Just **ask for everything** and set `skip_existing = TRUE`.
+
+```{r}
+# Ask for seeds 1 through 5
+system.time({
+  runs <- cs_run_seeds(
+    dgp_id       = "synth_baseline",
+    estimator_id = "lm_att",
+    n            = 100,
+    seeds        = 1:5,          # <--- Asking for the full set
+    board        = board,
+    skip_existing = TRUE         # <--- The magic switch
+  )
+})
+```
+
+**Look at the timing.** The first 3 seeds took **0 seconds** to compute because they were loaded from the cache. Only seeds 4 and 5 were actually calculated.
+
+# 3. The "Paranoid Guardian"
+
+What if you change your mind? Suppose you decide you actually wanted **Bootstrap Confidence Intervals** (`bootstrap = TRUE`).
+
+You might try to "resume" the previous run:
+
+```{r}
+
+  try({
+  cs_run_seeds(
+    dgp_id       = "synth_baseline",
+    estimator_id = "lm_att",
+    n            = 100,
+    seeds        = 1:5,
+    bootstrap    = TRUE,       # <--- CHANGED!
+    B            = 200,
+    board        = board,
+    skip_existing = TRUE
+  )
+})
+```
+
+**CausalStress refuses to run.**
+
+Why? Because the existing results on disk (seeds 1–3) were computed *without* bootstrapping. If we just filled in the gaps, you would end up with a "Frankenstein" dataset where some rows have CIs and others don't.
+
+The error message tells you exactly what happened: **Configuration fingerprint mismatch.**
+
+# 4. Overriding the Guardian
+
+If you *really* want to re-run those seeds with the new settings (Bootstrap = TRUE), you have two choices:
+
+### Option A: Force Overwrite
+
+Use `force = TRUE` (or `skip_existing = FALSE`). This tells CausalStress: *"I know a file exists, but I want to replace it with this new version."*
+
+```{r}
+cs_run_seeds(
+  dgp_id       = "synth_baseline",
+  estimator_id = "lm_att",
+  n            = 100,
+  seeds        = 1:3,
+  bootstrap    = TRUE,
+  B            = 200,
+  board        = board,
+  force        = TRUE        # <--- Overwrite enabled
+)
+```
+
+### Option B: Delete and Start Fresh
+
+If you want to clear out old experiments to avoid confusion, use the deletion helpers:
+
+```{r}
+
+  # Delete a specific result
+cs_delete_result(board, "synth_baseline", "lm_att", n = 100, seed = 1)
+
+# OR: Delete the entire campaign for this estimator
+cs_delete_campaign(board, "synth_baseline", "lm_att")
+```
+
+# Summary: Cheat Sheet
+
+|                                          |                        |
+|------------------------------------------|------------------------|
+| **I want to...**                         | **Argument to use**    |
+| **Run normally** (and save results)      | `board = my_board`     |
+| **Resume** after a crash                 | `skip_existing = TRUE` |
+| **Re-calculate** (overwrite old results) | `force = TRUE`         |
+| **Fix a bug** in my estimator            | `force = TRUE`         |
+| **Check what I have run**                | `cs_audit(board)`      |

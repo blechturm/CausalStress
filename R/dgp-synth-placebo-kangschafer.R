@@ -1,4 +1,4 @@
-#' Kang-Schafer placebo synthetic DGP (sharp null)
+#' Kang-Schafer placebo synthetic DGP (sharp null, v1.4.0)
 #'
 #' Implements the `synth_placebo_kangschafer` design: latent Gaussian covariates
 #' transformed nonlinearly to observed X, linear outcome/propensity in latent Z,
@@ -9,7 +9,7 @@
 #'
 #' @return A synthetic DGP list with df, true_att, true_qst, meta.
 #' @export
-dgp_synth_placebo_kangschafer <- function(n, seed = NULL) {
+dgp_synth_placebo_kangschafer_v140 <- function(n, seed = NULL) {
   if (!is.null(seed)) {
     cs_set_rng(seed)
   }
@@ -64,4 +64,9 @@ dgp_synth_placebo_kangschafer <- function(n, seed = NULL) {
 
   cs_check_dgp_synthetic(out)
   out
+}
+
+#' @export
+dgp_synth_placebo_kangschafer <- function(n, seed = NULL) {
+  dgp_synth_placebo_kangschafer_v140(n = n, seed = seed)
 }

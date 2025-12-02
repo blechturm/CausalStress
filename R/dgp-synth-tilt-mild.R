@@ -1,4 +1,4 @@
-#' Mildly tilted propensity synthetic DGP for CausalStress
+#' Mildly tilted propensity synthetic DGP for CausalStress (v1.3.0)
 #'
 #' Implements the `synth_tilt_mild` design from the DGP registry. Uses the same
 #' outcome and noise as `synth_baseline` but a mildly tilted propensity to
@@ -10,7 +10,7 @@
 #' @return A list with df, true_att, true_qst, and meta following the synthetic
 #'   DGP contract.
 #' @export
-dgp_synth_tilt_mild <- function(n, seed = NULL) {
+dgp_synth_tilt_mild_v130 <- function(n, seed = NULL) {
   if (!is.null(seed)) {
     cs_set_rng(seed)
   }
@@ -62,4 +62,9 @@ dgp_synth_tilt_mild <- function(n, seed = NULL) {
 
   cs_check_dgp_synthetic(out)
   out
+}
+
+#' @export
+dgp_synth_tilt_mild <- function(n, seed = NULL) {
+  dgp_synth_tilt_mild_v130(n = n, seed = seed)
 }

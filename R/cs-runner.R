@@ -1,11 +1,22 @@
 #' Run a single DGP/estimator combination for one seed
 #'
+#' @param dgp_id Character scalar, identifier of the DGP (e.g., "synth_baseline").
+#' @param estimator_id Character scalar, identifier of the estimator (e.g., "lm_att").
+#' @param n Integer sample size for the run.
+#' @param seed Integer seed for reproducibility.
+#' @param version Optional character version string for the DGP. Defaults to latest stable via registry.
+#' @param status Optional status filter for DGP lookup ("stable", "experimental", "deprecated", "invalidated").
+#' @param quiet Logical; if `TRUE`, suppress warnings from DGP lookup (use with
+#'   care—defaults to `FALSE` to honor loud-warning protocol).
 #' @export
 cs_run_single <- function(
   dgp_id,
   estimator_id,
   n,
   seed,
+  version   = NULL,
+  status    = "stable",
+  quiet     = FALSE,
   tau       = cs_tau_oracle,
   bootstrap = FALSE,
   B         = 0L,
@@ -13,6 +24,8 @@ cs_run_single <- function(
   board     = NULL,
   ...
 ) {
+  t_total_start <- Sys.time()
+
   cs_chk_scalar_numeric(n, "n")
   if (n <= 0) {
     rlang::abort(
@@ -41,10 +54,18 @@ cs_run_single <- function(
   }
 
   # Look up DGP + estimator descriptors
-  dgp_desc <- cs_get_dgp(dgp_id)
+  dgp_desc <- cs_get_dgp(
+    dgp_id  = dgp_id,
+    version = version,
+    status  = status,
+    quiet   = quiet
+  )
   est_desc <- cs_get_estimator(estimator_id)
 
-  dgp <- dgp_desc$generator(n = n, seed = seed)
+  dgp_generator <- dgp_desc$generator[[1]]
+  t_dgp_start <- Sys.time()
+  dgp <- dgp_generator(n = n, seed = seed)
+  run_time_dgp <- as.numeric(difftime(Sys.time(), t_dgp_start, units = "secs"))
   cs_check_dgp_synthetic(dgp)
 
   df_raw    <- dgp$df
@@ -52,8 +73,19 @@ cs_run_single <- function(
 
   oracle_allowed <- isTRUE(est_desc$oracle) || isTRUE(config$use_oracle)
   df_run <- cs_airlock(df_raw, oracle_allowed = oracle_allowed)
+  config_fingerprint <- cs_build_config_fingerprint(
+    dgp_id            = dgp_id,
+    estimator_id      = estimator_id,
+    n                 = n,
+    seed              = seed,
+    bootstrap         = bootstrap,
+    B                 = B,
+    oracle            = oracle_allowed,
+    estimator_version = est_desc$version
+  )
 
   # Run estimator
+  t_est_start <- Sys.time()
   res <- tryCatch(
     withCallingHandlers(
       est_desc$generator(
@@ -75,6 +107,7 @@ cs_run_single <- function(
   if (success) {
     cs_check_estimator_output(res, require_qst = est_desc$supports_qst, tau = tau)
   }
+  run_time_est <- as.numeric(difftime(Sys.time(), t_est_start, units = "secs"))
 
   # Extract ATT estimate (works for tibble or list)
   att <- res$att
@@ -157,6 +190,9 @@ cs_run_single <- function(
 
   log_str <- if (length(logs) == 0L) NA_character_ else paste(logs, collapse = "\n")
 
+  # Fresh run timestamp (POSIXct with a tiny jitter to avoid deduplication)
+  ts_now <- Sys.time() + runif(1, 0, 1e-6)
+
   result <- list(
     att = list(
       estimate     = est_att,
@@ -179,7 +215,13 @@ cs_run_single <- function(
       supports_qst   = est_desc$supports_qst,
       estimator_pkgs = estimator_pkgs,
       n_boot_ok      = n_boot_ok,
-      log            = log_str
+      log            = log_str,
+      config_fingerprint = config_fingerprint,
+      timestamp         = ts_now,
+      run_timestamp      = ts_now,
+      run_time_dgp       = run_time_dgp,
+      run_time_est       = run_time_est,
+      run_time_total     = as.numeric(difftime(Sys.time(), t_total_start, units = "secs"))
     )
   )
 
@@ -202,10 +244,16 @@ cs_run_single <- function(
 #' @param n Integer, number of observations to generate per seed.
 #' @param seeds Integer vector of seeds to use. Each seed produces one row
 #'   in the output tibble.
+#' @param version Optional DGP version string; forwarded to [cs_get_dgp()].
+#' @param status Optional DGP status filter; forwarded to [cs_get_dgp()].
 #' @param tau Numeric vector of quantile levels. Passed through to the
 #'   estimator via [cs_run_single()]. Default is [cs_tau_oracle].
 #' @param config List of estimator-specific configuration options. Passed
 #'   through to the estimator via [cs_run_single()].
+#' @param force Logical; if `TRUE`, recompute even when pins exist (alias for
+#'   setting `skip_existing = FALSE`).
+#' @param quiet Logical; if `TRUE`, suppress DGP governance warnings inside
+#'   per-seed runs (use with care; pre-flight still warns once).
 #'
 #' @return A tibble with one row per seed and at least the columns returned
 #'   by [cs_run_single()], including `dgp_id`, `estimator_id`, `n`, `seed`,
@@ -218,13 +266,17 @@ cs_run_seeds <- function(
   estimator_id,
   n,
   seeds,
+  version   = NULL,
+  status    = "stable",
   tau       = cs_tau_oracle,
   bootstrap = FALSE,
   B         = 200L,
   config    = list(),
   board     = NULL,
+  force     = FALSE,
   skip_existing = FALSE,
-  show_progress = TRUE
+  show_progress = TRUE,
+  quiet         = FALSE
 ) {
   if (length(seeds) == 0L) {
     rlang::abort(
@@ -246,18 +298,52 @@ cs_run_seeds <- function(
   }
   seeds <- as.integer(seeds)
 
+  est_desc <- cs_get_estimator(estimator_id)
+
   run_block <- function() {
     p <- progressr::progressor(steps = length(seeds))
+
+    # pre-flight governance warning (once per call)
+    cs_get_dgp(
+      dgp_id  = dgp_id,
+      version = version,
+      status  = status,
+      quiet   = FALSE
+    )
+
+    should_try_cache <- isTRUE(skip_existing) && !isTRUE(force)
 
     rows <- lapply(seeds, function(s) {
       msg <- glue::glue("{dgp_id} | {estimator_id} | seed {s}")
       on.exit(p(message = msg), add = TRUE)
-      if (!is.null(board) && isTRUE(skip_existing)) {
+      if (!is.null(board) && isTRUE(should_try_cache)) {
         if (cs_pin_exists(board, dgp_id, estimator_id, n, s)) {
           name <- glue::glue(
             "results__dgp={dgp_id}__est={estimator_id}__n={n}__seed={s}"
           )
           cached <- pins::pin_read(board, name)
+          stored_fp <- tryCatch(cached$meta$config_fingerprint, error = function(...) NULL)
+          expected_fp <- cs_build_config_fingerprint(
+            dgp_id            = dgp_id,
+            estimator_id      = estimator_id,
+            n                 = n,
+            seed              = s,
+            bootstrap         = bootstrap,
+            B                 = B,
+            oracle            = isTRUE(est_desc$oracle),
+            estimator_version = est_desc$version
+          )
+          if (is.null(stored_fp) || !identical(stored_fp, expected_fp)) {
+            old_txt <- if (is.null(stored_fp)) "missing" else stored_fp
+            stop(
+              "Configuration fingerprint mismatch for ",
+              dgp_id, " x ", estimator_id, " seed ", s, ". ",
+              "(Stored: ", old_txt, ", Current: ", expected_fp, "). ",
+              "To overwrite this run with new settings, set force = TRUE.",
+              call. = FALSE
+            )
+          }
+          tidy_row <- cs_result_to_row(cached)
           has_ci <- function(run_row) {
             n_ok <- tryCatch(run_row$n_boot_ok, error = function(...) NA)
             lo <- tryCatch(run_row$att_ci_lo, error = function(...) NA)
@@ -267,7 +353,7 @@ cs_run_seeds <- function(
             if (all(is.na(lo)) || all(is.na(hi))) return(FALSE)
             TRUE
           }
-          if (isTRUE(bootstrap) && B > 0 && !has_ci(cached)) {
+          if (isTRUE(bootstrap) && B > 0 && !has_ci(tidy_row)) {
             stop(
               "Existing run found for this (dgp_id, estimator_id, n, seed) ",
               "but it was computed without bootstrap CIs, while you requested ",
@@ -276,8 +362,17 @@ cs_run_seeds <- function(
               call. = FALSE
             )
           }
-          return(cs_result_to_row(cached))
+          return(tidy_row)
         }
+      }
+
+      # If we are forcing recompute and a pin exists, delete it to avoid stale metadata
+      if (!is.null(board) && !isTRUE(should_try_cache) &&
+          cs_pin_exists(board, dgp_id, estimator_id, n, s)) {
+        pins::pin_delete(
+          board,
+          glue::glue("results__dgp={dgp_id}__est={estimator_id}__n={n}__seed={s}")
+        )
       }
 
       res <- cs_run_single(
@@ -285,6 +380,9 @@ cs_run_seeds <- function(
         estimator_id = estimator_id,
         n            = n,
         seed         = s,
+        version      = version,
+        status       = status,
+        quiet        = TRUE,
         tau          = tau,
         bootstrap    = bootstrap,
         B            = B,

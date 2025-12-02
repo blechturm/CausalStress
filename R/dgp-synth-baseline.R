@@ -1,4 +1,4 @@
-#' Baseline synthetic DGP for CausalStress
+#' Baseline synthetic DGP for CausalStress (v1.3.0)
 #'
 #' Generates the baseline synthetic DGP as defined in the DGP Registry.
 #'
@@ -11,7 +11,7 @@
 #'   - true_qst: tibble with columns `tau` and `value`
 #'   - meta: list with fields `dgp_id = "synth_baseline"`, `type = "synthetic"`, `structural_te = tau`
 #' @export
-dgp_synth_baseline <- function(n, seed = NULL) {
+dgp_synth_baseline_v130 <- function(n, seed = NULL) {
   if (!is.null(seed)) {
     cs_set_rng(seed)
   }
@@ -60,4 +60,9 @@ dgp_synth_baseline <- function(n, seed = NULL) {
       structural_te = tau
     )
   )
+}
+
+#' @export
+dgp_synth_baseline <- function(n, seed = NULL) {
+  dgp_synth_baseline_v130(n = n, seed = seed)
 }

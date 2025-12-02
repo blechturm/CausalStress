@@ -9,6 +9,9 @@ cs_run_single(
   estimator_id,
   n,
   seed,
+  version = NULL,
+  status = "stable",
+  quiet = FALSE,
   tau = cs_tau_oracle,
   bootstrap = FALSE,
   B = 0L,
@@ -16,6 +19,22 @@ cs_run_single(
   board = NULL,
   ...
 )
+}
+\arguments{
+\item{dgp_id}{Character scalar, identifier of the DGP (e.g., "synth_baseline").}
+
+\item{estimator_id}{Character scalar, identifier of the estimator (e.g., "lm_att").}
+
+\item{n}{Integer sample size for the run.}
+
+\item{seed}{Integer seed for reproducibility.}
+
+\item{version}{Optional character version string for the DGP. Defaults to latest stable via registry.}
+
+\item{status}{Optional status filter for DGP lookup ("stable", "experimental", "deprecated", "invalidated").}
+
+\item{quiet}{Logical; if \code{TRUE}, suppress warnings from DGP lookup (use with
+care—defaults to \code{FALSE} to honor loud-warning protocol).}
 }
 \description{
 Run a single DGP/estimator combination for one seed

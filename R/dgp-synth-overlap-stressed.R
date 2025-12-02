@@ -1,4 +1,4 @@
-#' Overlap-stressed synthetic DGP for CausalStress
+#' Overlap-stressed synthetic DGP for CausalStress (v1.3.0)
 #'
 #' Implements the `synth_overlap_stressed` design from the DGP registry.
 #' Shares covariates, baseline outcome, treatment effect, and Gaussian noise
@@ -15,7 +15,7 @@
 #'   - true_qst: tibble with columns `tau`, `value`
 #'   - meta: list with fields `dgp_id`, `type`, `structural_te`
 #' @export
-dgp_synth_overlap_stressed <- function(n, seed = NULL) {
+dgp_synth_overlap_stressed_v130 <- function(n, seed = NULL) {
   if (!is.null(seed)) {
     cs_set_rng(seed)
   }
@@ -67,4 +67,9 @@ dgp_synth_overlap_stressed <- function(n, seed = NULL) {
 
   cs_check_dgp_synthetic(out)
   out
+}
+
+#' @export
+dgp_synth_overlap_stressed <- function(n, seed = NULL) {
+  dgp_synth_overlap_stressed_v130(n = n, seed = seed)
 }

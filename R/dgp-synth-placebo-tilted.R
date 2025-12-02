@@ -1,4 +1,4 @@
-#' Placebo tilted propensity synthetic DGP (sharp null)
+#' Placebo tilted propensity synthetic DGP (sharp null, v1.3.0)
 #'
 #' Implements the `synth_placebo_tilted` design: baseline outcome/noise with a
 #' stronger propensity tilt and sharp-null treatment effect (Y1 == Y0 pathwise).
@@ -8,7 +8,7 @@
 #'
 #' @return A synthetic DGP list with df, true_att, true_qst, meta.
 #' @export
-dgp_synth_placebo_tilted <- function(n, seed = NULL) {
+dgp_synth_placebo_tilted_v130 <- function(n, seed = NULL) {
   if (!is.null(seed)) {
     cs_set_rng(seed)
   }
@@ -59,4 +59,9 @@ dgp_synth_placebo_tilted <- function(n, seed = NULL) {
 
   cs_check_dgp_synthetic(out)
   out
+}
+
+#' @export
+dgp_synth_placebo_tilted <- function(n, seed = NULL) {
+  dgp_synth_placebo_tilted_v130(n = n, seed = seed)
 }

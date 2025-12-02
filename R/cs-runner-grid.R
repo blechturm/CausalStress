@@ -5,8 +5,16 @@
 #' @param n Integer, sample size per run (same for all combinations).
 #' @param seeds Integer vector of seeds to run for each (DGP, estimator) pair.
 #' @param tau Optional numeric vector of quantile levels (forwarded to cs_run_single()).
+#' @param version Optional DGP version string; forwarded to [cs_get_dgp()].
+#' @param status Optional DGP status filter; forwarded to [cs_get_dgp()].
 #' @param config Optional named list of configuration settings (forwarded to cs_run_single()).
-#'
+#' @param bootstrap Logical, whether to run bootstrap for ATT CIs.
+#' @param B Integer, number of bootstrap replicates.
+#' @param board Optional pins board for persistence.
+#' @param skip_existing Logical, whether to resume from existing pins.
+#' @param force Logical, whether to overwrite existing pins (alias for
+#'   `skip_existing = FALSE`).
+#' 
 #' @return A tibble with one row per (dgp_id, estimator_id, seed) run, including
 #'   all columns from cs_run_single(), and bindable into cs_summarise_runs().
 #' @export
@@ -15,11 +23,14 @@ cs_run_grid <- function(dgp_ids,
                         n,
                         seeds,
                         tau = NULL,
+                        version = NULL,
+                        status = "stable",
                         bootstrap = FALSE,
                         B = 200L,
                         config = list(),
                         board = NULL,
-                        skip_existing = FALSE) {
+                        skip_existing = FALSE,
+                        force = FALSE) {
   cs_chk_scalar_numeric(n, "n")
   if (n <= 0) {
     rlang::abort("`n` must be a positive scalar.", class = "causalstress_contract_error")
@@ -35,7 +46,7 @@ cs_run_grid <- function(dgp_ids,
     rlang::abort("`seeds` must be a non-empty numeric/integer vector.", class = "causalstress_contract_error")
   }
 
-  lapply(dgp_ids, cs_get_dgp)
+  lapply(dgp_ids, cs_get_dgp, version = version, status = status, quiet = FALSE)
   lapply(estimator_ids, cs_get_estimator)
 
   grid <- expand.grid(
@@ -52,11 +63,16 @@ cs_run_grid <- function(dgp_ids,
         estimator_id = grid$estimator_id[i],
         n            = n,
         seeds        = seeds,
+        version      = version,
+        status       = status,
         bootstrap    = bootstrap,
         B            = B,
         config       = config,
         board        = board,
-        skip_existing = skip_existing
+        skip_existing = skip_existing,
+        force         = force,
+        show_progress = FALSE,
+        quiet         = TRUE
       )
     } else {
       cs_run_seeds(
@@ -64,12 +80,17 @@ cs_run_grid <- function(dgp_ids,
         estimator_id = grid$estimator_id[i],
         n            = n,
         seeds        = seeds,
+        version      = version,
+        status       = status,
         tau          = tau,
         bootstrap    = bootstrap,
         B            = B,
         config       = config,
         board        = board,
-        skip_existing = skip_existing
+        skip_existing = skip_existing,
+        force         = force,
+        show_progress = FALSE,
+        quiet         = TRUE
       )
     }
   })
