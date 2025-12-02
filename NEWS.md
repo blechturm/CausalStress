@@ -50,6 +50,13 @@
 -   Reduce `skip_existing` footguns via basic run fingerprinting.
 -   Provide minimal, official support for test suites and basic plots.
 -   Clarify documentation around experimental DGPs and LLM usage.
+-   Record runtime metadata (DGP × estimator × bootstrap) in run results for
+    easier provenance and performance inspection.
+-   Capture additional timings: DGP generation vs estimator time, bootstrap loop
+    overhead, and (optional) pin I/O / batch timings for grid/suite blocks.
+-   Add metadata documentation describing all fields written to results/pins
+    (runtime, fingerprints, governance fields). Likely location: inst/design/
+    or a vignette dedicated to provenance/metadata.
 
 ### Planned Changes (In Scope)
 
