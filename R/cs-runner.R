@@ -24,6 +24,8 @@ cs_run_single <- function(
   board     = NULL,
   ...
 ) {
+  t_total_start <- Sys.time()
+
   cs_chk_scalar_numeric(n, "n")
   if (n <= 0) {
     rlang::abort(
@@ -61,7 +63,9 @@ cs_run_single <- function(
   est_desc <- cs_get_estimator(estimator_id)
 
   dgp_generator <- dgp_desc$generator[[1]]
+  t_dgp_start <- Sys.time()
   dgp <- dgp_generator(n = n, seed = seed)
+  run_time_dgp <- as.numeric(difftime(Sys.time(), t_dgp_start, units = "secs"))
   cs_check_dgp_synthetic(dgp)
 
   df_raw    <- dgp$df
@@ -81,6 +85,7 @@ cs_run_single <- function(
   )
 
   # Run estimator
+  t_est_start <- Sys.time()
   res <- tryCatch(
     withCallingHandlers(
       est_desc$generator(
@@ -102,6 +107,7 @@ cs_run_single <- function(
   if (success) {
     cs_check_estimator_output(res, require_qst = est_desc$supports_qst, tau = tau)
   }
+  run_time_est <- as.numeric(difftime(Sys.time(), t_est_start, units = "secs"))
 
   # Extract ATT estimate (works for tibble or list)
   att <- res$att
@@ -212,7 +218,10 @@ cs_run_single <- function(
       log            = log_str,
       config_fingerprint = config_fingerprint,
       timestamp         = ts_now,
-      run_timestamp      = ts_now
+      run_timestamp      = ts_now,
+      run_time_dgp       = run_time_dgp,
+      run_time_est       = run_time_est,
+      run_time_total     = as.numeric(difftime(Sys.time(), t_total_start, units = "secs"))
     )
   )
 
