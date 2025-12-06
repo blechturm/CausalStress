@@ -3,6 +3,8 @@ cs_result_to_row <- function(result) {
   meta <- result$meta %||% list()
 
   tibble::tibble(
+    success       = meta$success %||% NA,
+    error         = meta$error %||% NA_character_,
     dgp_id         = meta$dgp_id %||% NA_character_,
     estimator_id   = meta$estimator_id %||% NA_character_,
     n              = meta$n %||% NA_integer_,
@@ -22,6 +24,7 @@ cs_result_to_row <- function(result) {
     run_time_total = meta$run_time_total %||% NA_real_,
     n_boot_ok      = meta$n_boot_ok %||% 0L,
     estimator_pkgs = meta$estimator_pkgs %||% NA_character_,
-    log            = meta$log %||% NA_character_
+    log            = meta$log %||% NA_character_,
+    qst            = list(result$qst %||% NULL)
   )
 }

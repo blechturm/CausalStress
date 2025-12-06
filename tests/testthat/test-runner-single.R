@@ -266,6 +266,81 @@ test_that("Running a real DGP does not warn for validated baseline", {
   )
 })
 
+test_that("cs_run_single handles estimator crashes gracefully", {
+  crash_est <- function(df, config = list(), tau = cs_tau_oracle, ...) {
+    stop("Boom")
+  }
+
+  cs_register_estimator(
+    estimator_id  = "crash_est",
+    type          = "test",
+    generator     = crash_est,
+    oracle        = FALSE,
+    supports_qst  = FALSE,
+    version       = "0.0.0",
+    description   = "Crashing estimator for robustness test",
+    source        = "test",
+    requires_pkgs = character(0)
+  )
+
+  res <- cs_run_single(
+    dgp_id       = "synth_baseline",
+    estimator_id = "crash_est",
+    n            = 50,
+    seed         = 123
+  )
+
+  expect_type(res, "list")
+  expect_false(res$meta$success)
+  expect_true(grepl("Boom", res$meta$error))
+
+  row <- cs_result_to_row(res)
+  expect_s3_class(row, "tbl_df")
+  expect_equal(nrow(row), 1L)
+  expect_false(row$success)
+  expect_true(is.na(row$est_att))
+})
+
+test_that("cs_run_single times out long-running estimators", {
+  slow_est <- function(df, config = list(), tau = cs_tau_oracle, ...) {
+    Sys.sleep(2)
+    list(
+      att = list(estimate = 0),
+      qst = NULL,
+      meta = list(estimator_id = "slow_est", oracle = FALSE, supports_qst = FALSE)
+    )
+  }
+
+  cs_register_estimator(
+    estimator_id  = "slow_est",
+    type          = "test",
+    generator     = slow_est,
+    oracle        = FALSE,
+    supports_qst  = FALSE,
+    version       = "0.0.0",
+    description   = "Slow estimator for timeout test",
+    source        = "test",
+    requires_pkgs = character(0)
+  )
+
+  res <- cs_run_single(
+    dgp_id       = "synth_baseline",
+    estimator_id = "slow_est",
+    n            = 50,
+    seed         = 123,
+    max_runtime  = 0.5
+  )
+
+  expect_type(res, "list")
+  expect_false(res$meta$success)
+  expect_true(grepl("Timeout|limit", res$meta$error, ignore.case = TRUE))
+
+  row <- cs_result_to_row(res)
+  expect_s3_class(row, "tbl_df")
+  expect_equal(nrow(row), 1L)
+  expect_false(row$success)
+})
+
 test_that("cs_run_single calculates QST metrics and CIs", {
   est_id <- "mock_qst_est"
   mock_qst_est <- function(df, tau = cs_tau_oracle, config = list(), ...) {

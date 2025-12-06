@@ -16,7 +16,7 @@ License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
-Suggests: testthat (>= 3.0.0), GenGC, grf, pins, knitr, rmarkdown
+Suggests: testthat (>= 3.0.0), GenGC, grf, pins, knitr, rmarkdown, withr
 Config/testthat/edition: 3
-Imports: glue, rlang, progressr, cli, digest, ggplot2, tidyr
+Imports: glue, rlang, progressr, cli, digest, ggplot2, tidyr, furrr, future
 VignetteBuilder: knitr
