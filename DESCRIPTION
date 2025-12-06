@@ -1,31 +1,22 @@
 Package: CausalStress
-Title: CausalStress: A rigorous benchmarking framework built on a Constitutional architecture.
-Version: 0.1.3
-Authors@R: 
-    person("Maximilian", "Thomasberger", , "max@blechturm.com", role = c("aut", "cre"))
-Description: A rigorous framework for benchmarking causal inference estimators under
-    controlled conditions. It implements a "Constitutional" architecture that enforces
-    strict data separation ("Airlocks") between estimators and ground truth, ensuring
-    no data leakage. The package features atomic persistence for crash resilience,
-    provenance tracking via Git hashes, and a standardized interface for comparing
-    estimators across diverse synthetic data-generating processes.
+Title: CausalStress: A rigorous benchmarking framework built on a
+        Constitutional architecture.
+Version: 0.1.4
+Authors@R: person("Maximilian", "Thomasberger", , "max@blechturm.com",
+        role = c("aut", "cre"))
+Description: A rigorous framework for benchmarking causal inference
+        estimators under controlled conditions. It implements a
+        "Constitutional" architecture that enforces strict data
+        separation ("Airlocks") between estimators and ground truth,
+        ensuring no data leakage. The package features atomic
+        persistence for crash resilience, provenance tracking via Git
+        hashes, and a standardized interface for comparing estimators
+        across diverse synthetic data-generating processes.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
-Suggests: 
-    testthat (>= 3.0.0),
-    grf,
-    pins,
-    knitr,
-    rmarkdown
+Suggests: testthat (>= 3.0.0), GenGC, grf, pins, knitr, rmarkdown
 Config/testthat/edition: 3
-Imports: 
-    glue,
-    rlang,
-    progressr,
-    cli,
-    digest,
-    ggplot2,
-    tidyr
+Imports: glue, rlang, progressr, cli, digest, ggplot2, tidyr
 VignetteBuilder: knitr

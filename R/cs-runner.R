@@ -120,9 +120,42 @@ cs_run_single <- function(
   att_error      <- est_att - true_att
   att_abs_error  <- abs(att_error)
 
+  # QST point estimates and truth join
+  qst_df <- NULL
+  if (!is.null(res$qst)) {
+    qst_df <- res$qst
+    if ("value" %in% names(qst_df) && !"estimate" %in% names(qst_df)) {
+      qst_df <- dplyr::rename(qst_df, estimate = value)
+    }
+    if (!"estimate" %in% names(qst_df)) {
+      rlang::abort("qst output must contain `estimate` or `value` column.", class = "causalstress_runner_error")
+    }
+
+    if (!is.null(dgp$true_qst)) {
+      truth_tbl <- dgp$true_qst
+      if ("value" %in% names(truth_tbl)) {
+        truth_tbl <- dplyr::rename(truth_tbl, true = value)
+      }
+      qst_df <- qst_df %>%
+        dplyr::left_join(truth_tbl, by = "tau") %>%
+        dplyr::mutate(
+          error = estimate - true,
+          abs_error = abs(error)
+        )
+    } else {
+      qst_df <- qst_df %>%
+        dplyr::mutate(
+          true = NA_real_,
+          error = NA_real_,
+          abs_error = NA_real_
+        )
+    }
+  }
+
   if (bootstrap) {
     n_obs <- nrow(df_run)
     boot_att <- numeric(B)
+    boot_qst_list <- vector("list", B)
     for (b in seq_len(B)) {
       idx_b <- sample.int(n_obs, size = n_obs, replace = TRUE)
       df_b  <- df_run[idx_b, , drop = FALSE]
@@ -139,16 +172,25 @@ cs_run_single <- function(
         next
       }
       att_b <- if (is.data.frame(res_b$att)) res_b$att[["estimate"]] else res_b$att$estimate
+      qst_b <- res_b$qst
+      if (!is.null(qst_b)) {
+        if ("value" %in% names(qst_b) && !"estimate" %in% names(qst_b)) {
+          qst_b <- dplyr::rename(qst_b, estimate = value)
+        }
+      }
       if (is.finite(att_b)) {
         n_boot_ok <- n_boot_ok + 1L
         boot_att[n_boot_ok] <- att_b
+        if (!is.null(qst_b)) {
+          boot_qst_list[[n_boot_ok]] <- qst_b
+        }
       }
     }
-  if (n_boot_ok > 0L) {
-    boot_att <- boot_att[seq_len(n_boot_ok)]
-    ci_lo_att <- stats::quantile(boot_att, 0.025, na.rm = TRUE)
-    ci_hi_att <- stats::quantile(boot_att, 0.975, na.rm = TRUE)
-    boot_draws <- tibble::tibble(
+    if (n_boot_ok > 0L) {
+      boot_att <- boot_att[seq_len(n_boot_ok)]
+      ci_lo_att <- stats::quantile(boot_att, 0.025, na.rm = TRUE)
+      ci_hi_att <- stats::quantile(boot_att, 0.975, na.rm = TRUE)
+      boot_draws <- tibble::tibble(
         b       = seq_along(boot_att),
         est_att = boot_att
       )
@@ -157,6 +199,26 @@ cs_run_single <- function(
         !is.na(ci_hi_att) &&
         true_att >= ci_lo_att &&
         true_att <= ci_hi_att
+    }
+    if (n_boot_ok > 0L && est_desc$supports_qst && !is.null(qst_df)) {
+      boot_qst <- dplyr::bind_rows(boot_qst_list[seq_len(n_boot_ok)])
+      qst_ci <- boot_qst %>%
+        dplyr::group_by(.data$tau) %>%
+        dplyr::summarise(
+          ci_lo = stats::quantile(estimate, 0.025, na.rm = TRUE),
+          ci_hi = stats::quantile(estimate, 0.975, na.rm = TRUE),
+          .groups = "drop"
+        )
+      qst_df <- qst_df %>%
+        dplyr::left_join(qst_ci, by = "tau") %>%
+        dplyr::mutate(
+          covered = ifelse(
+            is.na(true) | is.na(ci_lo) | is.na(ci_hi),
+            NA,
+            true >= ci_lo & true <= ci_hi
+          ),
+          ci_width = ifelse(is.na(ci_lo) | is.na(ci_hi), NA_real_, ci_hi - ci_lo)
+        )
     }
   }
 
@@ -204,7 +266,7 @@ cs_run_single <- function(
       boot_covered = att_covered,
       ci_width     = if (!is.na(ci_lo_att) && !is.na(ci_hi_att)) ci_hi_att - ci_lo_att else NA_real_
     ),
-    qst        = res$qst %||% NULL,
+    qst        = qst_df %||% NULL,
     boot_draws = boot_draws,
     meta = list(
       dgp_id         = dgp_id,

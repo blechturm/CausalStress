@@ -1,0 +1,83 @@
+---
+title: "Distributional Intelligence: Unmasking Hidden Harm"
+output: rmarkdown::html_vignette
+vignette: >
+  %VignetteIndexEntry{Distributional Intelligence: Unmasking Hidden Harm}
+  %VignetteEngine{knitr::rmarkdown}
+  %VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+library(CausalStress)
+library(dplyr)
+library(ggplot2)
+```
+
+# The Danger of the Net Effect
+
+Policymakers often celebrate a small positive Average Treatment Effect (ATT ≈ 0.10) as success. But a net effect can hide harm: a policy can help some while hurting others just as much. Without distributional intelligence, the victims stay invisible.
+
+# The Hidden Reality: The S-Curve DGP
+
+`dgp_synth_qte1` encodes this trap. Half the treated units experience **-1**; the other half experience **+1**. A slight selection tilt makes the ATT positive, but the lower quantiles are harmed.
+
+```{r generate-data}
+set.seed(42)
+dgp <- dgp_synth_qte1(n = 2000)
+head(dgp$df)
+```
+
+# Baseline vs Distributional Estimators
+
+## OLS (ATT-only, hides harm)
+```{r run-ols}
+res_ols <- cs_run_single(
+  dgp_id       = "synth_qte1",
+  estimator_id = "lm_att",
+  n            = 2000,
+  seed         = 1L,
+  bootstrap    = TRUE,
+  B            = 100
+)
+```
+
+## GenGC (distributional, reveals S-curve)
+```{r run-gengc, eval=requireNamespace("GenGC", quietly = TRUE)}
+res_gengc <- cs_run_single(
+  dgp_id       = "synth_qte1",
+  estimator_id = "gengc",
+  n            = 2000,
+  seed         = 1L,
+  bootstrap    = TRUE,
+  B            = 100
+)
+```
+
+## The numbers
+```{r compare-att, eval=requireNamespace("GenGC", quietly = TRUE)}
+c(ols_att = res_ols$att$estimate, gengc_att = res_gengc$att$estimate)
+```
+
+OLS reports a small positive ATT, masking the negative effects in the lower tail. GenGC provides the full curve.
+
+# Visual Proof: The Blue Band
+
+```{r plot-qst, eval=requireNamespace("GenGC", quietly = TRUE)}
+qst_df <- dplyr::mutate(res_gengc$qst, dgp_id = "synth_qte1", estimator_id = "gengc")
+cs_plot_qst(qst_df)
+```
+
+The blue ribbon dives below zero at low quantiles—clear evidence of harm—then rises above zero in the upper tail: the S-curve made visible.
+
+# Governance: The Gatekeeper (10/10 Rule)
+
+Gatekeeper guards against false positives: an estimator fails if more than 10% of quantiles exclude zero on placebo data.
+
+```{r gatekeeper, eval=FALSE}
+# Example usage on placebo suite results:
+# placebo_runs <- cs_run_suite("placebo", estimator_ids = c("gengc", "lm_att"), seeds = 1:50)
+# cs_summarise_gatekeeper(placebo_runs)
+```
+
+In practice, run the placebo suite and pass the results to `cs_summarise_gatekeeper()`. Distributional estimators that hallucinate effects will fail the 10/10 rule.

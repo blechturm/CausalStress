@@ -19,26 +19,29 @@ cs_estimator_registry_base <- function() {
   pkg_ver <- as.character(utils::packageVersion("CausalStress"))
 
   tibble::tibble(
-    estimator_id = c("oracle_att", "lm_att", "ipw_att"),
-    type = c("oracle", "gcomp", "ipw"),
+    estimator_id = c("oracle_att", "lm_att", "ipw_att", "gengc"),
+    type = c("oracle", "gcomp", "ipw", "gcomp"),
     generator = list(
       est_oracle_att,
       est_lm_att,
-      est_ipw_att
+      est_ipw_att,
+      est_gengc
     ),
-    oracle = c(TRUE, FALSE, FALSE),
-    supports_qst = c(FALSE, FALSE, FALSE),
-    version = rep(pkg_ver, 3L),
+    oracle = c(TRUE, FALSE, FALSE, FALSE),
+    supports_qst = c(FALSE, FALSE, FALSE, TRUE),
+    version = rep(pkg_ver, 4L),
     description = c(
       "Oracle ATT using structural treatment effects.",
       "Linear outcome regression g-computation ATT estimator.",
-      "Inverse-probability weighted ATT estimator based on logistic propensity."
+      "Inverse-probability weighted ATT estimator based on logistic propensity.",
+      "GenGC distributional estimator (ATT + QST)."
     ),
-    source = c("core", "core", "core"),
+    source = c("core", "core", "core", "optional"),
     requires_pkgs = list(
       character(0),
       character(0),
-      character(0)
+      character(0),
+      "GenGC"
     )
   )
 }

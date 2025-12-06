@@ -265,3 +265,42 @@ test_that("Running a real DGP does not warn for validated baseline", {
     cs_run_single("synth_baseline", "lm_att", n = 10, seed = 1, quiet = FALSE)
   )
 })
+
+test_that("cs_run_single calculates QST metrics and CIs", {
+  est_id <- "mock_qst_est"
+  mock_qst_est <- function(df, tau = cs_tau_oracle, config = list(), ...) {
+    list(
+      att = list(estimate = 0),
+      qst = tibble::tibble(
+        tau = c(0.1, 0.5, 0.9),
+        value = c(1, 2, 3)
+      ),
+      meta = list(estimator_id = est_id, oracle = FALSE, supports_qst = TRUE)
+    )
+  }
+
+  cs_register_estimator(
+    estimator_id  = est_id,
+    type          = "test",
+    generator     = mock_qst_est,
+    oracle        = FALSE,
+    supports_qst  = TRUE,
+    version       = "0.0.0",
+    description   = "Mock QST estimator",
+    source        = "test",
+    requires_pkgs = character(0)
+  )
+
+  res <- cs_run_single(
+    dgp_id       = "synth_baseline",
+    estimator_id = est_id,
+    n            = 150,
+    seed         = 123,
+    tau          = c(0.1, 0.5, 0.9),
+    bootstrap    = TRUE,
+    B            = 30
+  )
+
+  expect_s3_class(res$qst, "tbl_df")
+  expect_true(all(c("ci_lo", "ci_hi", "covered") %in% names(res$qst)))
+})

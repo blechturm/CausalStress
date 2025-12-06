@@ -1,4 +1,10 @@
-﻿# CausalStress 0.1.3
+# CausalStress 0.1.4
+
+- GenGC Integration: Added est_gengc adapter with soft dependency.
+- Distributional Intelligence: Runner now bootstraps QST curves, computes pointwise CIs, and enriches outputs.
+- Governance: Added cs_summarise_qst and implemented the Gatekeeper 10/10 rule for QST (fails if >10% of quantiles exclude zero).
+- Visualization: Updated cs_plot_qst to support confidence bands and truth overlays ("Blue Band").
+# CausalStress 0.1.3
 
 ### Safety & Suites
 -   **Suites Layer:** Introduced `cs_run_suite()` and the internal Suite Registry. Users can now run curated batches (e.g., `suite_id = "placebo"`) with a single command.
