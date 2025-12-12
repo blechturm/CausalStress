@@ -22,6 +22,7 @@ cs_run_single <- function(
   B         = 0L,
   config    = list(),
   board     = NULL,
+  max_runtime = Inf,
   ...
 ) {
   t_total_start <- Sys.time()
@@ -81,19 +82,26 @@ cs_run_single <- function(
     bootstrap         = bootstrap,
     B                 = B,
     oracle            = oracle_allowed,
-    estimator_version = est_desc$version
+    estimator_version = est_desc$version,
+    config            = config,
+    tau               = tau
   )
 
   # Run estimator
   t_est_start <- Sys.time()
+  res <- NULL
   res <- tryCatch(
     withCallingHandlers(
-      est_desc$generator(
-        df     = df_run,
-        config = config,
-        tau    = tau,
-        ...
-      ),
+      {
+        setTimeLimit(cpu = max_runtime, elapsed = max_runtime, transient = TRUE)
+        on.exit(setTimeLimit(cpu = Inf, elapsed = Inf, transient = TRUE), add = TRUE)
+        est_desc$generator(
+          df     = df_run,
+          config = config,
+          tau    = tau,
+          ...
+        )
+      },
       message = collect_msg,
       warning = collect_warn
     ),
@@ -101,20 +109,20 @@ cs_run_single <- function(
       logs <<- c(logs, paste0("[error] ", conditionMessage(e)))
       errors_vec <<- c(errors_vec, conditionMessage(e))
       success <<- FALSE
-      stop(e)
+      list(att = list(estimate = NA_real_), qst = NULL)
     }
   )
-  if (success) {
+  if (isTRUE(success)) {
     cs_check_estimator_output(res, require_qst = est_desc$supports_qst, tau = tau)
   }
   run_time_est <- as.numeric(difftime(Sys.time(), t_est_start, units = "secs"))
 
   # Extract ATT estimate (works for tibble or list)
-  att <- res$att
+  att <- res$att %||% list(estimate = NA_real_)
   if (is.data.frame(att)) {
     est_att <- att[["estimate"]]
   } else {
-    est_att <- att$estimate
+    est_att <- att$estimate %||% NA_real_
   }
 
   att_error      <- est_att - true_att
@@ -269,6 +277,18 @@ cs_run_single <- function(
     qst        = qst_df %||% NULL,
     boot_draws = boot_draws,
     meta = list(
+      success        = isTRUE(success),
+    error          = if (!isTRUE(success)) {
+      if (any(grepl("reached elapsed time limit|reached CPU time limit|reached time limit", errors_vec))) {
+        "Timeout reached"
+      } else if (length(errors_vec) == 0L) {
+        NA_character_
+      } else {
+        paste(errors_vec, collapse = "; ")
+      }
+    } else {
+      NA_character_
+    },
       dgp_id         = dgp_id,
       estimator_id   = estimator_id,
       n              = as.integer(n),
@@ -278,6 +298,8 @@ cs_run_single <- function(
       estimator_pkgs = estimator_pkgs,
       n_boot_ok      = n_boot_ok,
       log            = log_str,
+      dgp_params         = list(n = n, seed = seed),
+      estimator_params   = config,
       config_fingerprint = config_fingerprint,
       timestamp         = ts_now,
       run_timestamp      = ts_now,
@@ -338,7 +360,10 @@ cs_run_seeds <- function(
   force     = FALSE,
   skip_existing = FALSE,
   show_progress = TRUE,
-  quiet         = FALSE
+  quiet         = FALSE,
+  max_runtime   = Inf,
+  parallel      = FALSE,
+  staging_dir   = NULL
 ) {
   if (length(seeds) == 0L) {
     rlang::abort(
@@ -360,51 +385,41 @@ cs_run_seeds <- function(
   }
   seeds <- as.integer(seeds)
 
+  if (!is.null(staging_dir) && !is.null(board)) {
+    dir.create(staging_dir, recursive = TRUE, showWarnings = FALSE)
+    # Recovery: gather any staged files from prior crash before running new seeds
+    cs_gather_results(board, staging_dir)
+  }
+
   est_desc <- cs_get_estimator(estimator_id)
 
-  run_block <- function() {
-    p <- progressr::progressor(steps = length(seeds))
-
-    # pre-flight governance warning (once per call)
-    cs_get_dgp(
-      dgp_id  = dgp_id,
-      version = version,
-      status  = status,
-      quiet   = FALSE
-    )
+  run_one_seed <- function(s, p = NULL) {
+    tick <- function() {
+      if (!is.null(p)) p(message = glue::glue("seed {s} done"))
+    }
+    on.exit(tick(), add = TRUE)
 
     should_try_cache <- isTRUE(skip_existing) && !isTRUE(force)
-
-    rows <- lapply(seeds, function(s) {
-      msg <- glue::glue("{dgp_id} | {estimator_id} | seed {s}")
-      on.exit(p(message = msg), add = TRUE)
-      if (!is.null(board) && isTRUE(should_try_cache)) {
-        if (cs_pin_exists(board, dgp_id, estimator_id, n, s)) {
-          name <- glue::glue(
-            "results__dgp={dgp_id}__est={estimator_id}__n={n}__seed={s}"
-          )
-          cached <- pins::pin_read(board, name)
-          stored_fp <- tryCatch(cached$meta$config_fingerprint, error = function(...) NULL)
-          expected_fp <- cs_build_config_fingerprint(
-            dgp_id            = dgp_id,
-            estimator_id      = estimator_id,
-            n                 = n,
-            seed              = s,
-            bootstrap         = bootstrap,
-            B                 = B,
-            oracle            = isTRUE(est_desc$oracle),
-            estimator_version = est_desc$version
-          )
-          if (is.null(stored_fp) || !identical(stored_fp, expected_fp)) {
-            old_txt <- if (is.null(stored_fp)) "missing" else stored_fp
-            stop(
-              "Configuration fingerprint mismatch for ",
-              dgp_id, " x ", estimator_id, " seed ", s, ". ",
-              "(Stored: ", old_txt, ", Current: ", expected_fp, "). ",
-              "To overwrite this run with new settings, set force = TRUE.",
-              call. = FALSE
-            )
-          }
+    if (!is.null(board) && isTRUE(should_try_cache)) {
+      if (cs_pin_exists(board, dgp_id, estimator_id, n, s)) {
+        name <- glue::glue(
+          "results__dgp={dgp_id}__est={estimator_id}__n={n}__seed={s}"
+        )
+        cached <- pins::pin_read(board, name)
+        stored_fp <- tryCatch(cached$meta$config_fingerprint, error = function(...) NULL)
+        expected_fp <- cs_build_config_fingerprint(
+          dgp_id            = dgp_id,
+          estimator_id      = estimator_id,
+          n                 = n,
+          seed              = s,
+          bootstrap         = bootstrap,
+          B                 = B,
+          oracle            = isTRUE(est_desc$oracle),
+          estimator_version = est_desc$version,
+          config            = config,
+          tau               = tau
+        )
+        if (!is.null(stored_fp) && identical(stored_fp, expected_fp)) {
           tidy_row <- cs_result_to_row(cached)
           has_ci <- function(run_row) {
             n_ok <- tryCatch(run_row$n_boot_ok, error = function(...) NA)
@@ -425,42 +440,92 @@ cs_run_seeds <- function(
             )
           }
           return(tidy_row)
+        } else {
+          old_txt <- if (is.null(stored_fp)) "missing" else stored_fp
+          stop(
+            "Configuration fingerprint mismatch for ",
+            dgp_id, " x ", estimator_id, " seed ", s, ". ",
+            "(Stored: ", old_txt, ", Current: ", expected_fp, "). ",
+            "To overwrite this run with new settings, set force = TRUE or skip_existing = FALSE.",
+            call. = FALSE
+          )
         }
       }
+    }
 
-      # If we are forcing recompute and a pin exists, delete it to avoid stale metadata
-      if (!is.null(board) && !isTRUE(should_try_cache) &&
-          cs_pin_exists(board, dgp_id, estimator_id, n, s)) {
-        pins::pin_delete(
-          board,
-          glue::glue("results__dgp={dgp_id}__est={estimator_id}__n={n}__seed={s}")
-        )
-      }
-
-      res <- cs_run_single(
-        dgp_id       = dgp_id,
-        estimator_id = estimator_id,
-        n            = n,
-        seed         = s,
-        version      = version,
-        status       = status,
-        quiet        = TRUE,
-        tau          = tau,
-        bootstrap    = bootstrap,
-        B            = B,
-        config       = config,
-        board        = board
+    # If we are forcing recompute and a pin exists, delete it to avoid stale metadata
+    if (!is.null(board) && !isTRUE(should_try_cache) &&
+        cs_pin_exists(board, dgp_id, estimator_id, n, s)) {
+      pins::pin_delete(
+        board,
+        glue::glue("results__dgp={dgp_id}__est={estimator_id}__n={n}__seed={s}")
       )
-      cs_result_to_row(res)
-    })
+    }
 
-    tibble::as_tibble(do.call(rbind, rows))
+    worker_board <- if (isTRUE(parallel) || !is.null(staging_dir)) NULL else board
+
+    res <- CausalStress::cs_run_single(
+      dgp_id       = dgp_id,
+      estimator_id = estimator_id,
+      n            = n,
+      seed         = s,
+      version      = version,
+      status       = status,
+      quiet        = TRUE,
+      tau          = tau,
+      bootstrap    = bootstrap,
+      B            = B,
+      config       = config,
+      board        = worker_board,
+      max_runtime  = max_runtime
+    )
+    if (!is.null(staging_dir)) {
+      cs_stage_result(res, staging_dir)
+    } else if (!is.null(board)) {
+      cs_pin_write(board = board, result = res)
+    }
+    cs_result_to_row(res)
+  }
+
+  # pre-flight governance warning (once per call)
+  cs_get_dgp(
+    dgp_id  = dgp_id,
+    version = version,
+    status  = status,
+    quiet   = FALSE
+  )
+
+  run_with_progress <- function() {
+    p <- if (isTRUE(show_progress)) progressr::progressor(steps = length(seeds) + 1L) else NULL
+
+    if (isTRUE(parallel)) {
+      rows <- furrr::future_map(
+        sample(seeds),
+        run_one_seed,
+        p = p,
+        .options  = furrr::furrr_options(seed = TRUE, packages = "CausalStress"),
+        .progress = FALSE
+      )
+      out <- tibble::as_tibble(dplyr::bind_rows(rows))
+    } else {
+      rows <- lapply(seeds, function(s) run_one_seed(s, p = p))
+      out <- tibble::as_tibble(do.call(rbind, rows))
+    }
+
+    if (!is.null(staging_dir) && !is.null(board)) {
+      gathered <- cs_gather_results(board, staging_dir)
+      if (!is.null(p)) p(message = glue::glue("Gathered {gathered} staged results"))
+    } else if (!is.null(p)) {
+      p(message = "Gathering results...")
+    }
+
+    dplyr::arrange(out, seed)
   }
 
   if (isTRUE(show_progress)) {
-    progressr::with_progress(run_block())
+    progressr::with_progress(run_with_progress())
   } else {
-    run_block()
+    run_with_progress()
   }
 }
 
@@ -472,6 +537,3 @@ cs_run_seeds <- function(
 #' @inheritParams cs_run_seeds
 #' @return A tibble of runs, identical to [cs_run_seeds()].
 #' @export
-cs_run_campaign <- function(...) {
-  cs_run_seeds(...)
-}

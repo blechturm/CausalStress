@@ -19,3 +19,24 @@ Implements the \code{synth_placebo_kangschafer} design: latent Gaussian covariat
 transformed nonlinearly to observed X, linear outcome/propensity in latent Z,
 and sharp-null treatment effect (Y1 == Y0 pathwise).
 }
+\details{
+\strong{Goal:} Canonical misspecification trap (Kang–Schafer) adapted as a sharp-null placebo; any nonzero effect indicates functional-form failure.
+
+\strong{Description:} Data are generated from latent Gaussian covariates \eqn{Z}, but the analyst only observes nonlinear transforms \eqn{X = f(Z)}. True outcome regression and propensity are linear in \eqn{Z} yet become severely misspecified when fit linearly in the observed \eqn{X}. Treatment effect is zero pathwise.
+
+\strong{Generative structure:}
+\itemize{
+\item \strong{Latent covariates (unobserved):} \eqn{Z = (Z_1, Z_2, Z_3, Z_4)^\top \sim \mathcal{N}_4(0, I_4)}.
+\item \strong{Observed covariates (returned):}
+\deqn{X_1 = \exp(Z_1/2),\quad X_2 = \frac{Z_2}{1 + \exp(Z_1)} + 10,}
+\deqn{X_3 = (Z_1 Z_3 / 25 + 0.6)^3,\quad X_4 = (Z_2 + Z_4 + 20)^2.}
+\item \strong{Propensity (in \eqn{Z}):} \eqn{p(Z) = \mathrm{expit}(-Z_1 + 0.5 Z_2 - 0.25 Z_3 - 0.1 Z_4)}, with \eqn{W \sim \mathrm{Bernoulli}(p(Z))}.
+\item \strong{Baseline outcome (in \eqn{Z}):} \deqn{\mu_0(Z) = 210 + 27.4 Z_1 + 13.7 Z_2 + 13.7 Z_3 + 13.7 Z_4,}
+\eqn{Y_0 = \mu_0(Z) + \varepsilon}, \eqn{\varepsilon \sim \mathcal{N}(0,1)}.
+\item \strong{Treatment effect (sharp null):} \eqn{\tau(Z) \equiv 0}, so \eqn{Y_1 = Y_0} and \eqn{Y = Y_0}.
+}
+
+\strong{Returned fields:} \code{df} contains \code{y}, \code{w}, \code{y0}, \code{y1}, \code{p}, \code{structural_te}, \code{X1}–\code{X4}; \code{structural_te} is all zeros; \code{true_att = 0}; \code{true_qst} is identically zero on \code{cs_tau_oracle()}.
+
+\strong{Challenge:} Severe outcome and propensity misspecification in observed \eqn{X}-space; belongs in the placebo suite.
+}

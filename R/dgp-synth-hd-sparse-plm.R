@@ -4,6 +4,23 @@
 #' correlated Gaussian covariates (p = 50) with sparse linear outcome and
 #' propensity, constant ATT tau = 1.
 #'
+#' @details
+#' \strong{Goal:} High-dimensional sparse nuisance setting for modern ML estimators (DML, R-learner, causal forests, GenGC).
+#'
+#' \strong{Description:} Partially linear model with \eqn{X \in \mathbb{R}^{50}}, sparse linear outcome regression and sparse logistic propensity, constant treatment effect. Covariates follow a Toeplitz correlation to induce regularization difficulty.
+#'
+#' \strong{Generative structure:}
+#' \itemize{
+#'   \item \strong{Covariates:} \eqn{X \sim \mathcal{N}(0, \Sigma)} with \eqn{\Sigma_{ij} = 0.5^{|i-j|}}, returned as \code{X1}–\code{X50}.
+#'   \item \strong{Outcome regression (sparse):} \eqn{\beta^{(Y)}_1 = \dots = \beta^{(Y)}_5 = 1}, others zero; \eqn{\mu_0(X) = X^\top \beta^{(Y)}}, \eqn{Y_0 = \mu_0(X) + \varepsilon}, \eqn{\varepsilon \sim \mathcal{N}(0,1)}.
+#'   \item \strong{Treatment effect:} \eqn{\tau(X) \equiv 1.0}, so \eqn{Y_1 = Y_0 + 1}.
+#'   \item \strong{Propensity (sparse):} \eqn{\gamma = (0.5, -0.5, 0.25, -0.25, 0.1, 0,\dots,0)}, \eqn{p(X) = \mathrm{expit}(X^\top \gamma)}, \eqn{W \sim \mathrm{Bernoulli}(p(X))}.
+#' }
+#'
+#' \strong{Returned fields:} `df` includes `y`, `w`, `y0`, `y1`, `p`, `structural_te`, and `X1`–`X50`; `structural_te` is all ones; `true_att = 1.0`; `true_qst` reflects a constant +1 shift on the `cs_tau_oracle()` grid.
+#'
+#' \strong{Challenge:} Correlated, high-dimensional sparse nuisance learning; tests variable selection, regularization bias, and orthogonalization robustness.
+#'
 #' @param n Integer, number of observations.
 #' @param seed Optional seed for reproducibility (passed to `cs_set_rng()`).
 #'

@@ -19,3 +19,8 @@ Implements the \code{synth_placebo_heavytail} design: baseline outcome with
 heavy-tailed noise (0.8 N(0,0.5) + 0.2 Cauchy(0,1)) and sharp-null treatment
 effect (Y1 == Y0 pathwise).
 }
+\details{
+\strong{Placebo contract (sharp null):} \eqn{\tau(X) \equiv 0} and \eqn{Y_1 \equiv Y_0}; \code{structural_te} zeros, \code{true_att = 0}, \code{true_qst} zero on \code{cs_tau_oracle()}.
+
+\strong{Registry nuance (this variant):} Outcome and propensity match \code{synth_baseline}; noise matches \code{synth_heavytail}: \eqn{\varepsilon \sim 0.8 \cdot \mathcal{N}(0, 0.5) + 0.2 \cdot \text{Cauchy}(0, 1)}.
+}

@@ -5,6 +5,19 @@
 #' df = 4 scaled to sigma = 0.5 to induce heavier tails and heterogeneity in
 #' the QST curve.
 #'
+#' @details
+#' \strong{Goal:} Verify detection of distributional heterogeneity.
+#'
+#' \strong{Structure:} Same \eqn{X}, \eqn{\mu_0}, and \eqn{p} as \code{synth_baseline}.
+#'
+#' \strong{Mechanism:} \eqn{\tau(X)} flips sign based on \eqn{X_1}:
+#' \itemize{
+#'   \item \eqn{\tau(X) = +1.0} if \eqn{X_1 > 0}.
+#'   \item \eqn{\tau(X) = -1.0} if \eqn{X_1 \le 0}.
+#' }
+#'
+#' \strong{Noise:} Student-t with \eqn{df = 4}, scaled to \eqn{\sigma = 0.5}.
+#'
 #' @param n Integer, number of observations.
 #' @param seed Optional seed for reproducibility (passed to `cs_set_rng()`).
 #'

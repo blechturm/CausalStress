@@ -13,8 +13,23 @@ cs_summarise_qst <- function(runs) {
     cli::cli_abort("Input `runs` must contain a `qst` list-column.")
   }
 
-  runs %>%
-    tidyr::unnest(.data$qst) %>%
+  df <- runs
+  if ("qst" %in% names(df)) {
+    df <- tidyr::unnest(df, .data$qst, names_repair = "unique")
+    dup_idx <- which(grepl("\\.{2}\\d+$", names(df)))
+    if (length(dup_idx) > 0L) {
+      new_names <- names(df)
+      new_names[dup_idx] <- paste0(
+        "qst_",
+        seq_along(dup_idx),
+        "_",
+        sub("\\.{2}\\d+$", "", new_names[dup_idx])
+      )
+      names(df) <- new_names
+    }
+  }
+
+  df %>%
     dplyr::group_by(.data$dgp_id, .data$estimator_id, .data$n, .data$tau) %>%
     dplyr::summarise(
       mean_bias      = mean(.data$error, na.rm = TRUE),
@@ -24,4 +39,3 @@ cs_summarise_qst <- function(runs) {
       .groups = "drop"
     )
 }
-

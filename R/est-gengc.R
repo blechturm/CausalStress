@@ -39,8 +39,9 @@ est_gengc <- function(df, tau = cs_tau_oracle, config = list()) {
   keep_cols <- setdiff(names(df), drop_cols)
   df_run <- df[, keep_cols, drop = FALSE]
 
-  n_draws   <- if (!is.null(config$n_draws)) config$n_draws else 300
-  num_trees <- if (!is.null(config$num_trees)) config$num_trees else 800
+  n_draws    <- if (!is.null(config$n_draws)) config$n_draws else 300
+  num_trees  <- if (!is.null(config$num_trees)) config$num_trees else 800
+  num_threads <- 1L  # enforce single-threaded execution
 
   formula <- stats::as.formula("y ~ . - w")
 
@@ -51,7 +52,8 @@ est_gengc <- function(df, tau = cs_tau_oracle, config = list()) {
     target     = "both",
     tau_grid   = tau,
     n_draws    = n_draws,
-    num_trees  = num_trees
+    num_trees  = num_trees,
+    num_threads = num_threads
   )
 
   att_hat <- as.numeric(fit$att)
@@ -72,8 +74,9 @@ est_gengc <- function(df, tau = cs_tau_oracle, config = list()) {
       capabilities = c("att", "qst"),
       target_level = "population",
       config       = list(
-        n_draws   = n_draws,
-        num_trees = num_trees
+        n_draws    = n_draws,
+        num_trees  = num_trees,
+        num_threads = num_threads
       ),
       warnings = character(),
       errors   = character(),

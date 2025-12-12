@@ -4,6 +4,17 @@
 #' outcome and noise as `synth_baseline` but a mildly tilted propensity to
 #' induce covariate shift.
 #'
+#' @details
+#' \strong{Goal:} Test basic propensity reweighting under mild covariate shift.
+#'
+#' \strong{Structure:} Outcomes/noise match \code{synth_baseline}.
+#'
+#' \strong{Covariates:} \eqn{X \sim \mathcal{N}(0, I_5)} (global default).
+#'
+#' \strong{Propensity:} \eqn{p(X) = \mathrm{plogis}(0.45 X_1 - 0.3 X_2 - 0.25 X_4)}.
+#'
+#' \strong{Clipping:} None in the DGP; estimators commonly clip to \eqn{[0.05, 0.95]}.
+#'
 #' @param n Integer, number of observations.
 #' @param seed Optional seed for reproducibility (passed to `cs_set_rng()`).
 #'

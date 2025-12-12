@@ -69,3 +69,32 @@ test_that("cs_collect_qst subsets QST-like columns", {
   expect_true(all(needed %in% names(qst)))
   expect_false("other" %in% names(qst))
 })
+
+test_that("collect helpers work on raw run objects", {
+  res <- list(
+    att = list(estimate = 1, true = 0.5, error = 0.5, abs_error = 0.5, ci_lo = NA, ci_hi = NA, boot_covered = NA, ci_width = NA),
+    qst = tibble::tibble(tau = 0.5, estimate = 1),
+    meta = list(dgp_id = "d", estimator_id = "e", n = 10L, seed = 1L, oracle = FALSE, supports_qst = TRUE)
+  )
+
+  qst <- cs_collect_qst(res)
+  expect_s3_class(qst, "tbl_df")
+  expect_true(all(c("dgp_id", "estimator_id", "tau", "estimate") %in% names(qst)))
+})
+
+test_that("cs_collect_qst unnests list-columns", {
+  df <- tibble::tibble(
+    dgp_id = "d",
+    estimator_id = "e",
+    n = 1L,
+    seed = 1L,
+    qst = list(
+      tibble::tibble(tau = c(0.1, 0.9), estimate = c(-1, 1))
+    )
+  )
+
+  out <- cs_collect_qst(df)
+  expect_s3_class(out, "tbl_df")
+  expect_true(nrow(out) > nrow(df))
+  expect_true("tau" %in% names(out))
+})

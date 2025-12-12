@@ -18,3 +18,8 @@ A synthetic DGP list with df, true_att, true_qst, meta.
 Implements the \code{synth_placebo_tilted} design: baseline outcome/noise with a
 stronger propensity tilt and sharp-null treatment effect (Y1 == Y0 pathwise).
 }
+\details{
+\strong{Placebo contract (sharp null):} \eqn{\tau(X) \equiv 0} and \eqn{Y_1 \equiv Y_0}; \code{structural_te} zeros, \code{true_att = 0}, \code{true_qst} zero on \code{cs_tau_oracle()}.
+
+\strong{Registry nuance (this variant):} Outcome and noise match \code{synth_baseline}; propensity is stronger selection: \eqn{p(X) = \mathrm{plogis}(1.0 X_1 + 1.2 X_2)}.
+}

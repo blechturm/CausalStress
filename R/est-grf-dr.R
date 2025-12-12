@@ -54,6 +54,16 @@ est_grf_dr_att <- function(df, config = list(), tau = cs_tau_oracle, ...) {
 
   X <- as.matrix(df[, x_cols, drop = FALSE])
 
+  # Enforce single-threaded execution per Constitution (wide & shallow)
+  # Translate num_threads -> num.threads for grf API and drop the original key.
+  if (!is.null(config$num_threads)) {
+    config$num.threads <- config$num_threads
+    config$num_threads <- NULL
+  }
+  if (is.null(config$num.threads)) {
+    config$num.threads <- 1L
+  }
+
   args <- c(
     list(
       X = X,
@@ -97,6 +107,11 @@ est_grf_dr_att <- function(df, config = list(), tau = cs_tau_oracle, ...) {
   cs_check_estimator_output(res, require_qst = FALSE)
 
   res
+}
+
+#' @export
+est_grf_dr <- function(df, config = list(), tau = cs_tau_oracle, ...) {
+  est_grf_dr_att(df = df, config = config, tau = tau, ...)
 }
 
 #' Register GRF-based ATT estimator in the estimator registry

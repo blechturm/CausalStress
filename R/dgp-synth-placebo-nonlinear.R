@@ -3,6 +3,11 @@
 #' Implements the `synth_placebo_nonlinear` design: nonlinear baseline outcome
 #' with sharp-null treatment effect (Y1 == Y0 pathwise).
 #'
+#' @details
+#' \strong{Placebo contract (sharp null):} \eqn{\tau(X) \equiv 0} and \eqn{Y_1 \equiv Y_0}; `structural_te` zeros, `true_att = 0`, `true_qst` zero on `cs_tau_oracle()`.
+#'
+#' \strong{Registry nuance (this variant):} Baseline outcome \eqn{\mu_0 = \sin(X_1) + \cos(X_2)}; propensity and noise match \code{synth_baseline} (\eqn{p(X) = \mathrm{plogis}(0.5 X_1 - 0.5 X_2)}, \eqn{\varepsilon \sim \mathcal{N}(0, 0.5)}).
+#'
 #' @param n Integer, number of observations.
 #' @param seed Optional seed for reproducibility (passed to `cs_set_rng()`).
 #'

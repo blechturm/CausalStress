@@ -23,3 +23,15 @@ A list with:
 \description{
 Generates the baseline synthetic DGP as defined in the DGP Registry.
 }
+\details{
+\strong{Goal:} Sanity check; the happy path benchmark.
+
+\strong{Structure:}
+\itemize{
+\item \strong{Covariates:} \eqn{X \in \mathbb{R}^5}. Active coordinates: \eqn{X_1, X_2}.
+\item \strong{Baseline outcome:} \eqn{\mu_0(X) = 1 + X_1 + 0.5 X_2}.
+\item \strong{Treatment effect:} \eqn{\tau(X) = 1 + 0.5 X_1}.
+\item \strong{Propensity:} \eqn{p(X) = \mathrm{plogis}(0.5 X_1 - 0.5 X_2)}.
+\item \strong{Noise:} \eqn{\varepsilon \sim \mathcal{N}(0, 0.5)} (standard deviation).
+}
+}

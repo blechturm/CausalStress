@@ -4,6 +4,24 @@
 #' DGP registry. This DGP has nonlinear baseline outcome, constant
 #' treatment effect, and heteroskedastic Gaussian noise.
 #'
+#' @details
+#' \strong{Goal:} Test curve fitting and variance adaptation.
+#'
+#' \strong{Covariates:} \eqn{X \in \mathbb{R}^4}.
+#' \itemize{
+#'   \item \eqn{X_1, X_2 \sim \mathcal{N}(0,1)}.
+#'   \item \eqn{X_3 \sim \mathcal{U}[-2, 2]}.
+#'   \item \eqn{X_4 \sim \mathrm{Bernoulli}(0.4)}.
+#' }
+#'
+#' \strong{Outcome:} \eqn{Y_0 = 1 + 0.8 \sin(X_1) + 0.5 X_2^2 - 0.3 X_4}.
+#'
+#' \strong{Treatment effect:} \eqn{\tau(X) = 1.0} (constant).
+#'
+#' \strong{Noise:} Gaussian with heteroskedastic scale \eqn{\varepsilon \sim \mathcal{N}(0, \sigma(X)^2)} where \eqn{\sigma(X) = 0.3 + 0.2 |X_3|}.
+#'
+#' \strong{Propensity:} \eqn{p(X) = \mathrm{plogis}(0.5 X_1 - 0.5 X_2)}.
+#'
 #' @param n Integer, number of observations.
 #' @param seed Optional seed for reproducibility (passed to `cs_set_rng()`).
 #'

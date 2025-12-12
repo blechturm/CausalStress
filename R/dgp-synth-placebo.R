@@ -4,6 +4,11 @@
 #' zero and the potential outcomes are pathwise identical (Y1 == Y0). This
 #' design is intended for gatekeeper/placebo checks.
 #'
+#' @details
+#' \strong{Placebo contract (sharp null):} \eqn{\tau(X) \equiv 0} and \eqn{Y_1 \equiv Y_0} pathwise; `structural_te` is all zeros, `true_att = 0`, `true_qst` is zero on the `cs_tau_oracle()` grid.
+#'
+#' \strong{Registry nuance (this variant):} Outcome, noise, and propensity match \code{synth_baseline}: \eqn{\mu_0(X) = 1 + X_1 + 0.5 X_2}, \eqn{p(X) = \mathrm{plogis}(0.5 X_1 - 0.5 X_2)}, \eqn{\varepsilon \sim \mathcal{N}(0, 0.5)}.
+#'
 #' @param n Integer, number of observations.
 #' @param seed Optional seed for reproducibility (passed to `cs_set_rng()`).
 #'

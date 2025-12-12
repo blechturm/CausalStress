@@ -6,6 +6,15 @@
 #' heavy-tailed mixture:
 #'   epsilon ~ 0.8 * N(0, 0.5) + 0.2 * Cauchy(0, 1).
 #'
+#' @details
+#' \strong{Goal:} Penalize non-robust loss functions (e.g., L2/MSE).
+#'
+#' \strong{Structure:} Same \eqn{\mu_0}, \eqn{\tau}, and \eqn{p} as \code{synth_baseline}.
+#'
+#' \strong{Noise mixture:} \eqn{\varepsilon \sim 0.8 \cdot \mathcal{N}(0, 0.5) + 0.2 \cdot \text{Cauchy}(0, 1)}.
+#'
+#' \strong{Note:} Variance is undefined; winsorization is forbidden inside the DGP generation.
+#'
 #' @param n Integer, number of observations.
 #' @param seed Optional seed for reproducibility (passed to `cs_set_rng()`).
 #'
