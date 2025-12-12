@@ -82,7 +82,9 @@ cs_run_single <- function(
     bootstrap         = bootstrap,
     B                 = B,
     oracle            = oracle_allowed,
-    estimator_version = est_desc$version
+    estimator_version = est_desc$version,
+    config            = config,
+    tau               = tau
   )
 
   # Run estimator
@@ -360,7 +362,8 @@ cs_run_seeds <- function(
   show_progress = TRUE,
   quiet         = FALSE,
   max_runtime   = Inf,
-  parallel      = FALSE
+  parallel      = FALSE,
+  staging_dir   = NULL
 ) {
   if (length(seeds) == 0L) {
     rlang::abort(
@@ -382,9 +385,20 @@ cs_run_seeds <- function(
   }
   seeds <- as.integer(seeds)
 
+  if (!is.null(staging_dir) && !is.null(board)) {
+    dir.create(staging_dir, recursive = TRUE, showWarnings = FALSE)
+    # Recovery: gather any staged files from prior crash before running new seeds
+    cs_gather_results(board, staging_dir)
+  }
+
   est_desc <- cs_get_estimator(estimator_id)
 
-  run_one_seed <- function(s) {
+  run_one_seed <- function(s, p = NULL) {
+    tick <- function() {
+      if (!is.null(p)) p(message = glue::glue("seed {s} done"))
+    }
+    on.exit(tick(), add = TRUE)
+
     should_try_cache <- isTRUE(skip_existing) && !isTRUE(force)
     if (!is.null(board) && isTRUE(should_try_cache)) {
       if (cs_pin_exists(board, dgp_id, estimator_id, n, s)) {
@@ -401,38 +415,41 @@ cs_run_seeds <- function(
           bootstrap         = bootstrap,
           B                 = B,
           oracle            = isTRUE(est_desc$oracle),
-          estimator_version = est_desc$version
+          estimator_version = est_desc$version,
+          config            = config,
+          tau               = tau
         )
-        if (is.null(stored_fp) || !identical(stored_fp, expected_fp)) {
+        if (!is.null(stored_fp) && identical(stored_fp, expected_fp)) {
+          tidy_row <- cs_result_to_row(cached)
+          has_ci <- function(run_row) {
+            n_ok <- tryCatch(run_row$n_boot_ok, error = function(...) NA)
+            lo <- tryCatch(run_row$att_ci_lo, error = function(...) NA)
+            hi <- tryCatch(run_row$att_ci_hi, error = function(...) NA)
+            if (is.null(lo) || is.null(hi)) return(FALSE)
+            if (is.na(n_ok) || n_ok == 0L) return(FALSE)
+            if (all(is.na(lo)) || all(is.na(hi))) return(FALSE)
+            TRUE
+          }
+          if (isTRUE(bootstrap) && B > 0 && !has_ci(tidy_row)) {
+            stop(
+              "Existing run found for this (dgp_id, estimator_id, n, seed) ",
+              "but it was computed without bootstrap CIs, while you requested ",
+              "bootstrap = TRUE, B = ", B, ". Use a fresh board or set ",
+              "skip_existing = FALSE to recompute.",
+              call. = FALSE
+            )
+          }
+          return(tidy_row)
+        } else {
           old_txt <- if (is.null(stored_fp)) "missing" else stored_fp
           stop(
             "Configuration fingerprint mismatch for ",
             dgp_id, " x ", estimator_id, " seed ", s, ". ",
             "(Stored: ", old_txt, ", Current: ", expected_fp, "). ",
-            "To overwrite this run with new settings, set force = TRUE.",
+            "To overwrite this run with new settings, set force = TRUE or skip_existing = FALSE.",
             call. = FALSE
           )
         }
-        tidy_row <- cs_result_to_row(cached)
-        has_ci <- function(run_row) {
-          n_ok <- tryCatch(run_row$n_boot_ok, error = function(...) NA)
-          lo <- tryCatch(run_row$att_ci_lo, error = function(...) NA)
-          hi <- tryCatch(run_row$att_ci_hi, error = function(...) NA)
-          if (is.null(lo) || is.null(hi)) return(FALSE)
-          if (is.na(n_ok) || n_ok == 0L) return(FALSE)
-          if (all(is.na(lo)) || all(is.na(hi))) return(FALSE)
-          TRUE
-        }
-        if (isTRUE(bootstrap) && B > 0 && !has_ci(tidy_row)) {
-          stop(
-            "Existing run found for this (dgp_id, estimator_id, n, seed) ",
-            "but it was computed without bootstrap CIs, while you requested ",
-            "bootstrap = TRUE, B = ", B, ". Use a fresh board or set ",
-            "skip_existing = FALSE to recompute.",
-            call. = FALSE
-          )
-        }
-        return(tidy_row)
       }
     }
 
@@ -444,6 +461,8 @@ cs_run_seeds <- function(
         glue::glue("results__dgp={dgp_id}__est={estimator_id}__n={n}__seed={s}")
       )
     }
+
+    worker_board <- if (isTRUE(parallel) || !is.null(staging_dir)) NULL else board
 
     res <- CausalStress::cs_run_single(
       dgp_id       = dgp_id,
@@ -457,9 +476,14 @@ cs_run_seeds <- function(
       bootstrap    = bootstrap,
       B            = B,
       config       = config,
-      board        = board,
+      board        = worker_board,
       max_runtime  = max_runtime
     )
+    if (!is.null(staging_dir)) {
+      cs_stage_result(res, staging_dir)
+    } else if (!is.null(board)) {
+      cs_pin_write(board = board, result = res)
+    }
     cs_result_to_row(res)
   }
 
@@ -471,28 +495,37 @@ cs_run_seeds <- function(
     quiet   = FALSE
   )
 
-  if (isTRUE(parallel)) {
-    rows <- furrr::future_map(
-      seeds,
-      run_one_seed,
-      .options  = furrr::furrr_options(seed = TRUE, packages = "CausalStress"),
-      .progress = isTRUE(show_progress)
-    )
-    tibble::as_tibble(dplyr::bind_rows(rows))
-  } else {
-    run_block <- function() {
-      p <- progressr::progressor(steps = length(seeds))
-      rows <- lapply(seeds, function(s) {
-        on.exit(p(message = glue::glue("{dgp_id} | {estimator_id} | seed {s}")), add = TRUE)
-        run_one_seed(s)
-      })
-      tibble::as_tibble(do.call(rbind, rows))
-    }
-    if (isTRUE(show_progress)) {
-      progressr::with_progress(run_block())
+  run_with_progress <- function() {
+    p <- if (isTRUE(show_progress)) progressr::progressor(steps = length(seeds) + 1L) else NULL
+
+    if (isTRUE(parallel)) {
+      rows <- furrr::future_map(
+        sample(seeds),
+        run_one_seed,
+        p = p,
+        .options  = furrr::furrr_options(seed = TRUE, packages = "CausalStress"),
+        .progress = FALSE
+      )
+      out <- tibble::as_tibble(dplyr::bind_rows(rows))
     } else {
-      run_block()
+      rows <- lapply(seeds, function(s) run_one_seed(s, p = p))
+      out <- tibble::as_tibble(do.call(rbind, rows))
     }
+
+    if (!is.null(staging_dir) && !is.null(board)) {
+      gathered <- cs_gather_results(board, staging_dir)
+      if (!is.null(p)) p(message = glue::glue("Gathered {gathered} staged results"))
+    } else if (!is.null(p)) {
+      p(message = "Gathering results...")
+    }
+
+    dplyr::arrange(out, seed)
+  }
+
+  if (isTRUE(show_progress)) {
+    progressr::with_progress(run_with_progress())
+  } else {
+    run_with_progress()
   }
 }
 
@@ -504,6 +537,3 @@ cs_run_seeds <- function(
 #' @inheritParams cs_run_seeds
 #' @return A tibble of runs, identical to [cs_run_seeds()].
 #' @export
-cs_run_campaign <- function(...) {
-  cs_run_seeds(...)
-}

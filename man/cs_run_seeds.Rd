@@ -19,7 +19,10 @@ cs_run_seeds(
   force = FALSE,
   skip_existing = FALSE,
   show_progress = TRUE,
-  quiet = FALSE
+  quiet = FALSE,
+  max_runtime = Inf,
+  parallel = FALSE,
+  staging_dir = NULL
 )
 }
 \arguments{

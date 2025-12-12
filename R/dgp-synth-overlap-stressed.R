@@ -5,6 +5,13 @@
 #' with `synth_baseline`, but uses a sharper propensity to stress overlap:
 #' p = plogis(3 * X1 + 3 * X2).
 #'
+#' @details
+#' \strong{Goal:} Stress-test weighting stability under severe overlap violations.
+#'
+#' \strong{Structure:} Same outcomes/noise as \code{synth_baseline}.
+#'
+#' \strong{Propensity:} \eqn{p(X) = \mathrm{plogis}(3.0 X_1 + 3.0 X_2)}, intentionally pushing probability mass toward \eqn{0} or \eqn{1}.
+#'
 #' @param n Integer, number of observations.
 #' @param seed Optional seed for reproducibility (passed to `cs_set_rng()`).
 #'

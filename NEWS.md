@@ -1,3 +1,12 @@
+# CausalStress 0.1.5
+
+- Parallel execution: Added `parallel=TRUE` support to `cs_run_seeds` and `cs_run_campaign` with future/furrr, plus optional staging_dir for crash-safe runs.
+- Load balancing: Shuffled task ordering and chunked scheduling to reduce idle workers in wide campaigns.
+- Staging & resume: Stage-and-gather workflow for pins boards; improved fingerprint hashing now includes estimator config and tau to avoid stale caches.
+- Progress: Wired progressr into parallel runs for clearer feedback during campaigns.
+- Robustness: Timeout/safety checks in runners; fingerprint mismatch now surfaces clear errors with force/skip overrides.
+
+
 # CausalStress 0.1.4
 
 - GenGC Integration: Added est_gengc adapter with soft dependency.

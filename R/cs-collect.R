@@ -40,7 +40,18 @@ cs_collect_qst <- function(tidy) {
   }
 
   if ("qst" %in% names(tidy)) {
-    tidy <- tidyr::unnest(tidy, cols = c(qst))
+    tidy <- tidyr::unnest(tidy, cols = c(qst), names_repair = "unique")
+    dup_idx <- which(grepl("\\.{2}\\d+$", names(tidy)))
+    if (length(dup_idx) > 0L) {
+      new_names <- names(tidy)
+      new_names[dup_idx] <- paste0(
+        "qst_",
+        seq_along(dup_idx),
+        "_",
+        sub("\\.{2}\\d+$", "", new_names[dup_idx])
+      )
+      names(tidy) <- new_names
+    }
   }
 
   dplyr::select(

@@ -3,6 +3,11 @@
 #' Implements the `synth_placebo_tilted` design: baseline outcome/noise with a
 #' stronger propensity tilt and sharp-null treatment effect (Y1 == Y0 pathwise).
 #'
+#' @details
+#' \strong{Placebo contract (sharp null):} \eqn{\tau(X) \equiv 0} and \eqn{Y_1 \equiv Y_0}; `structural_te` zeros, `true_att = 0`, `true_qst` zero on `cs_tau_oracle()`.
+#'
+#' \strong{Registry nuance (this variant):} Outcome and noise match \code{synth_baseline}; propensity is stronger selection: \eqn{p(X) = \mathrm{plogis}(1.0 X_1 + 1.2 X_2)}.
+#'
 #' @param n Integer, number of observations.
 #' @param seed Optional seed for reproducibility (passed to `cs_set_rng()`).
 #'

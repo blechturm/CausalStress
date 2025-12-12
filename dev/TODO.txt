@@ -1,0 +1,4 @@
+TODO: 
+
+.) validate estimator ID before running a campaign
+.) custom registred estimators have to be propagated to R workers, right it simply does not work in parallel

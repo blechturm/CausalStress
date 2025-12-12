@@ -26,3 +26,8 @@ Generates a placebo DGP where the structural treatment effect is identically
 zero and the potential outcomes are pathwise identical (Y1 == Y0). This
 design is intended for gatekeeper/placebo checks.
 }
+\details{
+\strong{Placebo contract (sharp null):} \eqn{\tau(X) \equiv 0} and \eqn{Y_1 \equiv Y_0} pathwise; \code{structural_te} is all zeros, \code{true_att = 0}, \code{true_qst} is zero on the \code{cs_tau_oracle()} grid.
+
+\strong{Registry nuance (this variant):} Outcome, noise, and propensity match \code{synth_baseline}: \eqn{\mu_0(X) = 1 + X_1 + 0.5 X_2}, \eqn{p(X) = \mathrm{plogis}(0.5 X_1 - 0.5 X_2)}, \eqn{\varepsilon \sim \mathcal{N}(0, 0.5)}.
+}

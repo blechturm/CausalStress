@@ -17,7 +17,11 @@ cs_run_grid(
   config = list(),
   board = NULL,
   skip_existing = FALSE,
-  force = FALSE
+  force = FALSE,
+  max_runtime = Inf,
+  parallel = FALSE,
+  staging_dir = NULL,
+  show_progress = FALSE
 )
 }
 \arguments{

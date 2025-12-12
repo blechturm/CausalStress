@@ -17,6 +17,7 @@ cs_run_single(
   B = 0L,
   config = list(),
   board = NULL,
+  max_runtime = Inf,
   ...
 )
 }

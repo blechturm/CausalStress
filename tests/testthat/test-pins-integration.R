@@ -29,3 +29,29 @@ test_that("cs_run_seeds persists rich results to a pins board", {
   md <- if (!is.null(meta$metadata)) meta$metadata else meta$user
   expect_true("git_hash" %in% names(md))
 })
+
+test_that("Stage & Gather workflow", {
+  skip_if_not_installed("pins")
+  skip_if_not_installed("qs")
+
+  board <- pins::board_temp()
+  staging_dir <- file.path(tempdir(), "cs_stage_demo")
+  dir.create(staging_dir, showWarnings = FALSE, recursive = TRUE)
+
+  res <- cs_run_single(
+    dgp_id       = "synth_baseline",
+    estimator_id = "lm_att",
+    n            = 50,
+    seed         = 123,
+    bootstrap    = FALSE,
+    board        = NULL
+  )
+
+  path <- CausalStress:::cs_stage_result(res, staging_dir)
+  expect_true(file.exists(path))
+
+  gathered <- CausalStress:::cs_gather_results(board, staging_dir)
+  expect_equal(gathered, 1L)
+  expect_false(file.exists(path))
+  expect_true(cs_pin_exists(board, res$meta$dgp_id, res$meta$estimator_id, res$meta$n, res$meta$seed))
+})

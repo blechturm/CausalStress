@@ -4,6 +4,11 @@
 #' heavy-tailed noise (0.8 N(0,0.5) + 0.2 Cauchy(0,1)) and sharp-null treatment
 #' effect (Y1 == Y0 pathwise).
 #'
+#' @details
+#' \strong{Placebo contract (sharp null):} \eqn{\tau(X) \equiv 0} and \eqn{Y_1 \equiv Y_0}; `structural_te` zeros, `true_att = 0`, `true_qst` zero on `cs_tau_oracle()`.
+#'
+#' \strong{Registry nuance (this variant):} Outcome and propensity match \code{synth_baseline}; noise matches \code{synth_heavytail}: \eqn{\varepsilon \sim 0.8 \cdot \mathcal{N}(0, 0.5) + 0.2 \cdot \text{Cauchy}(0, 1)}.
+#'
 #' @param n Integer, number of observations.
 #' @param seed Optional seed for reproducibility (passed to `cs_set_rng()`).
 #'
