@@ -19,7 +19,7 @@ cs_estimator_registry_base <- function() {
   pkg_ver <- as.character(utils::packageVersion("CausalStress"))
 
   tibble::tibble(
-    estimator_id = c("oracle_att", "lm_att", "ipw_att", "gengc", "gengc_dr", "grf_dr"),
+    estimator_id = c("oracle_att", "lm_att", "ipw_att", "gengc", "gengc_dr", "grf_dr_att"),
     type = c("oracle", "gcomp", "ipw", "gcomp", "gcomp", "dr"),
     generator = list(
       est_oracle_att,
@@ -27,7 +27,7 @@ cs_estimator_registry_base <- function() {
       est_ipw_att,
       est_gengc,
       est_gengc_dr,
-      est_grf_dr
+      est_grf_dr_att
     ),
     oracle = c(TRUE, FALSE, FALSE, FALSE, FALSE, FALSE),
     supports_qst = c(FALSE, FALSE, FALSE, TRUE, TRUE, FALSE),

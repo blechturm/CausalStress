@@ -105,7 +105,19 @@ cs_dgp_registry <- function() {
       "1.3.0",
       "1.4.0",
       "1.4.0"
-    )
+    ),
+    tags = purrr::map(dgp_id, function(id) {
+      yaml_path <- system.file("dgp_meta", paste0(id, ".yml"), package = "CausalStress")
+      if (yaml_path == "") {
+        yaml_path <- file.path("inst", "dgp_meta", paste0(id, ".yml"))
+      }
+      if (file.exists(yaml_path)) {
+        meta <- yaml::read_yaml(yaml_path)
+        meta$meta$tags %||% character(0)
+      } else {
+        character(0)
+      }
+    })
   )
 }
 

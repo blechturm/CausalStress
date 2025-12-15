@@ -14,8 +14,13 @@
 cs_summarise_gatekeeper <- function(suite_results, threshold = 0.90) {
   tidy <- cs_tidy(suite_results)
 
+  reg <- cs_dgp_registry()
+  placebo_ids <- reg %>%
+    dplyr::filter(purrr::map_lgl(.data$tags, ~ "placebo" %in% (.x %||% character(0)))) %>%
+    dplyr::pull(.data$dgp_id)
+
   placebo <- tidy %>%
-    dplyr::filter(grepl("placebo", .data$dgp_id))
+    dplyr::filter(.data$dgp_id %in% placebo_ids)
 
   if (nrow(placebo) == 0) {
     cli::cli_warn("No placebo DGPs found in the provided results.")
@@ -76,7 +81,7 @@ cs_summarise_gatekeeper <- function(suite_results, threshold = 0.90) {
 
   if (has_qst) {
     qst_placebo <- suite_results %>%
-      dplyr::filter(grepl("placebo", .data$dgp_id)) %>%
+      dplyr::filter(.data$dgp_id %in% placebo_ids) %>%
       dplyr::filter(!purrr::map_lgl(.data$qst, is.null))
 
     if (nrow(qst_placebo) > 0) {

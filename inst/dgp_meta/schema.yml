@@ -1,0 +1,45 @@
+# Schema defining valid values for stress profile tags
+# This file is the authoritative reference for classification vocabulary
+
+stress_profile_schema:
+  overlap:
+    type: enum
+    values: [none, mild, moderate, severe, extreme]
+    description: "Propensity score overlap stress level"
+
+  noise:
+    type: enum
+    values: [gaussian, heavy, heteroskedastic, bounded]
+    description: "Noise distribution characteristics"
+
+  linearity:
+    type: enum
+    values: [linear, smooth, discontinuous]
+    description: "Outcome surface smoothness"
+
+  effect:
+    type: enum
+    values: [constant, linear, nonlinear, heterogeneous]
+    description: "Treatment effect structure"
+
+  target:
+    type: enum
+    values: [att, qst, both]
+    description: "Primary estimand focus"
+
+difficulty_schema:
+  stars:
+    type: integer
+    range: [1, 5]
+    description: "Estimator challenge difficulty (how hard for methods to get right)"
+    labels:
+      1: "Sanity check (all methods should pass)"
+      2: "Basic stress (exposes simple failures)"
+      3: "Moderate stress (requires proper implementation)"
+      4: "Hard stress (only robust methods succeed)"
+      5: "Extreme stress (frontier/research challenge)"
+
+status_schema:
+  type: enum
+  values: [stable, experimental, deprecated]
+  description: "DGP lifecycle status per Constitution Article VII"

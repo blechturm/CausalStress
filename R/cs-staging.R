@@ -15,9 +15,15 @@ cs_stage_result <- function(result, staging_dir) {
 
 #' Gather staged results and pin them to a board
 #'
-#' @param board A pins board.
-#' @param staging_dir Directory containing staged .qs files.
-#' @return Number of files gathered and pinned.
+#' Reads all staged files (`.qs` format) from a directory (produced by workers
+#' using `cs_stage_result`) and writes them to the central board. This
+#' implements the "Reduce" step of the "Map-Reduce" parallel pattern.
+#'
+#' @param board The target pins board.
+#' @param staging_dir Path to the directory containing worker outputs.
+#'
+#' @return Invisibly, the number of results gathered.
+#' @export
 cs_gather_results <- function(board, staging_dir) {
   files <- list.files(staging_dir, pattern = "\\.qs$", full.names = TRUE)
   if (length(files) == 0L) return(0L)
@@ -27,5 +33,5 @@ cs_gather_results <- function(board, staging_dir) {
     cs_pin_write(board, res)
     unlink(f)
   }
-  length(files)
+  invisible(length(files))
 }

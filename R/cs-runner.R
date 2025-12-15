@@ -117,24 +117,16 @@ cs_run_single <- function(
   }
   run_time_est <- as.numeric(difftime(Sys.time(), t_est_start, units = "secs"))
 
-  # Extract ATT estimate (works for tibble or list)
-  att <- res$att %||% list(estimate = NA_real_)
-  if (is.data.frame(att)) {
-    est_att <- att[["estimate"]]
-  } else {
-    est_att <- att$estimate %||% NA_real_
-  }
+  extracted <- cs_extract_estimator_result(res)
+  est_att <- extracted$att
 
   att_error      <- est_att - true_att
   att_abs_error  <- abs(att_error)
 
   # QST point estimates and truth join
   qst_df <- NULL
-  if (!is.null(res$qst)) {
-    qst_df <- res$qst
-    if ("value" %in% names(qst_df) && !"estimate" %in% names(qst_df)) {
-      qst_df <- dplyr::rename(qst_df, estimate = value)
-    }
+  if (!is.null(extracted$qst)) {
+    qst_df <- extracted$qst
     if (!"estimate" %in% names(qst_df)) {
       rlang::abort("qst output must contain `estimate` or `value` column.", class = "causalstress_runner_error")
     }
@@ -179,13 +171,9 @@ cs_run_single <- function(
         logs <<- c(logs, paste0("[error] bootstrap[", b, "]: ", conditionMessage(attr(res_b, "condition"))))
         next
       }
-      att_b <- if (is.data.frame(res_b$att)) res_b$att[["estimate"]] else res_b$att$estimate
-      qst_b <- res_b$qst
-      if (!is.null(qst_b)) {
-        if ("value" %in% names(qst_b) && !"estimate" %in% names(qst_b)) {
-          qst_b <- dplyr::rename(qst_b, estimate = value)
-        }
-      }
+      extracted_b <- cs_extract_estimator_result(res_b)
+      att_b <- extracted_b$att
+      qst_b <- extracted_b$qst
       if (is.finite(att_b)) {
         n_boot_ok <- n_boot_ok + 1L
         boot_att[n_boot_ok] <- att_b
