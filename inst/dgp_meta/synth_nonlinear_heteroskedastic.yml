@@ -6,8 +6,8 @@ type: "synthetic"
 stress_profile:
   overlap: "moderate"
   noise: "heteroskedastic"
-  linearity: "nonlinear"
-  effect: "constant"
+  linearity: "smooth"
+  effect: "heterogeneous"
   target: "both"
 
 difficulty:
