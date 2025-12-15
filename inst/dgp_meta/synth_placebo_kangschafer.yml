@@ -1,0 +1,17 @@
+dgp_id: "synth_placebo_kangschafer"
+version: "1.4.0"
+status: "experimental"
+type: "synthetic"
+
+stress_profile:
+  overlap: "moderate"
+  noise: "gaussian"
+  linearity: "smooth"
+  effect: "constant"
+  target: "both"
+
+difficulty:
+  stars: 1
+
+meta:
+  tags: ["placebo", "misspecification"]

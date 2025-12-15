@@ -1,0 +1,19 @@
+dgp_id: "synth_baseline"
+version: "1.3.0"
+status: "stable"
+type: "synthetic"
+
+meta:
+  title: "Linear Baseline (Sanity Check)"
+  description: "Linear signal with Gaussian noise"
+  tags: [linear, gaussian, baseline]
+
+stress_profile:
+  overlap: "moderate"
+  noise: "gaussian"
+  linearity: "linear"
+  effect: "linear"
+  target: "both"
+
+difficulty:
+  stars: 1

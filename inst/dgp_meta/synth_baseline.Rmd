@@ -1,0 +1,228 @@
+---
+title: "DGP Dossier: `r params$meta$dgp_id`"
+output: html_document
+params:
+  meta: NULL
+  dgp_id: "synth_baseline"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE,
+  message = FALSE,
+  warning = FALSE
+)
+library(CausalStress)
+library(ggplot2)
+have_kableextra <- requireNamespace("kableExtra", quietly = TRUE)
+if (requireNamespace("patchwork", quietly = TRUE)) {
+  patchwork_available <- TRUE
+} else {
+  patchwork_available <- FALSE
+}
+```
+
+## 1. Identity & Status
+
+```{r meta_table, echo=FALSE, results='asis'}
+stars <- params$meta$difficulty$stars %||% 0
+active_star   <- '<span style="color: #f1c40f;">★</span>'
+inactive_star <- '<span style="color: #e0e0e0;">★</span>'
+difficulty_val <- paste0(
+  strrep(active_star, max(0, stars)),
+  strrep(inactive_star, max(0, 5 - stars)),
+  " (", stars, "/5)"
+)
+prof <- params$meta$stress_profile
+
+get_badge_color <- function(val) {
+  val <- tolower(as.character(val))
+  if (val %in% c("linear", "gaussian", "strong", "high", "easy", "stable", "att")) return("success")
+  if (val %in% c("moderate", "medium", "experimental")) return("warning")
+  if (val %in% c("nonlinear", "heavytail", "heavy", "poor", "severe", "deprecated", "heterogeneous")) return("danger")
+  "secondary"
+}
+
+stress_val <- if (is.null(prof)) {
+  "N/A"
+} else {
+  badge_vec <- mapply(
+    function(k, v) {
+      cls <- get_badge_color(v)
+      sprintf('<span class="badge bg-%s" style="margin-right:4px;">%s: %s</span>', cls, k, v)
+    },
+    names(prof),
+    unlist(prof),
+    USE.NAMES = FALSE
+  )
+  paste0("&nbsp;", paste(badge_vec, collapse = ""))
+}
+
+status_raw <- params$meta$status %||% "N/A"
+status_class <- get_badge_color(status_raw)
+status_val <- sprintf('<span class="badge bg-%s">%s</span>', status_class, status_raw)
+
+version_val <- params$meta$version %||% "N/A"
+dgp_id_val <- params$meta$dgp_id %||% "N/A"
+if (is.character(dgp_id_val)) {
+  dgp_id_val <- dgp_id_val
+}
+
+meta_df <- tibble::tibble(
+  Attribute = c("DGP ID", "Version", "Status", "Difficulty", "Stress Profile"),
+  Value = c(
+    dgp_id_val,
+    version_val,
+    status_val,
+    difficulty_val,
+    stress_val
+  )
+)
+
+knitr::kable(meta_df, format = "html", col.names = NULL, escape = FALSE) %>%
+  {
+    if (have_kableextra) {
+      kableExtra::kable_styling(
+        .,
+        bootstrap_options = c("hover", "condensed"),
+        full_width = TRUE,
+        position = "left"
+      ) %>%
+        kableExtra::column_spec(1, bold = TRUE, width = "150px")
+    } else {
+      .
+    }
+  }
+```
+
+## 2. What This DGP Stresses (Intent)
+
+Baseline sanity check: if an estimator fails here, it is fundamentally broken. Intended to confirm correct implementation under ideal linear, well-behaved conditions.
+
+## 3. Identification Assumptions (Explicit)
+
+-   Selection on observables holds.
+-   Overlap is moderate (propensity bounded).
+-   SUTVA holds.
+
+## 4. Mathematical Specification
+
+Covariates: $X_1, X_2, X_3, X_4, X_5 \sim \mathcal{N}(0, 1)$ independently. Only $X_1, X_2$ drive outcomes and treatment.
+
+**Outcome (control):** $$\mu_0(X) = 1 + X_1 + 0.5 X_2$$
+
+**Propensity:** $$p(X) = \text{expit}(0.5 X_1 - 0.5 X_2)$$
+
+**Treatment effect:** $$\tau(X) = 1 + 0.5 X_1$$
+
+Treated outcome: $Y_1 = Y_0 + \tau(X)$ with Gaussian noise $\varepsilon \sim \mathcal{N}(0, 0.5)$.
+
+## 5. Oracle Truth Definition
+
+-   True ATT is calculated as the sample mean of `structural_te` among treated units.
+-   No Monte Carlo approximation needed for ATT (exact sample truth).
+
+## 6. Visual Diagnostics (n = 5000)
+
+```{r visuals, fig.width=10, fig.height=7}
+set.seed(123)
+dgp <- dgp_synth_baseline(n = 5000, seed = 123)
+df <- dgp$df
+
+p1 <- ggplot(df, aes(x = p, fill = factor(w))) +
+  geom_histogram(alpha = 0.6, bins = 30, position = "identity") +
+  labs(title = "Propensity Distribution (Moderate Overlap)",
+       x = "p(X)", y = "Count", fill = "W") +
+  theme_minimal()
+
+p2 <- ggplot(df, aes(x = X1, y = structural_te)) +
+  geom_point(alpha = 0.3) +
+  geom_smooth(method = "lm", se = TRUE) +
+  labs(title = expression(paste("Treatment Effect: ", tau(X), " = 1 + 0.5·X1")),
+       x = "X1", y = "structural_te") +
+  theme_minimal()
+
+p3 <- ggplot(df, aes(x = X1, y = X2, color = factor(w))) +
+  geom_point(alpha = 0.4) +
+  labs(title = "Covariate Balance", x = "X1", y = "X2", color = "W") +
+  theme_minimal()
+
+# Plot the True QST curve (stored in dgp_viz$true_qst)
+p4 <- ggplot(dgp$true_qst, aes(x = tau, y = value)) +
+  geom_hline(yintercept = 1.0, linetype = "dashed", color = "gray70") + # Mean ATT reference
+  geom_line(color = "#2c3e50", size = 1) +
+  labs(
+    title = "True Quantile Shift (QST)",
+    subtitle = "Solid line: True effect at each quantile | Dashed: Mean ATT",
+    x = "Quantile (tau)",
+    y = "Treatment Effect"
+  ) +
+  theme_minimal()
+
+if (patchwork_available) {
+  library(patchwork)
+  (p1 + p2) / (p3 + p4)
+} else {
+  print(p1)
+  print(p2)
+  print(p3)
+  print(p4)
+}
+```
+
+## 7. Empirical Validation
+
+We expect correctly specified OLS (`lm_att`) and the oracle to be essentially unbiased on this baseline.
+
+```{r empirical, cache=TRUE}
+run_fast <- function(est_id) {
+  cs_run_seeds(
+    dgp_id        = "synth_baseline",
+    estimator_id  = est_id,
+    n             = 5000,
+    seeds         = 1:10,
+    bootstrap     = FALSE,
+    parallel      = FALSE,
+    show_progress = FALSE
+  )
+}
+
+res_lm     <- run_fast("lm_att")
+res_oracle <- run_fast("oracle_att")
+
+summary_tbl <- dplyr::bind_rows(res_lm, res_oracle) %>%
+  cs_tidy() %>%
+  dplyr::group_by(estimator_id) %>%
+  dplyr::summarise(
+    mean_bias = mean(att_error, na.rm = TRUE),
+    rmse      = sqrt(mean(att_error^2, na.rm = TRUE)),
+    .groups   = "drop"
+  )
+
+knitr::kable(summary_tbl, digits = 3, caption = "Empirical validation (n=5000, seeds=1:10)")
+```
+
+## 8. Failure Mode Summary
+
+-   Naive estimators (unadjusted) fail due to confounding.
+-   L2 estimators succeed (linear surface).
+-   Propensity estimators succeed (moderate overlap).
+
+## 9. Implementation Reference
+
+-   Code: `R/dgp-synth-baseline.R` (v1.3.0)
+-   Registry: `cs_dgp_registry()` entry for `synth_baseline`
+-   Oracle: `true_att` computed from `structural_te` among treated
+-   Airlock: oracle columns removed unless explicitly allowed
+
+## 10. Validation Checklist
+
+-   [x] Math matches code
+-   [x] Oracle matches definition
+-   [x] Visual diagnostics show intended properties
+-   [x] Empirical validation (lm_att vs oracle_att) passes
+-   [x] Stress profile/difficulty tags set
+
+## 11. Changelog
+
+-   v1.0 dossier: Initial dossier following Standard Template v1.0

@@ -13,12 +13,7 @@ library(CausalStress)
 library(future)
 library(pins)
 
-Sys.setenv(
-  OMP_NUM_THREADS = 1,
-  MKL_NUM_THREADS = 1,
-  OPENBLAS_NUM_THREADS = 1,
-  VECLIB_MAXIMUM_THREADS = 1
-)
+
 # If you have RhpcBLASctl: RhpcBLASctl::blas_set_num_threads(1)
 
 

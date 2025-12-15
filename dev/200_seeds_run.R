@@ -43,7 +43,7 @@ dgp_ids   <- unique(unlist(lapply(suite_ids, cs_get_suite), use.names = FALSE))
 results <- cs_run_campaign(
   dgp_ids       = dgp_ids,
   estimator_ids = estimator_ids,
-  seeds         = 1:200,
+  seeds         = 1:20,
   n             = 5000,
   bootstrap     = FALSE,  # B ignored when bootstrap = FALSE
   B             = 0,

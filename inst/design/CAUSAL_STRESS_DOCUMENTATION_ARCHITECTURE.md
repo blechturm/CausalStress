@@ -1226,7 +1226,7 @@ results <- cs_run_grid(
 
 ## 11. Benefits Summary
 
-### For Your PhD Defense (Primary Goal)
+### For PhD Defense (Primary Goal)
 ✅ **Specialist validation** - Reviewers can verify DGPs are correctly implemented  
 ✅ **Mathematical transparency** - LaTeX specs show exactly what you're testing  
 ✅ **Visual evidence** - Plots prove stress conditions exist  
@@ -1318,4 +1318,4 @@ Templates will be provided in `inst/templates/`:
 - `dgp_narrative_mvp_template.Rmd` - Math + validation plots only
 - `dgp_narrative_full_template.Rmd` - With pedagogy (future use)
 
-These ensure consistency and make migration fast.
+These ensure consistency and make migration fast. 

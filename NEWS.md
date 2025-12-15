@@ -1,3 +1,50 @@
+# CausalStress 0.1.6
+
+## Major Improvements (Hardening Phase)
+* **RNG Locking:** Implemented strict worker-side RNG enforcement (Constitution Article II).
+* **Robust Bootstrap:** Added tryCatch protection and a 90% success quality gate for CIs.
+* **New Estimators:** Added `bart_att` (BART) and `tmle_att` (TMLE) with soft dependency checks.
+* **Validation:** Added `cs_validate_registry()` tool; verified 12 baseline DGPs.
+
+## Oracle & Truth Generation:
+* Refactor `cs_get_oracle_qst`: Removed "Shadow Library" of duplicate simulators.
+* Implemented "Registry-First" truth generation: Oracle now calls `cs_get_dgp()`.
+* Added recursion guard (cache sentinel) to prevent infinite loops (DGP->Oracle->DGP).
+* Enforced `ORACLE_SEED <- 99999L` to isolate truth generation from user seeds.
+
+## Registry & Metadata:
+* Created YAML sidecars (`inst/dgp_meta/*.yml`) for ALL DGPs (including placebos).
+* Refactored `cs_dgp_registry` to read `tags` dynamically from these YAMLs.
+* Refactored Gatekeeper to filter placebos via metadata tags, not regex.
+* Added `yaml` to Imports.
+
+## Runner & Code Health:
+* Extracted `cs_extract_estimator_result` helper to DRY up `cs_run_single`.
+* Unified result parsing logic for main execution and bootstrap loops.
+* Added `test-integrity-capabilities.R` to prevent Registry/Estimator drift.
+
+## Operational Hygiene:
+* Exported `cs_gather_results` for explicit parallel support.
+* Renamed `dgp-synth-placebo.R` -> `dgp-synth-placebo-tau0.R` (Constitutional fix).
+* Updated .Rbuildignore/.gitignore to exclude sidecar cache artifacts.
+
+
+# CausalStress 0.1.5
+
+## Scientific Safety & Oracle Refactor
+* **Oracle Truth:** Completely refactored `cs_get_oracle_qst` to strictly adhere to the "Single Source of Truth" principle. It now calls the official DGP generators from the Registry (using a reserved seed `99999L`) rather than using a hardcoded "shadow library" of simulators. Implemented a recursion guard to safely handle synthetic DGPs calling the Oracle.
+* **Gatekeeper Robustness:** Eliminated brittle "magic string" matching (regexing "placebo" in filenames). The Gatekeeper now identifies placebo DGPs by querying strict `tags` ("placebo") from the Registry.
+* **Registry-Sidecar Integration:** The DGP Registry now dynamically reads metadata (tags, stress profiles) from immutable YAML sidecars (`inst/dgp_meta/*.yml`) instead of hardcoded lists.
+
+## Operational Hygiene & API
+* **Parallel Staging:** Exported `cs_gather_results()` to the public API to officially support "Stage & Gather" parallel patterns.
+* **Build Artifacts:** configured `.Rbuildignore` and `.gitignore` to exclude machine-specific RMarkdown cache directories (`*_cache`, `*_files`) from the package source.
+* **Constitutional Compliance:** Renamed `dgp-synth-placebo.R` to `dgp-synth-placebo-tau0.R` (and associated tests) to strictly match the DGP ID.
+
+## Internal Code Health
+* **DRY Runner:** Refactored `cs_run_single` to use a unified helper `cs_extract_estimator_result` for parsing estimator outputs, eliminating logic duplication between the main run and the bootstrap loop.
+* **Integrity Tests:** Added `test-integrity-capabilities.R` to enforce that estimator outputs (oracle, QST support) match their Registry declarations.
+
 # CausalStress 0.1.5
 
 - Parallel execution: Added `parallel=TRUE` support to `cs_run_seeds` and `cs_run_campaign` with future/furrr, plus optional staging_dir for crash-safe runs.

@@ -16,6 +16,9 @@ cs_run_one_seed_internal <- function(dgp_id,
                                      parallel = FALSE,
                                      staging_dir = NULL,
                                      p = NULL) {
+  # Phase 1.1: RNG Locking (Constitution Article II) -- enforce deterministic RNG per seed
+  CausalStress::cs_set_rng(seed)
+
   est_desc <- cs_get_estimator(estimator_id)
 
   should_try_cache <- isTRUE(skip_existing) && !isTRUE(force)

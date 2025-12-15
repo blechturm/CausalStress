@@ -7,13 +7,15 @@
 cs_gather_results(board, staging_dir)
 }
 \arguments{
-\item{board}{A pins board.}
+\item{board}{The target pins board.}
 
-\item{staging_dir}{Directory containing staged .qs files.}
+\item{staging_dir}{Path to the directory containing worker outputs.}
 }
 \value{
-Number of files gathered and pinned.
+Invisibly, the number of results gathered.
 }
 \description{
-Gather staged results and pin them to a board
+Reads all staged files (\code{.qs} format) from a directory (produced by workers
+using \code{cs_stage_result}) and writes them to the central board. This
+implements the "Reduce" step of the "Map-Reduce" parallel pattern.
 }

@@ -1,0 +1,53 @@
+---
+title: "DGP Dossier: `r params$meta$dgp_id`"
+output: html_document
+params:
+  meta: NULL
+  dgp_id: "Unknown"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE,
+  message = FALSE,
+  warning = FALSE
+)
+```
+
+## 1. Identity & Status
+
+- **DGP ID:** `r params$meta$dgp_id`
+- **Version:** `r params$meta$version`
+- **Status:** `r params$meta$status`
+- **Difficulty:** `r if (!is.null(params$meta$difficulty$stars)) paste0(strrep("★", params$meta$difficulty$stars), " (", params$meta$difficulty$stars, "/5)") else "N/A"`
+- **Stress profile:** `r if (!is.null(params$meta$stress_profile)) paste(purrr::map_chr(names(params$meta$stress_profile), ~ paste0(.x, " = ", params$meta$stress_profile[[.x]])), collapse = "; ") else "N/A"`
+
+## 2. What This DGP Stresses (Intent)
+<!-- Describe intent -->
+
+## 3. Identification Assumptions (Explicit)
+<!-- List assumptions -->
+
+## 4. Mathematical Specification
+<!-- Provide LaTeX for mu0, tau, p(X), noise -->
+
+## 5. Oracle Truth Definition
+<!-- Define how true quantities are computed -->
+
+## 6. Visual Diagnostics
+<!-- Plots/figures -->
+
+## 7. Empirical Validation
+<!-- Light benchmarks showing expected behavior -->
+
+## 8. Failure Mode Summary
+<!-- Short bullets on which estimators fail/pass and why -->
+
+## 9. Implementation Reference
+<!-- Pointers to code/registry/oracle/airlock nuances -->
+
+## 10. Validation Checklist
+<!-- Checklist of validation items -->
+
+## 11. Changelog
+<!-- Track dossier changes -->
