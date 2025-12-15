@@ -1,3 +1,34 @@
+# CausalStress 0.1.6
+
+## Major Improvements (Hardening Phase)
+* **RNG Locking:** Implemented strict worker-side RNG enforcement (Constitution Article II).
+* **Robust Bootstrap:** Added tryCatch protection and a 90% success quality gate for CIs.
+* **New Estimators:** Added `bart_att` (BART) and `tmle_att` (TMLE) with soft dependency checks.
+* **Validation:** Added `cs_validate_registry()` tool; verified 12 baseline DGPs.
+
+## Oracle & Truth Generation:
+* Refactor `cs_get_oracle_qst`: Removed "Shadow Library" of duplicate simulators.
+* Implemented "Registry-First" truth generation: Oracle now calls `cs_get_dgp()`.
+* Added recursion guard (cache sentinel) to prevent infinite loops (DGP->Oracle->DGP).
+* Enforced `ORACLE_SEED <- 99999L` to isolate truth generation from user seeds.
+
+## Registry & Metadata:
+* Created YAML sidecars (`inst/dgp_meta/*.yml`) for ALL DGPs (including placebos).
+* Refactored `cs_dgp_registry` to read `tags` dynamically from these YAMLs.
+* Refactored Gatekeeper to filter placebos via metadata tags, not regex.
+* Added `yaml` to Imports.
+
+## Runner & Code Health:
+* Extracted `cs_extract_estimator_result` helper to DRY up `cs_run_single`.
+* Unified result parsing logic for main execution and bootstrap loops.
+* Added `test-integrity-capabilities.R` to prevent Registry/Estimator drift.
+
+## Operational Hygiene:
+* Exported `cs_gather_results` for explicit parallel support.
+* Renamed `dgp-synth-placebo.R` -> `dgp-synth-placebo-tau0.R` (Constitutional fix).
+* Updated .Rbuildignore/.gitignore to exclude sidecar cache artifacts.
+
+
 # CausalStress 0.1.5
 
 ## Scientific Safety & Oracle Refactor

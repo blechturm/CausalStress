@@ -1,228 +1,138 @@
-# CausalStress Roadmap
+# CausalStress v1.0.0 Roadmap: The "Wide & Shallow" Path
 
-*(Updated with post-v0.1.2 enhancements and future nice-to-haves)*
+**Current Version:** v0.1.6
+**Target:** v1.0.0 (JSS Submission + 14M Fit Campaign)
+**Timeline:** 4-Week Sprint
+**Philosophy:** Scientific Rigor > Architectural Complexity.
 
-This file documents planned improvements that **do not** block v0.1.2 and are therefore scheduled for **v0.2.x and later**. These items improve robustness, usability, and scientific hygiene, but are not required for the MVP.
+---
 
-------------------------------------------------------------------------
+## 1. The Challenge (Context)
 
-## 1. Run Configuration Fingerprint (Planned for v0.2.x+)
+We are running a massive benchmarking campaign:
+* **Scale:** 14 DGPs × 10 Estimators × 500 Seeds × 200 Bootstraps ≈ **14,000,000 model fits**.
+* **Estimand:** **ATT** (Average Treatment Effect on the Treated) is the sole target unless explicitly stated.
+* **Compute Requirement:** Benchmarks indicate high CPU cost per run. Target hardware is a **64-thread workstation** (or equivalent cluster).
+* **Constraint 1 (Scientific):** Results must be bitwise reproducible across platforms (Constitution Article II).
+* **Constraint 2 (Operational):** Managing 70,000 individual result files causes I/O latency; databases add unnecessary complexity.
+* **Solution:** **Randomized Batching**. We will aggregate results into ~350 batch files (200 runs each) using a deterministic shuffle.
 
-### Current behavior (v0.1.x–v0.1.2)
+---
 
--   `skip_existing = TRUE` checks only for the existence of a matching pin for `(dgp_id, estimator_id, n, seed, oracle)`.
--   It does **not** validate whether pinned results were generated with the same:
-    -   bootstrap settings (`bootstrap`, `B`),
-    -   estimator hyperparameters,
-    -   configuration options,
-    -   tau grid,
-    -   DGP version,
-    -   estimator version.
--   v0.1.2 adds only a **minimal guard**: if the user requests bootstrap but the cached run has no CIs, the runner errors.
+## Phase 1: Hardening (v0.1.6)
+**Goal:** Ensure the instrument is scientifically valid before scaling.
+**Effort:** ~1 Day
 
-### Planned improvement
+### 1.1 Strict RNG Locking (Critical)
+`future` workers can drift in RNG implementation across OSs, violating the "Frozen Logic" clause.
+* **Action:** Add `cs_set_rng(seed)` as the very first line of `cs_run_one_seed_internal`.
+* **Verification:** Bitwise identity test between `plan(sequential)` and `plan(multisession)`.
 
-Introduce a **run configuration fingerprint**:
+### 1.2 Robust Bootstrap
+One singular matrix in bootstrap replicate #199 must not crash the whole seed.
+* **Action:** Wrap estimator calls inside the bootstrap loop with `tryCatch`.
+* **Logic:** If a replicate fails, decrement `n_boot_ok` and continue. Only fail the run if `n_boot_ok < B * 0.9`.
 
--   Every run is associated with a **hash** that encodes all relevant run settings.
--   Stored inside the pinned object as `meta$config_fingerprint`.
--   On resume with `skip_existing = TRUE`, the runner:
-    -   recomputes the fingerprint for the *requested* run,
-    -   compares it to the stored fingerprint.
+### 1.3 Unambiguous Noise Notation
+* **Action:** Update all documentation and the Constitution to explicitly specify "Standard Deviation $\sigma = 0.5$" (vs Variance = 0.25).
 
-**Outcome:**
+---
 
--   If fingerprints match → **safe reuse**
--   If fingerprints differ → **hard error** with a human-readable explanation
+## Phase 2: Validation (v0.1.7)
+**Goal:** Verify the 14 existing DGPs. (No new DGPs).
+**Effort:** ~2 Days
 
-### Rationale
+### 2.1 The DGP Validator Tool
+Create `cs_validate_dgp(dgp_fn)` to automate quality control.
+* **Check 1 (Stability):** Coefficient of Variation of `true_att` across 100 seeds < 5%.
+* **Check 2 (Determinism):** Seed $X$ always produces identical dataframe $Y$.
+* **Check 3 (Contract):** Output format matches Constitution (correct columns, metadata).
+* **Check 4 (Adversarial Sanity):** Run a naive estimator (Difference-in-Means).
+    * *Baseline:* Bias must be reasonable (not massive).
+    * *Placebo:* Estimate must be $\approx 0$.
+    * *Rationale:* Catches "hallucination DGPs" where logic is valid but signal is broken.
 
--   Prevents accidental reuse of incompatible runs.
--   Strengthens reproducibility guarantees.
--   Keeps resume workflow fast while scientifically safe.
+### 2.2 Manual Metadata Review
+* **Decision:** Do not write an automated schema validator.
+* **Action:** Manually review the 14 YAML files in `inst/dgp_meta/`. Ensure tags are consistent (e.g., `heavy_tail` not `heavytail`) and difficulty stars match empirical reality.
 
-``` r
-# (Sketch only)
-cs_build_config_fingerprint <- function(dgp_id, estimator_id, n, seed,
-                                        bootstrap, B, config) {
-  digest::digest(list(
-    dgp_id       = dgp_id,
-    estimator_id = estimator_id,
-    n            = n,
-    seed         = seed,
-    bootstrap    = bootstrap,
-    B            = B,
-    config       = config  # possibly filtered/subset
-  ))
-}
-```
+---
 
-------------------------------------------------------------------------
+## Phase 3: Architecture (v0.1.8)
+**Goal:** Solve the I/O bottleneck using Deterministic Randomized Batching.
+**Effort:** ~2 Days
 
-## 2. Parallel Execution Safety (v0.2.0+)
+### 3.1 The "Batch ID" Strategy
+We replace the "One Pin Per Run" model with "One File Per Batch".
 
--   Not needed in v0.1.x (**serial-only**), but required for proper parallelism.
--   **Planned: Stage-and-Gather pattern:**
-    -   Workers compute locally → controller serializes pins (avoids parallel writes and OS race conditions).
--   Deterministic handling of:
-    -   RNG,
-    -   `progressr` handlers,
-    -   worker-level logs.
+* **Refactor `cs_run_campaign`:**
+    1.  **Expand:** Generate the full task grid (DGP × Est × Seed = 70,000 rows).
+    2.  **Deterministic Shuffle:** `set.seed(campaign_seed); tasks <- tasks[sample(nrow(tasks)), ]`.
+        * *Why:* Ensures Batch 1 always contains the same tasks, enabling resume logic.
+        * *Benefit:* Perfect load balancing (slow/fast tasks mixed).
+    3.  **Chunk:** Assign `batch_id` (1 to 350).
+    4.  **Resume Logic:** If `results/batches/batch_101.qs` exists, skip it.
 
-------------------------------------------------------------------------
+### 3.2 The Batch Runner (`cs_run_batch_internal`)
+Create an internal worker function to handle the chunk.
+* **Input:** Dataframe of 200 tasks.
+* **Process:**
+    * Loop through tasks in memory.
+    * Regenerate DGP for each task (proven cost: <10ms, negligible).
+    * Run Estimator.
+    * `bind_rows()` results into one tibble.
+* **Output:** Atomic write to `results/batches/batch_{id}.qs`.
 
-## 3. Enhanced Progress Handling (v0.1.3 or v0.2.x)
+### 3.3 Filesystem Hygiene
+* **Outcome:** Campaign produces **~350 files** (approx 200-500MB each).
+* **Justification:** Large files are optimized for sequential reads and avoid filesystem fragmentation/inode exhaustion.
+* **Benefit:** Trivial to copy, backup, and list.
 
--   Add explicit documentation for:
+---
 
-``` r
-library(progressr)
-handlers(global = TRUE)
+## Phase 4: Analysis (v0.1.9)
+**Goal:** Aggregate results without a database.
+**Effort:** ~2 Hours
 
-with_progress({
-  cs_run_grid(...)
-})
-```
+### 4.1 The Simple Aggregator
+We do not need DuckDB. We have plenty of RAM for the summary statistics.
 
--   Optional: `cs_with_progress(expr)` convenience wrapper.
+* **Script:** `R/cs-campaign-aggregate.R`
+* **Logic:**
+    1.  List all `*.qs` files in `results/batches/`.
+    2.  Use `purrr::map_dfr` to read and bind them.
+    3.  Select summary columns (Bias, Coverage, RMSE, `n_boot_ok`). Drop raw vectors.
+    4.  Save to `analysis/campaign_results.rds` (~20-50MB).
 
--   Campaign probes (post-v0.2):
-    -   `campaign_test()`: run small, downsampled subsets of planned grids to validate configs without heavy cost.
-    -   `campaign_cost_estimator()`: use recorded run_time meta (DGP / estimator / bootstrap, pin I/O) to estimate total campaign cost on current hardware.
+### 4.2 JSS Figure Generation
+* **Action:** Point `ggplot2` scripts directly at `campaign_results.rds`.
 
-------------------------------------------------------------------------
+---
 
-## 4. Manifest / Provenance Helpers (v0.2.x+)
+## Production: The v1.0.0 Freeze
 
--   Extend provenance tooling with:
-    -   **Manifest view**: aggregated metadata for quick inspection:
-        -   counts by DGP,
-        -   counts by estimator,
-        -   counts by git hash,
-        -   date ranges.
--   Possibly: `cs_manifest(board)` returning a `tibble` summarizing all runs pinned on a board.
+### 5.1 The Freeze Protocol
+Before the campaign starts:
+1.  **Tag:** `git tag v1.0.0`
+2.  **Lock:** Add "FROZEN" comments to `cs_dgp_registry.R`.
+3.  **Docs:** Ensure `NEWS.md` and `README.md` reflect the frozen state.
 
-------------------------------------------------------------------------
+### 5.2 Campaign Execution
+1.  **Hardware:** 64-thread workstation (Threadripper/Epyc) or equivalent HPC node.
+    * *Benchmark:* GRF takes ~1-5s per fit. 14M fits on 16 cores ≈ weeks. 64 threads reduces this to days.
+2.  **Config:** `batch_size = 200`.
+3.  **Command:** `cs_run_campaign(..., skip_existing = TRUE)`.
+4.  **Monitoring:** Count files: `ls results/batches | wc -l`. (Target: ~350).
 
-## 5. Estimator Registry Enhancements (v0.2.x)
+---
 
--   Enforce explicit `capabilities = c("att", "qst")` fields for all estimators.
-    -   Helps with future multi-output estimators.
--   Provide a documented template for user estimators:
+## The "Anti-Roadmap" (What we cut)
+* **No New DGPs:** Pushed to v1.1.0.
+* **No Dashboard:** HTML/Shiny is unnecessary overhead.
+* **No Status YAML:** Avoids race conditions. Filesystem existence is the only truth.
+* **No DuckDB:** `readRDS` is faster and simpler for this data volume.
+* **No Seed Bundling:** Decouples estimators to prevent one crash from killing the whole seed.
 
-``` r
-cs_register_estimator(
-  id = "...",
-  generator = my_fn,
-  version = "0.1.0",
-  capabilities = c("att")
-)
-```
-
--   Encourage user estimators to declare `ci_type` explicitly.
-
-------------------------------------------------------------------------
-
-## 6. DGP / Estimator Version Compatibility Checks (v0.2.x+)
-
--   Extend the fingerprint system or implement lightweight checks to ensure:
-    -   Estimators are not resumed across incompatible `estimator_versions`.
-    -   DGPs are not resumed when DGP logic changes (enforced by version bumps in Constitution).
-
-------------------------------------------------------------------------
-
-## 7. Truth & Oracle System Enhancements (v0.2.x)
-
--   Document `options(causalstress.N_oracle = ...)` as a supported override.
--   Add helper: `cs_show_oracle_cache()` to list stored oracles for debugging.
--   Possibly allow oracle caching to disk if users run many campaigns.
-
-------------------------------------------------------------------------
-
-## 8. Documentation & UX Improvements (v0.1.3–v0.2.x)
-
--   Planned additions:
-    -   Better explanation of:
-        -   progress handlers,
-        -   persistence model,
-        -   airlock behavior,
-        -   how `skip_existing` interacts with run config fingerprint,
-        -   recommended workflows for large campaigns.
-    -   A minimal **"quickstart" vignette** showing: run, pin, resume, audit, collect, summarise.
--   Planned metadata/provenance doc:
-    -   Document all meta fields written to runs/pins (fingerprints, timing, governance fields, timestamps)
-    -   Location: `inst/design/CAUSAL_STRESS_METADATA.md` (authoritative) plus a short vignette.
-
-------------------------------------------------------------------------
-
-## 9. Edge Case Handling (v0.2.x+)
-
--   **Non-git environments:**
-    -   Warn if `git_hash` is `NA`.
--   **SessionInfo size:**
-    -   Consider an opt-out option: `options(causalstress.slim_sessioninfo = TRUE)`
--   **File system scale:**
-    -   Optional support for subdirectory **sharding** when thousands of runs are pinned on local filesystems.
-
-------------------------------------------------------------------------
-
-## 10. Literature Canon Integration (GRF Porting)
-
-**Status:** Planned / To Be Determined  
-**Priority:** Medium (Post-v0.2.0 Infrastructure)
-
-**Context:** The `grf` package documentation and associated literature (e.g., Wager & Athey 2018, Nie & Wager 2017) rely on a specific set of synthetic data setups to demonstrate heterogeneous treatment effect (HTE) estimation. These setups have become de facto standards ("canon") in the field. To fulfill the CausalStress mission of being a "universal scoreboard", the framework must include these standard benchmarks alongside its own stress tests.
-
-### The Challenge: Architectural & Constitutional Alignment
-
-Porting these DGPs is not merely a copy-paste exercise. The `grf` examples are typically implemented as ad-hoc scripts. Integrating them requires solving specific Constitutional challenges:
-
-1.  **Implicit Truth:** Truth in these scripts is often defined procedurally within the simulation loop. CausalStress requires truth to be a distinct, structural object adhering to the **Two-Tier Truth Contract** (Article I).
-2.  **RNG Dependencies:** Ad-hoc scripts may rely on specific R versions or RNG states. CausalStress DGPs must follow the strict "Frozen Logic" rules (Article II) to ensure long-term reproducibility.
-3.  **Variable Definitions:** We must ensure variables are explicitly separated into "structural truth" and "noise," satisfying the framework's strict data contracts.
-
-### Key Decision Points
-
-* **Adaptation Strategy:**
-    * *Re-implementation (Recommended):* We will likely re-implement the exact logic of `grf` setups inside `CausalStress` DGP functions. This ensures immutability, air-gapped correctness, and independence from external package changes.
-* **Truth Definitions:**
-    * We must rigorously derive the **Structural ATT** and **Oracle QST** for these setups.
-    * *Evaluation:* Some `grf` setups focus purely on CATE (Conditional Average Treatment Effect). We need to evaluate if they provide meaningful stress tests for *population-level* estimands (ATT/QST) or if they strictly serve as HTE benchmarks.
-* **Naming Convention:**
-    * We need a namespace strategy (e.g., `synth_grf_wager2018_setupA`) to clearly distinguish "Literature Canon" from "CausalStress Native" DGPs.
-
-### Action Plan
-
-1.  **Audit:** Review simulation scripts from Wager & Athey (2018) and related papers to identify the 3-5 most "canonical" setups.
-2.  **Validation:** For each candidate:
-    * Derive closed-form $\tau(X)$.
-    * Confirm compatibility with CausalStress noise models.
-3.  **Implementation:**
-    * Create `R/dgp-synth-grf-canon.R`.
-    * Implement immutable versions.
-    * Generate "Sidecar" documentation (`.Rmd`) proving the implementation matches the statistical properties of the original literature.
-
-
-## Summary
-
-| Status | Feature | Planned Version |
-|:---|:---|:---|
-| **Completed in v0.1.2** | Airlock helper + hard tests | v0.1.2 |
-|  | Pins/resume bootstrap fingerprint guard | v0.1.2 |
-|  | Constitution & README clarifications | v0.1.2 |
-|  | ATT/QST collectors | v0.1.2 |
-|  | Spy tests for pins/resume | v0.1.2 |
-|  | Robust resume behavior | v0.1.2 |
-| **Planned for Future** | Full configuration fingerprints | v0.2.x+ |
-|  | Parallel safe writes | v0.2.x |
-|  | Manifest/provenance summary helpers | v0.2.x+ |
-|  | Explicit estimator capabilities | v0.2.x |
-|  | Oracle system documentation improvements | v0.2.x |
-|  | Enhanced UX (progress, persistence, versioning) | v0.1.3–v0.2.x |
-|  | Git/sessionInfo edge-case handling | v0.2.x+ |
-|  | Optional deterministic sharding for huge campaigns | v0.2.x+ |
-
-This roadmap is a living document—items may migrate between releases as capabilities and requirements evolve.
 
 
 ## Roadmap Note: Sensitivity Analysis via Unobserved Confounding (Proposed Amendment)

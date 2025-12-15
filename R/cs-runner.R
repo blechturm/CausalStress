@@ -157,23 +157,24 @@ cs_run_single <- function(
     boot_att <- numeric(B)
     boot_qst_list <- vector("list", B)
     for (b in seq_len(B)) {
-      idx_b <- sample.int(n_obs, size = n_obs, replace = TRUE)
-      df_b  <- df_run[idx_b, , drop = FALSE]
-      res_b <- try(
-        withCallingHandlers(
+      res_boot <- tryCatch({
+        idx_b <- sample.int(n_obs, size = n_obs, replace = TRUE)
+        df_b  <- df_run[idx_b, , drop = FALSE]
+        res_b <- withCallingHandlers(
           est_desc$generator(df = df_b, config = config, tau = tau, ...),
           message = collect_msg,
           warning = collect_warn
-        ),
-        silent = TRUE
-      )
-      if (inherits(res_b, "try-error")) {
-        logs <<- c(logs, paste0("[error] bootstrap[", b, "]: ", conditionMessage(attr(res_b, "condition"))))
-        next
-      }
-      extracted_b <- cs_extract_estimator_result(res_b)
-      att_b <- extracted_b$att
-      qst_b <- extracted_b$qst
+        )
+        extracted_b <- cs_extract_estimator_result(res_b)
+        list(att = extracted_b$att, qst = extracted_b$qst)
+      }, error = function(e) {
+        logs <<- c(logs, paste0("[error] bootstrap[", b, "]: ", conditionMessage(e)))
+        NULL
+      })
+      if (is.null(res_boot)) next
+
+      att_b <- res_boot$att
+      qst_b <- res_boot$qst
       if (is.finite(att_b)) {
         n_boot_ok <- n_boot_ok + 1L
         boot_att[n_boot_ok] <- att_b
@@ -182,14 +183,25 @@ cs_run_single <- function(
         }
       }
     }
+    boot_threshold <- 0.9 * B
     if (n_boot_ok > 0L) {
       boot_att <- boot_att[seq_len(n_boot_ok)]
-      ci_lo_att <- stats::quantile(boot_att, 0.025, na.rm = TRUE)
-      ci_hi_att <- stats::quantile(boot_att, 0.975, na.rm = TRUE)
       boot_draws <- tibble::tibble(
         b       = seq_along(boot_att),
         est_att = boot_att
       )
+    }
+    if (B > 0 && n_boot_ok < boot_threshold) {
+      ci_lo_att <- NA_real_
+      ci_hi_att <- NA_real_
+      att_covered <- NA
+      warnings_vec <- c(
+        warnings_vec,
+        glue::glue("Bootstrap instability: {n_boot_ok}/{B} succeeded. Threshold is {boot_threshold}. CIs set to NA.")
+      )
+    } else if (n_boot_ok > 0L) {
+      ci_lo_att <- stats::quantile(boot_att, 0.025, na.rm = TRUE)
+      ci_hi_att <- stats::quantile(boot_att, 0.975, na.rm = TRUE)
       att_covered <- !is.na(true_att) &&
         !is.na(ci_lo_att) &&
         !is.na(ci_hi_att) &&
@@ -286,6 +298,7 @@ cs_run_single <- function(
       estimator_pkgs = estimator_pkgs,
       n_boot_ok      = n_boot_ok,
       log            = log_str,
+      warnings       = warnings_vec,
       dgp_params         = list(n = n, seed = seed),
       estimator_params   = config,
       config_fingerprint = config_fingerprint,

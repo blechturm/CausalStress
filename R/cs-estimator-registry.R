@@ -19,35 +19,41 @@ cs_estimator_registry_base <- function() {
   pkg_ver <- as.character(utils::packageVersion("CausalStress"))
 
   tibble::tibble(
-    estimator_id = c("oracle_att", "lm_att", "ipw_att", "gengc", "gengc_dr", "grf_dr_att"),
-    type = c("oracle", "gcomp", "ipw", "gcomp", "gcomp", "dr"),
+    estimator_id = c("oracle_att", "lm_att", "ipw_att", "gengc", "gengc_dr", "grf_dr_att", "bart_att", "tmle_att"),
+    type = c("oracle", "gcomp", "ipw", "gcomp", "gcomp", "dr", "gcomp", "dr"),
     generator = list(
       est_oracle_att,
       est_lm_att,
       est_ipw_att,
       est_gengc,
       est_gengc_dr,
-      est_grf_dr_att
+      est_grf_dr_att,
+      est_bart_att,
+      est_tmle_att
     ),
-    oracle = c(TRUE, FALSE, FALSE, FALSE, FALSE, FALSE),
-    supports_qst = c(FALSE, FALSE, FALSE, TRUE, TRUE, FALSE),
-    version = rep(pkg_ver, 6L),
+    oracle = c(TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE),
+    supports_qst = c(FALSE, FALSE, FALSE, TRUE, TRUE, FALSE, FALSE, FALSE),
+    version = rep(pkg_ver, 8L),
     description = c(
       "Oracle ATT using structural treatment effects.",
       "Linear outcome regression g-computation ATT estimator.",
       "Inverse-probability weighted ATT estimator based on logistic propensity.",
       "GenGC distributional estimator (ATT + QST).",
       "GenGC doubly-robust distributional estimator (ATT + QST).",
-      "GRF causal forest doubly-robust ATT estimator."
+      "GRF causal forest doubly-robust ATT estimator.",
+      "BART ATT estimator via bartCause::bartc.",
+      "TMLE estimator (ATE target) via tmle::tmle."
     ),
-    source = c("core", "core", "core", "optional", "optional", "optional"),
+    source = c("core", "core", "core", "optional", "optional", "optional", "optional", "optional"),
     requires_pkgs = list(
       character(0),
       character(0),
       character(0),
       "GenGC",
       "GenGC",
-      "grf"
+      "grf",
+      c("bartCause"),
+      c("tmle", "SuperLearner")
     )
   )
 }
