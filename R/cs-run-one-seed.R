@@ -17,14 +17,7 @@ cs_run_one_seed_internal <- function(dgp_id,
                                      staging_dir = NULL,
                                      p = NULL,
                                      ...) {
-  if (isTRUE(parallel) && !is.null(board) && is.null(staging_dir)) {
-    cli::cli_abort(
-      c(
-        "Parallel execution with persistence requires a staging directory.",
-        "i" = "Set `staging_dir` when using `parallel = TRUE` with a non-NULL `board`."
-      )
-    )
-  }
+  cs_require_staging_for_parallel_persistence(parallel = parallel, board = board, staging_dir = staging_dir)
 
   # Phase 1.1: RNG Locking (Constitution Article II) -- enforce deterministic RNG per seed
   CausalStress::cs_set_rng(seed)
@@ -38,7 +31,7 @@ cs_run_one_seed_internal <- function(dgp_id,
           "results__dgp={dgp_id}__est={estimator_id}__n={n}__seed={seed}"
         )
         meta_obj <- pins::pin_meta(board, name)
-        md <- meta_obj$metadata %||% meta_obj$user %||% list()
+        md <- cs_pin_meta_user_or_metadata(meta_obj)
       stored_fp <- md$config_fingerprint %||% NULL
       expected_fp <- cs_build_config_fingerprint(
         dgp_id            = dgp_id,

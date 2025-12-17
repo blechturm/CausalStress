@@ -4,7 +4,12 @@
 \alias{dgp_synth_placebo_heavytail_v130}
 \title{Placebo heavy-tail synthetic DGP (sharp null, v1.3.0)}
 \usage{
-dgp_synth_placebo_heavytail_v130(n, seed = NULL)
+dgp_synth_placebo_heavytail_v130(
+  n,
+  seed = NULL,
+  include_truth = TRUE,
+  oracle_only = FALSE
+)
 }
 \arguments{
 \item{n}{Integer, number of observations.}

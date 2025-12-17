@@ -6,6 +6,8 @@
 #'
 #' @param dgp_ids Character vector of DGP IDs.
 #' @param estimator_ids Character vector of estimator IDs.
+#' @param dgp_id Deprecated alias for `dgp_ids` (scalar character).
+#' @param estimator_id Deprecated alias for `estimator_ids` (scalar character).
 #' @param seeds Integer vector of seeds.
 #' @param n Integer sample size per run.
 #' @param defaults Optional default estimator config list forwarded to
@@ -27,8 +29,10 @@
 #' @return Tibble with one row per run.
 #' @export
 cs_run_campaign <- function(
-  dgp_ids,
-  estimator_ids,
+  dgp_ids = NULL,
+  estimator_ids = NULL,
+  dgp_id = NULL,
+  estimator_id = NULL,
   seeds,
   n,
   defaults = list(),
@@ -68,11 +72,19 @@ cs_run_campaign <- function(
   }
 
   # Backward compatibility with legacy argument names
-  if (missing(dgp_ids) && !missing(dgp_id)) {
+  if (!is.null(dgp_id)) {
+    if (!is.null(dgp_ids)) rlang::abort("Provide only one of `dgp_ids` or legacy `dgp_id`.")
     dgp_ids <- dgp_id
   }
-  if (missing(estimator_ids) && !missing(estimator_id)) {
+  if (!is.null(estimator_id)) {
+    if (!is.null(estimator_ids)) rlang::abort("Provide only one of `estimator_ids` or legacy `estimator_id`.")
     estimator_ids <- estimator_id
+  }
+  if (is.null(dgp_ids) || length(dgp_ids) == 0L) {
+    rlang::abort("`dgp_ids` must be a non-empty character vector.", class = "causalstress_contract_error")
+  }
+  if (is.null(estimator_ids) || length(estimator_ids) == 0L) {
+    rlang::abort("`estimator_ids` must be a non-empty character vector.", class = "causalstress_contract_error")
   }
 
   tasks <- tidyr::expand_grid(
@@ -86,14 +98,7 @@ cs_run_campaign <- function(
     rlang::abort("`campaign_seed` must be a finite numeric scalar or NULL.", class = "causalstress_contract_error")
   }
 
-  if (isTRUE(parallel) && !is.null(board) && is.null(staging_dir)) {
-    cli::cli_abort(
-      c(
-        "Parallel execution with persistence requires a staging directory.",
-        "i" = "Set `staging_dir` when using `parallel = TRUE` with a non-NULL `board`."
-      )
-    )
-  }
+  cs_require_staging_for_parallel_persistence(parallel = parallel, board = board, staging_dir = staging_dir)
 
   if (!is.null(staging_dir) && !is.null(board)) {
     dir.create(staging_dir, recursive = TRUE, showWarnings = FALSE)
@@ -118,16 +123,6 @@ cs_run_campaign <- function(
     cfg
   }
 
-  has_boot_ci_meta <- function(md) {
-    n_ok <- suppressWarnings(as.integer(md$n_boot_ok %||% 0L))
-    lo <- md$att_ci_lo %||% NA_real_
-    hi <- md$att_ci_hi %||% NA_real_
-    if (!is.finite(n_ok) || n_ok <= 0L) return(FALSE)
-    if (!is.finite(lo) || !is.finite(hi)) return(FALSE)
-    if (lo > hi) return(FALSE)
-    TRUE
-  }
-
   # Skip existing pins if requested (with fingerprint/CI checks)
   should_try_cache <- isTRUE(skip_existing) && !isTRUE(force)
   if (isTRUE(should_try_cache) && !is.null(board)) {
@@ -144,7 +139,7 @@ cs_run_campaign <- function(
           "results__dgp={dgp_id_i}__est={est_id_i}__n={n_i}__seed={seed_i}"
         )
         meta_obj <- pins::pin_meta(board, name)
-        md <- meta_obj$metadata %||% meta_obj$user %||% list()
+        md <- cs_pin_meta_user_or_metadata(meta_obj)
         stored_fp <- md$config_fingerprint %||% NULL
         est_desc <- cs_get_estimator(est_id_i)
         task_config <- apply_runner_defaults(resolve_config(est_id_i), seed_i)
@@ -170,7 +165,7 @@ cs_run_campaign <- function(
             call. = FALSE
           )
         }
-        if (isTRUE(bootstrap) && B > 0 && !has_boot_ci_meta(md)) {
+        if (isTRUE(bootstrap) && B > 0 && !cs_has_boot_ci_meta(md)) {
           stop(
             "Existing run found for this (dgp_id, estimator_id, n, seed) ",
             "but it was computed without bootstrap CIs, while you requested ",

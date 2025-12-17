@@ -5,11 +5,15 @@
 \title{Run a full campaign across DGPs, estimators, and seeds}
 \usage{
 cs_run_campaign(
-  dgp_ids,
-  estimator_ids,
+  dgp_ids = NULL,
+  estimator_ids = NULL,
+  dgp_id = NULL,
+  estimator_id = NULL,
   seeds,
   n,
-  config = list(),
+  defaults = list(),
+  overrides = list(),
+  campaign_seed = NULL,
   version = NULL,
   status = "stable",
   tau = cs_tau_oracle,
@@ -18,7 +22,7 @@ cs_run_campaign(
   skip_existing = FALSE,
   board = NULL,
   staging_dir = NULL,
-  parallel = TRUE,
+  parallel = FALSE,
   show_progress = TRUE,
   force = FALSE,
   quiet = TRUE,
@@ -31,11 +35,25 @@ cs_run_campaign(
 
 \item{estimator_ids}{Character vector of estimator IDs.}
 
+\item{dgp_id}{Deprecated alias for \code{dgp_ids} (scalar character).}
+
+\item{estimator_id}{Deprecated alias for \code{estimator_ids} (scalar character).}
+
 \item{seeds}{Integer vector of seeds.}
 
 \item{n}{Integer sample size per run.}
 
-\item{config}{Optional estimator config list forwarded to cs_run_single().}
+\item{defaults}{Optional default estimator config list forwarded to
+\code{cs_run_single()} (e.g., \code{list(n_boot = 200, num_threads = 1L)}).}
+
+\item{overrides}{Optional named list of estimator-specific config overrides
+(e.g., \code{list(tmle_att = list(ci_method = "native"))}). Each override is
+merged over \code{defaults} using \code{utils::modifyList()}.}
+
+\item{campaign_seed}{Optional scalar integer used to deterministically
+shuffle task execution order for better load balancing without relying on
+ambient RNG state. If \code{NULL}, tasks are executed in deterministic grid
+order.}
 
 \item{skip_existing}{Logical; if TRUE, skip tasks already pinned on \code{board}.}
 

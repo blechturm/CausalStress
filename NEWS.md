@@ -1,3 +1,11 @@
+# CausalStress 0.1.7
+
+## Scale Readiness & Protocol Hardening
+* Enforced "no parallel persistence without staging" protocol (`parallel=TRUE` + `board` requires `staging_dir`).
+* Deterministic campaign execution order via optional `campaign_seed` (no ambient `sample()` usage).
+* Pin metadata now includes ATT/CI summary fields for pin-meta-first resume checks.
+* Stage-and-gather persistence leaves staged files in place on write failures for retry.
+
 # CausalStress 0.1.6
 
 ## Major Improvements (Hardening Phase)

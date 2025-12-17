@@ -384,14 +384,7 @@ cs_run_seeds <- function(
   }
   seeds <- as.integer(seeds)
 
-  if (isTRUE(parallel) && !is.null(board) && is.null(staging_dir)) {
-    cli::cli_abort(
-      c(
-        "Parallel execution with persistence requires a staging directory.",
-        "i" = "Set `staging_dir` when using `parallel = TRUE` with a non-NULL `board`."
-      )
-    )
-  }
+  cs_require_staging_for_parallel_persistence(parallel = parallel, board = board, staging_dir = staging_dir)
 
   if (!is.null(staging_dir) && !is.null(board)) {
     dir.create(staging_dir, recursive = TRUE, showWarnings = FALSE)
@@ -433,16 +426,6 @@ cs_run_seeds <- function(
     )
   }
 
-  has_boot_ci_meta <- function(md) {
-    n_ok <- suppressWarnings(as.integer(md$n_boot_ok %||% 0L))
-    lo <- md$att_ci_lo %||% NA_real_
-    hi <- md$att_ci_hi %||% NA_real_
-    if (!is.finite(n_ok) || n_ok <= 0L) return(FALSE)
-    if (!is.finite(lo) || !is.finite(hi)) return(FALSE)
-    if (lo > hi) return(FALSE)
-    TRUE
-  }
-
   should_try_cache <- isTRUE(skip_existing) && !isTRUE(force)
   cached_seeds <- integer(0)
   seeds_to_run <- seeds
@@ -455,7 +438,7 @@ cs_run_seeds <- function(
 
       name <- pin_name_for_seed(s)
       meta_obj <- pins::pin_meta(board, name)
-      md <- meta_obj$metadata %||% meta_obj$user %||% list()
+      md <- cs_pin_meta_user_or_metadata(meta_obj)
       stored_fp <- md$config_fingerprint %||% NULL
       expected_fp <- build_expected_fp(s)
 
@@ -470,7 +453,7 @@ cs_run_seeds <- function(
         )
       }
 
-      if (isTRUE(bootstrap) && B > 0L && !has_boot_ci_meta(md)) {
+      if (isTRUE(bootstrap) && B > 0L && !cs_has_boot_ci_meta(md)) {
         stop(
           "Existing run found for this (dgp_id, estimator_id, n, seed) ",
           "but it was computed without bootstrap CIs, while you requested ",
@@ -577,11 +560,3 @@ cs_run_seeds <- function(
   }
 }
 
-#' Run a campaign of seeds for a single DGP–estimator pair
-#'
-#' `cs_run_campaign()` is an alias for [cs_run_seeds()] kept for compatibility
-#' with design documents and early drafts of the API.
-#'
-#' @inheritParams cs_run_seeds
-#' @return A tibble of runs, identical to [cs_run_seeds()].
-#' @export
