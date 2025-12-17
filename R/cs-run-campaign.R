@@ -94,9 +94,6 @@ cs_run_campaign <- function(
     if (is.null(cfg$seed)) {
       cfg$seed <- seed_i
     }
-    if (is.null(cfg$ci_method)) {
-      cfg$ci_method <- if (isTRUE(bootstrap) && B > 0L) "bootstrap" else "none"
-    }
     if (isTRUE(bootstrap) && B > 0L && is.null(cfg$n_boot)) {
       cfg$n_boot <- B
     }

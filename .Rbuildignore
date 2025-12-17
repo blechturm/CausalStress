@@ -4,5 +4,6 @@
 ^LICENSE\.md$
 ^doc$
 ^Meta$
+^_experiments$
 ^inst/dgp_meta/.*_cache$
 ^inst/dgp_meta/.*_files$

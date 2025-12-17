@@ -35,7 +35,7 @@ test_that("cs_run_seeds can resume from existing pins without recomputing", {
         B = 0L,
         oracle = FALSE,
         estimator_version = cs_estimator_registry()$version[cs_estimator_registry()$estimator_id == "lm_att"],
-        config = list(seed = 1L, ci_method = "none"),
+        config = list(seed = 1L),
         tau = cs_tau_oracle
       )
     )

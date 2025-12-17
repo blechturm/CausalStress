@@ -23,9 +23,16 @@ cs_pin_write <- function(board, result) {
       type    = "qs",
       metadata = list(
         dgp_id       = meta$dgp_id,
+        dgp_version  = meta$dgp_version %||% NA_character_,
+        dgp_status   = meta$dgp_status %||% NA_character_,
+        dgp_design_spec = meta$dgp_design_spec %||% NA_character_,
         estimator_id = meta$estimator_id,
+        estimator_version = meta$estimator_version %||% NA_character_,
         n            = meta$n,
         seed         = meta$seed,
+        oracle       = meta$oracle %||% NA,
+        supports_qst = meta$supports_qst %||% NA,
+        config_fingerprint = meta$config_fingerprint %||% NA_character_,
         git_hash     = git_hash,
         session_info = list(utils::sessionInfo()),
         timestamp    = ts_num

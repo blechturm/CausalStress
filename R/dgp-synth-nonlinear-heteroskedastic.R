@@ -77,7 +77,9 @@ dgp_synth_nonlinear_heteroskedastic_v130 <- function(n, seed = NULL, include_tru
     true_qst = true_qst,
     meta = list(
       dgp_id        = "synth_nonlinear_heteroskedastic",
+      version       = "1.3.0",
       type          = "synthetic",
+      params        = list(n = n, seed = seed),
       structural_te = tau
     )
   )

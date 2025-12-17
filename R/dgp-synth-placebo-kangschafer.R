@@ -81,7 +81,9 @@ dgp_synth_placebo_kangschafer_v140 <- function(n, seed = NULL, include_truth = T
     true_qst = true_qst,
     meta = list(
       dgp_id        = "synth_placebo_kangschafer",
+      version       = "1.4.0",
       type          = "synthetic",
+      params        = list(n = n, seed = seed),
       structural_te = tau
     )
   )

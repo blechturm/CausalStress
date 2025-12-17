@@ -66,7 +66,9 @@ dgp_synth_placebo_heavytail_v130 <- function(n, seed = NULL, include_truth = TRU
     true_qst = true_qst,
     meta = list(
       dgp_id        = "synth_placebo_heavytail",
+      version       = "1.3.0",
       type          = "synthetic",
+      params        = list(n = n, seed = seed),
       structural_te = tau
     )
   )

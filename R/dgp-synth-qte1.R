@@ -75,7 +75,9 @@ dgp_synth_qte1_v130 <- function(n, seed = NULL, include_truth = TRUE, oracle_onl
     true_qst = true_qst,
     meta = list(
       dgp_id        = "synth_qte1",
+      version       = "1.3.0",
       type          = "synthetic",
+      params        = list(n = n, seed = seed),
       structural_te = tau
     )
   )

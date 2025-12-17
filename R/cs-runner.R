@@ -79,9 +79,6 @@ cs_run_single <- function(
   if (is.null(config_local$seed)) {
     config_local$seed <- seed
   }
-  if (is.null(config_local$ci_method)) {
-    config_local$ci_method <- if (isTRUE(bootstrap) && B > 0L) "bootstrap" else "none"
-  }
   if (isTRUE(bootstrap) && B > 0L && is.null(config_local$n_boot)) {
     config_local$n_boot <- B
   }
@@ -275,6 +272,10 @@ cs_run_single <- function(
       seed           = as.integer(seed),
       oracle         = est_desc$oracle,
       supports_qst   = est_desc$supports_qst,
+      dgp_version    = dgp_desc$version[[1L]] %||% NA_character_,
+      dgp_status     = dgp_desc$status[[1L]] %||% NA_character_,
+      dgp_design_spec = dgp_desc$design_spec[[1L]] %||% NA_character_,
+      estimator_version = est_desc$version %||% NA_character_,
       estimator_pkgs = estimator_pkgs,
       n_boot_ok      = n_boot_ok,
       n_boot_fail    = n_boot_fail,
@@ -408,9 +409,6 @@ cs_run_seeds <- function(
         config_cache <- config
         if (is.null(config_cache$seed)) {
           config_cache$seed <- s
-        }
-        if (is.null(config_cache$ci_method)) {
-          config_cache$ci_method <- if (isTRUE(bootstrap) && B > 0L) "bootstrap" else "none"
         }
         if (isTRUE(bootstrap) && B > 0L && is.null(config_cache$n_boot)) {
           config_cache$n_boot <- B

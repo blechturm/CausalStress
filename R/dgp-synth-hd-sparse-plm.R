@@ -74,7 +74,9 @@ dgp_synth_hd_sparse_plm_v140 <- function(n, seed = NULL, include_truth = TRUE, o
     true_qst = true_qst,
     meta = list(
       dgp_id        = "synth_hd_sparse_plm",
+      version       = "1.4.0",
       type          = "synthetic",
+      params        = list(n = n, seed = seed),
       structural_te = tau
     )
   )
