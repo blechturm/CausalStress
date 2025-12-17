@@ -4,7 +4,12 @@
 \alias{dgp_synth_hd_sparse_plm_v140}
 \title{High-dimensional sparse partially linear DGP (v1.4.0)}
 \usage{
-dgp_synth_hd_sparse_plm_v140(n, seed = NULL)
+dgp_synth_hd_sparse_plm_v140(
+  n,
+  seed = NULL,
+  include_truth = TRUE,
+  oracle_only = FALSE
+)
 }
 \arguments{
 \item{n}{Integer, number of observations.}

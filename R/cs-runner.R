@@ -72,8 +72,17 @@ cs_run_single <- function(
   df_raw    <- dgp$df
   true_att  <- dgp$true_att
 
-  oracle_allowed <- isTRUE(est_desc$oracle) || isTRUE(config$use_oracle)
+  oracle_allowed <- isTRUE(est_desc$oracle)
   df_run <- cs_airlock(df_raw, oracle_allowed = oracle_allowed)
+
+  config_local <- config
+  if (is.null(config_local$seed)) {
+    config_local$seed <- seed
+  }
+  if (isTRUE(bootstrap) && B > 0L && is.null(config_local$n_boot)) {
+    config_local$n_boot <- B
+  }
+
   config_fingerprint <- cs_build_config_fingerprint(
     dgp_id            = dgp_id,
     estimator_id      = estimator_id,
@@ -83,13 +92,14 @@ cs_run_single <- function(
     B                 = B,
     oracle            = oracle_allowed,
     estimator_version = est_desc$version,
-    config            = config,
+    config            = config_local,
     tau               = tau
   )
 
   # Run estimator
   t_est_start <- Sys.time()
   res <- NULL
+  config <- config_local
   res <- tryCatch(
     withCallingHandlers(
       {
@@ -120,6 +130,14 @@ cs_run_single <- function(
   extracted <- cs_extract_estimator_result(res)
   est_att <- extracted$att
 
+  att_ci <- res$att %||% list()
+  ci_lo_att <- att_ci$ci_lo %||% NA_real_
+  ci_hi_att <- att_ci$ci_hi %||% NA_real_
+  res_meta <- res$meta %||% list()
+  n_boot_ok <- res_meta$n_boot_ok %||% 0L
+  n_boot_fail <- res_meta$n_boot_fail %||% 0L
+  boot_draws <- res$boot_draws %||% NULL
+
   att_error      <- est_att - true_att
   att_abs_error  <- abs(att_error)
 
@@ -131,13 +149,23 @@ cs_run_single <- function(
       rlang::abort("qst output must contain `estimate` or `value` column.", class = "causalstress_runner_error")
     }
 
+    if (!"tau_id" %in% names(qst_df)) {
+      qst_df$tau_id <- cs_tau_id(qst_df$tau)
+    }
+
     if (!is.null(dgp$true_qst)) {
       truth_tbl <- dgp$true_qst
       if ("value" %in% names(truth_tbl)) {
         truth_tbl <- dplyr::rename(truth_tbl, true = value)
       }
+      if (!"tau_id" %in% names(truth_tbl)) {
+        truth_tbl$tau_id <- cs_tau_id(truth_tbl$tau)
+      }
+      truth_tbl <- truth_tbl %>%
+        dplyr::select(.data$tau_id, .data$true)
+
       qst_df <- qst_df %>%
-        dplyr::left_join(truth_tbl, by = "tau") %>%
+        dplyr::left_join(truth_tbl, by = "tau_id") %>%
         dplyr::mutate(
           error = estimate - true,
           abs_error = abs(error)
@@ -150,83 +178,32 @@ cs_run_single <- function(
           abs_error = NA_real_
         )
     }
-  }
+    if (!"ci_lo" %in% names(qst_df)) qst_df$ci_lo <- NA_real_
+    if (!"ci_hi" %in% names(qst_df)) qst_df$ci_hi <- NA_real_
+    if (!"ci_width" %in% names(qst_df)) qst_df$ci_width <- NA_real_
+    if (!"covered" %in% names(qst_df)) qst_df$covered <- NA
 
-  if (bootstrap) {
-    n_obs <- nrow(df_run)
-    boot_att <- numeric(B)
-    boot_qst_list <- vector("list", B)
-    for (b in seq_len(B)) {
-      res_boot <- tryCatch({
-        idx_b <- sample.int(n_obs, size = n_obs, replace = TRUE)
-        df_b  <- df_run[idx_b, , drop = FALSE]
-        res_b <- withCallingHandlers(
-          est_desc$generator(df = df_b, config = config, tau = tau, ...),
-          message = collect_msg,
-          warning = collect_warn
-        )
-        extracted_b <- cs_extract_estimator_result(res_b)
-        list(att = extracted_b$att, qst = extracted_b$qst)
-      }, error = function(e) {
-        logs <<- c(logs, paste0("[error] bootstrap[", b, "]: ", conditionMessage(e)))
-        NULL
-      })
-      if (is.null(res_boot)) next
-
-      att_b <- res_boot$att
-      qst_b <- res_boot$qst
-      if (is.finite(att_b)) {
-        n_boot_ok <- n_boot_ok + 1L
-        boot_att[n_boot_ok] <- att_b
-        if (!is.null(qst_b)) {
-          boot_qst_list[[n_boot_ok]] <- qst_b
-        }
-      }
+    # If estimator exposes QST CIs as qst_ci_* columns, map them into the
+    # standardized ci_* fields used by downstream summaries/governance.
+    if ("qst_ci_lo" %in% names(qst_df) && all(is.na(qst_df$ci_lo))) {
+      qst_df$ci_lo <- qst_df$qst_ci_lo
     }
-    boot_threshold <- 0.9 * B
-    if (n_boot_ok > 0L) {
-      boot_att <- boot_att[seq_len(n_boot_ok)]
-      boot_draws <- tibble::tibble(
-        b       = seq_along(boot_att),
-        est_att = boot_att
+    if ("qst_ci_hi" %in% names(qst_df) && all(is.na(qst_df$ci_hi))) {
+      qst_df$ci_hi <- qst_df$qst_ci_hi
+    }
+    if (all(is.na(qst_df$ci_width))) {
+      qst_df$ci_width <- ifelse(
+        !is.na(qst_df$ci_lo) & !is.na(qst_df$ci_hi),
+        qst_df$ci_hi - qst_df$ci_lo,
+        NA_real_
       )
     }
-    if (B > 0 && n_boot_ok < boot_threshold) {
-      ci_lo_att <- NA_real_
-      ci_hi_att <- NA_real_
-      att_covered <- NA
-      warnings_vec <- c(
-        warnings_vec,
-        glue::glue("Bootstrap instability: {n_boot_ok}/{B} succeeded. Threshold is {boot_threshold}. CIs set to NA.")
+    if (all(is.na(qst_df$covered))) {
+      qst_df$covered <- ifelse(
+        !is.na(qst_df$true) & !is.na(qst_df$ci_lo) & !is.na(qst_df$ci_hi),
+        qst_df$true >= qst_df$ci_lo & qst_df$true <= qst_df$ci_hi,
+        NA
       )
-    } else if (n_boot_ok > 0L) {
-      ci_lo_att <- stats::quantile(boot_att, 0.025, na.rm = TRUE)
-      ci_hi_att <- stats::quantile(boot_att, 0.975, na.rm = TRUE)
-      att_covered <- !is.na(true_att) &&
-        !is.na(ci_lo_att) &&
-        !is.na(ci_hi_att) &&
-        true_att >= ci_lo_att &&
-        true_att <= ci_hi_att
-    }
-    if (n_boot_ok > 0L && est_desc$supports_qst && !is.null(qst_df)) {
-      boot_qst <- dplyr::bind_rows(boot_qst_list[seq_len(n_boot_ok)])
-      qst_ci <- boot_qst %>%
-        dplyr::group_by(.data$tau) %>%
-        dplyr::summarise(
-          ci_lo = stats::quantile(estimate, 0.025, na.rm = TRUE),
-          ci_hi = stats::quantile(estimate, 0.975, na.rm = TRUE),
-          .groups = "drop"
-        )
-      qst_df <- qst_df %>%
-        dplyr::left_join(qst_ci, by = "tau") %>%
-        dplyr::mutate(
-          covered = ifelse(
-            is.na(true) | is.na(ci_lo) | is.na(ci_hi),
-            NA,
-            true >= ci_lo & true <= ci_hi
-          ),
-          ci_width = ifelse(is.na(ci_lo) | is.na(ci_hi), NA_real_, ci_hi - ci_lo)
-        )
     }
   }
 
@@ -260,8 +237,8 @@ cs_run_single <- function(
 
   log_str <- if (length(logs) == 0L) NA_character_ else paste(logs, collapse = "\n")
 
-  # Fresh run timestamp (POSIXct with a tiny jitter to avoid deduplication)
-  ts_now <- Sys.time() + runif(1, 0, 1e-6)
+  # Non-deterministic provenance is stored separately from the science payload.
+  ts_now <- Sys.time()
 
   result <- list(
     att = list(
@@ -295,13 +272,34 @@ cs_run_single <- function(
       seed           = as.integer(seed),
       oracle         = est_desc$oracle,
       supports_qst   = est_desc$supports_qst,
+      dgp_version    = dgp_desc$version[[1L]] %||% NA_character_,
+      dgp_status     = dgp_desc$status[[1L]] %||% NA_character_,
+      dgp_design_spec = dgp_desc$design_spec[[1L]] %||% NA_character_,
+      estimator_version = est_desc$version %||% NA_character_,
       estimator_pkgs = estimator_pkgs,
       n_boot_ok      = n_boot_ok,
+      n_boot_fail    = n_boot_fail,
+      ci_method      = res_meta$ci_method %||% NA_character_,
+      ci_type        = res_meta$ci_type %||% NA_character_,
+      ci_level       = res_meta$ci_level %||% NA_real_,
+      ci_valid       = res_meta$ci_valid %||% NA,
+      ci_fail_code   = res_meta$ci_fail_code %||% NA_character_,
+      ci_valid_by_dim = res_meta$ci_valid_by_dim %||% logical(0),
+      collapsed      = res_meta$collapsed %||% logical(0),
+      qst_ci_method       = res_meta$qst_ci_method %||% NA_character_,
+      qst_ci_type         = res_meta$qst_ci_type %||% NA_character_,
+      qst_ci_level        = res_meta$qst_ci_level %||% NA_real_,
+      qst_ci_valid        = res_meta$qst_ci_valid %||% NA,
+      qst_ci_fail_code    = res_meta$qst_ci_fail_code %||% NA_character_,
+      qst_ci_valid_by_dim = res_meta$qst_ci_valid_by_dim %||% logical(0),
+      qst_ci_collapsed    = res_meta$qst_ci_collapsed %||% logical(0),
       log            = log_str,
       warnings       = warnings_vec,
       dgp_params         = list(n = n, seed = seed),
       estimator_params   = config,
-      config_fingerprint = config_fingerprint,
+      config_fingerprint = config_fingerprint
+    ),
+    provenance = list(
       timestamp         = ts_now,
       run_timestamp      = ts_now,
       run_time_dgp       = run_time_dgp,
@@ -386,6 +384,8 @@ cs_run_seeds <- function(
   }
   seeds <- as.integer(seeds)
 
+  cs_require_staging_for_parallel_persistence(parallel = parallel, board = board, staging_dir = staging_dir)
+
   if (!is.null(staging_dir) && !is.null(board)) {
     dir.create(staging_dir, recursive = TRUE, showWarnings = FALSE)
     # Recovery: gather any staged files from prior crash before running new seeds
@@ -394,74 +394,103 @@ cs_run_seeds <- function(
 
   est_desc <- cs_get_estimator(estimator_id)
 
+  pin_name_for_seed <- function(s) {
+    glue::glue(
+      "results__dgp={dgp_id}__est={estimator_id}__n={n}__seed={s}"
+    )
+  }
+
+  apply_runner_defaults <- function(cfg, seed_i) {
+    if (is.null(cfg$seed)) {
+      cfg$seed <- seed_i
+    }
+    if (isTRUE(bootstrap) && B > 0L && is.null(cfg$n_boot)) {
+      cfg$n_boot <- B
+    }
+    cfg
+  }
+
+  build_expected_fp <- function(seed_i) {
+    expected_cfg <- apply_runner_defaults(config, seed_i)
+    cs_build_config_fingerprint(
+      dgp_id            = dgp_id,
+      estimator_id      = estimator_id,
+      n                 = n,
+      seed              = seed_i,
+      bootstrap         = bootstrap,
+      B                 = B,
+      oracle            = isTRUE(est_desc$oracle),
+      estimator_version = est_desc$version,
+      config            = expected_cfg,
+      tau               = tau
+    )
+  }
+
+  should_try_cache <- isTRUE(skip_existing) && !isTRUE(force)
+  cached_seeds <- integer(0)
+  seeds_to_run <- seeds
+
+  if (!is.null(board) && isTRUE(should_try_cache)) {
+    cached <- logical(length(seeds))
+    for (i in seq_along(seeds)) {
+      s <- seeds[[i]]
+      if (!cs_pin_exists(board, dgp_id, estimator_id, n, s)) next
+
+      name <- pin_name_for_seed(s)
+      meta_obj <- pins::pin_meta(board, name)
+      md <- cs_pin_meta_user_or_metadata(meta_obj)
+      stored_fp <- md$config_fingerprint %||% NULL
+      expected_fp <- build_expected_fp(s)
+
+      if (is.null(stored_fp) || !identical(stored_fp, expected_fp)) {
+        old_txt <- if (is.null(stored_fp)) "missing" else stored_fp
+        stop(
+          "Configuration fingerprint mismatch for ",
+          dgp_id, " x ", estimator_id, " seed ", s, ". ",
+          "(Stored: ", old_txt, ", Current: ", expected_fp, "). ",
+          "To overwrite this run with new settings, set force = TRUE or skip_existing = FALSE.",
+          call. = FALSE
+        )
+      }
+
+      if (isTRUE(bootstrap) && B > 0L && !cs_has_boot_ci_meta(md)) {
+        stop(
+          "Existing run found for this (dgp_id, estimator_id, n, seed) ",
+          "but it was computed without bootstrap CIs, while you requested ",
+          "bootstrap = TRUE, B = ", B, ". Use a fresh board or set ",
+          "skip_existing = FALSE to recompute.",
+          call. = FALSE
+        )
+      }
+
+      cached[[i]] <- TRUE
+    }
+
+    cached_seeds <- seeds[cached]
+    seeds_to_run <- seeds[!cached]
+  }
+
+  # If we are forcing recompute and a pin exists, delete it to avoid stale metadata
+  if (!is.null(board) && !isTRUE(should_try_cache)) {
+    for (s in seeds_to_run) {
+      if (!cs_pin_exists(board, dgp_id, estimator_id, n, s)) next
+      pins::pin_delete(board, pin_name_for_seed(s))
+    }
+  }
+
+  cached_rows <- list()
+  if (!is.null(board) && length(cached_seeds) > 0L) {
+    cached_rows <- lapply(cached_seeds, function(s) {
+      cached <- pins::pin_read(board, pin_name_for_seed(s))
+      cs_result_to_row(cached)
+    })
+  }
+
   run_one_seed <- function(s, p = NULL) {
     tick <- function() {
       if (!is.null(p)) p(message = glue::glue("seed {s} done"))
     }
     on.exit(tick(), add = TRUE)
-
-    should_try_cache <- isTRUE(skip_existing) && !isTRUE(force)
-    if (!is.null(board) && isTRUE(should_try_cache)) {
-      if (cs_pin_exists(board, dgp_id, estimator_id, n, s)) {
-        name <- glue::glue(
-          "results__dgp={dgp_id}__est={estimator_id}__n={n}__seed={s}"
-        )
-        cached <- pins::pin_read(board, name)
-        stored_fp <- tryCatch(cached$meta$config_fingerprint, error = function(...) NULL)
-        expected_fp <- cs_build_config_fingerprint(
-          dgp_id            = dgp_id,
-          estimator_id      = estimator_id,
-          n                 = n,
-          seed              = s,
-          bootstrap         = bootstrap,
-          B                 = B,
-          oracle            = isTRUE(est_desc$oracle),
-          estimator_version = est_desc$version,
-          config            = config,
-          tau               = tau
-        )
-        if (!is.null(stored_fp) && identical(stored_fp, expected_fp)) {
-          tidy_row <- cs_result_to_row(cached)
-          has_ci <- function(run_row) {
-            n_ok <- tryCatch(run_row$n_boot_ok, error = function(...) NA)
-            lo <- tryCatch(run_row$att_ci_lo, error = function(...) NA)
-            hi <- tryCatch(run_row$att_ci_hi, error = function(...) NA)
-            if (is.null(lo) || is.null(hi)) return(FALSE)
-            if (is.na(n_ok) || n_ok == 0L) return(FALSE)
-            if (all(is.na(lo)) || all(is.na(hi))) return(FALSE)
-            TRUE
-          }
-          if (isTRUE(bootstrap) && B > 0 && !has_ci(tidy_row)) {
-            stop(
-              "Existing run found for this (dgp_id, estimator_id, n, seed) ",
-              "but it was computed without bootstrap CIs, while you requested ",
-              "bootstrap = TRUE, B = ", B, ". Use a fresh board or set ",
-              "skip_existing = FALSE to recompute.",
-              call. = FALSE
-            )
-          }
-          return(tidy_row)
-        } else {
-          old_txt <- if (is.null(stored_fp)) "missing" else stored_fp
-          stop(
-            "Configuration fingerprint mismatch for ",
-            dgp_id, " x ", estimator_id, " seed ", s, ". ",
-            "(Stored: ", old_txt, ", Current: ", expected_fp, "). ",
-            "To overwrite this run with new settings, set force = TRUE or skip_existing = FALSE.",
-            call. = FALSE
-          )
-        }
-      }
-    }
-
-    # If we are forcing recompute and a pin exists, delete it to avoid stale metadata
-    if (!is.null(board) && !isTRUE(should_try_cache) &&
-        cs_pin_exists(board, dgp_id, estimator_id, n, s)) {
-      pins::pin_delete(
-        board,
-        glue::glue("results__dgp={dgp_id}__est={estimator_id}__n={n}__seed={s}")
-      )
-    }
 
     worker_board <- if (isTRUE(parallel) || !is.null(staging_dir)) NULL else board
 
@@ -497,11 +526,11 @@ cs_run_seeds <- function(
   )
 
   run_with_progress <- function() {
-    p <- if (isTRUE(show_progress)) progressr::progressor(steps = length(seeds) + 1L) else NULL
+    p <- if (isTRUE(show_progress)) progressr::progressor(steps = length(seeds_to_run) + 1L) else NULL
 
     if (isTRUE(parallel)) {
       rows <- furrr::future_map(
-        sample(seeds),
+        seeds_to_run,
         run_one_seed,
         p = p,
         .options  = furrr::furrr_options(seed = TRUE, packages = "CausalStress"),
@@ -509,7 +538,7 @@ cs_run_seeds <- function(
       )
       out <- tibble::as_tibble(dplyr::bind_rows(rows))
     } else {
-      rows <- lapply(seeds, function(s) run_one_seed(s, p = p))
+      rows <- lapply(seeds_to_run, function(s) run_one_seed(s, p = p))
       out <- tibble::as_tibble(do.call(rbind, rows))
     }
 
@@ -520,7 +549,8 @@ cs_run_seeds <- function(
       p(message = "Gathering results...")
     }
 
-    dplyr::arrange(out, seed)
+    out_all <- dplyr::bind_rows(cached_rows, out)
+    dplyr::arrange(out_all, seed)
   }
 
   if (isTRUE(show_progress)) {
@@ -530,11 +560,3 @@ cs_run_seeds <- function(
   }
 }
 
-#' Run a campaign of seeds for a single DGP–estimator pair
-#'
-#' `cs_run_campaign()` is an alias for [cs_run_seeds()] kept for compatibility
-#' with design documents and early drafts of the API.
-#'
-#' @inheritParams cs_run_seeds
-#' @return A tibble of runs, identical to [cs_run_seeds()].
-#' @export

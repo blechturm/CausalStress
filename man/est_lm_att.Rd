@@ -6,24 +6,6 @@
 \usage{
 est_lm_att(df, tau = cs_tau_oracle, config = list())
 }
-\arguments{
-\item{df}{A data.frame or tibble containing at least \code{y}, \code{w}, and at
-least one covariate column whose name starts with \code{"X"}. Typically
-this is \code{dgp$df} from a synthetic DGP.}
-
-\item{tau}{Numeric vector of quantile levels. Included for interface
-compatibility; ignored by this estimator.}
-
-\item{config}{List of estimator-specific settings. Currently unused
-but stored in the returned metadata.}
-}
-\value{
-A list with components \code{att}, \code{qst}, \code{cf}, and \code{meta},
-satisfying the estimator contract used in CausalStress.
-}
 \description{
-This estimator fits a linear model for the outcome on control units
-and then uses g-computation to estimate the ATT. It only uses observed
-outcomes \code{y}, treatment indicator \code{w}, and covariates (columns whose
-names start with \code{"X"}).
+Fits a linear model on controls and uses g-computation to estimate ATT.
 }

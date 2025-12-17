@@ -113,13 +113,14 @@ test_that("cs_run_single attaches a log field (NA for clean runs)", {
   expect_true(is.na(res$meta$log) || is.character(res$meta$log))
 })
 
-test_that("cs_run_single bootstrap fields are NA when bootstrap = FALSE", {
+test_that("cs_run_single returns NA CI fields when ci_method = 'none'", {
   res <- cs_run_single(
     dgp_id       = "synth_baseline",
     estimator_id = "lm_att",
     n            = 100,
     seed         = 1L,
-    bootstrap    = FALSE
+    bootstrap    = FALSE,
+    config       = list(ci_method = "none")
   )
 
   expect_true(is.na(res$att$ci_lo))

@@ -1,0 +1,5 @@
+library(devtools)
+load_all(quiet=TRUE)
+print(cs_build_config_fingerprint('synth_baseline','lm_att',50,1,TRUE,10,FALSE,'0.1.6',config=list(seed=1), tau=cs_tau_oracle))
+print(cs_build_config_fingerprint('synth_baseline','lm_att',50,1,TRUE,10,FALSE,'0.1.6',config=list(ci_method='bootstrap'), tau=cs_tau_oracle))
+print(cs_build_config_fingerprint('synth_baseline','lm_att',50,1,TRUE,10,FALSE,'0.1.6',config=list(seed=1, ci_method='bootstrap'), tau=cs_tau_oracle))

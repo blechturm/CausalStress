@@ -19,7 +19,9 @@ cs_collect_att <- function(tidy) {
       "oracle", "supports_qst",
       "true_att", "est_att", "att_error", "att_abs_error",
       "att_ci_lo", "att_ci_hi", "att_covered", "att_ci_width",
-      "n_boot_ok"
+      "att_ci_method", "att_ci_type", "att_ci_level", "att_ci_valid",
+      "att_ci_fail_code", "att_ci_collapsed", "att_ci_valid_by_dim",
+      "n_boot_ok", "n_boot_fail"
     ))
   )
 }
@@ -57,14 +59,17 @@ cs_collect_qst <- function(tidy) {
   dplyr::select(
     tidy,
     dplyr::any_of(c(
-      "dgp_id", "estimator_id", "n", "seed", "tau",
+      "dgp_id", "estimator_id", "n", "seed", "tau_id", "tau",
       # Standardized column names produced by the runner
       "estimate", "value", "true", "error", "abs_error",
       "ci_lo", "ci_hi", "covered", "ci_width",
+      # QST CI provenance (run-level, stored in meta and surfaced by cs_tidy)
+      "qst_ci_method", "qst_ci_type", "qst_ci_level", "qst_ci_valid", "qst_ci_fail_code",
+      "qst_ci_collapsed", "qst_ci_valid_by_dim",
       # Legacy column names retained for backward compatibility
       "true_qst", "est_qst", "qst_error", "qst_abs_error",
       "qst_ci_lo", "qst_ci_hi", "qst_covered", "qst_ci_width",
-      "n_boot_qst_ok"
+      "qst_n_boot_ok", "qst_n_boot_fail", "n_boot_qst_ok"
     ))
   )
 }

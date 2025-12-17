@@ -15,7 +15,10 @@ cs_run_one_seed_internal <- function(dgp_id,
                                      max_runtime = Inf,
                                      parallel = FALSE,
                                      staging_dir = NULL,
-                                     p = NULL) {
+                                     p = NULL,
+                                     ...) {
+  cs_require_staging_for_parallel_persistence(parallel = parallel, board = board, staging_dir = staging_dir)
+
   # Phase 1.1: RNG Locking (Constitution Article II) -- enforce deterministic RNG per seed
   CausalStress::cs_set_rng(seed)
 
@@ -27,8 +30,9 @@ cs_run_one_seed_internal <- function(dgp_id,
         name <- glue::glue(
           "results__dgp={dgp_id}__est={estimator_id}__n={n}__seed={seed}"
         )
-        cached <- pins::pin_read(board, name)
-      stored_fp <- tryCatch(cached$meta$config_fingerprint, error = function(...) NULL)
+        meta_obj <- pins::pin_meta(board, name)
+        md <- cs_pin_meta_user_or_metadata(meta_obj)
+      stored_fp <- md$config_fingerprint %||% NULL
       expected_fp <- cs_build_config_fingerprint(
         dgp_id            = dgp_id,
         estimator_id      = estimator_id,
@@ -42,6 +46,7 @@ cs_run_one_seed_internal <- function(dgp_id,
           tau               = tau
         )
         if (!is.null(stored_fp) && identical(stored_fp, expected_fp)) {
+          cached <- pins::pin_read(board, name)
           tidy_row <- cs_result_to_row(cached)
           if (!is.null(p)) p(message = glue::glue("seed {seed} done (cached)"))
           return(tidy_row)
@@ -64,7 +69,7 @@ cs_run_one_seed_internal <- function(dgp_id,
       board,
       glue::glue("results__dgp={dgp_id}__est={estimator_id}__n={n}__seed={seed}")
     )
-  }
+    }
 
   worker_board <- if (isTRUE(parallel) || !is.null(staging_dir)) NULL else board
 

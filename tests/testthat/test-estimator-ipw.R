@@ -2,7 +2,7 @@ test_that("est_ipw_att returns a valid estimator object", {
   dgp <- dgp_synth_baseline(n = 1000, seed = 1L)
   df  <- dgp$df
 
-  res <- est_ipw_att(df)
+  res <- est_ipw_att(df, config = list(seed = 1, ci_method = "none"))
 
   expect_invisible(cs_check_estimator_output(res, require_qst = FALSE))
 

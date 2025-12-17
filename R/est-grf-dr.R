@@ -54,15 +54,26 @@ est_grf_dr_att <- function(df, config = list(), tau = cs_tau_oracle, ...) {
 
   X <- as.matrix(df[, x_cols, drop = FALSE])
 
+  grf_config <- config
+
   # Enforce single-threaded execution per Constitution (wide & shallow)
   # Translate num_threads -> num.threads for grf API and drop the original key.
-  if (!is.null(config$num_threads)) {
-    config$num.threads <- config$num_threads
-    config$num_threads <- NULL
+  if (!is.null(grf_config$num_threads)) {
+    grf_config$num.threads <- grf_config$num_threads
+    grf_config$num_threads <- NULL
   }
-  if (is.null(config$num.threads)) {
-    config$num.threads <- 1L
+  if (is.null(grf_config$num.threads)) {
+    grf_config$num.threads <- 1L
   }
+  grf_config$ci_method <- NULL
+  grf_config$n_boot <- NULL
+  grf_config$dgp_id <- NULL
+  grf_config$seed <- NULL
+
+  ci_method <- if (is.null(config$ci_method)) "native" else config$ci_method
+  n_boot <- if (is.null(config$n_boot)) 200 else config$n_boot
+  dgp_id <- if (is.null(config$dgp_id)) "unk" else config$dgp_id
+  task_seed <- config$seed
 
   args <- c(
     list(
@@ -70,25 +81,86 @@ est_grf_dr_att <- function(df, config = list(), tau = cs_tau_oracle, ...) {
       Y = y,
       W = w
     ),
-    config
+    grf_config
   )
 
-  forest <- do.call(grf::causal_forest, args)
-
-  ate <- grf::average_treatment_effect(
-    forest,
-    target.sample = "treated"
+  ci_lo <- NA_real_
+  ci_hi <- NA_real_
+  ci_meta <- list(
+    n_boot_ok = 0L,
+    n_boot_fail = 0L,
+    ci_valid_by_dim = logical(0),
+    collapsed = logical(0),
+    ci_valid = NA,
+    ci_fail_code = NA_character_,
+    ci_method = ci_method,
+    ci_type = NA_character_,
+    ci_level = 0.95
   )
 
-  att_hat <- as.numeric(ate[["estimate"]])
+  att_hat <- NA_real_
 
-  att <- tibble::tibble(
-    estimand = "ATT",
-    estimate = att_hat
-  )
+  if (identical(ci_method, "native")) {
+    forest <- do.call(grf::causal_forest, args)
+    ate <- grf::average_treatment_effect(
+      forest,
+      target.sample = "treated"
+    )
+    att_hat <- as.numeric(ate[["estimate"]])
+    se_hat <- as.numeric(ate[["std.err"]])
+    ci_lo <- att_hat - 1.96 * se_hat
+    ci_hi <- att_hat + 1.96 * se_hat
+    valid <- is.finite(ci_lo) && is.finite(ci_hi) && ci_lo <= ci_hi
+    ci_meta$ci_valid <- valid
+    ci_meta$ci_fail_code <- if (valid) NA_character_ else "invalid_bounds"
+    ci_meta$collapsed <- !is.na(ci_lo) && !is.na(ci_hi) && abs(ci_hi - ci_lo) < 1e-8
+    ci_meta$ci_valid_by_dim <- valid
+    ci_meta$ci_type <- "wald"
+  } else if (identical(ci_method, "bootstrap")) {
+    if (is.null(task_seed)) stop("config$seed is required for bootstrap CI")
+    stat_fn <- function(boot_df) {
+      x_cols_b <- setdiff(names(boot_df), core_cols)
+      Xb <- as.matrix(boot_df[, x_cols_b, drop = FALSE])
+      args_b <- c(
+        list(
+          X = Xb,
+          Y = boot_df$y,
+          W = boot_df$w
+        ),
+        grf_config
+      )
+      forest_b <- do.call(grf::causal_forest, args_b)
+      ate_b <- grf::average_treatment_effect(
+        forest_b,
+        target.sample = "treated"
+      )
+      as.numeric(ate_b[["estimate"]])
+    }
+    salt <- paste("est_grf_dr_att", dgp_id, sep = "|")
+    boot_seed <- cs_derive_seed(task_seed, salt)
+    ci_res <- cs_bootstrap_ci(stat_fn, df, n_boot = n_boot, seed = boot_seed, alpha = 0.05)
+    ci_lo <- if (length(ci_res$ci_lo) > 0) ci_res$ci_lo[1] else NA_real_
+    ci_hi <- if (length(ci_res$ci_hi) > 0) ci_res$ci_hi[1] else NA_real_
+    ci_meta <- ci_res$meta
+    att_hat <- stat_fn(df)
+  } else {
+    warning("Unsupported ci_method; falling back to none.")
+    ci_meta$ci_method <- "none"
+    ci_meta$ci_fail_code <- "unsupported_ci_method"
+    forest <- do.call(grf::causal_forest, args)
+    ate <- grf::average_treatment_effect(
+      forest,
+      target.sample = "treated"
+    )
+    att_hat <- as.numeric(ate[["estimate"]])
+  }
 
   res <- list(
-    att = att,
+    att = list(
+      estimate = att_hat,
+      ci_lo = ci_lo,
+      ci_hi = ci_hi
+    ),
     qst = NULL,
     cf  = NULL,
     meta = list(
@@ -100,7 +172,16 @@ est_grf_dr_att <- function(df, config = list(), tau = cs_tau_oracle, ...) {
       warnings     = character(),
       errors       = character(),
       oracle       = FALSE,
-      supports_qst = FALSE
+      supports_qst = FALSE,
+      ci_method    = ci_meta$ci_method,
+      ci_valid     = ci_meta$ci_valid,
+      ci_fail_code = ci_meta$ci_fail_code,
+      ci_valid_by_dim = ci_meta$ci_valid_by_dim,
+      collapsed    = ci_meta$collapsed,
+      ci_type      = ci_meta$ci_type,
+      ci_level     = ci_meta$ci_level,
+      n_boot_ok    = ci_meta$n_boot_ok,
+      n_boot_fail  = ci_meta$n_boot_fail
     )
   )
 

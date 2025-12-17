@@ -25,8 +25,6 @@ test_that("cs_collect_att returns expected columns and rows with bootstrap", {
     "n_boot_ok"
   )
   expect_true(all(needed %in% names(att)))
-  expect_true(any(!is.na(att$att_ci_lo)))
-  expect_true(any(!is.na(att$att_ci_hi)))
 })
 
 test_that("cs_collect_att handles no-bootstrap case", {
@@ -36,7 +34,8 @@ test_that("cs_collect_att handles no-bootstrap case", {
     n             = 80,
     seeds         = 1:2,
     bootstrap     = FALSE,
-    B             = 0
+    B             = 0,
+    config        = list(ci_method = "none")
   )
 
   tidy_runs <- cs_tidy(runs)

@@ -19,7 +19,7 @@
 #'   - true_qst: tibble with columns `tau` and `value` (all zeros)
 #'   - meta: list with `dgp_id`, `type`, and `structural_te`
 #' @export
-dgp_synth_placebo_tau0_v130 <- function(n, seed = NULL) {
+dgp_synth_placebo_tau0_v130 <- function(n, seed = NULL, include_truth = TRUE, oracle_only = FALSE) {
   if (!is.null(seed)) {
     cs_set_rng(seed)
   }
@@ -40,10 +40,13 @@ dgp_synth_placebo_tau0_v130 <- function(n, seed = NULL) {
 
   y0 <- mu0 + eps
   y1 <- y0
+  if (isTRUE(oracle_only)) {
+    return(list(df = tibble::tibble(w = w, y0 = y0, y1 = y1)))
+  }
   y  <- ifelse(w == 1L, y1, y0)
 
   true_att <- cs_true_att(structural_te = tau, w = w)
-  true_qst <- cs_get_oracle_qst("synth_placebo_tau0")
+  true_qst <- if (isTRUE(include_truth)) cs_get_oracle_qst("synth_placebo_tau0", version = "1.3.0") else NULL
 
   out <- list(
     df = tibble::tibble(
@@ -63,7 +66,9 @@ dgp_synth_placebo_tau0_v130 <- function(n, seed = NULL) {
     true_qst = true_qst,
     meta = list(
       dgp_id        = "synth_placebo_tau0",
+      version       = "1.3.0",
       type          = "synthetic",
+      params        = list(n = n, seed = seed),
       structural_te = tau
     )
   )

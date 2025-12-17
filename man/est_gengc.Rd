@@ -6,21 +6,6 @@
 \usage{
 est_gengc(df, tau = cs_tau_oracle, config = list())
 }
-\arguments{
-\item{df}{Data frame with columns \code{y}, \code{w}, and covariates; oracle columns
-(\code{y0}, \code{y1}, \code{p}, \code{structural_te}) will be stripped before calling GenGC.}
-
-\item{tau}{Numeric vector of quantile levels passed to GenGC via \code{tau_grid}.}
-
-\item{config}{Optional list with entries \code{n_draws} (default 300) and
-\code{num_trees} (default 800) forwarded to GenGC.}
-}
-\value{
-A list with \code{att}, \code{qst}, \code{cf = NULL}, and \code{meta} satisfying
-\code{cs_check_estimator_output(require_qst = TRUE)}.
-}
 \description{
-Adapter around the external GenGC package that estimates ATT and QST while
-respecting the CausalStress airlock and contracts. Uses a soft dependency
-pattern: GenGC is suggested, not imported.
+GenGC ATT + QST estimator (soft dependency)
 }

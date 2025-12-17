@@ -46,6 +46,18 @@ test_that("fingerprints differ when tau changes", {
   expect_false(identical(fp1, fp2))
 })
 
+test_that("fingerprint rejects non-serializable config values", {
+  expect_error(
+    cs_build_config_fingerprint(
+      dgp_id = "d1", estimator_id = "e1", n = 100, seed = 1,
+      bootstrap = TRUE, B = 10, oracle = FALSE, estimator_version = "1.0",
+      config = list(fn = function(x) x),
+      tau = c(0.1, 0.5)
+    ),
+    class = "causalstress_fingerprint_error"
+  )
+})
+
 test_that("skip_existing errors when config changes (fingerprint mismatch)", {
   board <- pins::board_temp()
   pin_name <- "results__dgp=synth_baseline__est=lm_att__n=30__seed=1"

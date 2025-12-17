@@ -6,9 +6,19 @@
 #'
 #' @param dgp_ids Character vector of DGP IDs.
 #' @param estimator_ids Character vector of estimator IDs.
+#' @param dgp_id Deprecated alias for `dgp_ids` (scalar character).
+#' @param estimator_id Deprecated alias for `estimator_ids` (scalar character).
 #' @param seeds Integer vector of seeds.
 #' @param n Integer sample size per run.
-#' @param config Optional estimator config list forwarded to cs_run_single().
+#' @param defaults Optional default estimator config list forwarded to
+#'   `cs_run_single()` (e.g., `list(n_boot = 200, num_threads = 1L)`).
+#' @param overrides Optional named list of estimator-specific config overrides
+#'   (e.g., `list(tmle_att = list(ci_method = "native"))`). Each override is
+#'   merged over `defaults` using `utils::modifyList()`.
+#' @param campaign_seed Optional scalar integer used to deterministically
+#'   shuffle task execution order for better load balancing without relying on
+#'   ambient RNG state. If `NULL`, tasks are executed in deterministic grid
+#'   order.
 #' @param skip_existing Logical; if TRUE, skip tasks already pinned on `board`.
 #' @param board Optional pins board for persistence.
 #' @param staging_dir Optional staging directory for crash recovery.
@@ -19,11 +29,15 @@
 #' @return Tibble with one row per run.
 #' @export
 cs_run_campaign <- function(
-  dgp_ids,
-  estimator_ids,
+  dgp_ids = NULL,
+  estimator_ids = NULL,
+  dgp_id = NULL,
+  estimator_id = NULL,
   seeds,
   n,
-  config = list(),
+  defaults = list(),
+  overrides = list(),
+  campaign_seed = NULL,
   version = NULL,
   status = "stable",
   tau = cs_tau_oracle,
@@ -32,19 +46,45 @@ cs_run_campaign <- function(
   skip_existing = FALSE,
   board = NULL,
   staging_dir = NULL,
-  parallel = TRUE,
+  parallel = FALSE,
   show_progress = TRUE,
   force = FALSE,
   quiet = TRUE,
   max_runtime = Inf,
   ...
 ) {
+  dots <- list(...)
+  # Backward compatibility: `config` / `config_by_estimator` were the previous
+  # names for `defaults` / `overrides`. Prefer the new names for clarity.
+  if ("config" %in% names(dots)) {
+    if (length(defaults) > 0L) {
+      rlang::abort("Provide only one of `defaults` or legacy `config`.")
+    }
+    defaults <- dots$config
+    dots$config <- NULL
+  }
+  if ("config_by_estimator" %in% names(dots)) {
+    if (length(overrides) > 0L) {
+      rlang::abort("Provide only one of `overrides` or legacy `config_by_estimator`.")
+    }
+    overrides <- dots$config_by_estimator
+    dots$config_by_estimator <- NULL
+  }
+
   # Backward compatibility with legacy argument names
-  if (missing(dgp_ids) && !missing(dgp_id)) {
+  if (!is.null(dgp_id)) {
+    if (!is.null(dgp_ids)) rlang::abort("Provide only one of `dgp_ids` or legacy `dgp_id`.")
     dgp_ids <- dgp_id
   }
-  if (missing(estimator_ids) && !missing(estimator_id)) {
+  if (!is.null(estimator_id)) {
+    if (!is.null(estimator_ids)) rlang::abort("Provide only one of `estimator_ids` or legacy `estimator_id`.")
     estimator_ids <- estimator_id
+  }
+  if (is.null(dgp_ids) || length(dgp_ids) == 0L) {
+    rlang::abort("`dgp_ids` must be a non-empty character vector.", class = "causalstress_contract_error")
+  }
+  if (is.null(estimator_ids) || length(estimator_ids) == 0L) {
+    rlang::abort("`estimator_ids` must be a non-empty character vector.", class = "causalstress_contract_error")
   }
 
   tasks <- tidyr::expand_grid(
@@ -54,24 +94,39 @@ cs_run_campaign <- function(
   ) %>%
     dplyr::mutate(n = n)
 
+  if (!is.null(campaign_seed) && (!is.numeric(campaign_seed) || length(campaign_seed) != 1L || !is.finite(campaign_seed))) {
+    rlang::abort("`campaign_seed` must be a finite numeric scalar or NULL.", class = "causalstress_contract_error")
+  }
+
+  cs_require_staging_for_parallel_persistence(parallel = parallel, board = board, staging_dir = staging_dir)
+
   if (!is.null(staging_dir) && !is.null(board)) {
     dir.create(staging_dir, recursive = TRUE, showWarnings = FALSE)
     cs_gather_results(board, staging_dir)
   }
 
-  # Skip existing pins if requested (with fingerprint/CI checks)
-  if (isTRUE(skip_existing) && !is.null(board)) {
-    skip_vec <- logical(nrow(tasks))
-
-    has_ci <- function(run_row) {
-      n_ok <- tryCatch(run_row$n_boot_ok, error = function(...) NA)
-      lo <- tryCatch(run_row$att_ci_lo, error = function(...) NA)
-      hi <- tryCatch(run_row$att_ci_hi, error = function(...) NA)
-      if (is.null(lo) || is.null(hi)) return(FALSE)
-      if (is.na(n_ok) || n_ok == 0L) return(FALSE)
-      if (all(is.na(lo)) || all(is.na(hi))) return(FALSE)
-      TRUE
+  resolve_config <- function(est_id) {
+    cfg <- defaults
+    if (!is.null(est_id) && est_id %in% names(overrides)) {
+      cfg <- utils::modifyList(cfg, overrides[[est_id]])
     }
+    cfg
+  }
+
+  apply_runner_defaults <- function(cfg, seed_i) {
+    if (is.null(cfg$seed)) {
+      cfg$seed <- seed_i
+    }
+    if (isTRUE(bootstrap) && B > 0L && is.null(cfg$n_boot)) {
+      cfg$n_boot <- B
+    }
+    cfg
+  }
+
+  # Skip existing pins if requested (with fingerprint/CI checks)
+  should_try_cache <- isTRUE(skip_existing) && !isTRUE(force)
+  if (isTRUE(should_try_cache) && !is.null(board)) {
+    skip_vec <- logical(nrow(tasks))
 
     for (i in seq_len(nrow(tasks))) {
       dgp_id_i  <- tasks$dgp_id[i]
@@ -83,9 +138,11 @@ cs_run_campaign <- function(
         name <- glue::glue(
           "results__dgp={dgp_id_i}__est={est_id_i}__n={n_i}__seed={seed_i}"
         )
-        cached <- pins::pin_read(board, name)
-        stored_fp <- tryCatch(cached$meta$config_fingerprint, error = function(...) NULL)
+        meta_obj <- pins::pin_meta(board, name)
+        md <- cs_pin_meta_user_or_metadata(meta_obj)
+        stored_fp <- md$config_fingerprint %||% NULL
         est_desc <- cs_get_estimator(est_id_i)
+        task_config <- apply_runner_defaults(resolve_config(est_id_i), seed_i)
         expected_fp <- cs_build_config_fingerprint(
           dgp_id            = dgp_id_i,
           estimator_id      = est_id_i,
@@ -95,7 +152,7 @@ cs_run_campaign <- function(
           B                 = B,
           oracle            = isTRUE(est_desc$oracle),
           estimator_version = est_desc$version,
-          config            = config,
+          config            = task_config,
           tau               = tau
         )
         if (is.null(stored_fp) || !identical(stored_fp, expected_fp)) {
@@ -108,8 +165,7 @@ cs_run_campaign <- function(
             call. = FALSE
           )
         }
-        tidy_row <- cs_result_to_row(cached)
-        if (isTRUE(bootstrap) && B > 0 && !has_ci(tidy_row)) {
+        if (isTRUE(bootstrap) && B > 0 && !cs_has_boot_ci_meta(md)) {
           stop(
             "Existing run found for this (dgp_id, estimator_id, n, seed) ",
             "but it was computed without bootstrap CIs, while you requested ",
@@ -133,30 +189,39 @@ cs_run_campaign <- function(
     return(tibble::tibble())
   }
 
-  # Shuffle tasks to mix DGPs/seeds for better load distribution
-  tasks <- tasks[sample(nrow(tasks)), , drop = FALSE]
+  # Shuffle tasks (deterministically when campaign_seed is provided)
+  if (!is.null(campaign_seed)) {
+    idx <- withr::with_seed(as.integer(campaign_seed), sample.int(nrow(tasks)))
+    tasks <- tasks[idx, , drop = FALSE]
+  }
 
   run_task <- function(dgp_id, estimator_id, seed, n, p = NULL) {
-    cs_run_one_seed_internal(
-      dgp_id       = dgp_id,
-      estimator_id = estimator_id,
-      n            = n,
-      seed         = seed,
-      version      = version,
-      status       = status,
-      tau          = tau,
-      bootstrap    = bootstrap,
-      B            = B,
-      config       = config,
-      board        = board,
-      skip_existing = FALSE,
-      force         = force,
-      quiet         = quiet,
-      max_runtime   = max_runtime,
-      parallel      = parallel,
-      staging_dir   = staging_dir,
-      p             = p,
-      ...
+    task_config <- apply_runner_defaults(resolve_config(estimator_id), seed)
+    do.call(
+      cs_run_one_seed_internal,
+      c(
+        list(
+          dgp_id        = dgp_id,
+          estimator_id  = estimator_id,
+          n             = n,
+          seed          = seed,
+          version       = version,
+          status        = status,
+          tau           = tau,
+          bootstrap     = bootstrap,
+          B             = B,
+          config        = task_config,
+          board         = if (isTRUE(parallel) || !is.null(staging_dir)) NULL else board,
+          skip_existing = FALSE,
+          force         = force,
+          quiet         = quiet,
+          max_runtime   = max_runtime,
+          parallel      = parallel,
+          staging_dir   = staging_dir,
+          p             = p
+        ),
+        dots
+      )
     )
   }
 
@@ -183,7 +248,7 @@ cs_run_campaign <- function(
       p(message = "Gathering results...")
     }
 
-    out
+    dplyr::arrange(out, dgp_id, estimator_id, seed)
   }
 
   if (isTRUE(show_progress)) {

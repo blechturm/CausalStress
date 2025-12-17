@@ -50,10 +50,11 @@ cs_audit <- function(board) {
     meta <- pins::pin_meta(board, name)
     pin_obj <- try(pins::pin_read(board, name), silent = TRUE)
     pin_meta <- if (!inherits(pin_obj, "try-error")) pin_obj$meta else list()
+    pin_prov <- if (!inherits(pin_obj, "try-error")) (pin_obj$provenance %||% list()) else list()
 
     ts_val <- extract_ts(
-      pin_meta$timestamp,
-      pin_meta$run_timestamp,
+      pin_prov$timestamp,
+      pin_prov$run_timestamp,
       meta$metadata$timestamp,
       meta$user$timestamp,
       meta$timestamp,

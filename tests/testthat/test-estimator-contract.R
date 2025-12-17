@@ -22,17 +22,18 @@ test_that("cs_check_estimator_output accepts ATT-only estimator without qst", {
 })
 
 test_that("cs_check_estimator_output accepts QST-capable estimator when qst is present", {
+  tau_req <- 0.5
   res <- list(
     att  = data.frame(estimate = 0.5),
     qst  = tibble::tibble(
-      tau   = c(0.5),
+      tau   = c(tau_req),
       value = c(1.0)
     ),
     meta = list(estimator_id = "DummyQST")
   )
 
   expect_invisible(
-    cs_check_estimator_output(res, require_qst = TRUE, tau = cs_tau_oracle)
+    cs_check_estimator_output(res, require_qst = TRUE, tau = tau_req)
   )
 })
 

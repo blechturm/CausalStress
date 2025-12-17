@@ -102,9 +102,9 @@ cs_check_dgp_synthetic <- function(dgp) {
       class   = "causalstress_dgp_error"
     )
   }
-  if (!all(tq$tau %in% cs_tau_oracle)) {
+  if (!identical(cs_tau_id(tq$tau), cs_tau_id(cs_tau_oracle))) {
     rlang::abort(
-      message = "`true_qst$tau` must be a subset of the oracle tau grid.",
+      message = "`true_qst$tau` must equal the canonical cs_tau_oracle() grid.",
       class   = "causalstress_dgp_error"
     )
   }
@@ -219,32 +219,46 @@ cs_check_estimator_output <- function(res, require_qst = FALSE, tau = NULL) {
   cs_chk_scalar_numeric(est, "att$estimate")
 
   # qst
-  if (require_qst) {
-    if (is.null(res$qst)) {
+  normalize_qst <- function(qst) {
+    if (!tibble::is_tibble(qst) || !"tau" %in% names(qst)) {
       rlang::abort(
-        message = "Estimator must return `qst` when `require_qst = TRUE`.",
+        message = "`qst` must be a tibble with a `tau` column.",
         class   = "causalstress_estimator_error"
       )
     }
-    if (!tibble::is_tibble(res$qst) ||
-        !all(c("tau", "value") %in% names(res$qst))) {
+    if ("estimate" %in% names(qst)) return(qst)
+    if ("value" %in% names(qst)) return(dplyr::rename(qst, estimate = value))
+    rlang::abort(
+      message = "`qst` must contain an `estimate` (or legacy `value`) column.",
+      class   = "causalstress_estimator_error"
+    )
+  }
+
+  if (require_qst && is.null(res$qst)) {
+    rlang::abort(
+      message = "Estimator must return `qst` when `require_qst = TRUE`.",
+      class   = "causalstress_estimator_error"
+    )
+  }
+
+  if (!is.null(res$qst)) {
+    qst_tbl <- normalize_qst(res$qst)
+    if (!is.numeric(qst_tbl$tau) || !is.numeric(qst_tbl$estimate)) {
       rlang::abort(
-        message = "`qst` must be a tibble with columns `tau` and `value`.",
+        message = "`qst$tau` and `qst$estimate` must be numeric.",
         class   = "causalstress_estimator_error"
       )
     }
-    if (!is.null(tau) && !all(res$qst$tau %in% tau)) {
+    if (anyNA(qst_tbl$tau) || anyNA(qst_tbl$estimate)) {
       rlang::abort(
-        message = "`qst$tau` must be a subset of the requested tau grid.",
+        message = "`qst$tau` and `qst$estimate` must not contain NA.",
         class   = "causalstress_estimator_error"
       )
     }
-  } else {
-    if (!is.null(res$qst)) {
-      if (!tibble::is_tibble(res$qst) ||
-          !all(c("tau", "value") %in% names(res$qst))) {
+    if (!is.null(tau)) {
+      if (!identical(cs_tau_id(qst_tbl$tau), cs_tau_id(tau))) {
         rlang::abort(
-          message = "`qst` must be a tibble with columns `tau` and `value` when provided.",
+          message = "`qst$tau` must match the requested tau grid exactly (same values and order).",
           class   = "causalstress_estimator_error"
         )
       }

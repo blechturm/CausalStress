@@ -7,7 +7,7 @@ test_that("gengc estimator returns contract-compliant output", {
     res <- est_gengc(
       dgp$df,
       tau = cs_tau_oracle,
-      config = list(n_draws = 50, num_trees = 50)
+      config = list(n_draws = 50, num_trees = 50, seed = 1)
     )
     cs_check_estimator_output(res, require_qst = TRUE, tau = cs_tau_oracle)
   })
@@ -24,7 +24,7 @@ test_that("gengc estimator strips oracle columns (airlock)", {
     est_gengc(
       df_bad,
       tau = cs_tau_oracle,
-      config = list(n_draws = 10, num_trees = 20)
+      config = list(n_draws = 10, num_trees = 20, seed = 2)
     )
   )
 })

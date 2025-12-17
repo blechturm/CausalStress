@@ -24,16 +24,18 @@
 #' @return A list with components `df`, `true_att`, `true_qst`, and `meta`
 #'   following the synthetic DGP contract.
 #' @export
-dgp_synth_qte1_v130 <- function(n, seed = NULL) {
+dgp_synth_qte1_v130 <- function(n, seed = NULL, include_truth = TRUE, oracle_only = FALSE) {
   if (!is.null(seed)) {
     cs_set_rng(seed)
   }
 
   X1 <- stats::rnorm(n, mean = 0, sd = 1)
   X2 <- stats::rnorm(n, mean = 0, sd = 1)
-  X3 <- stats::rnorm(n, mean = 0, sd = 1)
-  X4 <- stats::rnorm(n, mean = 0, sd = 1)
-  X5 <- stats::rnorm(n, mean = 0, sd = 1)
+  if (!isTRUE(oracle_only)) {
+    X3 <- stats::rnorm(n, mean = 0, sd = 1)
+    X4 <- stats::rnorm(n, mean = 0, sd = 1)
+    X5 <- stats::rnorm(n, mean = 0, sd = 1)
+  }
 
   mu0 <- 1 + X1 + 0.5 * X2
   tau <- ifelse(X1 > 0, 1, -1)
@@ -46,10 +48,14 @@ dgp_synth_qte1_v130 <- function(n, seed = NULL) {
 
   y0 <- mu0 + eps0
   y1 <- mu0 + tau + eps1
+
+  if (isTRUE(oracle_only)) {
+    return(list(df = tibble::tibble(w = w, y0 = y0, y1 = y1)))
+  }
   y  <- ifelse(w == 1L, y1, y0)
 
   true_att <- cs_true_att(structural_te = tau, w = w)
-  true_qst <- cs_get_oracle_qst("synth_qte1")
+  true_qst <- if (isTRUE(include_truth)) cs_get_oracle_qst("synth_qte1", version = "1.3.0") else NULL
 
   out <- list(
     df = tibble::tibble(
@@ -69,7 +75,9 @@ dgp_synth_qte1_v130 <- function(n, seed = NULL) {
     true_qst = true_qst,
     meta = list(
       dgp_id        = "synth_qte1",
+      version       = "1.3.0",
       type          = "synthetic",
+      params        = list(n = n, seed = seed),
       structural_te = tau
     )
   )

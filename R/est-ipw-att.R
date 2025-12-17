@@ -1,83 +1,59 @@
 #' Inverse-probability weighted ATT estimator (IPW-ATT)
 #'
-#' Implements a simple inverse-probability weighting estimator for the
-#' average treatment effect on the treated (ATT). The propensity score
-#' is estimated via logistic regression of `w` on covariates, and the
-#' ATT is computed using standard ATT-IPW weights.
-#'
-#' @param df A data.frame or tibble containing at least `y`, `w`, and
-#'   covariates whose names start with `"X"`.
-#' @param config Optional list of configuration options (currently unused
-#'   but included for API symmetry and future extensions).
-#' @param tau Numeric vector of quantile levels (ignored; included for
-#'   API compatibility).
-#' @param ... Ignored. Allows for future extensibility.
-#'
-#' @return A list with components:
-#'   - att: list with an `estimate` field (scalar ATT estimate).
-#'   - qst: `NULL` (this estimator does not provide QST).
-#'   - meta: list with metadata about the estimator.
-#'
 #' @export
 est_ipw_att <- function(df, config = list(), tau = cs_tau_oracle, ...) {
+  ci_method <- if (is.null(config$ci_method)) "bootstrap" else config$ci_method
+  n_boot <- if (is.null(config$n_boot)) 200 else config$n_boot
+  dgp_id <- if (is.null(config$dgp_id)) "unk" else config$dgp_id
+  task_seed <- config$seed
+
   if (!is.data.frame(df)) {
-    rlang::abort(
-      message = "`df` must be a data.frame.",
-      class   = "causalstress_estimator_error"
-    )
+    rlang::abort("`df` must be a data.frame.", class = "causalstress_estimator_error")
   }
   if (!all(c("y", "w") %in% names(df))) {
-    rlang::abort(
-      message = "`df` must contain columns `y` and `w`.",
-      class   = "causalstress_estimator_error"
-    )
+    rlang::abort("`df` must contain columns `y` and `w`.", class = "causalstress_estimator_error")
   }
 
   x_cols <- grep("^X", names(df), value = TRUE)
   if (length(x_cols) == 0L) {
-    rlang::abort(
-      message = "No covariate columns starting with 'X' found in `df`.",
-      class   = "causalstress_estimator_error"
-    )
+    rlang::abort("No covariate columns starting with 'X' found in `df`.", class = "causalstress_estimator_error")
   }
 
   if (!(is.numeric(df$w) || is.integer(df$w)) || !all(df$w %in% c(0, 1))) {
-    rlang::abort(
-      message = "`w` must be numeric/integer and contain only 0/1.",
-      class   = "causalstress_estimator_error"
-    )
+    rlang::abort("`w` must be numeric/integer and contain only 0/1.", class = "causalstress_estimator_error")
   }
   if (!is.numeric(df$y)) {
-    rlang::abort(
-      message = "`y` must be numeric.",
-      class   = "causalstress_estimator_error"
-    )
+    rlang::abort("`y` must be numeric.", class = "causalstress_estimator_error")
   }
   if (anyNA(df[, c("y", "w", x_cols), drop = FALSE])) {
-    rlang::abort(
-      message = "`y`, `w`, and covariates `X*` must not contain missing values.",
-      class   = "causalstress_estimator_error"
-    )
+    rlang::abort("`y`, `w`, and covariates `X*` must not contain missing values.", class = "causalstress_estimator_error")
   }
 
   treated <- df$w == 1L
   control <- !treated
   if (!any(control)) {
-    rlang::abort(
-      message = "No control units available to estimate propensity.",
-      class   = "causalstress_estimator_error"
-    )
+    rlang::abort("No control units available to estimate propensity.", class = "causalstress_estimator_error")
   }
   if (!any(treated)) {
-    rlang::abort(
-      message = "No treated units available to estimate ATT.",
-      class   = "causalstress_estimator_error"
-    )
+    rlang::abort("No treated units available to estimate ATT.", class = "causalstress_estimator_error")
   }
 
-  form <- stats::as.formula(
-    paste("w ~", paste(x_cols, collapse = " + "))
-  )
+  form <- stats::as.formula(paste("w ~", paste(x_cols, collapse = " + ")))
+
+  calc_point <- function(df_boot) {
+    treated_b <- df_boot$w == 1L
+    control_b <- !treated_b
+    if (!any(control_b) || !any(treated_b)) stop("insufficient groups")
+    glm_fit_b <- stats::glm(form, family = stats::binomial(), data = df_boot)
+    e_hat_b <- stats::predict(glm_fit_b, type = "response")
+    y_treated_b <- df_boot$y[treated_b]
+    y_control_b <- df_boot$y[control_b]
+    w_control_b <- e_hat_b[control_b] / (1 - e_hat_b[control_b])
+    mu1_b <- mean(y_treated_b)
+    mu0_b <- sum(w_control_b * y_control_b) / sum(w_control_b)
+    mu1_b - mu0_b
+  }
+
   glm_fit <- stats::glm(form, family = stats::binomial(), data = df)
   e_hat <- stats::predict(glm_fit, type = "response")
 
@@ -89,9 +65,46 @@ est_ipw_att <- function(df, config = list(), tau = cs_tau_oracle, ...) {
   mu0_hat <- sum(w_control * y_control) / sum(w_control)
   att_hat <- mu1_hat - mu0_hat
 
+  ci_lo <- NA_real_
+  ci_hi <- NA_real_
+  ci_meta <- list(
+    n_boot_ok = 0L,
+    n_boot_fail = 0L,
+    ci_valid_by_dim = logical(0),
+    collapsed = logical(0),
+    ci_valid = NA,
+    ci_fail_code = NA_character_,
+    ci_method = ci_method,
+    ci_type = "percentile",
+    ci_level = 0.95
+  )
+  warnings_vec <- character()
+
+  if (identical(ci_method, "bootstrap")) {
+    if (is.null(task_seed)) {
+      warning("Bootstrap CI requested but config$seed is missing; CIs set to NA.")
+      ci_meta$ci_method <- "none"
+      ci_meta$ci_fail_code <- "missing_seed"
+    } else {
+      salt <- paste("est_ipw_att", dgp_id, sep = "|")
+      boot_seed <- cs_derive_seed(task_seed, salt)
+      ci_res <- cs_bootstrap_ci(calc_point, df, n_boot = n_boot, seed = boot_seed, alpha = 0.05)
+      ci_lo <- if (length(ci_res$ci_lo) > 0) ci_res$ci_lo[1] else NA_real_
+      ci_hi <- if (length(ci_res$ci_hi) > 0) ci_res$ci_hi[1] else NA_real_
+      ci_meta <- ci_res$meta
+    }
+  } else if (!identical(ci_method, "none")) {
+    warning("Unsupported ci_method; falling back to none.")
+    ci_method <- "none"
+    ci_meta$ci_method <- "none"
+    ci_meta$ci_fail_code <- "unsupported_ci_method"
+  }
+
   res <- list(
     att = list(
-      estimate = att_hat
+      estimate = att_hat,
+      ci_lo = ci_lo,
+      ci_hi = ci_hi
     ),
     qst = NULL,
     cf  = NULL,
@@ -101,14 +114,22 @@ est_ipw_att <- function(df, config = list(), tau = cs_tau_oracle, ...) {
       capabilities = c("att"),
       target_level = "population",
       config       = config,
-      warnings     = character(),
+      warnings     = warnings_vec,
       errors       = character(),
       oracle       = FALSE,
-      supports_qst = FALSE
+      supports_qst = FALSE,
+      n_boot_ok    = ci_meta$n_boot_ok,
+      n_boot_fail  = ci_meta$n_boot_fail,
+      ci_method    = ci_meta$ci_method,
+      ci_valid     = ci_meta$ci_valid,
+      ci_fail_code = ci_meta$ci_fail_code,
+      ci_valid_by_dim = ci_meta$ci_valid_by_dim,
+      collapsed    = ci_meta$collapsed,
+      ci_type      = ci_meta$ci_type,
+      ci_level     = ci_meta$ci_level
     )
   )
 
   cs_check_estimator_output(res, require_qst = FALSE)
-
   res
 }

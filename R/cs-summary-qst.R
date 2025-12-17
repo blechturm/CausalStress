@@ -29,9 +29,14 @@ cs_summarise_qst <- function(runs) {
     }
   }
 
+  if (!"tau_id" %in% names(df) && "tau" %in% names(df)) {
+    df$tau_id <- cs_tau_id(df$tau)
+  }
+
   df %>%
-    dplyr::group_by(.data$dgp_id, .data$estimator_id, .data$n, .data$tau) %>%
+    dplyr::group_by(.data$dgp_id, .data$estimator_id, .data$n, .data$tau_id) %>%
     dplyr::summarise(
+      tau            = dplyr::first(.data$tau),
       mean_bias      = mean(.data$error, na.rm = TRUE),
       mean_abs_bias  = mean(.data$abs_error, na.rm = TRUE),
       coverage       = mean(.data$covered, na.rm = TRUE),
