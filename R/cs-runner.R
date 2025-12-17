@@ -384,6 +384,15 @@ cs_run_seeds <- function(
   }
   seeds <- as.integer(seeds)
 
+  if (isTRUE(parallel) && !is.null(board) && is.null(staging_dir)) {
+    cli::cli_abort(
+      c(
+        "Parallel execution with persistence requires a staging directory.",
+        "i" = "Set `staging_dir` when using `parallel = TRUE` with a non-NULL `board`."
+      )
+    )
+  }
+
   if (!is.null(staging_dir) && !is.null(board)) {
     dir.create(staging_dir, recursive = TRUE, showWarnings = FALSE)
     # Recovery: gather any staged files from prior crash before running new seeds
@@ -392,81 +401,113 @@ cs_run_seeds <- function(
 
   est_desc <- cs_get_estimator(estimator_id)
 
+  pin_name_for_seed <- function(s) {
+    glue::glue(
+      "results__dgp={dgp_id}__est={estimator_id}__n={n}__seed={s}"
+    )
+  }
+
+  apply_runner_defaults <- function(cfg, seed_i) {
+    if (is.null(cfg$seed)) {
+      cfg$seed <- seed_i
+    }
+    if (isTRUE(bootstrap) && B > 0L && is.null(cfg$n_boot)) {
+      cfg$n_boot <- B
+    }
+    cfg
+  }
+
+  build_expected_fp <- function(seed_i) {
+    expected_cfg <- apply_runner_defaults(config, seed_i)
+    cs_build_config_fingerprint(
+      dgp_id            = dgp_id,
+      estimator_id      = estimator_id,
+      n                 = n,
+      seed              = seed_i,
+      bootstrap         = bootstrap,
+      B                 = B,
+      oracle            = isTRUE(est_desc$oracle),
+      estimator_version = est_desc$version,
+      config            = expected_cfg,
+      tau               = tau
+    )
+  }
+
+  has_boot_ci_meta <- function(md) {
+    n_ok <- suppressWarnings(as.integer(md$n_boot_ok %||% 0L))
+    lo <- md$att_ci_lo %||% NA_real_
+    hi <- md$att_ci_hi %||% NA_real_
+    if (!is.finite(n_ok) || n_ok <= 0L) return(FALSE)
+    if (!is.finite(lo) || !is.finite(hi)) return(FALSE)
+    if (lo > hi) return(FALSE)
+    TRUE
+  }
+
+  should_try_cache <- isTRUE(skip_existing) && !isTRUE(force)
+  cached_seeds <- integer(0)
+  seeds_to_run <- seeds
+
+  if (!is.null(board) && isTRUE(should_try_cache)) {
+    cached <- logical(length(seeds))
+    for (i in seq_along(seeds)) {
+      s <- seeds[[i]]
+      if (!cs_pin_exists(board, dgp_id, estimator_id, n, s)) next
+
+      name <- pin_name_for_seed(s)
+      meta_obj <- pins::pin_meta(board, name)
+      md <- meta_obj$metadata %||% meta_obj$user %||% list()
+      stored_fp <- md$config_fingerprint %||% NULL
+      expected_fp <- build_expected_fp(s)
+
+      if (is.null(stored_fp) || !identical(stored_fp, expected_fp)) {
+        old_txt <- if (is.null(stored_fp)) "missing" else stored_fp
+        stop(
+          "Configuration fingerprint mismatch for ",
+          dgp_id, " x ", estimator_id, " seed ", s, ". ",
+          "(Stored: ", old_txt, ", Current: ", expected_fp, "). ",
+          "To overwrite this run with new settings, set force = TRUE or skip_existing = FALSE.",
+          call. = FALSE
+        )
+      }
+
+      if (isTRUE(bootstrap) && B > 0L && !has_boot_ci_meta(md)) {
+        stop(
+          "Existing run found for this (dgp_id, estimator_id, n, seed) ",
+          "but it was computed without bootstrap CIs, while you requested ",
+          "bootstrap = TRUE, B = ", B, ". Use a fresh board or set ",
+          "skip_existing = FALSE to recompute.",
+          call. = FALSE
+        )
+      }
+
+      cached[[i]] <- TRUE
+    }
+
+    cached_seeds <- seeds[cached]
+    seeds_to_run <- seeds[!cached]
+  }
+
+  # If we are forcing recompute and a pin exists, delete it to avoid stale metadata
+  if (!is.null(board) && !isTRUE(should_try_cache)) {
+    for (s in seeds_to_run) {
+      if (!cs_pin_exists(board, dgp_id, estimator_id, n, s)) next
+      pins::pin_delete(board, pin_name_for_seed(s))
+    }
+  }
+
+  cached_rows <- list()
+  if (!is.null(board) && length(cached_seeds) > 0L) {
+    cached_rows <- lapply(cached_seeds, function(s) {
+      cached <- pins::pin_read(board, pin_name_for_seed(s))
+      cs_result_to_row(cached)
+    })
+  }
+
   run_one_seed <- function(s, p = NULL) {
     tick <- function() {
       if (!is.null(p)) p(message = glue::glue("seed {s} done"))
     }
     on.exit(tick(), add = TRUE)
-
-    should_try_cache <- isTRUE(skip_existing) && !isTRUE(force)
-    if (!is.null(board) && isTRUE(should_try_cache)) {
-      if (cs_pin_exists(board, dgp_id, estimator_id, n, s)) {
-        name <- glue::glue(
-          "results__dgp={dgp_id}__est={estimator_id}__n={n}__seed={s}"
-        )
-        cached <- pins::pin_read(board, name)
-        stored_fp <- tryCatch(cached$meta$config_fingerprint, error = function(...) NULL)
-        config_cache <- config
-        if (is.null(config_cache$seed)) {
-          config_cache$seed <- s
-        }
-        if (isTRUE(bootstrap) && B > 0L && is.null(config_cache$n_boot)) {
-          config_cache$n_boot <- B
-        }
-        expected_fp <- cs_build_config_fingerprint(
-          dgp_id            = dgp_id,
-          estimator_id      = estimator_id,
-          n                 = n,
-          seed              = s,
-          bootstrap         = bootstrap,
-          B                 = B,
-          oracle            = isTRUE(est_desc$oracle),
-          estimator_version = est_desc$version,
-          config            = config_cache,
-          tau               = tau
-        )
-        if (!is.null(stored_fp) && identical(stored_fp, expected_fp)) {
-          tidy_row <- cs_result_to_row(cached)
-          has_ci <- function(run_row) {
-            n_ok <- tryCatch(run_row$n_boot_ok, error = function(...) NA)
-            lo <- tryCatch(run_row$att_ci_lo, error = function(...) NA)
-            hi <- tryCatch(run_row$att_ci_hi, error = function(...) NA)
-            if (is.null(lo) || is.null(hi)) return(FALSE)
-            if (is.na(n_ok) || n_ok == 0L) return(FALSE)
-            if (all(is.na(lo)) || all(is.na(hi))) return(FALSE)
-            TRUE
-          }
-          if (isTRUE(bootstrap) && B > 0 && !has_ci(tidy_row)) {
-            stop(
-              "Existing run found for this (dgp_id, estimator_id, n, seed) ",
-              "but it was computed without bootstrap CIs, while you requested ",
-              "bootstrap = TRUE, B = ", B, ". Use a fresh board or set ",
-              "skip_existing = FALSE to recompute.",
-              call. = FALSE
-            )
-          }
-          return(tidy_row)
-        } else {
-          old_txt <- if (is.null(stored_fp)) "missing" else stored_fp
-          stop(
-            "Configuration fingerprint mismatch for ",
-            dgp_id, " x ", estimator_id, " seed ", s, ". ",
-            "(Stored: ", old_txt, ", Current: ", expected_fp, "). ",
-            "To overwrite this run with new settings, set force = TRUE or skip_existing = FALSE.",
-            call. = FALSE
-          )
-        }
-      }
-    }
-
-    # If we are forcing recompute and a pin exists, delete it to avoid stale metadata
-    if (!is.null(board) && !isTRUE(should_try_cache) &&
-        cs_pin_exists(board, dgp_id, estimator_id, n, s)) {
-      pins::pin_delete(
-        board,
-        glue::glue("results__dgp={dgp_id}__est={estimator_id}__n={n}__seed={s}")
-      )
-    }
 
     worker_board <- if (isTRUE(parallel) || !is.null(staging_dir)) NULL else board
 
@@ -502,11 +543,11 @@ cs_run_seeds <- function(
   )
 
   run_with_progress <- function() {
-    p <- if (isTRUE(show_progress)) progressr::progressor(steps = length(seeds) + 1L) else NULL
+    p <- if (isTRUE(show_progress)) progressr::progressor(steps = length(seeds_to_run) + 1L) else NULL
 
     if (isTRUE(parallel)) {
       rows <- furrr::future_map(
-        sample(seeds),
+        seeds_to_run,
         run_one_seed,
         p = p,
         .options  = furrr::furrr_options(seed = TRUE, packages = "CausalStress"),
@@ -514,7 +555,7 @@ cs_run_seeds <- function(
       )
       out <- tibble::as_tibble(dplyr::bind_rows(rows))
     } else {
-      rows <- lapply(seeds, function(s) run_one_seed(s, p = p))
+      rows <- lapply(seeds_to_run, function(s) run_one_seed(s, p = p))
       out <- tibble::as_tibble(do.call(rbind, rows))
     }
 
@@ -525,7 +566,8 @@ cs_run_seeds <- function(
       p(message = "Gathering results...")
     }
 
-    dplyr::arrange(out, seed)
+    out_all <- dplyr::bind_rows(cached_rows, out)
+    dplyr::arrange(out_all, seed)
   }
 
   if (isTRUE(show_progress)) {

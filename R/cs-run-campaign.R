@@ -13,6 +13,10 @@
 #' @param overrides Optional named list of estimator-specific config overrides
 #'   (e.g., `list(tmle_att = list(ci_method = "native"))`). Each override is
 #'   merged over `defaults` using `utils::modifyList()`.
+#' @param campaign_seed Optional scalar integer used to deterministically
+#'   shuffle task execution order for better load balancing without relying on
+#'   ambient RNG state. If `NULL`, tasks are executed in deterministic grid
+#'   order.
 #' @param skip_existing Logical; if TRUE, skip tasks already pinned on `board`.
 #' @param board Optional pins board for persistence.
 #' @param staging_dir Optional staging directory for crash recovery.
@@ -29,6 +33,7 @@ cs_run_campaign <- function(
   n,
   defaults = list(),
   overrides = list(),
+  campaign_seed = NULL,
   version = NULL,
   status = "stable",
   tau = cs_tau_oracle,
@@ -37,7 +42,7 @@ cs_run_campaign <- function(
   skip_existing = FALSE,
   board = NULL,
   staging_dir = NULL,
-  parallel = TRUE,
+  parallel = FALSE,
   show_progress = TRUE,
   force = FALSE,
   quiet = TRUE,
@@ -77,6 +82,19 @@ cs_run_campaign <- function(
   ) %>%
     dplyr::mutate(n = n)
 
+  if (!is.null(campaign_seed) && (!is.numeric(campaign_seed) || length(campaign_seed) != 1L || !is.finite(campaign_seed))) {
+    rlang::abort("`campaign_seed` must be a finite numeric scalar or NULL.", class = "causalstress_contract_error")
+  }
+
+  if (isTRUE(parallel) && !is.null(board) && is.null(staging_dir)) {
+    cli::cli_abort(
+      c(
+        "Parallel execution with persistence requires a staging directory.",
+        "i" = "Set `staging_dir` when using `parallel = TRUE` with a non-NULL `board`."
+      )
+    )
+  }
+
   if (!is.null(staging_dir) && !is.null(board)) {
     dir.create(staging_dir, recursive = TRUE, showWarnings = FALSE)
     cs_gather_results(board, staging_dir)
@@ -100,19 +118,20 @@ cs_run_campaign <- function(
     cfg
   }
 
-  # Skip existing pins if requested (with fingerprint/CI checks)
-  if (isTRUE(skip_existing) && !is.null(board)) {
-    skip_vec <- logical(nrow(tasks))
+  has_boot_ci_meta <- function(md) {
+    n_ok <- suppressWarnings(as.integer(md$n_boot_ok %||% 0L))
+    lo <- md$att_ci_lo %||% NA_real_
+    hi <- md$att_ci_hi %||% NA_real_
+    if (!is.finite(n_ok) || n_ok <= 0L) return(FALSE)
+    if (!is.finite(lo) || !is.finite(hi)) return(FALSE)
+    if (lo > hi) return(FALSE)
+    TRUE
+  }
 
-    has_ci <- function(run_row) {
-      n_ok <- tryCatch(run_row$n_boot_ok, error = function(...) NA)
-      lo <- tryCatch(run_row$att_ci_lo, error = function(...) NA)
-      hi <- tryCatch(run_row$att_ci_hi, error = function(...) NA)
-      if (is.null(lo) || is.null(hi)) return(FALSE)
-      if (is.na(n_ok) || n_ok == 0L) return(FALSE)
-      if (all(is.na(lo)) || all(is.na(hi))) return(FALSE)
-      TRUE
-    }
+  # Skip existing pins if requested (with fingerprint/CI checks)
+  should_try_cache <- isTRUE(skip_existing) && !isTRUE(force)
+  if (isTRUE(should_try_cache) && !is.null(board)) {
+    skip_vec <- logical(nrow(tasks))
 
     for (i in seq_len(nrow(tasks))) {
       dgp_id_i  <- tasks$dgp_id[i]
@@ -124,8 +143,9 @@ cs_run_campaign <- function(
         name <- glue::glue(
           "results__dgp={dgp_id_i}__est={est_id_i}__n={n_i}__seed={seed_i}"
         )
-        cached <- pins::pin_read(board, name)
-        stored_fp <- tryCatch(cached$meta$config_fingerprint, error = function(...) NULL)
+        meta_obj <- pins::pin_meta(board, name)
+        md <- meta_obj$metadata %||% meta_obj$user %||% list()
+        stored_fp <- md$config_fingerprint %||% NULL
         est_desc <- cs_get_estimator(est_id_i)
         task_config <- apply_runner_defaults(resolve_config(est_id_i), seed_i)
         expected_fp <- cs_build_config_fingerprint(
@@ -150,8 +170,7 @@ cs_run_campaign <- function(
             call. = FALSE
           )
         }
-        tidy_row <- cs_result_to_row(cached)
-        if (isTRUE(bootstrap) && B > 0 && !has_ci(tidy_row)) {
+        if (isTRUE(bootstrap) && B > 0 && !has_boot_ci_meta(md)) {
           stop(
             "Existing run found for this (dgp_id, estimator_id, n, seed) ",
             "but it was computed without bootstrap CIs, while you requested ",
@@ -175,8 +194,11 @@ cs_run_campaign <- function(
     return(tibble::tibble())
   }
 
-  # Shuffle tasks to mix DGPs/seeds for better load distribution
-  tasks <- tasks[sample(nrow(tasks)), , drop = FALSE]
+  # Shuffle tasks (deterministically when campaign_seed is provided)
+  if (!is.null(campaign_seed)) {
+    idx <- withr::with_seed(as.integer(campaign_seed), sample.int(nrow(tasks)))
+    tasks <- tasks[idx, , drop = FALSE]
+  }
 
   run_task <- function(dgp_id, estimator_id, seed, n, p = NULL) {
     task_config <- apply_runner_defaults(resolve_config(estimator_id), seed)
@@ -194,7 +216,7 @@ cs_run_campaign <- function(
           bootstrap     = bootstrap,
           B             = B,
           config        = task_config,
-          board         = board,
+          board         = if (isTRUE(parallel) || !is.null(staging_dir)) NULL else board,
           skip_existing = FALSE,
           force         = force,
           quiet         = quiet,
@@ -231,7 +253,7 @@ cs_run_campaign <- function(
       p(message = "Gathering results...")
     }
 
-    out
+    dplyr::arrange(out, dgp_id, estimator_id, seed)
   }
 
   if (isTRUE(show_progress)) {

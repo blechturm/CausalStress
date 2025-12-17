@@ -5,11 +5,26 @@
 #' @return Invisibly, the file path written.
 cs_stage_result <- function(result, staging_dir) {
   meta <- result$meta %||% list()
+  fp <- meta$config_fingerprint %||% "nofp"
   fname <- glue::glue(
-    "result_{meta$dgp_id}_{meta$estimator_id}_{meta$n}_seed{meta$seed}.qs"
+    "result__dgp={meta$dgp_id}__est={meta$estimator_id}__n={meta$n}__seed={meta$seed}__fp={fp}.qs"
   )
   path <- file.path(staging_dir, fname)
-  qs::qsave(result, path)
+
+  if (file.exists(path)) {
+    return(invisible(path))
+  }
+
+  dir.create(staging_dir, recursive = TRUE, showWarnings = FALSE)
+  tmp <- tempfile(pattern = paste0(fname, "."), tmpdir = staging_dir, fileext = ".tmp")
+
+  qs::qsave(result, tmp)
+  ok <- file.rename(tmp, path)
+  if (!isTRUE(ok)) {
+    # best-effort cleanup; on Windows rename can fail if file exists
+    if (file.exists(tmp)) unlink(tmp)
+    cli::cli_abort("Failed to atomically stage result to {path}.")
+  }
   invisible(path)
 }
 
@@ -27,11 +42,37 @@ cs_stage_result <- function(result, staging_dir) {
 cs_gather_results <- function(board, staging_dir) {
   files <- list.files(staging_dir, pattern = "\\.qs$", full.names = TRUE)
   if (length(files) == 0L) return(0L)
+  files <- sort(files)
 
   for (f in files) {
-    res <- qs::qread(f)
-    cs_pin_write(board, res)
-    unlink(f)
+    res <- tryCatch(
+      qs::qread(f),
+      error = function(e) {
+        cli::cli_abort(
+          c(
+            "Failed to read staged result file: {f}",
+            "i" = "Leaving the file in place for manual inspection/retry.",
+            "x" = conditionMessage(e)
+          )
+        )
+      }
+    )
+
+    tryCatch(
+      {
+        cs_pin_write(board, res)
+        unlink(f)
+      },
+      error = function(e) {
+        cli::cli_abort(
+          c(
+            "Failed to pin staged result from file: {f}",
+            "i" = "Leaving the file in place for retry.",
+            "x" = conditionMessage(e)
+          )
+        )
+      }
+    )
   }
   invisible(length(files))
 }
