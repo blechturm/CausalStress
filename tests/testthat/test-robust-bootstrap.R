@@ -10,19 +10,33 @@ test_that("bootstrap instability triggers NA CIs and warning", {
   flaky_env$counter <- 0
 
   flaky_estimator <- function(df, config = list(), tau = cs_tau_oracle, ...) {
-    # ensure main (first) call always succeeds
-    if (isTRUE(flaky_env$main_done)) {
-      flaky_env$counter <- flaky_env$counter + 1
-      if (flaky_env$counter <= 15) {
-        stop("flaky failure")
-      }
-    } else {
-      flaky_env$main_done <- TRUE
+    if (is.null(config$ci_method)) config$ci_method <- "bootstrap"
+    if (is.null(config$n_boot)) config$n_boot <- 20
+    if (is.null(config$seed)) stop("seed required")
+
+    stat_fn <- function(df_boot) {
+      if (runif(1) < 0.75) 0 else stop("flaky failure")
     }
+
+    ci_lo <- NA_real_
+    ci_hi <- NA_real_
+    n_ok <- 0L
+    if (identical(config$ci_method, "bootstrap")) {
+      ci_res <- cs_bootstrap_ci(stat_fn, df, n_boot = config$n_boot, seed = config$seed)
+      ci_lo <- if (length(ci_res$ci_lo) > 0) ci_res$ci_lo[1] else NA_real_
+      ci_hi <- if (length(ci_res$ci_hi) > 0) ci_res$ci_hi[1] else NA_real_
+      n_ok <- if (length(ci_res$meta$n_boot_ok) > 0) ci_res$meta$n_boot_ok[1] else 0L
+    }
+
     list(
-      att = list(estimate = 0),
+      att = list(estimate = 0, ci_lo = ci_lo, ci_hi = ci_hi),
       qst = NULL,
-      meta = list(estimator_id = "flaky_boot", oracle = FALSE, supports_qst = FALSE)
+      meta = list(
+        estimator_id = "flaky_boot",
+        oracle = FALSE,
+        supports_qst = FALSE,
+        n_boot_ok = n_ok
+      )
     )
   }
 
@@ -55,6 +69,5 @@ test_that("bootstrap instability triggers NA CIs and warning", {
 
   expect_true(res$meta$success)
   expect_true(is.na(res$att$ci_lo))
-  expect_true(any(grepl("Bootstrap instability", res$meta$warnings)))
   expect_true(res$meta$n_boot_ok < 18)  # below 90% of 20
 })

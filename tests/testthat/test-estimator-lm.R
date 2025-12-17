@@ -7,7 +7,7 @@ test_that("est_lm_att returns a valid estimator object on synth_baseline", {
   est <- est_lm_att(
     df     = df,
     tau    = cs_tau_oracle,
-    config = list()
+    config = list(seed = 1, ci_method = "none")
   )
 
   expect_invisible(cs_check_estimator_output(est, require_qst = FALSE))

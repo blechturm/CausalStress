@@ -6,29 +6,6 @@
 \usage{
 est_ipw_att(df, config = list(), tau = cs_tau_oracle, ...)
 }
-\arguments{
-\item{df}{A data.frame or tibble containing at least \code{y}, \code{w}, and
-covariates whose names start with \code{"X"}.}
-
-\item{config}{Optional list of configuration options (currently unused
-but included for API symmetry and future extensions).}
-
-\item{tau}{Numeric vector of quantile levels (ignored; included for
-API compatibility).}
-
-\item{...}{Ignored. Allows for future extensibility.}
-}
-\value{
-A list with components:
-\itemize{
-\item att: list with an \code{estimate} field (scalar ATT estimate).
-\item qst: \code{NULL} (this estimator does not provide QST).
-\item meta: list with metadata about the estimator.
-}
-}
 \description{
-Implements a simple inverse-probability weighting estimator for the
-average treatment effect on the treated (ATT). The propensity score
-is estimated via logistic regression of \code{w} on covariates, and the
-ATT is computed using standard ATT-IPW weights.
+Inverse-probability weighted ATT estimator (IPW-ATT)
 }

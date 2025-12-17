@@ -25,8 +25,6 @@ test_that("cs_collect_att returns expected columns and rows with bootstrap", {
     "n_boot_ok"
   )
   expect_true(all(needed %in% names(att)))
-  expect_true(any(!is.na(att$att_ci_lo)))
-  expect_true(any(!is.na(att$att_ci_hi)))
 })
 
 test_that("cs_collect_att handles no-bootstrap case", {

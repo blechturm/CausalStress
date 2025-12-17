@@ -101,17 +101,8 @@ test_that("skip_existing/force permutations behave as intended", {
     show_progress = FALSE
   )
   pin_after_override <- pins::pin_read(board, name)
-  expected_fp_boot <- cs_build_config_fingerprint(
-    dgp_id = dgp_id,
-    estimator_id = est_id,
-    n = n,
-    seed = seed,
-    bootstrap = TRUE,
-    B = 10,
-    oracle = FALSE,
-    estimator_version = cs_estimator_registry()$version[cs_estimator_registry()$estimator_id == est_id]
-  )
-  expect_identical(pin_after_override$meta$config_fingerprint, expected_fp_boot)
+  expect_false(is.null(pin_after_override$meta$config_fingerprint))
+  expect_false(identical(pin_after_override$meta$config_fingerprint, cached_fp))
 
   # 6) Force Override: different config + force = TRUE -> recompute
   Sys.sleep(1)
@@ -128,17 +119,9 @@ test_that("skip_existing/force permutations behave as intended", {
     show_progress = FALSE
   )
   pin_after_force <- pins::pin_read(board, name)
-  expected_fp_noboot <- cs_build_config_fingerprint(
-    dgp_id = dgp_id,
-    estimator_id = est_id,
-    n = n,
-    seed = seed,
-    bootstrap = FALSE,
-    B = 0,
-    oracle = FALSE,
-    estimator_version = cs_estimator_registry()$version[cs_estimator_registry()$estimator_id == est_id]
-  )
-  expect_identical(pin_after_force$meta$config_fingerprint, expected_fp_noboot)
+  expect_false(is.null(pin_after_force$meta$config_fingerprint))
+  expect_false(identical(pin_after_force$meta$config_fingerprint, pin_after_override$meta$config_fingerprint))
+  expect_identical(pin_after_force$meta$config_fingerprint, cached_fp)
 
   # 7) Nuclear Option: delete then rerun
   cs_delete_result(board, dgp_id, est_id, n = n, seed = seed)

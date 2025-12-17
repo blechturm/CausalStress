@@ -74,6 +74,18 @@ cs_run_single <- function(
 
   oracle_allowed <- isTRUE(est_desc$oracle) || isTRUE(config$use_oracle)
   df_run <- cs_airlock(df_raw, oracle_allowed = oracle_allowed)
+
+  config_local <- config
+  if (is.null(config_local$seed)) {
+    config_local$seed <- seed
+  }
+  if (is.null(config_local$ci_method)) {
+    config_local$ci_method <- if (isTRUE(bootstrap) && B > 0L) "bootstrap" else "none"
+  }
+  if (isTRUE(bootstrap) && B > 0L && is.null(config_local$n_boot)) {
+    config_local$n_boot <- B
+  }
+
   config_fingerprint <- cs_build_config_fingerprint(
     dgp_id            = dgp_id,
     estimator_id      = estimator_id,
@@ -83,13 +95,14 @@ cs_run_single <- function(
     B                 = B,
     oracle            = oracle_allowed,
     estimator_version = est_desc$version,
-    config            = config,
+    config            = config_local,
     tau               = tau
   )
 
   # Run estimator
   t_est_start <- Sys.time()
   res <- NULL
+  config <- config_local
   res <- tryCatch(
     withCallingHandlers(
       {
@@ -119,6 +132,12 @@ cs_run_single <- function(
 
   extracted <- cs_extract_estimator_result(res)
   est_att <- extracted$att
+
+  att_ci <- res$att %||% list()
+  ci_lo_att <- att_ci$ci_lo %||% NA_real_
+  ci_hi_att <- att_ci$ci_hi %||% NA_real_
+  n_boot_ok <- res$meta$n_boot_ok %||% 0L
+  boot_draws <- res$boot_draws %||% NULL
 
   att_error      <- est_att - true_att
   att_abs_error  <- abs(att_error)
@@ -150,84 +169,9 @@ cs_run_single <- function(
           abs_error = NA_real_
         )
     }
-  }
-
-  if (bootstrap) {
-    n_obs <- nrow(df_run)
-    boot_att <- numeric(B)
-    boot_qst_list <- vector("list", B)
-    for (b in seq_len(B)) {
-      res_boot <- tryCatch({
-        idx_b <- sample.int(n_obs, size = n_obs, replace = TRUE)
-        df_b  <- df_run[idx_b, , drop = FALSE]
-        res_b <- withCallingHandlers(
-          est_desc$generator(df = df_b, config = config, tau = tau, ...),
-          message = collect_msg,
-          warning = collect_warn
-        )
-        extracted_b <- cs_extract_estimator_result(res_b)
-        list(att = extracted_b$att, qst = extracted_b$qst)
-      }, error = function(e) {
-        logs <<- c(logs, paste0("[error] bootstrap[", b, "]: ", conditionMessage(e)))
-        NULL
-      })
-      if (is.null(res_boot)) next
-
-      att_b <- res_boot$att
-      qst_b <- res_boot$qst
-      if (is.finite(att_b)) {
-        n_boot_ok <- n_boot_ok + 1L
-        boot_att[n_boot_ok] <- att_b
-        if (!is.null(qst_b)) {
-          boot_qst_list[[n_boot_ok]] <- qst_b
-        }
-      }
-    }
-    boot_threshold <- 0.9 * B
-    if (n_boot_ok > 0L) {
-      boot_att <- boot_att[seq_len(n_boot_ok)]
-      boot_draws <- tibble::tibble(
-        b       = seq_along(boot_att),
-        est_att = boot_att
-      )
-    }
-    if (B > 0 && n_boot_ok < boot_threshold) {
-      ci_lo_att <- NA_real_
-      ci_hi_att <- NA_real_
-      att_covered <- NA
-      warnings_vec <- c(
-        warnings_vec,
-        glue::glue("Bootstrap instability: {n_boot_ok}/{B} succeeded. Threshold is {boot_threshold}. CIs set to NA.")
-      )
-    } else if (n_boot_ok > 0L) {
-      ci_lo_att <- stats::quantile(boot_att, 0.025, na.rm = TRUE)
-      ci_hi_att <- stats::quantile(boot_att, 0.975, na.rm = TRUE)
-      att_covered <- !is.na(true_att) &&
-        !is.na(ci_lo_att) &&
-        !is.na(ci_hi_att) &&
-        true_att >= ci_lo_att &&
-        true_att <= ci_hi_att
-    }
-    if (n_boot_ok > 0L && est_desc$supports_qst && !is.null(qst_df)) {
-      boot_qst <- dplyr::bind_rows(boot_qst_list[seq_len(n_boot_ok)])
-      qst_ci <- boot_qst %>%
-        dplyr::group_by(.data$tau) %>%
-        dplyr::summarise(
-          ci_lo = stats::quantile(estimate, 0.025, na.rm = TRUE),
-          ci_hi = stats::quantile(estimate, 0.975, na.rm = TRUE),
-          .groups = "drop"
-        )
-      qst_df <- qst_df %>%
-        dplyr::left_join(qst_ci, by = "tau") %>%
-        dplyr::mutate(
-          covered = ifelse(
-            is.na(true) | is.na(ci_lo) | is.na(ci_hi),
-            NA,
-            true >= ci_lo & true <= ci_hi
-          ),
-          ci_width = ifelse(is.na(ci_lo) | is.na(ci_hi), NA_real_, ci_hi - ci_lo)
-        )
-    }
+    if (!"ci_lo" %in% names(qst_df)) qst_df$ci_lo <- NA_real_
+    if (!"ci_hi" %in% names(qst_df)) qst_df$ci_hi <- NA_real_
+    if (!"covered" %in% names(qst_df)) qst_df$covered <- NA
   }
 
   cs_ver <- as.character(utils::packageVersion("CausalStress"))
@@ -408,6 +352,16 @@ cs_run_seeds <- function(
         )
         cached <- pins::pin_read(board, name)
         stored_fp <- tryCatch(cached$meta$config_fingerprint, error = function(...) NULL)
+        config_cache <- config
+        if (is.null(config_cache$seed)) {
+          config_cache$seed <- s
+        }
+        if (is.null(config_cache$ci_method)) {
+          config_cache$ci_method <- if (isTRUE(bootstrap) && B > 0L) "bootstrap" else "none"
+        }
+        if (isTRUE(bootstrap) && B > 0L && is.null(config_cache$n_boot)) {
+          config_cache$n_boot <- B
+        }
         expected_fp <- cs_build_config_fingerprint(
           dgp_id            = dgp_id,
           estimator_id      = estimator_id,
@@ -417,7 +371,7 @@ cs_run_seeds <- function(
           B                 = B,
           oracle            = isTRUE(est_desc$oracle),
           estimator_version = est_desc$version,
-          config            = config,
+          config            = config_cache,
           tau               = tau
         )
         if (!is.null(stored_fp) && identical(stored_fp, expected_fp)) {
