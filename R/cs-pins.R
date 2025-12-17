@@ -1,5 +1,6 @@
 cs_pin_write <- function(board, result) {
   meta <- result$meta
+  prov <- result$provenance %||% list()
 
   name <- glue::glue(
     "results__dgp={meta$dgp_id}__est={meta$estimator_id}__n={meta$n}__seed={meta$seed}"
@@ -11,7 +12,7 @@ cs_pin_write <- function(board, result) {
     error   = function(e) NA_character_
   )
 
-  ts <- meta$timestamp %||% meta$run_timestamp %||% Sys.time()
+  ts <- prov$timestamp %||% prov$run_timestamp %||% Sys.time()
   ts_num <- as.numeric(ts)
 
   suppressMessages(

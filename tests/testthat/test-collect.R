@@ -34,7 +34,8 @@ test_that("cs_collect_att handles no-bootstrap case", {
     n             = 80,
     seeds         = 1:2,
     bootstrap     = FALSE,
-    B             = 0
+    B             = 0,
+    config        = list(ci_method = "none")
   )
 
   tidy_runs <- cs_tidy(runs)

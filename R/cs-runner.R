@@ -72,7 +72,7 @@ cs_run_single <- function(
   df_raw    <- dgp$df
   true_att  <- dgp$true_att
 
-  oracle_allowed <- isTRUE(est_desc$oracle) || isTRUE(config$use_oracle)
+  oracle_allowed <- isTRUE(est_desc$oracle)
   df_run <- cs_airlock(df_raw, oracle_allowed = oracle_allowed)
 
   config_local <- config
@@ -136,7 +136,9 @@ cs_run_single <- function(
   att_ci <- res$att %||% list()
   ci_lo_att <- att_ci$ci_lo %||% NA_real_
   ci_hi_att <- att_ci$ci_hi %||% NA_real_
-  n_boot_ok <- res$meta$n_boot_ok %||% 0L
+  res_meta <- res$meta %||% list()
+  n_boot_ok <- res_meta$n_boot_ok %||% 0L
+  n_boot_fail <- res_meta$n_boot_fail %||% 0L
   boot_draws <- res$boot_draws %||% NULL
 
   att_error      <- est_att - true_att
@@ -150,13 +152,23 @@ cs_run_single <- function(
       rlang::abort("qst output must contain `estimate` or `value` column.", class = "causalstress_runner_error")
     }
 
+    if (!"tau_id" %in% names(qst_df)) {
+      qst_df$tau_id <- cs_tau_id(qst_df$tau)
+    }
+
     if (!is.null(dgp$true_qst)) {
       truth_tbl <- dgp$true_qst
       if ("value" %in% names(truth_tbl)) {
         truth_tbl <- dplyr::rename(truth_tbl, true = value)
       }
+      if (!"tau_id" %in% names(truth_tbl)) {
+        truth_tbl$tau_id <- cs_tau_id(truth_tbl$tau)
+      }
+      truth_tbl <- truth_tbl %>%
+        dplyr::select(.data$tau_id, .data$true)
+
       qst_df <- qst_df %>%
-        dplyr::left_join(truth_tbl, by = "tau") %>%
+        dplyr::left_join(truth_tbl, by = "tau_id") %>%
         dplyr::mutate(
           error = estimate - true,
           abs_error = abs(error)
@@ -171,7 +183,31 @@ cs_run_single <- function(
     }
     if (!"ci_lo" %in% names(qst_df)) qst_df$ci_lo <- NA_real_
     if (!"ci_hi" %in% names(qst_df)) qst_df$ci_hi <- NA_real_
+    if (!"ci_width" %in% names(qst_df)) qst_df$ci_width <- NA_real_
     if (!"covered" %in% names(qst_df)) qst_df$covered <- NA
+
+    # If estimator exposes QST CIs as qst_ci_* columns, map them into the
+    # standardized ci_* fields used by downstream summaries/governance.
+    if ("qst_ci_lo" %in% names(qst_df) && all(is.na(qst_df$ci_lo))) {
+      qst_df$ci_lo <- qst_df$qst_ci_lo
+    }
+    if ("qst_ci_hi" %in% names(qst_df) && all(is.na(qst_df$ci_hi))) {
+      qst_df$ci_hi <- qst_df$qst_ci_hi
+    }
+    if (all(is.na(qst_df$ci_width))) {
+      qst_df$ci_width <- ifelse(
+        !is.na(qst_df$ci_lo) & !is.na(qst_df$ci_hi),
+        qst_df$ci_hi - qst_df$ci_lo,
+        NA_real_
+      )
+    }
+    if (all(is.na(qst_df$covered))) {
+      qst_df$covered <- ifelse(
+        !is.na(qst_df$true) & !is.na(qst_df$ci_lo) & !is.na(qst_df$ci_hi),
+        qst_df$true >= qst_df$ci_lo & qst_df$true <= qst_df$ci_hi,
+        NA
+      )
+    }
   }
 
   cs_ver <- as.character(utils::packageVersion("CausalStress"))
@@ -204,8 +240,8 @@ cs_run_single <- function(
 
   log_str <- if (length(logs) == 0L) NA_character_ else paste(logs, collapse = "\n")
 
-  # Fresh run timestamp (POSIXct with a tiny jitter to avoid deduplication)
-  ts_now <- Sys.time() + runif(1, 0, 1e-6)
+  # Non-deterministic provenance is stored separately from the science payload.
+  ts_now <- Sys.time()
 
   result <- list(
     att = list(
@@ -241,11 +277,28 @@ cs_run_single <- function(
       supports_qst   = est_desc$supports_qst,
       estimator_pkgs = estimator_pkgs,
       n_boot_ok      = n_boot_ok,
+      n_boot_fail    = n_boot_fail,
+      ci_method      = res_meta$ci_method %||% NA_character_,
+      ci_type        = res_meta$ci_type %||% NA_character_,
+      ci_level       = res_meta$ci_level %||% NA_real_,
+      ci_valid       = res_meta$ci_valid %||% NA,
+      ci_fail_code   = res_meta$ci_fail_code %||% NA_character_,
+      ci_valid_by_dim = res_meta$ci_valid_by_dim %||% logical(0),
+      collapsed      = res_meta$collapsed %||% logical(0),
+      qst_ci_method       = res_meta$qst_ci_method %||% NA_character_,
+      qst_ci_type         = res_meta$qst_ci_type %||% NA_character_,
+      qst_ci_level        = res_meta$qst_ci_level %||% NA_real_,
+      qst_ci_valid        = res_meta$qst_ci_valid %||% NA,
+      qst_ci_fail_code    = res_meta$qst_ci_fail_code %||% NA_character_,
+      qst_ci_valid_by_dim = res_meta$qst_ci_valid_by_dim %||% logical(0),
+      qst_ci_collapsed    = res_meta$qst_ci_collapsed %||% logical(0),
       log            = log_str,
       warnings       = warnings_vec,
       dgp_params         = list(n = n, seed = seed),
       estimator_params   = config,
-      config_fingerprint = config_fingerprint,
+      config_fingerprint = config_fingerprint
+    ),
+    provenance = list(
       timestamp         = ts_now,
       run_timestamp      = ts_now,
       run_time_dgp       = run_time_dgp,

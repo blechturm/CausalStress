@@ -1,12 +1,24 @@
 # ==============================================================================
-# SMOKE TEST: Native CI & Provenance Refactor (v0.1.7)
+# SMOKE TEST: Mixed CI Strategies (defaults + per-estimator overrides)
 # ==============================================================================
-# Goal: Fast verification (2 seeds) across ALL estimators, exercising:
-#   - Lightweights + GenGC: refit bootstrap CIs
-#   - Heavyweights (GRF/TMLE/BART): native CIs (package-provided)
+# This script verifies that a single `cs_run_campaign()` call can run a mixed
+# CI strategy across estimators using:
+#   - `defaults`  (global estimator config)
+#   - `overrides` (per-estimator config overrides)
 #
-# Note: cs_run_campaign takes a single `config` for all estimators.
-# We therefore run two sub-campaigns (bootstrap + native) and then bind results.
+# It runs two campaigns:
+#   A) Explicit overrides: bootstrap for lightweights, native for heavyweights.
+#   B) Defaults only: relies on each estimator's default CI behavior (should
+#      still produce CIs without overrides).
+#
+# Run from project root (recommended). Optional heavy estimators require their
+# packages installed (grf, tmle, SuperLearner, bartCause, GenGC).
+
+# In a fresh R session, you can reinstall to ensure you're testing the latest local code.
+# Comment these out if you prefer `devtools::load_all()` workflows.
+remove.packages("CausalStress")
+unlink(file.path(.libPaths()[1], "CausalStress"), recursive = TRUE, force = TRUE)
+devtools::install(upgrade = "never")
 
 library(CausalStress)
 library(pins)
@@ -21,136 +33,160 @@ Sys.setenv(
   VECLIB_MAXIMUM_THREADS = 1
 )
 
-# 1. Config: Test All Available Estimators
-# ------------------------------------------------------------------------------
-# We test both Lightweights (native R) and Heavyweights (external pkgs).
-# The tryCatch ensures we only run what is installed/registered.
+# 1) Estimator selection (only include those actually available)
 candidates <- c(
-  "lm_att", "ipw_att",              # Lightweights
-  "gengc", "gengc_dr",              # GenGC (Refit Bootstrap)
-  "grf_dr_att",                     # GRF (Native/Bootstrap)
-  "tmle_att",                       # TMLE (Native/Bootstrap)
-  "bart_att"                        # BART (Native/Bootstrap)
+  "lm_att", "ipw_att",
+  "gengc", "gengc_dr",
+  "grf_dr_att",
+  "tmle_att",
+  "bart_att"
 )
 
-estimator_ids <- candidates[sapply(candidates, function(id) {
-  tryCatch({ cs_get_estimator(id); TRUE }, error = function(...) FALSE)
-})]
+estimator_ids <- candidates[vapply(
+  candidates,
+  function(id) {
+    ok <- tryCatch({ cs_get_estimator(id); TRUE }, error = function(...) FALSE)
+    isTRUE(ok)
+  },
+  logical(1)
+)]
 
-# Split into two groups so we can request CI methods per group.
 light_boot_ids <- intersect(estimator_ids, c("lm_att", "ipw_att", "gengc", "gengc_dr"))
 heavy_native_ids <- intersect(estimator_ids, c("grf_dr_att", "tmle_att", "bart_att"))
 
-# Pick a single fast DGP
-dgp_ids <- c("synth_baseline")
-
-# 2. Infrastructure
-# ------------------------------------------------------------------------------
-# Use distinct boards/staging dirs so we don't overwrite pins between runs
-mk_board <- function(suffix) {
-  board_path  <- normalizePath(file.path("_experiments", paste0("pins_board_test_", suffix)), mustWork = FALSE)
-  staging_dir <- normalizePath(file.path("_experiments", paste0("staging_test_", suffix)), mustWork = FALSE)
-  dir.create(board_path,  recursive = TRUE, showWarnings = FALSE)
-  dir.create(staging_dir, recursive = TRUE, showWarnings = FALSE)
-  list(
-    board = board_folder(board_path, versioned = TRUE),
-    staging_dir = staging_dir,
-    board_path = board_path
-  )
-}
-
-# 3. Parallel Execution
-# ------------------------------------------------------------------------------
-plan(multisession, workers = 4) # Slightly more workers for heavier load
-on.exit(plan(sequential), add = TRUE)
-
-message(">>> Starting Full Smoke Test")
-message("    DGPs: ", paste(dgp_ids, collapse=", "))
-message("    Ests (bootstrap): ", paste(light_boot_ids, collapse=", "))
-message("    Ests (native): ", paste(heavy_native_ids, collapse=", "))
-
-# 4. Run Campaign
-# ------------------------------------------------------------------------------
+dgp_ids <- "synth_baseline"
 seeds <- 1:2
 n <- 500
 n_boot <- 20
 
-results_boot <- NULL
-results_native <- NULL
+plan(multisession, workers = 4)
+on.exit(plan(sequential), add = TRUE)
 
-if (length(light_boot_ids) > 0) {
-  infra <- mk_board("bootstrap")
-  message(">>> Running bootstrap CI sub-campaign (n_boot=", n_boot, ")")
-  results_boot <- cs_run_campaign(
-    dgp_ids       = dgp_ids,
-    estimator_ids = light_boot_ids,
-    seeds         = seeds,
-    n             = n,
-    config        = list(
-      ci_method   = "bootstrap",
-      n_boot      = n_boot,
-      num_threads = 1L
-    ),
-    board         = infra$board,
-    staging_dir   = infra$staging_dir,
-    parallel      = TRUE,
-    show_progress = TRUE,
-    skip_existing = FALSE
+message(">>> Estimators available: ", paste(estimator_ids, collapse = ", "))
+message(">>> Light (bootstrap): ", paste(light_boot_ids, collapse = ", "))
+message(">>> Heavy (native): ", paste(heavy_native_ids, collapse = ", "))
+
+# Use separate boards so results can't mix between A and B.
+mk_board <- function(suffix) {
+  board_path <- normalizePath(file.path("_experiments", paste0("pins_board_ci_", suffix)), mustWork = FALSE)
+  staging_dir <- normalizePath(file.path("_experiments", paste0("staging_ci_", suffix)), mustWork = FALSE)
+  dir.create(board_path, recursive = TRUE, showWarnings = FALSE)
+  dir.create(staging_dir, recursive = TRUE, showWarnings = FALSE)
+  list(
+    board = pins::board_folder(board_path, versioned = TRUE),
+    staging_dir = staging_dir
   )
 }
 
-if (length(heavy_native_ids) > 0) {
-  infra <- mk_board("native")
-  message(">>> Running native CI sub-campaign (package-provided)")
-  results_native <- cs_run_campaign(
-    dgp_ids       = dgp_ids,
-    estimator_ids = heavy_native_ids,
-    seeds         = seeds,
-    n             = n,
-    config        = list(
-      ci_method   = "native",
-      num_threads = 1L
-    ),
-    board         = infra$board,
-    staging_dir   = infra$staging_dir,
-    parallel      = TRUE,
-    show_progress = TRUE,
-    skip_existing = FALSE
-  )
-}
+# ------------------------------------------------------------------------------
+# Campaign A: Explicit overrides (mixed-method)
+# ------------------------------------------------------------------------------
+infra_a <- mk_board("strategy_map")
 
-results <- dplyr::bind_rows(
-  if (!is.null(results_boot)) results_boot else tibble::tibble(),
-  if (!is.null(results_native)) results_native else tibble::tibble()
+overrides <- c(
+  setNames(rep(list(list(ci_method = "bootstrap")), length(light_boot_ids)), light_boot_ids),
+  setNames(rep(list(list(ci_method = "native")), length(heavy_native_ids)), heavy_native_ids)
 )
 
-message("\n>>> Verifying Results Structure...")
+message(">>> Campaign A: Overrides (mixed bootstrap/native)")
+res_a <- cs_run_campaign(
+  dgp_ids       = dgp_ids,
+  estimator_ids = estimator_ids,
+  seeds         = seeds,
+  n             = n,
+  defaults      = list(
+    n_boot      = n_boot,
+    num_threads = 1L
+  ),
+  overrides     = overrides,
+  board         = infra_a$board,
+  staging_dir   = infra_a$staging_dir,
+  parallel      = TRUE,
+  show_progress = TRUE,
+  skip_existing = FALSE
+)
 
-# 5. Verification
+tidy_a <- cs_tidy(res_a)
+
+cat("\n--- Campaign A: estimates + CI ---\n")
+print(
+  tidy_a %>%
+    select(
+      dgp_id, estimator_id, seed,
+      est_att, att_ci_lo, att_ci_hi,
+      att_ci_method, att_ci_type, att_ci_level,
+      att_ci_valid, att_ci_fail_code,
+      n_boot_ok, log
+    ) %>%
+    arrange(estimator_id, seed),
+  n = Inf
+)
+
 # ------------------------------------------------------------------------------
-tidy_res <- cs_tidy(results)
+# Campaign B: Defaults only (no overrides)
+# ------------------------------------------------------------------------------
+infra_b <- mk_board("defaults")
 
-# A. Check CIs (All should have values, no NAs)
-print("--- Point Estimates & CIs (Head) ---")
-tidy_res %>% 
-  select(dgp_id, estimator_id, seed, est_att, att_ci_lo, att_ci_hi) %>% 
-  arrange(estimator_id, seed) %>% 
-  print(n = 14)
+message(">>> Campaign B: Defaults only (estimator defaults)")
+res_b <- cs_run_campaign(
+  dgp_ids       = dgp_ids,
+  estimator_ids = estimator_ids,
+  seeds         = seeds,
+  n             = n,
+  defaults      = list(
+    n_boot      = n_boot,
+    num_threads = 1L
+  ),
+  board         = infra_b$board,
+  staging_dir   = infra_b$staging_dir,
+  parallel      = TRUE,
+  show_progress = TRUE,
+  skip_existing = FALSE
+)
 
-# B. Provenance Check (The critical part)
-print("--- Provenance Metadata (n_boot_ok) ---")
-# Check if n_boot_ok is populated (should be >0 for bootstrap estimators; 0 for native)
-results %>%
-  select(estimator_id, seed, n_boot_ok) %>%
-  arrange(estimator_id, seed) %>%
-  print(n = 14)
+tidy_b <- cs_tidy(res_b)
 
-message(">>> Test Complete. Check above for missing CIs or 0 boot successes.")
+cat("\n--- Campaign B: estimates + CI (defaults) ---\n")
+print(
+  tidy_b %>%
+    select(
+      dgp_id, estimator_id, seed,
+      est_att, att_ci_lo, att_ci_hi,
+      att_ci_method, att_ci_type, att_ci_level,
+      att_ci_valid, att_ci_fail_code,
+      n_boot_ok, log
+    ) %>%
+    arrange(estimator_id, seed),
+  n = Inf
+)
 
+message("\n>>> Done.")
 
-results %>%
-  select(estimator_id, seed, run_time_dgp, log)
+# ------------------------------------------------------------------------------
+# QST CI smoke check (GenGC only)
+# ------------------------------------------------------------------------------
+# For GenGC, bootstrap CI should cover both ATT and the full QST curve using the
+# same refit-bootstrap fits. This checks that qst_ci_lo/qst_ci_hi are present.
+if ("gengc" %in% estimator_ids) {
+  qst_a <- cs_collect_qst(res_a) %>%
+    dplyr::filter(.data$estimator_id == "gengc") %>%
+    dplyr::filter(.data$tau_id %in% c("0.1", "0.9")) %>%
+    dplyr::select(
+      dgp_id, estimator_id, seed, tau_id, tau,
+      estimate,
+      qst_ci_lo, qst_ci_hi,
+      qst_n_boot_ok, qst_ci_method, qst_ci_fail_code
+    ) %>%
+    dplyr::arrange(.data$seed, .data$tau_id)
 
+  cat("\n--- GenGC QST (tau_id=0.1,0.9): estimate + CI ---\n")
+  print(qst_a, n = Inf)
 
-results %>%
-  glimpse()
+  if (nrow(qst_a) > 0) {
+    ok <- is.finite(qst_a$qst_ci_lo) & is.finite(qst_a$qst_ci_hi) & (qst_a$qst_ci_lo <= qst_a$qst_ci_hi)
+    if (!all(ok)) stop("GenGC QST CI smoke check failed: invalid bounds.")
+  }
+}
+
+tidy_b %>% glimpse()
+tidy_a %>% glimpse()

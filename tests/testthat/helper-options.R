@@ -1,1 +1,1 @@
-options(causalstress.N_oracle = 1e4L)
+# Intentionally empty: oracle truth is constitutionally fixed.

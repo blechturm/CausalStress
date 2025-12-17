@@ -39,6 +39,7 @@ est_gengc <- function(df, tau = cs_tau_oracle, config = list()) {
 
   att_hat <- as.numeric(fit$att)
   qst_tbl <- tibble::tibble(
+    tau_id = cs_tau_id(fit$tau_grid),
     tau   = fit$tau_grid,
     value = fit$qst
   )
@@ -49,35 +50,40 @@ est_gengc <- function(df, tau = cs_tau_oracle, config = list()) {
   task_seed <- config$seed
 
   stat_fn <- function(boot_df) {
-    x_cols <- if (!is.null(config$covariates)) {
-      config$covariates
-    } else {
-      setdiff(names(boot_df), c("y", "w", "p", "y0", "y1", "id", "dgp_id", "seed"))
-    }
     fit_b <- GenGC::gengc(
-      y = boot_df$y,
-      w = boot_df$w,
-      x = as.matrix(boot_df[, x_cols, drop = FALSE]),
-      tau_grid   = tau,
-      n_draws    = n_draws,
-      num_trees  = num_trees,
+      formula     = formula,
+      data        = boot_df,
+      treatment   = "w",
+      target      = "both",
+      tau_grid    = tau,
+      n_draws     = n_draws,
+      num_trees   = num_trees,
       num_threads = num_threads
     )
-    fit_b$att
+    c(as.numeric(fit_b$att), as.numeric(fit_b$qst))
   }
 
   ci_lo <- NA_real_
   ci_hi <- NA_real_
   ci_meta <- list(
-    n_boot_ok = 0L,
-    n_boot_fail = 0L,
+    n_boot_ok       = 0L,
+    n_boot_fail     = 0L,
     ci_valid_by_dim = logical(0),
-    collapsed = logical(0),
-    ci_valid = NA,
-    ci_fail_code = NA_character_,
-    ci_method = ci_method,
-    ci_type = "percentile",
-    ci_level = 0.95
+    collapsed       = logical(0),
+    ci_valid        = NA,
+    ci_fail_code    = NA_character_,
+    ci_method       = ci_method,
+    ci_type         = "percentile",
+    ci_level        = 0.95
+  )
+  qst_ci_meta <- list(
+    ci_method       = ci_method,
+    ci_type         = NA_character_,
+    ci_level        = NA_real_,
+    ci_valid        = NA,
+    ci_fail_code    = NA_character_,
+    ci_valid_by_dim = logical(0),
+    collapsed       = logical(0)
   )
   warnings_vec <- character()
 
@@ -86,19 +92,92 @@ est_gengc <- function(df, tau = cs_tau_oracle, config = list()) {
       warning("Bootstrap CI requested but config$seed is missing; CIs set to NA.")
       ci_meta$ci_method <- "none"
       ci_meta$ci_fail_code <- "missing_seed"
+      qst_ci_meta$ci_method <- "none"
+      qst_ci_meta$ci_fail_code <- "missing_seed"
     } else {
       salt <- paste("est_gengc", dgp_id, sep = "|")
       boot_seed <- cs_derive_seed(task_seed, salt)
       ci_res <- cs_bootstrap_ci(stat_fn, df_run, n_boot = n_boot, seed = boot_seed, alpha = 0.05)
-      ci_lo <- if (length(ci_res$ci_lo) > 0) ci_res$ci_lo[1] else NA_real_
-      ci_hi <- if (length(ci_res$ci_hi) > 0) ci_res$ci_hi[1] else NA_real_
-      ci_meta <- ci_res$meta
+      if (length(ci_res$ci_lo) > 0L) {
+        k_expected <- 1L + length(tau)
+        if (length(ci_res$ci_lo) != k_expected || length(ci_res$ci_hi) != k_expected) {
+          warning("Bootstrap CI internal error (unexpected statistic length); CIs set to NA.")
+          ci_meta$ci_fail_code <- "invalid_stat_length"
+          qst_ci_meta$ci_fail_code <- "invalid_stat_length"
+        } else {
+          # ATT CI (dimension 1)
+          ci_lo <- ci_res$ci_lo[1]
+          ci_hi <- ci_res$ci_hi[1]
+
+          att_ok <- as.integer(ci_res$meta$n_boot_ok[1])
+          att_fail <- as.integer(ci_res$meta$n_boot_fail[1])
+          att_dim_gated <- att_ok >= (n_boot * 0.9)
+          att_valid_by_dim <- isTRUE(ci_res$meta$ci_valid_by_dim[1])
+          att_collapsed <- isTRUE(ci_res$meta$collapsed[1])
+          att_ci_valid <- isTRUE(att_dim_gated) && isTRUE(att_valid_by_dim)
+          att_fail_code <- NA_character_
+          if (!att_dim_gated) {
+            att_fail_code <- "low_boot_success"
+          } else if (!att_ci_valid) {
+            att_fail_code <- "invalid_bounds"
+          }
+          ci_meta <- list(
+            n_boot_ok       = att_ok,
+            n_boot_fail     = att_fail,
+            ci_valid_by_dim = ci_res$meta$ci_valid_by_dim[1],
+            collapsed       = ci_res$meta$collapsed[1],
+            ci_valid        = att_ci_valid,
+            ci_fail_code    = att_fail_code,
+            ci_method       = ci_res$meta$ci_method,
+            ci_type         = ci_res$meta$ci_type,
+            ci_level        = ci_res$meta$ci_level
+          )
+
+          # QST CI (dimensions 2..k)
+          qst_lo <- ci_res$ci_lo[-1]
+          qst_hi <- ci_res$ci_hi[-1]
+          qst_ok <- as.integer(ci_res$meta$n_boot_ok[-1])
+          qst_fail <- as.integer(ci_res$meta$n_boot_fail[-1])
+          qst_dim_gated <- qst_ok >= (n_boot * 0.9)
+          qst_valid_by_dim <- ci_res$meta$ci_valid_by_dim[-1]
+          qst_collapsed <- ci_res$meta$collapsed[-1]
+
+          qst_ci_valid <- any(qst_dim_gated) && all(qst_valid_by_dim[qst_dim_gated])
+          qst_fail_code <- NA_character_
+          if (any(!qst_dim_gated)) {
+            qst_fail_code <- "low_boot_success"
+          } else if (!qst_ci_valid) {
+            qst_fail_code <- "invalid_bounds"
+          }
+
+          qst_tbl$qst_ci_lo <- qst_lo
+          qst_tbl$qst_ci_hi <- qst_hi
+          qst_tbl$qst_n_boot_ok <- qst_ok
+          qst_tbl$qst_n_boot_fail <- qst_fail
+
+          qst_ci_meta <- list(
+            ci_method       = ci_res$meta$ci_method,
+            ci_type         = ci_res$meta$ci_type,
+            ci_level        = ci_res$meta$ci_level,
+            ci_valid        = qst_ci_valid,
+            ci_fail_code    = qst_fail_code,
+            ci_valid_by_dim = qst_valid_by_dim,
+            collapsed       = qst_collapsed
+          )
+        }
+      } else {
+        # Initial probe failure
+        ci_meta <- ci_res$meta
+        qst_ci_meta <- ci_res$meta
+      }
     }
   } else if (!identical(ci_method, "none")) {
     warning("Unsupported ci_method; falling back to none.")
     ci_method <- "none"
     ci_meta$ci_method <- "none"
     ci_meta$ci_fail_code <- "unsupported_ci_method"
+    qst_ci_meta$ci_method <- "none"
+    qst_ci_meta$ci_fail_code <- "unsupported_ci_method"
   }
 
   res <- list(
@@ -133,7 +212,14 @@ est_gengc <- function(df, tau = cs_tau_oracle, config = list()) {
       ci_valid_by_dim = ci_meta$ci_valid_by_dim,
       collapsed    = ci_meta$collapsed,
       ci_type      = ci_meta$ci_type,
-      ci_level     = ci_meta$ci_level
+      ci_level     = ci_meta$ci_level,
+      qst_ci_method       = qst_ci_meta$ci_method,
+      qst_ci_type         = qst_ci_meta$ci_type,
+      qst_ci_level        = qst_ci_meta$ci_level,
+      qst_ci_valid        = qst_ci_meta$ci_valid,
+      qst_ci_fail_code    = qst_ci_meta$ci_fail_code,
+      qst_ci_valid_by_dim = qst_ci_meta$ci_valid_by_dim,
+      qst_ci_collapsed    = qst_ci_meta$collapsed
     )
   )
 

@@ -11,8 +11,11 @@ cs_airlock <- function(df, oracle_allowed) {
 
   df2 <- df[, keep, drop = FALSE]
 
-  attr(df2, "structural_te") <- NULL
-  attr(df2, "params") <- NULL
+  # Strip all attributes except the data.frame essentials to prevent
+  # attribute-based truth leakage (side-channel).
+  attrs <- attributes(df2)
+  keep_attrs <- c("names", "row.names", "class")
+  attributes(df2) <- attrs[intersect(names(attrs), keep_attrs)]
 
   df2
 }

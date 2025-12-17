@@ -26,7 +26,7 @@
 #'
 #' @return A synthetic DGP list with df, true_att, true_qst, and meta.
 #' @export
-dgp_synth_hd_sparse_plm_v140 <- function(n, seed = NULL) {
+dgp_synth_hd_sparse_plm_v140 <- function(n, seed = NULL, include_truth = TRUE, oracle_only = FALSE) {
   if (!is.null(seed)) {
     cs_set_rng(seed)
   }
@@ -56,7 +56,7 @@ dgp_synth_hd_sparse_plm_v140 <- function(n, seed = NULL) {
   y <- ifelse(w == 1L, y1, y0)
 
   true_att <- cs_true_att(structural_te = tau, w = w)
-  true_qst <- cs_get_oracle_qst("synth_hd_sparse_plm")
+  true_qst <- if (isTRUE(include_truth)) cs_get_oracle_qst("synth_hd_sparse_plm", version = "1.4.0") else NULL
 
   df <- tibble::tibble(
     y  = y,

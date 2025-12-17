@@ -16,6 +16,7 @@ test_that("skip_existing/force permutations behave as intended", {
     seeds        = seed,
     bootstrap    = FALSE,
     B            = 0,
+    config       = list(ci_method = "none"),
     board        = board,
     skip_existing = FALSE,
     show_progress = FALSE
@@ -30,6 +31,7 @@ test_that("skip_existing/force permutations behave as intended", {
     seeds        = seed,
     bootstrap    = FALSE,
     B            = 0,
+    config       = list(ci_method = "none"),
     board        = board,
     skip_existing = TRUE,
     show_progress = FALSE
@@ -47,6 +49,7 @@ test_that("skip_existing/force permutations behave as intended", {
     seeds        = seed,
     bootstrap    = FALSE,
     B            = 0,
+    config       = list(ci_method = "none"),
     board        = board,
     skip_existing = FALSE,
     show_progress = FALSE
@@ -62,6 +65,7 @@ test_that("skip_existing/force permutations behave as intended", {
     seeds        = seed,
     bootstrap    = FALSE,
     B            = 0,
+    config       = list(ci_method = "none"),
     board        = board,
     skip_existing = TRUE,
     force         = TRUE,
@@ -113,6 +117,7 @@ test_that("skip_existing/force permutations behave as intended", {
     seeds        = seed,
     bootstrap    = FALSE,
     B            = 0,
+    config       = list(ci_method = "none"),
     board        = board,
     skip_existing = TRUE,
     force         = TRUE,
@@ -133,6 +138,7 @@ test_that("skip_existing/force permutations behave as intended", {
     seeds        = seed,
     bootstrap    = FALSE,
     B            = 0,
+    config       = list(ci_method = "none"),
     board        = board,
     skip_existing = TRUE,
     show_progress = FALSE
