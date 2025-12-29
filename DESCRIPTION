@@ -1,7 +1,7 @@
 Package: CausalStress
 Title: CausalStress: A rigorous benchmarking framework built on a
         Constitutional architecture.
-Version: 0.1.7
+Version: 0.1.8
 Authors@R: person("Maximilian", "Thomasberger", , "max@blechturm.com",
         role = c("aut", "cre"))
 Description: A rigorous framework for benchmarking causal inference

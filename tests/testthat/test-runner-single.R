@@ -210,6 +210,7 @@ make_mock_registry <- function(status_value = "stable") {
 test_that("cs_run_single warns for non-stable DGPs via accessor", {
   with_mocked_bindings(
     cs_dgp_registry = function() make_mock_registry(status_value = "experimental"),
+    cs_dgp_executable_meta = function(dgp_id, version) list(noise_family = "gaussian", effect_type = "constant"),
     {
       expect_warning(
         cs_run_single(
@@ -228,6 +229,7 @@ test_that("cs_run_single warns for non-stable DGPs via accessor", {
 test_that("cs_run_single errors when no stable or experimental version", {
   with_mocked_bindings(
     cs_dgp_registry = function() make_mock_registry(status_value = "deprecated"),
+    cs_dgp_executable_meta = function(dgp_id, version) list(noise_family = "gaussian", effect_type = "constant"),
     {
       expect_error(
         cs_run_single(
@@ -247,6 +249,7 @@ test_that("cs_run_single errors when no stable or experimental version", {
 test_that("cs_run_single runs without warnings for stable DGPs", {
   with_mocked_bindings(
     cs_dgp_registry = function() make_mock_registry(status_value = "stable"),
+    cs_dgp_executable_meta = function(dgp_id, version) list(noise_family = "gaussian", effect_type = "constant"),
     {
       expect_no_warning(
         cs_run_single(

@@ -33,6 +33,7 @@ cs_run_grid <- function(dgp_ids,
                         force = FALSE,
                         max_runtime = Inf,
                         parallel = FALSE,
+                        experimental_parallel = FALSE,
                         staging_dir = NULL,
                         show_progress = FALSE) {
   cs_chk_scalar_numeric(n, "n")
@@ -79,6 +80,7 @@ cs_run_grid <- function(dgp_ids,
         quiet         = TRUE,
         max_runtime   = max_runtime,
         parallel      = parallel,
+        experimental_parallel = experimental_parallel,
         staging_dir   = staging_dir
       )
     } else {
@@ -100,6 +102,7 @@ cs_run_grid <- function(dgp_ids,
         quiet         = TRUE,
         max_runtime   = max_runtime,
         parallel      = parallel,
+        experimental_parallel = experimental_parallel,
         staging_dir   = staging_dir
       )
     }

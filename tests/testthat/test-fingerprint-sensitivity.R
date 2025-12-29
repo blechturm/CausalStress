@@ -3,13 +3,15 @@ test_that("fingerprints are identical for identical inputs", {
     dgp_id = "d1", estimator_id = "e1", n = 100, seed = 1,
     bootstrap = TRUE, B = 10, oracle = FALSE, estimator_version = "1.0",
     config = list(num_trees = 100, alpha = 0.1),
-    tau = c(0.1, 0.5)
+    tau = c(0.1, 0.5),
+    max_runtime = Inf
   )
   fp2 <- cs_build_config_fingerprint(
     dgp_id = "d1", estimator_id = "e1", n = 100, seed = 1,
     bootstrap = TRUE, B = 10, oracle = FALSE, estimator_version = "1.0",
     config = list(alpha = 0.1, num_trees = 100),  # different order
-    tau = c(0.1, 0.5)
+    tau = c(0.1, 0.5),
+    max_runtime = Inf
   )
   expect_identical(fp1, fp2)
 })
@@ -19,13 +21,15 @@ test_that("fingerprints differ when config changes", {
     dgp_id = "d1", estimator_id = "e1", n = 100, seed = 1,
     bootstrap = TRUE, B = 10, oracle = FALSE, estimator_version = "1.0",
     config = list(num_trees = 100),
-    tau = c(0.1, 0.5)
+    tau = c(0.1, 0.5),
+    max_runtime = Inf
   )
   fp2 <- cs_build_config_fingerprint(
     dgp_id = "d1", estimator_id = "e1", n = 100, seed = 1,
     bootstrap = TRUE, B = 10, oracle = FALSE, estimator_version = "1.0",
     config = list(num_trees = 500),
-    tau = c(0.1, 0.5)
+    tau = c(0.1, 0.5),
+    max_runtime = Inf
   )
   expect_false(identical(fp1, fp2))
 })
@@ -35,13 +39,15 @@ test_that("fingerprints differ when tau changes", {
     dgp_id = "d1", estimator_id = "e1", n = 100, seed = 1,
     bootstrap = TRUE, B = 10, oracle = FALSE, estimator_version = "1.0",
     config = list(num_trees = 100),
-    tau = c(0.1, 0.5)
+    tau = c(0.1, 0.5),
+    max_runtime = Inf
   )
   fp2 <- cs_build_config_fingerprint(
     dgp_id = "d1", estimator_id = "e1", n = 100, seed = 1,
     bootstrap = TRUE, B = 10, oracle = FALSE, estimator_version = "1.0",
     config = list(num_trees = 100),
-    tau = c(0.1, 0.9)
+    tau = c(0.1, 0.9),
+    max_runtime = Inf
   )
   expect_false(identical(fp1, fp2))
 })
@@ -52,7 +58,8 @@ test_that("fingerprint rejects non-serializable config values", {
       dgp_id = "d1", estimator_id = "e1", n = 100, seed = 1,
       bootstrap = TRUE, B = 10, oracle = FALSE, estimator_version = "1.0",
       config = list(fn = function(x) x),
-      tau = c(0.1, 0.5)
+      tau = c(0.1, 0.5),
+      max_runtime = Inf
     ),
     class = "causalstress_fingerprint_error"
   )
