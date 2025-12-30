@@ -143,6 +143,7 @@ cs_run_single <- function(
   ci_lo_att <- att_ci$ci_lo %||% NA_real_
   ci_hi_att <- att_ci$ci_hi %||% NA_real_
   res_meta <- res$meta %||% list()
+  reported_ver <- res_meta$version %||% NA_character_
   n_boot_ok <- res_meta$n_boot_ok %||% 0L
   n_boot_fail <- res_meta$n_boot_fail %||% 0L
   boot_draws <- res$boot_draws %||% NULL
@@ -285,6 +286,7 @@ cs_run_single <- function(
       dgp_status     = dgp_desc$status[[1L]] %||% NA_character_,
       dgp_design_spec = dgp_desc$design_spec[[1L]] %||% NA_character_,
       estimator_version = est_desc$version %||% NA_character_,
+      estimator_reported_version = reported_ver,
       config_fingerprint_schema = 2L,
       estimator_pkgs = estimator_pkgs,
       n_boot_ok      = n_boot_ok,
