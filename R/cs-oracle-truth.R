@@ -4,14 +4,15 @@
 #' generators. Results are cached to avoid repeated simulations.
 #' @keywords internal
 
-.cs_oracle_qst_cache <- new.env(parent = emptyenv())
+.cs_oracle_qst_guard <- new.env(parent = emptyenv())
 ORACLE_SEED <- 99999L
 ORACLE_N <- 1e6L
 
 cs_get_oracle_qst <- function(dgp_id,
                               version  = "1.3.0",
                               tau_grid = cs_tau_oracle,
-                              N_oracle = ORACLE_N) {
+                              N_oracle = ORACLE_N,
+                              cache_dir = tools::R_user_dir("CausalStress", "cache")) {
   # Constitution: canonical tau grid and immutable oracle MC size.
   if (!identical(cs_tau_id(tau_grid), cs_tau_id(cs_tau_oracle))) {
     rlang::abort(
@@ -29,25 +30,30 @@ cs_get_oracle_qst <- function(dgp_id,
   }
 
   key <- paste(dgp_id, version, sep = "_")
+  dir.create(cache_dir, recursive = TRUE, showWarnings = FALSE)
+  cache_file <- file.path(cache_dir, paste0("truth_", dgp_id, "_", version, ".qs"))
 
-  if (exists(key, envir = .cs_oracle_qst_cache, inherits = FALSE)) {
-    val <- get(key, envir = .cs_oracle_qst_cache, inherits = FALSE)
-    if (is.data.frame(val)) return(val)
-    if (is.character(val) && identical(val, "CALCULATING")) {
-      return(tibble::tibble(
-        tau_id = cs_tau_id(tau_grid),
-        tau = tau_grid,
-        value = rep(NA_real_, length(tau_grid))
-      ))
+  if (file.exists(cache_file)) {
+    truth <- qs::qread(cache_file)
+    if (is.data.frame(truth)) {
+      return(truth)
     }
+    unlink(cache_file)
   }
 
   # recursion guard
-  assign(key, "CALCULATING", envir = .cs_oracle_qst_cache)
+  if (exists(key, envir = .cs_oracle_qst_guard, inherits = FALSE)) {
+    if (identical(get(key, envir = .cs_oracle_qst_guard, inherits = FALSE), "CALCULATING")) {
+      return(NULL)
+    }
+  }
+  assign(key, "CALCULATING", envir = .cs_oracle_qst_guard)
   on.exit({
-    cur <- get(key, envir = .cs_oracle_qst_cache, inherits = FALSE)
-    if (is.character(cur) && identical(cur, "CALCULATING")) {
-      remove(list = key, envir = .cs_oracle_qst_cache)
+    if (exists(key, envir = .cs_oracle_qst_guard, inherits = FALSE)) {
+      cur <- get(key, envir = .cs_oracle_qst_guard, inherits = FALSE)
+      if (is.character(cur) && identical(cur, "CALCULATING")) {
+        remove(list = key, envir = .cs_oracle_qst_guard)
+      }
     }
   }, add = TRUE)
 
@@ -69,7 +75,7 @@ cs_get_oracle_qst <- function(dgp_id,
       tau = tau_grid,
       value = rep(0, length(tau_grid))
     )
-    assign(key, truth, envir = .cs_oracle_qst_cache)
+    qs::qsave(truth, cache_file)
     return(truth)
   }
   if (dgp_id == "synth_hd_sparse_plm") {
@@ -78,7 +84,7 @@ cs_get_oracle_qst <- function(dgp_id,
       tau = tau_grid,
       value = rep(1, length(tau_grid))
     )
-    assign(key, truth, envir = .cs_oracle_qst_cache)
+    qs::qsave(truth, cache_file)
     return(truth)
   }
 
@@ -124,6 +130,6 @@ cs_get_oracle_qst <- function(dgp_id,
     )
   )
 
-  assign(key, truth, envir = .cs_oracle_qst_cache)
+  qs::qsave(truth, cache_file)
   truth
 }

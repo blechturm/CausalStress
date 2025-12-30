@@ -10,9 +10,22 @@ test_that("placebo oracle returns zeros", {
 })
 
 test_that("oracle cache returns identical results on repeat", {
-  res1 <- cs_get_oracle_qst("synth_baseline")
-  res2 <- cs_get_oracle_qst("synth_baseline")
+  dgp_id <- "synth_baseline"
+  version <- "1.3.0"
+  cache_dir <- tempfile("cs_oracle_cache_")
+  dir.create(cache_dir, recursive = TRUE, showWarnings = FALSE)
+  cache_file <- file.path(cache_dir, paste0("truth_", dgp_id, "_", version, ".qs"))
+  if (file.exists(cache_file)) unlink(cache_file)
+
+  res1 <- cs_get_oracle_qst(dgp_id, version = version, cache_dir = cache_dir)
+  expect_true(file.exists(cache_file))
+  mtime1 <- file.info(cache_file)$mtime
+
+  res2 <- cs_get_oracle_qst(dgp_id, version = version, cache_dir = cache_dir)
+  mtime2 <- file.info(cache_file)$mtime
+
   expect_identical(res1, res2)
+  expect_equal(mtime1, mtime2)
 })
 
 test_that("oracle call does not disturb global RNG state", {
