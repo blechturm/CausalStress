@@ -20,6 +20,7 @@ cs_run_grid(
   force = FALSE,
   max_runtime = Inf,
   parallel = FALSE,
+  experimental_parallel = FALSE,
   staging_dir = NULL,
   show_progress = FALSE
 )

@@ -23,6 +23,7 @@ cs_run_campaign(
   board = NULL,
   staging_dir = NULL,
   parallel = FALSE,
+  experimental_parallel = FALSE,
   show_progress = TRUE,
   force = FALSE,
   quiet = TRUE,

@@ -48,6 +48,20 @@ cs_thread_caps_env <- function() {
   )
 }
 
+cs_enforce_threads <- function(n_threads = 1L) {
+  if (is.null(n_threads) || !is.finite(n_threads)) {
+    return(invisible(NULL))
+  }
+  n_threads <- as.integer(n_threads)
+  if (is.na(n_threads) || n_threads < 1L) {
+    return(invisible(NULL))
+  }
+  env <- cs_thread_caps_env()
+  env[] <- as.character(n_threads)
+  do.call(Sys.setenv, as.list(env))
+  invisible(env)
+}
+
 cs_with_envvar <- function(env, expr) {
   old <- Sys.getenv(names(env), unset = NA_character_)
   # Track which were unset so we can restore accurately.

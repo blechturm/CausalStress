@@ -8,10 +8,25 @@
 #' @param n_seeds Integer count or integer vector of seeds.
 #' @param batch_size Integer batch size (tasks per batch).
 #' @param campaign_seed Integer seed for deterministic shuffling.
-#' @param strategy_map List of defaults and/or per-estimator overrides.
+#' @param strategy_map List of defaults and/or per-estimator overrides. Use
+#'   `list(defaults = list(...), overrides = list(est_id = list(...)))`.
 #'
 #' @return A tibble with columns `batch_id` and `tasks` (list-column).
 #' @export
+#'
+#' @examples
+#' plan <- cs_plan_campaign(
+#'   dgp_list = c("synth_baseline"),
+#'   estimator_list = c("lm_att", "ipw_att"),
+#'   n_seeds = 1:4,
+#'   batch_size = 2,
+#'   campaign_seed = 123,
+#'   strategy_map = list(
+#'     defaults = list(n_boot = 200, ci_method = "bootstrap"),
+#'     overrides = list(ipw_att = list(ci_method = "native"))
+#'   )
+#' )
+#' plan
 cs_plan_campaign <- function(dgp_list,
                              estimator_list,
                              n_seeds,

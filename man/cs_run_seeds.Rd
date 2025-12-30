@@ -22,6 +22,7 @@ cs_run_seeds(
   quiet = FALSE,
   max_runtime = Inf,
   parallel = FALSE,
+  experimental_parallel = FALSE,
   staging_dir = NULL
 )
 }
