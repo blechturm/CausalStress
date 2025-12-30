@@ -111,12 +111,14 @@ cs_dgp_registry <- function() {
       if (yaml_path == "") {
         yaml_path <- file.path("inst", "dgp_meta", paste0(id, ".yml"))
       }
-      if (file.exists(yaml_path)) {
-        meta <- yaml::read_yaml(yaml_path)
-        meta$meta$tags %||% character(0)
-      } else {
-        character(0)
+      if (!file.exists(yaml_path)) {
+        rlang::abort(
+          paste0("Critical: YAML sidecar not found for DGP ", id, "."),
+          class = "causalstress_registry_error"
+        )
       }
+      meta <- yaml::read_yaml(yaml_path)
+      meta$meta$tags %||% character(0)
     })
   )
 }

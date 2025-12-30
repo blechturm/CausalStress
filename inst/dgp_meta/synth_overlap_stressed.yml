@@ -7,7 +7,7 @@ stress_profile:
   overlap: "severe"
   noise: "gaussian"
   linearity: "linear"
-  effect: "constant"
+  effect: "linear"
   target: "both"
 
 difficulty:

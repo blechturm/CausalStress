@@ -23,6 +23,7 @@ test_that("cs_run_seeds can resume from existing pins without recomputing", {
       seed           = 1L,
       oracle         = FALSE,
       supports_qst   = FALSE,
+      config_fingerprint_schema = 2L,
       estimator_pkgs = "",
       n_boot_ok      = 0L,
       log            = NA_character_,
@@ -36,7 +37,8 @@ test_that("cs_run_seeds can resume from existing pins without recomputing", {
         oracle = FALSE,
         estimator_version = cs_estimator_registry()$version[cs_estimator_registry()$estimator_id == "lm_att"],
         config = list(seed = 1L),
-        tau = cs_tau_oracle
+        tau = cs_tau_oracle,
+        max_runtime = Inf
       )
     )
   )

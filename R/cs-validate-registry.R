@@ -70,6 +70,48 @@ cs_validate_dgp_registry <- function(strict = FALSE) {
     }
   }
 
+  # YAML sidecar consistency (minimal executable meta) -----------------------
+  for (i in seq_len(nrow(reg))) {
+    id <- reg$dgp_id[[i]]
+    ver <- reg$version[[i]]
+
+    yaml_path <- system.file("dgp_meta", paste0(id, ".yml"), package = "CausalStress")
+    if (yaml_path == "") {
+      yaml_path <- file.path("inst", "dgp_meta", paste0(id, ".yml"))
+    }
+    if (!file.exists(yaml_path)) next
+
+    yml <- try(yaml::read_yaml(yaml_path), silent = TRUE)
+    if (inherits(yml, "try-error")) {
+      msg <- paste0("Failed to read YAML sidecar for ", id, ": ", yaml_path)
+      if (strict) cli::cli_abort(msg) else cli::cli_warn(msg)
+      next
+    }
+
+    y_noise <- yml$stress_profile$noise %||% NA_character_
+    y_eff <- yml$stress_profile$effect %||% NA_character_
+
+    exec <- try(cs_dgp_executable_meta(id, ver), silent = TRUE)
+    if (inherits(exec, "try-error")) {
+      msg <- paste0("Executable meta mapping missing for ", id, " v", ver, ".")
+      if (strict) cli::cli_abort(msg) else cli::cli_warn(msg)
+      next
+    }
+
+    if (!identical(as.character(y_noise), as.character(exec$noise_family))) {
+      msg <- glue::glue(
+        "YAML sidecar mismatch for {id} v{ver}: noise='{y_noise}' but executable meta says '{exec$noise_family}'."
+      )
+      if (strict) cli::cli_abort(msg) else cli::cli_warn(msg)
+    }
+    if (!identical(as.character(y_eff), as.character(exec$effect_type))) {
+      msg <- glue::glue(
+        "YAML sidecar mismatch for {id} v{ver}: effect='{y_eff}' but executable meta says '{exec$effect_type}'."
+      )
+      if (strict) cli::cli_abort(msg) else cli::cli_warn(msg)
+    }
+  }
+
   # optional lightweight generator checks for synthetic types ---------------
   check_fun <- function(expr) {
     if (strict) {

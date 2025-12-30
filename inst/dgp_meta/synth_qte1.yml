@@ -5,7 +5,7 @@ type: "synthetic"
 
 stress_profile:
   overlap: "moderate"
-  noise: "gaussian"
+  noise: "heavy"
   linearity: "linear"
   effect: "heterogeneous"
   target: "both"

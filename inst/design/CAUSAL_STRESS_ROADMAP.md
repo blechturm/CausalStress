@@ -1,6 +1,6 @@
 # CausalStress v1.0.0 Roadmap: The "Wide & Shallow" Path
 
-**Current Version:** v0.1.6
+**Current Version:** v0.1.8
 **Target:** v1.0.0 (JSS Submission + 14M Fit Campaign)
 **Timeline:** 4-Week Sprint
 **Philosophy:** Scientific Rigor > Architectural Complexity.
@@ -58,22 +58,41 @@ Create `cs_validate_dgp(dgp_fn)` to automate quality control.
 
 ---
 
-## Phase 3: Architecture (v0.1.8)
-**Goal:** Solve the I/O bottleneck using Deterministic Randomized Batching.
+## Phase 3: Governance & Integrity (v0.1.8)
+**Goal:** Close governance gaps before scaling.
 **Effort:** ~2 Days
 
-### 3.1 The "Batch ID" Strategy
+### 3.1 Persistent Oracle Cache (Disk-based)
+Cache oracle truth to disk using `tools::R_user_dir(...)` to avoid redundant
+re-simulation across parallel workers.
+
+### 3.2 Registry Fail-Closed Logic
+Abort if a DGP sidecar YAML is missing to prevent silent ?fail-open? behavior.
+
+### 3.3 Strict CI Intent (No Silent Bootstraps)
+When `bootstrap = FALSE`, enforce `ci_method = "none"` unless explicitly set.
+
+### 3.4 Parallel Governance (Experimental Gating)
+Gate parallel execution behind `experimental_parallel = TRUE` with strict thread caps.
+
+---
+
+## Phase 4: Scale & Architecture (v0.1.9)
+**Goal:** Solve the I/O bottleneck using Deterministic Randomized Batching.
+**Effort:** ~2 Hours
+
+### 4.1 The "Batch ID" Strategy
 We replace the "One Pin Per Run" model with "One File Per Batch".
 
 * **Refactor `cs_run_campaign`:**
-    1.  **Expand:** Generate the full task grid (DGP × Est × Seed = 70,000 rows).
+    1.  **Expand:** Generate the full task grid (DGP ? Est ? Seed = 70,000 rows).
     2.  **Deterministic Shuffle:** `set.seed(campaign_seed); tasks <- tasks[sample(nrow(tasks)), ]`.
         * *Why:* Ensures Batch 1 always contains the same tasks, enabling resume logic.
         * *Benefit:* Perfect load balancing (slow/fast tasks mixed).
     3.  **Chunk:** Assign `batch_id` (1 to 350).
     4.  **Resume Logic:** If `results/batches/batch_101.qs` exists, skip it.
 
-### 3.2 The Batch Runner (`cs_run_batch_internal`)
+### 4.2 The Batch Runner (`cs_run_batch_internal`)
 Create an internal worker function to handle the chunk.
 * **Input:** Dataframe of 200 tasks.
 * **Process:**
@@ -83,18 +102,12 @@ Create an internal worker function to handle the chunk.
     * `bind_rows()` results into one tibble.
 * **Output:** Atomic write to `results/batches/batch_{id}.qs`.
 
-### 3.3 Filesystem Hygiene
+### 4.3 Filesystem Hygiene
 * **Outcome:** Campaign produces **~350 files** (approx 200-500MB each).
 * **Justification:** Large files are optimized for sequential reads and avoid filesystem fragmentation/inode exhaustion.
 * **Benefit:** Trivial to copy, backup, and list.
 
----
-
-## Phase 4: Analysis (v0.1.9)
-**Goal:** Aggregate results without a database.
-**Effort:** ~2 Hours
-
-### 4.1 The Simple Aggregator
+### 4.4 The Simple Aggregator
 We do not need DuckDB. We have plenty of RAM for the summary statistics.
 
 * **Script:** `R/cs-campaign-aggregate.R`
@@ -104,7 +117,7 @@ We do not need DuckDB. We have plenty of RAM for the summary statistics.
     3.  Select summary columns (Bias, Coverage, RMSE, `n_boot_ok`). Drop raw vectors.
     4.  Save to `analysis/campaign_results.rds` (~20-50MB).
 
-### 4.2 JSS Figure Generation
+### 4.5 JSS Figure Generation
 * **Action:** Point `ggplot2` scripts directly at `campaign_results.rds`.
 
 ---

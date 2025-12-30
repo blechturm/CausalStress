@@ -102,6 +102,7 @@ res_a <- cs_run_campaign(
   board         = infra_a$board,
   staging_dir   = infra_a$staging_dir,
   parallel      = TRUE,
+  experimental_parallel = TRUE,
   show_progress = TRUE,
   skip_existing = FALSE
 )
@@ -140,6 +141,7 @@ res_b <- cs_run_campaign(
   board         = infra_b$board,
   staging_dir   = infra_b$staging_dir,
   parallel      = TRUE,
+  experimental_parallel = TRUE,
   show_progress = TRUE,
   skip_existing = FALSE
 )
@@ -190,3 +192,86 @@ if ("gengc" %in% estimator_ids) {
 
 tidy_b %>% glimpse()
 tidy_a %>% glimpse()
+
+# ==============================================================================
+# v0.1.8 Showcase: Patch-Only Reproducibility & Audit Features
+# ==============================================================================
+cat("\n\n=== v0.1.8 Showcase ===\n")
+
+# 1) Experimental parallel gating + "warn once per call"
+cat("\n[1] Parallel gating\n")
+cat("Attempting parallel run without experimental_parallel (should error)...\n")
+print(try(cs_run_seeds(
+  dgp_id = "synth_baseline",
+  estimator_id = "lm_att",
+  n = 50,
+  seeds = 1:1,
+  parallel = TRUE,
+  show_progress = FALSE,
+  quiet = TRUE
+), silent = TRUE))
+
+cat("\nRunning experimental parallel (should warn once per call)...\n")
+warning_count <- 0L
+board_v018 <- pins::board_temp()
+staging_v018 <- file.path(tempdir(), "cs_stage_v018_showcase")
+dir.create(staging_v018, recursive = TRUE, showWarnings = FALSE)
+withCallingHandlers(
+  cs_run_seeds(
+    dgp_id = "synth_baseline",
+    estimator_id = "lm_att",
+    n = 50,
+    seeds = 1:1,
+    board = board_v018,
+    staging_dir = staging_v018,
+    parallel = TRUE,
+    experimental_parallel = TRUE,
+    config = list(num_threads = 8L),
+    show_progress = FALSE,
+    quiet = TRUE
+  ),
+  warning = function(w) {
+    if (inherits(w, "causalstress_experimental_parallel")) warning_count <<- warning_count + 1L
+    invokeRestart("muffleWarning")
+  }
+)
+cat("Experimental-parallel warnings seen (expected 1): ", warning_count, "\n", sep = "")
+
+# 2) Provenance vs science payload accessors + fingerprint schema (incl. max_runtime)
+cat("\n[2] Science payload vs provenance\n")
+pin_name <- "results__dgp=synth_baseline__est=lm_att__n=50__seed=1"
+obj <- pins::pin_read(board_v018, pin_name)
+
+cat("meta$config_fingerprint_schema: ", obj$meta$config_fingerprint_schema, "\n", sep = "")
+cat("provenance$max_runtime: ", obj$provenance$max_runtime, "\n", sep = "")
+cat("provenance$experimental_parallel: ", obj$provenance$experimental_parallel, "\n", sep = "")
+cat("provenance$parallel_backend: ", obj$provenance$parallel_backend, "\n", sep = "")
+cat("provenance$requested_num_threads: ", obj$provenance$requested_num_threads, "\n", sep = "")
+cat("provenance$effective_num_threads: ", obj$provenance$effective_num_threads, "\n", sep = "")
+
+payload <- cs_science_payload(obj)
+prov <- cs_provenance(obj)
+flat <- cs_meta_flatten(obj)
+cat("payload contains provenance? ", "provenance" %in% names(payload), "\n", sep = "")
+cat("provenance contains max_runtime? ", isTRUE("max_runtime" %in% names(prov)), "\n", sep = "")
+cat("flat contains max_runtime? ", isTRUE("max_runtime" %in% names(flat)), "\n", sep = "")
+
+# 3) Fingerprint safety: max_runtime participates in identity
+cat("\n[3] Fingerprint safety (max_runtime participates)\n")
+cat("Attempting resume with different max_runtime (should fingerprint-mismatch error)...\n")
+print(try(cs_run_seeds(
+  dgp_id = "synth_baseline",
+  estimator_id = "lm_att",
+  n = 50,
+  seeds = 1:1,
+  board = board_v018,
+  skip_existing = TRUE,
+  max_runtime = 0.5,
+  show_progress = FALSE,
+  quiet = TRUE
+), silent = TRUE))
+
+# 4) DGP executable meta mapping (runner-side; no DGP generator changes)
+cat("\n[4] DGP executable meta mapping\n")
+dgp_desc <- cs_get_dgp("synth_baseline", quiet = TRUE)
+print(cs_dgp_executable_meta("synth_baseline", dgp_desc$version))

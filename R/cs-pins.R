@@ -50,6 +50,7 @@ cs_pin_write <- function(board, result) {
         n_boot_fail  = meta$n_boot_fail %||% 0L,
         estimator_pkgs = meta$estimator_pkgs %||% NA_character_,
         config_fingerprint = meta$config_fingerprint %||% NA_character_,
+        config_fingerprint_schema = meta$config_fingerprint_schema %||% NA_integer_,
         git_hash     = git_hash,
         session_info = list(utils::sessionInfo()),
         timestamp    = ts_num

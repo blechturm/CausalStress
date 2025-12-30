@@ -1,3 +1,16 @@
+# CausalStress 0.1.8
+
+## Patch-Only: Reproducibility & Audit Closure
+* Integrity: Oracle truth is now cached to disk (`tools::R_user_dir`), avoiding redundant re-simulation in parallel runs.
+* UX: Runner enforces `ci_method = "none"` when `bootstrap = FALSE` to prevent accidental compute waste ("Silent Bootstraps").
+* Governance: Registry now fails closed (aborts) if a DGP sidecar is missing.
+* Audit: Runner captures `estimator_reported_version` alongside registry versions for provenance.
+* Experimental parallel gating: `parallel=TRUE` now requires `experimental_parallel=TRUE`, emits a `causalstress_experimental_parallel` warning once per call, and records provenance flags.
+* Fingerprint schema v2: `config_fingerprint_schema=2` added; `max_runtime` is now part of the config fingerprint; legacy v0.1.7 pins remain resumable (with `max_runtime=Inf` only).
+* Wide & Shallow in experimental parallel: forces `num_threads=1` and applies thread-cap env vars (OMP/MKL/OpenBLAS/Veclib) with provenance capture.
+* DGP sidecar metadata corrected + validated against runner-side executable meta mapping (no DGP generator changes).
+* Added accessors: `cs_science_payload()`, `cs_provenance()`, `cs_meta_flatten()`.
+
 # CausalStress 0.1.7
 
 ## Scale Readiness & Protocol Hardening

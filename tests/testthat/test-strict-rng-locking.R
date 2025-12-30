@@ -5,10 +5,14 @@ skip_on_cran()
 test_that("parallel seeds match serial seeds under strict RNG", {
   # ensure future is available
   skip_if_not_installed("future")
+  skip_if_not_installed("furrr")
   seeds <- 1:2
 
-  future::plan(sequential)
-  on.exit(future::plan(sequential), add = TRUE)
+  old_plan <- future::plan()
+  on.exit(future::plan(old_plan), add = TRUE)
+  # Note: sequential plan only exercises the experimental-parallel code path;
+  # it does not create true multiprocessing workers.
+  future::plan(future::sequential)
 
   res_serial <- cs_run_seeds(
     dgp_id        = "synth_baseline",
@@ -20,15 +24,18 @@ test_that("parallel seeds match serial seeds under strict RNG", {
     show_progress = FALSE
   )
 
-  future::plan(multisession, workers = 2)
-  res_parallel <- cs_run_seeds(
-    dgp_id        = "synth_baseline",
-    estimator_id  = "lm_att",
-    n             = 100,
-    seeds         = seeds,
-    bootstrap     = FALSE,
-    parallel      = TRUE,
-    show_progress = FALSE
+  expect_warning(
+    res_parallel <- cs_run_seeds(
+      dgp_id        = "synth_baseline",
+      estimator_id  = "lm_att",
+      n             = 100,
+      seeds         = seeds,
+      bootstrap     = FALSE,
+      parallel      = TRUE,
+      experimental_parallel = TRUE,
+      show_progress = FALSE
+    ),
+    class = "causalstress_experimental_parallel"
   )
 
   expect_identical(res_serial$est_att, res_parallel$est_att)

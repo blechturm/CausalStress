@@ -11,6 +11,7 @@ test_that("parallel persistence requires staging_dir (seeds + campaign)", {
       seeds        = 1:1,
       board        = board,
       parallel     = TRUE,
+      experimental_parallel = TRUE,
       staging_dir  = NULL,
       show_progress = FALSE,
       quiet = TRUE
@@ -26,6 +27,7 @@ test_that("parallel persistence requires staging_dir (seeds + campaign)", {
       n             = 50,
       board         = board,
       parallel      = TRUE,
+      experimental_parallel = TRUE,
       staging_dir   = NULL,
       show_progress = FALSE,
       quiet = TRUE
@@ -46,16 +48,20 @@ test_that("parallel + staging_dir uses stage-and-gather persistence", {
   staging_dir <- file.path(tempdir(), "cs_stage_parallel_protocol")
   dir.create(staging_dir, showWarnings = FALSE, recursive = TRUE)
 
-  runs <- cs_run_seeds(
-    dgp_id       = "synth_baseline",
-    estimator_id = "lm_att",
-    n            = 50,
-    seeds        = 1:2,
-    board        = board,
-    parallel     = TRUE,
-    staging_dir  = staging_dir,
-    show_progress = FALSE,
-    quiet = TRUE
+  expect_warning(
+    runs <- cs_run_seeds(
+      dgp_id       = "synth_baseline",
+      estimator_id = "lm_att",
+      n            = 50,
+      seeds        = 1:2,
+      board        = board,
+      parallel     = TRUE,
+      experimental_parallel = TRUE,
+      staging_dir  = staging_dir,
+      show_progress = FALSE,
+      quiet = TRUE
+    ),
+    class = "causalstress_experimental_parallel"
   )
 
   expect_equal(nrow(runs), 2L)

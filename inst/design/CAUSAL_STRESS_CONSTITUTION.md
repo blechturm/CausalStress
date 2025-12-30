@@ -198,7 +198,7 @@ They do not constrain heterogeneous-effect estimators or real-data estimators wh
     -   If `config$num_threads == 1`, the Estimator **MUST** restrict internal parallelism to 1 thread.
     -   If `config$num_threads > 1`, the Estimator **MAY** use up to that many threads.
 
--   This article specifies how parallel execution MUST behave when implemented. v0.1.x implements only serial execution
+-   This article specifies how parallel execution MUST behave when implemented. v0.1.x is **serial by default**; parallel execution is permitted only in **experimental mode** under strict protocol (see Article VI).
 
 ### Section 5.2: The Granularity Rule
 
