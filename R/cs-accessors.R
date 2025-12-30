@@ -35,7 +35,7 @@ cs_science_payload <- function(x) {
       abs_error    = att$abs_error %||% NA_real_,
       ci_lo        = att$ci_lo %||% NA_real_,
       ci_hi        = att$ci_hi %||% NA_real_,
-      boot_covered = att$boot_covered %||% NA,
+      boot_covered = att$boot_covered %||% att$att_covered %||% NA,
       ci_width     = att$ci_width %||% NA_real_
     ),
     qst = qst,
@@ -99,6 +99,7 @@ cs_meta_flatten <- function(x) {
     estimator_version = meta$estimator_version %||% NA_character_,
     n = meta$n %||% NA_integer_,
     seed = meta$seed %||% NA_integer_,
+    tau_id = meta$tau_id %||% NA_character_,
     oracle = meta$oracle %||% NA,
     supports_qst = meta$supports_qst %||% NA,
     config_fingerprint = meta$config_fingerprint %||% NA_character_,
@@ -115,4 +116,3 @@ cs_meta_flatten <- function(x) {
     dgp_effect_type = prov$dgp_effect_type %||% NA_character_
   )
 }
-
