@@ -87,6 +87,9 @@ cs_run_single <- function(
   if (isTRUE(bootstrap) && B > 0L && is.null(config_local$n_boot)) {
     config_local$n_boot <- B
   }
+  if (isFALSE(bootstrap) && is.null(config_local$ci_method)) {
+    config_local$ci_method <- "none"
+  }
 
   config_fingerprint <- cs_build_config_fingerprint(
     dgp_id            = dgp_id,
