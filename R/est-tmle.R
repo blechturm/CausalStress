@@ -20,7 +20,12 @@ est_tmle_att <- function(df, config = list(), tau = cs_tau_oracle, ...) {
     stop("Package 'SuperLearner' needed for tmle estimator.")
   }
 
-  ci_method <- if (is.null(config$ci_method)) "native" else config$ci_method
+  method_in <- config$ci_method %||% "default"
+  if (identical(method_in, "default")) {
+    ci_method <- "native"
+  } else {
+    ci_method <- method_in
+  }
   n_boot <- if (is.null(config$n_boot)) 200 else config$n_boot
   dgp_id <- if (is.null(config$dgp_id)) "unk" else config$dgp_id
   task_seed <- config$seed
@@ -69,7 +74,16 @@ est_tmle_att <- function(df, config = list(), tau = cs_tau_oracle, ...) {
     ci_meta$ci_valid_by_dim <- valid
     ci_meta$ci_type <- "asymptotic"
   } else if (identical(ci_method, "bootstrap")) {
-    if (is.null(task_seed)) stop("config$seed is required for bootstrap CI")
+    if (is.null(task_seed)) {
+      rlang::abort(
+        message = "Bootstrap CI requested (or implied by default) but `config$seed` is missing.",
+        class = "causalstress_config_error",
+        body = c(
+          "x" = "Bootstrap relies on random sampling and requires a deterministic seed for reproducibility.",
+          "i" = "Provide `seed` in the `config` list or use `cs_run_campaign` (which handles this automatically)."
+        )
+      )
+    }
     stat_fn <- function(boot_df) {
       tmle::tmle(
         Y      = boot_df$y,

@@ -55,6 +55,9 @@ cs_collect_qst <- function(tidy) {
       names(tidy) <- new_names
     }
   }
+  if (!"tau_id" %in% names(tidy) && "tau" %in% names(tidy)) {
+    tidy <- dplyr::mutate(tidy, tau_id = cs_tau_id(.data$tau))
+  }
 
   dplyr::select(
     tidy,

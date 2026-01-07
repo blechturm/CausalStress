@@ -4,6 +4,9 @@
 #' (dgp_id, estimator_id, seed) with dynamic load balancing, making it
 #' the recommended entry point for large heterogeneous campaigns.
 #'
+#' @param plan Optional plan tibble from `cs_plan_campaign()`. If supplied,
+#'   `cs_run_campaign()` will execute the planned batches and ignore the
+#'   grid-based arguments.
 #' @param dgp_ids Character vector of DGP IDs.
 #' @param estimator_ids Character vector of estimator IDs.
 #' @param dgp_id Deprecated alias for `dgp_ids` (scalar character).
@@ -23,18 +26,35 @@
 #' @param board Optional pins board for persistence.
 #' @param staging_dir Optional staging directory for crash recovery.
 #' @param parallel Logical; if TRUE, uses furrr/future for parallel execution.
+#' @param workers Number of parallel workers for plan-based execution.
 #' @param show_progress Logical; show progressr-based progress.
 #' @param ... Additional arguments forwarded to cs_run_single() (tau, etc.).
 #'
-#' @return Tibble with one row per run.
+#' @return Tibble with one row per run (grid mode) or invisibly returns the
+#'   batch ids executed (plan mode).
 #' @export
+#'
+#' @examples
+#' \dontrun{
+#' plan <- cs_plan_campaign(
+#'   dgp_list = "synth_baseline",
+#'   estimator_list = "lm_att",
+#'   n_seeds = 1:4,
+#'   batch_size = 2,
+#'   campaign_seed = 123,
+#'   strategy_map = list(defaults = list(n = 200))
+#' )
+#' cs_run_campaign(plan = plan, staging_dir = "staging_batches", workers = 2)
+#' cs_consolidate(staging_dir = "staging_batches", board = pins::board_temp())
+#' }
 cs_run_campaign <- function(
+  plan = NULL,
   dgp_ids = NULL,
   estimator_ids = NULL,
   dgp_id = NULL,
   estimator_id = NULL,
-  seeds,
-  n,
+  seeds = NULL,
+  n = NULL,
   defaults = list(),
   overrides = list(),
   campaign_seed = NULL,
@@ -48,12 +68,25 @@ cs_run_campaign <- function(
   staging_dir = NULL,
   parallel = FALSE,
   experimental_parallel = FALSE,
+  workers = parallel::detectCores() - 1L,
   show_progress = TRUE,
   force = FALSE,
   quiet = TRUE,
   max_runtime = Inf,
   ...
 ) {
+  if (!is.null(plan)) {
+    if (is.null(staging_dir) || !nzchar(staging_dir)) {
+      rlang::abort("`staging_dir` must be provided when plan is supplied.")
+    }
+    return(cs_run_campaign_plan(
+      plan = plan,
+      staging_dir = staging_dir,
+      board = board,
+      workers = workers,
+      show_progress = show_progress
+    ))
+  }
   dots <- list(...)
   # Backward compatibility: `config` / `config_by_estimator` were the previous
   # names for `defaults` / `overrides`. Prefer the new names for clarity.
@@ -86,6 +119,12 @@ cs_run_campaign <- function(
   }
   if (is.null(estimator_ids) || length(estimator_ids) == 0L) {
     rlang::abort("`estimator_ids` must be a non-empty character vector.", class = "causalstress_contract_error")
+  }
+  if (is.null(seeds) || length(seeds) == 0L) {
+    rlang::abort("`seeds` must be a non-empty integer vector.", class = "causalstress_contract_error")
+  }
+  if (is.null(n) || length(n) != 1L || !is.finite(n)) {
+    rlang::abort("`n` must be a finite numeric scalar.", class = "causalstress_contract_error")
   }
 
   tasks <- tidyr::expand_grid(
@@ -296,6 +335,18 @@ cs_run_campaign <- function(
   }
 
   if (isTRUE(show_progress)) {
+    current_handlers <- progressr::handlers(default = NA)
+    if (length(current_handlers) == 0L) {
+      if (requireNamespace("cli", quietly = TRUE)) {
+        progressr::handlers(
+          progressr::handler_cli(
+            intrusiveness = getOption("progressr.intrusiveness.gui", 1)
+          )
+        )
+      } else {
+        progressr::handlers(progressr::handler_txtprogressbar(style = 3))
+      }
+    }
     progressr::with_progress(run_campaign())
   } else {
     run_campaign()

@@ -116,3 +116,50 @@ cs_meta_flatten <- function(x) {
     dgp_effect_type = prov$dgp_effect_type %||% NA_character_
   )
 }
+
+#' Read a batch pin from a board
+#'
+#' Reads a batch artifact pinned by `cs_consolidate()` and returns the list of
+#' run result objects stored under `results`.
+#'
+#' @param board A pins board containing batch pins.
+#' @param batch_id Integer batch id or a full pin name (`batch_{id}`).
+#' @return A list of run result objects.
+#' @export
+cs_read_batch <- function(board, batch_id) {
+  if (is.null(board)) {
+    rlang::abort("`board` must be provided.")
+  }
+  if (is.null(batch_id) || length(batch_id) != 1L) {
+    rlang::abort("`batch_id` must be a single value.")
+  }
+  pin_name <- if (is.character(batch_id) && grepl("^batch_", batch_id)) {
+    batch_id
+  } else {
+    paste0("batch_", batch_id)
+  }
+
+  obj <- pins::pin_read(board, pin_name)
+  if (!is.list(obj) || is.null(obj$results)) {
+    rlang::abort("Batch pin does not contain results.")
+  }
+  obj$results
+}
+
+#' Tidy a batch of run results
+#'
+#' Applies `cs_tidy()` to each result object in a batch and returns a single
+#' combined tibble.
+#'
+#' @param batch_results A list of run result objects (from `cs_read_batch()`).
+#' @return A tibble of tidy results.
+#' @export
+cs_tidy_batch <- function(batch_results) {
+  if (!is.list(batch_results)) {
+    rlang::abort("`batch_results` must be a list of run results.")
+  }
+  if (length(batch_results) == 0L) {
+    return(tibble::tibble())
+  }
+  dplyr::bind_rows(lapply(batch_results, cs_tidy))
+}

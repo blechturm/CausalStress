@@ -25,7 +25,18 @@ cs_plan_campaign(
 \item{campaign_seed}{Integer seed for deterministic shuffling.}
 
 \item{strategy_map}{List of defaults and/or per-estimator overrides. Use
-\code{list(defaults = list(...), overrides = list(est_id = list(...)))}.}
+\code{list(defaults = list(...), overrides = list(est_id = list(...)))}.
+The resolved config is attached to each task (defaults + per-estimator
+overrides via \code{modifyList}). Common fields include:
+\itemize{
+\item \code{n}: sample size per run (required by the worker; overrides any global \code{n}).
+\item \code{seed}: per-task RNG seed (usually not overridden; use \code{n_seeds} instead).
+\item \code{ci_method}: "bootstrap", "native", or "none".
+\item \code{n_boot}: number of bootstrap draws.
+\item \code{tau}: custom quantile grid (numeric vector).
+\item \code{num_threads}: force single-threaded estimators.
+\item estimator-specific hyperparameters (e.g., \code{num_trees}, \code{n_draws}).
+}}
 }
 \value{
 A tibble with columns \code{batch_id} and \code{tasks} (list-column).
@@ -47,4 +58,21 @@ plan <- cs_plan_campaign(
   )
 )
 plan
+\dontrun{
+# Run using the plan-based batching engine (v0.1.9)
+cs_run_campaign(
+  plan = plan,
+  staging_dir = "staging_batches",
+  workers = 2
+)
+
+# Legacy grid runner (v0.1.8 and earlier)
+cs_run_campaign(
+  dgp_ids = c("synth_baseline"),
+  estimator_ids = c("lm_att", "ipw_att"),
+  seeds = 1:4,
+  n = 200,
+  defaults = list(ci_method = "bootstrap")
+)
+}
 }
