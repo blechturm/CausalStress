@@ -443,7 +443,9 @@ p(X) = \text{expit}(0.5 X_1 - 0.5 X_2)
 <p><strong>Noise Mixture (Heavy Tails)</strong> <span class="math display">\[
 \varepsilon \sim 0.8 \cdot \mathcal{N}(0, 0.5^2) + 0.2 \cdot
 \text{Cauchy}(0, 1)
-\]</span></p>
+\]</span> where <span class="math inline">\(\varepsilon_0\)</span> and
+<span class="math inline">\(\varepsilon_1\)</span> are drawn
+independently.</p>
 <p><strong>Moment note:</strong> The Cauchy component has undefined mean
 and variance. Therefore the population mean of realized outcomes is
 undefined, and any L2/MSE estimator is not well-posed in the

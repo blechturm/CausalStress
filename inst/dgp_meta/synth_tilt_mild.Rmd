@@ -107,6 +107,11 @@ Mild overlap tilt. A warm-up for the severe overlap stress test.
 
 ## 4. Mathematical Specification
 
+Covariates:
+\[
+X \sim \mathcal{N}(0, I_5)
+\]
+
 Propensity:
 \[
 p(X) = \text{expit}(0.45 X_1 - 0.3 X_2 - 0.25 X_4)

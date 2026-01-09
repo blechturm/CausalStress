@@ -4,7 +4,7 @@ status: "experimental"
 type: "synthetic"
 
 stress_profile:
-  overlap: "moderate"
+  overlap: "severe"
   noise: "gaussian"
   linearity: "linear"
   effect: "constant"

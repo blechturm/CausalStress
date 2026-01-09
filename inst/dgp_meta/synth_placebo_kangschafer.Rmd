@@ -145,6 +145,11 @@ Sharp null effect:
 \tau(Z) \equiv 0,\quad Y_1 = Y_0
 \]
 
+**Noise:**
+\[
+\varepsilon \sim \mathcal{N}(0, 1^2)
+\]
+
 ## 5. Oracle Truth Definition
 
 - True ATT is exactly 0 (sharp null).
@@ -161,7 +166,7 @@ p1 <- ggplot(df, aes(x = p, fill = factor(w))) +
   geom_histogram(alpha = 0.6, bins = 30, position = "identity") +
   labs(title = "Propensity Distribution (Practical Positivity Violation)",
        subtitle = "Histogram shows true p(Z). Analysts observing X face misspecification.",
-       x = "p(X)", y = "Count", fill = "W") +
+       x = "p(Z)", y = "Count", fill = "W") +
   theme_minimal()
 
 p2 <- ggplot(df, aes(x = X1, y = structural_te)) +

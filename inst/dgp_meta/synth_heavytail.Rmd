@@ -140,6 +140,7 @@ p(X) = \text{expit}(0.5 X_1 - 0.5 X_2)
 \[
 \varepsilon \sim 0.8 \cdot \mathcal{N}(0, 0.5^2) + 0.2 \cdot \text{Cauchy}(0, 1)
 \]
+where \(\varepsilon_0\) and \(\varepsilon_1\) are drawn independently.
 
 **Moment note:** The Cauchy component has undefined mean and variance. Therefore the
 population mean of realized outcomes is undefined, and any L2/MSE estimator is not
