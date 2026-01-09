@@ -26,8 +26,8 @@ if (requireNamespace("patchwork", quietly = TRUE)) {
 
 ```{r meta_table, echo=FALSE, results='asis'}
 stars <- params$meta$difficulty$stars %||% 0
-active_star   <- '<span style="color: #f1c40f;">★</span>'
-inactive_star <- '<span style="color: #e0e0e0;">★</span>'
+active_star   <- '<span style="color: #f1c40f;">&#9733;</span>'
+inactive_star <- '<span style="color: #e0e0e0;">&#9734;</span>'
 difficulty_val <- paste0(
   strrep(active_star, max(0, stars)),
   strrep(inactive_star, max(0, 5 - stars)),
@@ -109,7 +109,7 @@ Gatekeeper check (Constitution Article IV).
 
 ## 4. Mathematical Specification
 
-Covariates: $X_1, X_2, X_3, X_4, X_5 \sim \mathcal{N}(0, 1)$ independently.
+Covariates: $X_1, X_2, X_3, X_4, X_5 \sim \mathcal{N}(0, 1^2)$ independently.
 
 **Outcome (control):** $$\mu_0(X) = 1 + X_1 + 0.5 X_2$$
 
@@ -117,7 +117,7 @@ Covariates: $X_1, X_2, X_3, X_4, X_5 \sim \mathcal{N}(0, 1)$ independently.
 
 **Treatment effect (sharp null):** $$\tau(X) \equiv 0$$
 
-Noise is Gaussian: $\varepsilon \sim \mathcal{N}(0, 0.5)$ and $Y_1 \equiv Y_0$ pathwise.
+Noise is Gaussian: $\varepsilon \sim \mathcal{N}(0, 0.5^2)$ and $Y_1 \equiv Y_0$ pathwise.
 
 ## 5. Oracle Truth Definition
 

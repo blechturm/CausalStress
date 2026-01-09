@@ -386,7 +386,7 @@ Status
 Difficulty
 </td>
 <td style="text-align:left;">
-<span style="color: #f1c40f;">★</span><span style="color: #f1c40f;">★</span><span style="color: #f1c40f;">★</span><span style="color: #f1c40f;">★</span><span style="color: #e0e0e0;">★</span>
+<span style="color: #f1c40f;">★</span><span style="color: #f1c40f;">★</span><span style="color: #f1c40f;">★</span><span style="color: #f1c40f;">★</span><span style="color: #e0e0e0;">☆</span>
 (4/5)
 </td>
 </tr>
@@ -422,6 +422,15 @@ unstable inverse weights.</p>
 p(X) = \text{expit}(9 X_1 + 9 X_2)
 \]</span></p>
 <p>The coefficient 9.0 pushes probability mass toward 0 and 1.</p>
+<p>Outcome (control): <span class="math display">\[
+\mu_0(X) = 1 + X_1 + 0.5 X_2
+\]</span></p>
+<p>Treatment effect: <span class="math display">\[
+\tau(X) = 1 + 0.5 X_1
+\]</span></p>
+<p>Noise: <span class="math display">\[
+\varepsilon \sim \mathcal{N}(0, 0.5^2)
+\]</span></p>
 </div>
 <div id="oracle-truth-definition" class="section level2">
 <h2>5. Oracle Truth Definition</h2>

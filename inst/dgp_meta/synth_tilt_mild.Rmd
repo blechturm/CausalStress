@@ -27,7 +27,7 @@ if (requireNamespace("patchwork", quietly = TRUE)) {
 ```{r meta_table, echo=FALSE, results='asis'}
 stars <- params$meta$difficulty$stars %||% 0
 active_star   <- '<span style="color: #f1c40f;">&#9733;</span>'
-inactive_star <- '<span style="color: #e0e0e0;">&#9733;</span>'
+inactive_star <- '<span style="color: #e0e0e0;">&#9734;</span>'
 difficulty_val <- paste0(
   strrep(active_star, max(0, stars)),
   strrep(inactive_star, max(0, 5 - stars)),
@@ -113,6 +113,21 @@ p(X) = \text{expit}(0.45 X_1 - 0.3 X_2 - 0.25 X_4)
 \]
 
 Including \(X_4\) induces a mild covariate shift between treated and control units.
+
+Outcome (control):
+\[
+\mu_0(X) = 1 + X_1 + 0.5 X_2
+\]
+
+Treatment effect:
+\[
+\tau(X) = 1 + 0.5 X_1
+\]
+
+Noise:
+\[
+\varepsilon \sim \mathcal{N}(0, 0.5^2)
+\]
 
 ## 5. Oracle Truth Definition
 

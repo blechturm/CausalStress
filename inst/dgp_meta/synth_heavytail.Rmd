@@ -118,17 +118,17 @@ well-defined under heavy tails.
 
 ## 4. Mathematical Specification
 
-### Covariates
+**Covariates**
 \[
 X \sim \mathcal{N}(0, I_5)
 \]
 
-### Propensity
+**Propensity**
 \[
 p(X) = \text{expit}(0.5 X_1 - 0.5 X_2)
 \]
 
-### Baseline Outcome and Treatment Effect
+**Baseline Outcome and Treatment Effect**
 \[
 \mu_0(X) = 1 + X_1 + 0.5 X_2
 \]
@@ -136,16 +136,16 @@ p(X) = \text{expit}(0.5 X_1 - 0.5 X_2)
 \tau(X) = 1 + 0.5 X_1
 \]
 
-### Noise Mixture (Heavy Tails)
+**Noise Mixture (Heavy Tails)**
 \[
-\varepsilon \sim 0.8 \cdot \mathcal{N}(0, 0.5) + 0.2 \cdot \text{Cauchy}(0, 1)
+\varepsilon \sim 0.8 \cdot \mathcal{N}(0, 0.5^2) + 0.2 \cdot \text{Cauchy}(0, 1)
 \]
 
 **Moment note:** The Cauchy component has undefined mean and variance. Therefore the
 population mean of realized outcomes is undefined, and any L2/MSE estimator is not
 well-posed in the population.
 
-### Potential Outcomes
+**Potential Outcomes**
 \[
 Y_0 = \mu_0(X) + \varepsilon_0,\quad
 Y_1 = \mu_0(X) + \tau(X) + \varepsilon_1

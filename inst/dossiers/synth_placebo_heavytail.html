@@ -386,7 +386,7 @@ Status
 Difficulty
 </td>
 <td style="text-align:left;">
-<span style="color: #f1c40f;">★</span><span style="color: #f1c40f;">★</span><span style="color: #f1c40f;">★</span><span style="color: #e0e0e0;">★</span><span style="color: #e0e0e0;">★</span>
+<span style="color: #f1c40f;">★</span><span style="color: #f1c40f;">★</span><span style="color: #f1c40f;">★</span><span style="color: #e0e0e0;">☆</span><span style="color: #e0e0e0;">☆</span>
 (3/5)
 </td>
 </tr>
@@ -427,13 +427,13 @@ Y_0\)</span>.</li>
 <div id="mathematical-specification" class="section level2">
 <h2>4. Mathematical Specification</h2>
 <p>Covariates: <span class="math inline">\(X_1, X_2, X_3, X_4, X_5 \sim
-\mathcal{N}(0, 1)\)</span> independently.</p>
+\mathcal{N}(0, 1^2)\)</span> independently.</p>
 <p><strong>Outcome (control):</strong> <span class="math display">\[\mu_0(X) = 1 + X_1 + 0.5 X_2\]</span></p>
 <p><strong>Propensity:</strong> <span class="math display">\[p(X) =
 \text{expit}(0.5 X_1 - 0.5 X_2)\]</span></p>
 <p><strong>Treatment effect (sharp null):</strong> <span class="math display">\[\tau(X) \equiv 0\]</span></p>
-<p><strong>Noise mixture:</strong> <span class="math display">\[\varepsilon \sim 0.8 \cdot \mathcal{N}(0, 0.5) +
-0.2 \cdot \text{Cauchy}(0, 1)\]</span></p>
+<p><strong>Noise mixture:</strong> <span class="math display">\[\varepsilon \sim 0.8 \cdot \mathcal{N}(0, 0.5^2)
++ 0.2 \cdot \text{Cauchy}(0, 1)\]</span></p>
 <p>Mean and variance are undefined due to the Cauchy component.</p>
 </div>
 <div id="oracle-truth-definition" class="section level2">

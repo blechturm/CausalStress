@@ -429,44 +429,29 @@ independent of realized noise.</li>
 </div>
 <div id="mathematical-specification" class="section level2">
 <h2>4. Mathematical Specification</h2>
-<div id="covariates" class="section level3">
-<h3>Covariates</h3>
-<p><span class="math display">\[
+<p><strong>Covariates</strong> <span class="math display">\[
 X \sim \mathcal{N}(0, I_5)
 \]</span></p>
-</div>
-<div id="propensity" class="section level3">
-<h3>Propensity</h3>
-<p><span class="math display">\[
+<p><strong>Propensity</strong> <span class="math display">\[
 p(X) = \text{expit}(0.5 X_1 - 0.5 X_2)
 \]</span></p>
-</div>
-<div id="baseline-outcome-and-treatment-effect" class="section level3">
-<h3>Baseline Outcome and Treatment Effect</h3>
-<p><span class="math display">\[
+<p><strong>Baseline Outcome and Treatment Effect</strong> <span class="math display">\[
 \mu_0(X) = 1 + X_1 + 0.5 X_2
 \]</span> <span class="math display">\[
 \tau(X) = 1 + 0.5 X_1
 \]</span></p>
-</div>
-<div id="noise-mixture-heavy-tails" class="section level3">
-<h3>Noise Mixture (Heavy Tails)</h3>
-<p><span class="math display">\[
-\varepsilon \sim 0.8 \cdot \mathcal{N}(0, 0.5) + 0.2 \cdot
+<p><strong>Noise Mixture (Heavy Tails)</strong> <span class="math display">\[
+\varepsilon \sim 0.8 \cdot \mathcal{N}(0, 0.5^2) + 0.2 \cdot
 \text{Cauchy}(0, 1)
 \]</span></p>
 <p><strong>Moment note:</strong> The Cauchy component has undefined mean
 and variance. Therefore the population mean of realized outcomes is
 undefined, and any L2/MSE estimator is not well-posed in the
 population.</p>
-</div>
-<div id="potential-outcomes" class="section level3">
-<h3>Potential Outcomes</h3>
-<p><span class="math display">\[
+<p><strong>Potential Outcomes</strong> <span class="math display">\[
 Y_0 = \mu_0(X) + \varepsilon_0,\quad
 Y_1 = \mu_0(X) + \tau(X) + \varepsilon_1
 \]</span></p>
-</div>
 </div>
 <div id="oracle-truth-definition" class="section level2">
 <h2>5. Oracle Truth Definition</h2>

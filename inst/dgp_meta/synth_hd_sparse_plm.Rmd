@@ -28,7 +28,7 @@ if (requireNamespace("patchwork", quietly = TRUE)) {
 ```{r meta_table, echo=FALSE, results='asis'}
 stars <- params$meta$difficulty$stars %||% 0
 active_star   <- '<span style="color: #f1c40f;">&#9733;</span>'
-inactive_star <- '<span style="color: #e0e0e0;">&#9733;</span>'
+inactive_star <- '<span style="color: #e0e0e0;">&#9734;</span>'
 difficulty_val <- paste0(
   strrep(active_star, max(0, stars)),
   strrep(inactive_star, max(0, 5 - stars)),
@@ -106,7 +106,7 @@ estimation without regularization becomes fragile.
 ## 3. Identification Assumptions (Explicit)
 
 - Selection on observables holds.
-- Overlap is moderate by design.
+- Overlap is severe (high-dimensional separation).
 - SUTVA holds.
 
 ## 4. Mathematical Specification
@@ -131,6 +131,11 @@ Treatment effect:
 \tau(X) \equiv 1
 \]
 
+Noise:
+\[
+\varepsilon \sim \mathcal{N}(0, 1^2)
+\]
+
 ## 5. Oracle Truth Definition
 
 - True ATT is computed from `structural_te` among treated units.
@@ -145,7 +150,7 @@ df <- dgp$df
 
 p1 <- ggplot(df, aes(x = p, fill = factor(w))) +
   geom_histogram(alpha = 0.6, bins = 30, position = "identity") +
-  labs(title = "Propensity Distribution (Moderate Overlap)",
+  labs(title = "Propensity Distribution (High-Dimensional Stress)",
        x = "p(X)", y = "Count", fill = "W") +
   theme_minimal()
 

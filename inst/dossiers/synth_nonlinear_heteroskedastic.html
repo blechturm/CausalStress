@@ -387,7 +387,7 @@ Status
 Difficulty
 </td>
 <td style="text-align:left;">
-<span style="color: #f1c40f;">★</span><span style="color: #f1c40f;">★</span><span style="color: #f1c40f;">★</span><span style="color: #e0e0e0;">★</span><span style="color: #e0e0e0;">★</span>
+<span style="color: #f1c40f;">★</span><span style="color: #f1c40f;">★</span><span style="color: #f1c40f;">★</span><span style="color: #e0e0e0;">☆</span><span style="color: #e0e0e0;">☆</span>
 (3/5)
 </td>
 </tr>
@@ -406,9 +406,9 @@ smooth</span><span class="badge bg-secondary" style="margin-right:4px;">effect: 
 </div>
 <div id="what-this-dgp-stresses-intent" class="section level2">
 <h2>2. What This DGP Stresses (Intent)</h2>
-<p>Monotone nonlinear confounding + “black swan” heteroskedastic noise.
-OLS fails because it fits a plane to a cubic signal and cannot adapt to
-variance that explodes in the tails of the covariate distribution.</p>
+<p>Monotone nonlinear confounding + severe heteroskedasticity. OLS fails
+because it fits a plane to a cubic signal and cannot adapt to variance
+that explodes in the tails of the covariate distribution.</p>
 </div>
 <div id="identification-assumptions-explicit" class="section level2">
 <h2>3. Identification Assumptions (Explicit)</h2>
@@ -420,8 +420,17 @@ variance that explodes in the tails of the covariate distribution.</p>
 </div>
 <div id="mathematical-specification" class="section level2">
 <h2>4. Mathematical Specification</h2>
+<p>Covariates: <span class="math display">\[
+X_1 \sim \mathcal{N}(0, 1^2),\quad
+X_2 \sim \mathcal{N}(0, 1^2),\quad
+X_3 \sim \mathcal{U}[-2, 2],\quad
+X_4 \sim \text{Bernoulli}(0.4)
+\]</span></p>
 <p>Outcome (control): <span class="math display">\[
 \mu_0(X) = 1 + 0.5 X_1^3 + 1.5 X_2^2 - 1.0 X_4
+\]</span></p>
+<p>Treatment Effect: <span class="math display">\[
+\tau(X) \equiv 1
 \]</span></p>
 <p>Propensity: <span class="math display">\[
 p(X) = \mathrm{expit}(1.5 X_1 - 1.5 X_2)
