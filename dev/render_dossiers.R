@@ -12,6 +12,18 @@ suppressPackageStartupMessages({
 
 or_else <- function(x, y) if (is.null(x)) y else x
 
+load_causalstress_dev <- function() {
+  if (requireNamespace("devtools", quietly = TRUE)) {
+    devtools::load_all(quiet = TRUE)
+    return(invisible(TRUE))
+  }
+  if (requireNamespace("CausalStress", quietly = TRUE)) {
+    library(CausalStress)
+    return(invisible(TRUE))
+  }
+  stop("Neither devtools nor CausalStress is available; cannot load package for dossier rendering.")
+}
+
 get_registry_ids <- function() {
   # Try exported first
   reg_fn <- NULL
@@ -77,6 +89,8 @@ render_dossier <- function(dgp_id, force = FALSE, output_dir = "inst/dossiers") 
 
 render_all_dossiers <- function(force = FALSE) {
   dir_create(path("inst", "dossiers"), recurse = TRUE)
+
+  load_causalstress_dev()
 
   dgp_ids <- get_registry_ids()
   cli::cli_alert(glue("Rendering {length(dgp_ids)} dossiers..."))

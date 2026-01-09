@@ -31,7 +31,7 @@ overrides via \code{modifyList}). Common fields include:
 \itemize{
 \item \code{n}: sample size per run (required by the worker; overrides any global \code{n}).
 \item \code{seed}: per-task RNG seed (usually not overridden; use \code{n_seeds} instead).
-\item \code{ci_method}: "bootstrap", "native", or "none".
+\item \code{ci_method}: one of "none", "default", "bootstrap", "native" (see \link{cs_ci_methods}).
 \item \code{n_boot}: number of bootstrap draws.
 \item \code{tau}: custom quantile grid (numeric vector).
 \item \code{num_threads}: force single-threaded estimators.

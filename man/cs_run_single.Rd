@@ -36,6 +36,32 @@ cs_run_single(
 
 \item{quiet}{Logical; if \code{TRUE}, suppress warnings from DGP lookup (use with
 care—defaults to \code{FALSE} to honor loud-warning protocol).}
+
+\item{tau}{Numeric vector of quantile levels used by QST-capable estimators.
+Defaults to \link{cs_tau_oracle}.}
+
+\item{bootstrap}{Logical; runner-level convenience flag. When \code{TRUE} and
+\code{config$ci_method} is missing, the runner sets it to \code{"bootstrap"} and also
+injects \code{config$seed} from \code{seed} (see \link{cs_ci_methods}).}
+
+\item{B}{Integer; convenience alias for \code{config$n_boot} when \code{bootstrap=TRUE}.
+Only used if \code{config$n_boot} is missing.}
+
+\item{config}{List of estimator configuration options. Common fields include
+\code{ci_method}, \code{n_boot}, and estimator-specific hyperparameters. See
+\link{cs_ci_methods} for CI semantics.}
+
+\item{board}{Optional pins board. If provided, results can be persisted by
+higher-level runners.}
+
+\item{max_runtime}{Numeric scalar; maximum allowed runtime (seconds) for the
+estimator call. Defaults to \code{Inf}.}
+
+\item{...}{Additional arguments forwarded to the estimator generator.}
+}
+\value{
+A tibble with one row containing point estimates, optional CI
+columns, provenance metadata, and any captured warnings/errors.
 }
 \description{
 Run a single DGP/estimator combination for one seed

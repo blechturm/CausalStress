@@ -7,8 +7,15 @@
 #' @param df Data frame with `y`, `w`, and covariates; oracle columns (`y0`,
 #'   `y1`, `p`, `structural_te`) are dropped before calling GenGC.
 #' @param tau Numeric vector of quantile levels passed to `tau_grid`.
-#' @param config Optional list: `n_draws` (default 300), `num_trees` (default
-#'   800), `crossfit_folds` (default 5), `num_threads` (default 1, enforced).
+#' @param config Optional list. Common fields include:
+#' \itemize{
+#'   \item \code{ci_method}: CI intent; one of "none", "default", "bootstrap", "native" (see [cs_ci_methods]).
+#'   \item \code{seed}: required when bootstrap CIs are requested.
+#'   \item \code{n_boot}: number of bootstrap draws (default: 200).
+#'   \item \code{n_draws} (default 300), \code{num_trees} (default 800),
+#'     \code{crossfit_folds} (default 5), \code{num_threads} (default 1, enforced).
+#' }
+#' For this estimator, \code{ci_method = "default"} maps to \code{"bootstrap"}.
 #'
 #' @return List with `att`, `qst`, `cf = NULL`, and `meta` satisfying
 #'   `cs_check_estimator_output(require_qst = TRUE)`.
@@ -58,7 +65,7 @@ est_gengc_dr <- function(df, tau = cs_tau_oracle, config = list()) {
     value = fit$qst
   )
 
-  method_in <- config$ci_method %||% "default"
+  method_in <- config$ci_method %||% "none"
   if (identical(method_in, "default")) {
     ci_method <- "bootstrap"
   } else {
@@ -67,6 +74,15 @@ est_gengc_dr <- function(df, tau = cs_tau_oracle, config = list()) {
   n_boot <- if (is.null(config$n_boot)) 200 else config$n_boot
   dgp_id <- if (is.null(config$dgp_id)) "unk" else config$dgp_id
   task_seed <- config$seed
+  ci_method_source <- config$ci_method_source %||% {
+    if (is.null(config$ci_method)) {
+      "implicit_none"
+    } else if (identical(config$ci_method, "default")) {
+      "default_mapped"
+    } else {
+      "explicit"
+    }
+  }
 
   stat_fn <- function(boot_df) {
     fit_b <- GenGC::gengc_dr(
@@ -114,7 +130,8 @@ est_gengc_dr <- function(df, tau = cs_tau_oracle, config = list()) {
         class = "causalstress_config_error",
         body = c(
           "x" = "Bootstrap relies on random sampling and requires a deterministic seed for reproducibility.",
-          "i" = "Provide `seed` in the `config` list or use `cs_run_campaign` (which handles this automatically)."
+          "i" = "Provide `seed` in the `config` list or use `cs_run_campaign()` / `cs_run_seeds()` (which handle this automatically).",
+          "i2" = "If you only need point estimates, set `ci_method = \"none\"`."
         )
       )
     } else {
@@ -231,6 +248,9 @@ est_gengc_dr <- function(df, tau = cs_tau_oracle, config = list()) {
       collapsed    = ci_meta$collapsed,
       ci_type      = ci_meta$ci_type,
       ci_level     = ci_meta$ci_level,
+      ci_method_in = method_in,
+      ci_method_source = ci_method_source,
+      seed_used    = task_seed %||% NA_integer_,
       qst_ci_method       = qst_ci_meta$ci_method,
       qst_ci_type         = qst_ci_meta$ci_type,
       qst_ci_level        = qst_ci_meta$ci_level,

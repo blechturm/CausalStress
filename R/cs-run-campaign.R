@@ -14,7 +14,8 @@
 #' @param seeds Integer vector of seeds.
 #' @param n Integer sample size per run.
 #' @param defaults Optional default estimator config list forwarded to
-#'   `cs_run_single()` (e.g., `list(n_boot = 200, num_threads = 1L)`).
+#'   `cs_run_single()` (e.g., `list(n_boot = 200, num_threads = 1L)`). Common
+#'   fields include `ci_method` (see [cs_ci_methods]).
 #' @param overrides Optional named list of estimator-specific config overrides
 #'   (e.g., `list(tmle_att = list(ci_method = "native"))`). Each override is
 #'   merged over `defaults` using `utils::modifyList()`.
@@ -28,6 +29,12 @@
 #' @param parallel Logical; if TRUE, uses furrr/future for parallel execution.
 #' @param workers Number of parallel workers for plan-based execution.
 #' @param show_progress Logical; show progressr-based progress.
+#' @param bootstrap Logical; runner-level convenience flag forwarded to
+#'   [cs_run_single()]. When `TRUE` and `ci_method` is missing in the resolved
+#'   config, bootstrap CIs are requested and the per-task seed is injected (see
+#'   [cs_ci_methods]).
+#' @param B Integer; convenience alias forwarded to [cs_run_single()] for setting
+#'   `config$n_boot` when `bootstrap=TRUE`.
 #' @param ... Additional arguments forwarded to cs_run_single() (tau, etc.).
 #'
 #' @return Tibble with one row per run (grid mode) or invisibly returns the

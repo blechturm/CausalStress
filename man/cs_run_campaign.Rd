@@ -51,7 +51,8 @@ grid-based arguments.}
 \item{n}{Integer sample size per run.}
 
 \item{defaults}{Optional default estimator config list forwarded to
-\code{cs_run_single()} (e.g., \code{list(n_boot = 200, num_threads = 1L)}).}
+\code{cs_run_single()} (e.g., \code{list(n_boot = 200, num_threads = 1L)}). Common
+fields include \code{ci_method} (see \link{cs_ci_methods}).}
 
 \item{overrides}{Optional named list of estimator-specific config overrides
 (e.g., \code{list(tmle_att = list(ci_method = "native"))}). Each override is
@@ -61,6 +62,14 @@ merged over \code{defaults} using \code{utils::modifyList()}.}
 shuffle task execution order for better load balancing without relying on
 ambient RNG state. If \code{NULL}, tasks are executed in deterministic grid
 order.}
+
+\item{bootstrap}{Logical; runner-level convenience flag forwarded to
+\code{\link[=cs_run_single]{cs_run_single()}}. When \code{TRUE} and \code{ci_method} is missing in the resolved
+config, bootstrap CIs are requested and the per-task seed is injected (see
+\link{cs_ci_methods}).}
+
+\item{B}{Integer; convenience alias forwarded to \code{\link[=cs_run_single]{cs_run_single()}} for setting
+\code{config$n_boot} when \code{bootstrap=TRUE}.}
 
 \item{skip_existing}{Logical; if TRUE, skip tasks already pinned on \code{board}.}
 

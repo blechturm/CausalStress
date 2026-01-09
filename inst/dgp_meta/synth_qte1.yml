@@ -11,7 +11,7 @@ stress_profile:
   target: "both"
 
 difficulty:
-  stars: 1
+  stars: 4
 
 meta:
   tags: ["heterogeneity", "qte"]

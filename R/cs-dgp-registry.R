@@ -13,40 +13,33 @@ cs_dgp_registry <- function() {
       "synth_placebo_tau0",
       "synth_qte1",
       "synth_nonlinear_heteroskedastic",
+      "synth_nonlinear_heteroskedastic",
+      "synth_overlap_stressed",
       "synth_overlap_stressed",
       "synth_tilt_mild",
       "synth_placebo_nonlinear",
       "synth_placebo_heavytail",
       "synth_placebo_tilted",
       "synth_placebo_kangschafer",
+      "synth_hd_sparse_plm",
       "synth_hd_sparse_plm"
     ),
-    type = c(
-      "synthetic",
-      "synthetic",
-      "synthetic",
-      "synthetic",
-      "synthetic",
-      "synthetic",
-      "synthetic",
-      "synthetic",
-      "synthetic",
-      "synthetic",
-      "synthetic",
-      "synthetic"
-    ),
+    type = rep("synthetic", 15),
     generator = list(
       dgp_synth_baseline_v130,
       dgp_synth_heavytail_v130,
       dgp_synth_placebo_tau0_v130,
       dgp_synth_qte1_v130,
       dgp_synth_nonlinear_heteroskedastic_v130,
+      dgp_synth_nonlinear_heteroskedastic_v140,
       dgp_synth_overlap_stressed_v130,
+      dgp_synth_overlap_stressed_v140,
       dgp_synth_tilt_mild_v130,
       dgp_synth_placebo_nonlinear_v130,
       dgp_synth_placebo_heavytail_v130,
       dgp_synth_placebo_tilted_v130,
       dgp_synth_placebo_kangschafer_v140,
+      dgp_synth_hd_sparse_plm_v130,
       dgp_synth_hd_sparse_plm_v140
     ),
     version = c(
@@ -55,12 +48,15 @@ cs_dgp_registry <- function() {
       "1.3.0",
       "1.3.0",
       "1.3.0",
+      "1.4.0",
       "1.3.0",
+      "1.4.0",
       "1.3.0",
       "1.3.0",
       "1.3.0",
       "1.3.0",
       "1.4.0",
+      "1.3.0",
       "1.4.0"
     ),
     description = c(
@@ -69,28 +65,31 @@ cs_dgp_registry <- function() {
       "Sharp-null placebo: tau(X) = 0 with Y1 identical to Y0 pathwise.",
       "Sign-flip QTE DGP: tau(X)=+1 if X1>0, -1 otherwise; Student-t noise (df=4, sigma=0.5).",
       "Nonlinear heteroskedastic DGP: sine/quadratic mu0, tau=1, sigma(X)=0.3+0.2|X3|.",
+      "Nonlinear heteroskedastic DGP (hardened): mu0 = 1 + 2.0*sin(2*X1) + 1.5*X2^2 - 1.0*X4; sigma(X)=0.1+1.5|X3|.",
       "Overlap-stressed DGP: same outcome/noise as synth_baseline; propensity plogis(3*X1 + 3*X2) to push p toward 0/1.",
+      "Overlap-stressed DGP (hardened): same outcome/noise as synth_baseline; propensity plogis(9*X1 + 9*X2) for extreme positivity stress.",
       "Mildly tilted propensity: baseline outcomes/noise, propensity plogis(0.45*X1 - 0.3*X2 - 0.25*X4).",
       "Placebo nonlinear: mu0 = sin(X1) + cos(X2), sharp null Y1 == Y0.",
       "Placebo heavy-tail: baseline mu0, heavy-tailed epsilon (0.8 N + 0.2 Cauchy), sharp null.",
       "Placebo tilted: baseline mu0/noise, strong tilt propensity plogis(1*X1 + 1.2*X2), sharp null.",
       "Kang-Schafer misspecification placebo: tau=0, linear in latent Z, nonlinear observed X.",
+      "High-dim sparse partially linear (v1.3.0): correlated Gaussian X (p=50, rho=0.5), sparse outcome/PS, tau=1.",
       "High-dim sparse partially linear: correlated Gaussian X (p=50), sparse outcome/PS, tau=1."
     ),
     status = c(
       "stable",      # synth_baseline
       "stable",      # synth_heavytail
-      rep("experimental", 10)
+      rep("experimental", 13)
     ),
     rationale = c(
       "Validated in v0.1.x",
       "Validated in v0.1.x",
-      rep("Pending human validation", 10)
+      rep("Pending human validation", 13)
     ),
     date_status_changed = c(
       "2025-11-30",
       "2025-11-30",
-      rep("2025-11-30", 10)
+      rep("2025-11-30", 13)
     ),
     design_spec = c(
       "1.3.0",
@@ -98,12 +97,15 @@ cs_dgp_registry <- function() {
       "1.3.0",
       "1.3.0",
       "1.3.0",
+      "1.4.0",
       "1.3.0",
+      "1.4.0",
       "1.3.0",
       "1.3.0",
       "1.3.0",
       "1.3.0",
       "1.4.0",
+      "1.3.0",
       "1.4.0"
     ),
     tags = purrr::map(dgp_id, function(id) {

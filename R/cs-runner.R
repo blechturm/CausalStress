@@ -8,6 +8,24 @@
 #' @param status Optional status filter for DGP lookup ("stable", "experimental", "deprecated", "invalidated").
 #' @param quiet Logical; if `TRUE`, suppress warnings from DGP lookup (use with
 #'   care—defaults to `FALSE` to honor loud-warning protocol).
+#' @param tau Numeric vector of quantile levels used by QST-capable estimators.
+#'   Defaults to [cs_tau_oracle].
+#' @param bootstrap Logical; runner-level convenience flag. When `TRUE` and
+#'   `config$ci_method` is missing, the runner sets it to `"bootstrap"` and also
+#'   injects `config$seed` from `seed` (see [cs_ci_methods]).
+#' @param B Integer; convenience alias for `config$n_boot` when `bootstrap=TRUE`.
+#'   Only used if `config$n_boot` is missing.
+#' @param config List of estimator configuration options. Common fields include
+#'   `ci_method`, `n_boot`, and estimator-specific hyperparameters. See
+#'   [cs_ci_methods] for CI semantics.
+#' @param board Optional pins board. If provided, results can be persisted by
+#'   higher-level runners.
+#' @param max_runtime Numeric scalar; maximum allowed runtime (seconds) for the
+#'   estimator call. Defaults to `Inf`.
+#' @param ... Additional arguments forwarded to the estimator generator.
+#'
+#' @return A tibble with one row containing point estimates, optional CI
+#'   columns, provenance metadata, and any captured warnings/errors.
 #' @export
 cs_run_single <- function(
   dgp_id,
@@ -87,8 +105,17 @@ cs_run_single <- function(
   if (isTRUE(bootstrap) && B > 0L && is.null(config_local$n_boot)) {
     config_local$n_boot <- B
   }
+  if (isTRUE(bootstrap) && is.null(config_local$ci_method)) {
+    config_local$ci_method <- "bootstrap"
+    if (is.null(config_local$ci_method_source)) {
+      config_local$ci_method_source <- "runner_bootstrap"
+    }
+  }
   if (isFALSE(bootstrap) && is.null(config_local$ci_method)) {
     config_local$ci_method <- "none"
+    if (is.null(config_local$ci_method_source)) {
+      config_local$ci_method_source <- "runner_none"
+    }
   }
 
   config_fingerprint <- cs_build_config_fingerprint(
@@ -292,6 +319,8 @@ cs_run_single <- function(
       n_boot_ok      = n_boot_ok,
       n_boot_fail    = n_boot_fail,
       ci_method      = res_meta$ci_method %||% NA_character_,
+      ci_method_in   = res_meta$ci_method_in %||% NA_character_,
+      ci_method_source = res_meta$ci_method_source %||% NA_character_,
       ci_type        = res_meta$ci_type %||% NA_character_,
       ci_level       = res_meta$ci_level %||% NA_real_,
       ci_valid       = res_meta$ci_valid %||% NA,
@@ -331,7 +360,7 @@ cs_run_single <- function(
 }
 
 
-#' Run a DGP × estimator combination over multiple seeds
+#' Run a DGP x estimator combination over multiple seeds
 #'
 #' This function repeatedly calls [cs_run_single()] for a given DGP and
 #' estimator, using a vector of seeds. It returns a tibble with one row
@@ -346,12 +375,21 @@ cs_run_single <- function(
 #' @param status Optional DGP status filter; forwarded to [cs_get_dgp()].
 #' @param tau Numeric vector of quantile levels. Passed through to the
 #'   estimator via [cs_run_single()]. Default is [cs_tau_oracle].
+#' @param bootstrap Logical; runner-level convenience flag. When `TRUE` and
+#'   `config$ci_method` is missing, the runner sets it to `"bootstrap"` and also
+#'   injects `config$seed` from each per-seed `seed` (see [cs_ci_methods]).
+#' @param B Integer; convenience alias for `config$n_boot` when `bootstrap=TRUE`.
+#'   Only used if `config$n_boot` is missing.
 #' @param config List of estimator-specific configuration options. Passed
 #'   through to the estimator via [cs_run_single()].
 #' @param force Logical; if `TRUE`, recompute even when pins exist (alias for
 #'   setting `skip_existing = FALSE`).
 #' @param quiet Logical; if `TRUE`, suppress DGP governance warnings inside
 #'   per-seed runs (use with care; pre-flight still warns once).
+#' @param max_runtime Numeric scalar; maximum allowed runtime (seconds) per seed.
+#' @param parallel Logical; if `TRUE`, uses furrr/future for parallel execution.
+#' @param experimental_parallel Logical; must be `TRUE` to enable parallel mode.
+#' @param staging_dir Optional staging directory for crash recovery.
 #'
 #' @return A tibble with one row per seed and at least the columns returned
 #'   by [cs_run_single()], including `dgp_id`, `estimator_id`, `n`, `seed`,

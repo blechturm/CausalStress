@@ -11,7 +11,7 @@ stress_profile:
   target: "both"
 
 difficulty:
-  stars: 1
+  stars: 2
 
 meta:
   tags: ["overlap", "tilted"]

@@ -9,7 +9,15 @@ est_tmle_att(df, config = list(), tau = cs_tau_oracle, ...)
 \arguments{
 \item{df}{Data frame with outcome \code{y}, treatment \code{w}, and covariates.}
 
-\item{config}{Optional list of parameters forwarded to \code{tmle::tmle}.}
+\item{config}{Optional list of configuration options. Common fields include:
+\itemize{
+\item \code{ci_method}: CI intent; one of "none", "default", "bootstrap", "native" (see \link{cs_ci_methods}).
+\item \code{seed}: required when bootstrap CIs are requested.
+\item \code{n_boot}: number of bootstrap draws if using bootstrap CIs.
+\item \code{num_threads}: sets \code{mc.cores} for downstream learners.
+\item Additional parameters forwarded to \code{tmle::tmle}.
+}
+For this estimator, \code{ci_method = "default"} maps to \code{"native"}.}
 
 \item{tau}{Unused (signature compatibility).}
 

@@ -53,7 +53,11 @@ dgp_synth_overlap_stressed_v130 <- function(n, seed = NULL, include_truth = TRUE
   y  <- ifelse(w == 1L, y1, y0)
 
   true_att <- cs_true_att(structural_te = tau, w = w)
-  true_qst <- if (isTRUE(include_truth)) cs_get_oracle_qst("synth_overlap_stressed", version = "1.3.0") else NULL
+  true_qst <- if (isTRUE(include_truth)) {
+    cs_get_oracle_qst("synth_overlap_stressed", version = "1.3.0")
+  } else {
+    tibble::tibble(tau = cs_tau_oracle, value = rep(NA_real_, length(cs_tau_oracle)))
+  }
 
   out <- list(
     df = tibble::tibble(
@@ -84,7 +88,90 @@ dgp_synth_overlap_stressed_v130 <- function(n, seed = NULL, include_truth = TRUE
   out
 }
 
+#' Overlap-stressed synthetic DGP for CausalStress (v1.4.0)
+#'
+#' Version bump that further hardens positivity stress by sharpening the
+#' propensity score toward 0/1:
+#' p = plogis(9 * X1 + 9 * X2).
+#'
+#' Other components follow the v1.3.0 design.
+#'
+#' @inheritParams dgp_synth_overlap_stressed_v130
+#'
+#' @return A list with:
+#'   - df: tibble with columns `y`, `w`, `y0`, `y1`, `p`, `structural_te`,
+#'     `X1`, `X2`, `X3`, `X4`, `X5`
+#'   - true_att: numeric scalar (ATT on treated units)
+#'   - true_qst: tibble with columns `tau`, `value`
+#'   - meta: list with fields `dgp_id`, `type`, `structural_te`
+#' @export
+dgp_synth_overlap_stressed_v140 <- function(n, seed = NULL, include_truth = TRUE, oracle_only = FALSE) {
+  if (!is.null(seed)) {
+    cs_set_rng(seed)
+  }
+
+  X1 <- stats::rnorm(n, mean = 0, sd = 1)
+  X2 <- stats::rnorm(n, mean = 0, sd = 1)
+  if (!isTRUE(oracle_only)) {
+    X3 <- stats::rnorm(n, mean = 0, sd = 1)
+    X4 <- stats::rnorm(n, mean = 0, sd = 1)
+    X5 <- stats::rnorm(n, mean = 0, sd = 1)
+  }
+
+  mu0 <- 1 + X1 + 0.5 * X2
+  tau <- 1 + 0.5 * X1
+  p   <- stats::plogis(9.0 * X1 + 9.0 * X2)
+
+  w <- stats::rbinom(n, size = 1L, prob = p)
+
+  eps0 <- stats::rnorm(n, mean = 0, sd = 0.5)
+  eps1 <- stats::rnorm(n, mean = 0, sd = 0.5)
+
+  y0 <- mu0 + eps0
+  y1 <- mu0 + tau + eps1
+
+  if (isTRUE(oracle_only)) {
+    return(list(df = tibble::tibble(w = w, y0 = y0, y1 = y1)))
+  }
+  y  <- ifelse(w == 1L, y1, y0)
+
+  true_att <- cs_true_att(structural_te = tau, w = w)
+  true_qst <- if (isTRUE(include_truth)) {
+    cs_get_oracle_qst("synth_overlap_stressed", version = "1.4.0")
+  } else {
+    tibble::tibble(tau = cs_tau_oracle, value = rep(NA_real_, length(cs_tau_oracle)))
+  }
+
+  out <- list(
+    df = tibble::tibble(
+      y  = y,
+      w  = w,
+      y0 = y0,
+      y1 = y1,
+      p  = p,
+      structural_te = tau,
+      X1 = X1,
+      X2 = X2,
+      X3 = X3,
+      X4 = X4,
+      X5 = X5
+    ),
+    true_att = true_att,
+    true_qst = true_qst,
+    meta = list(
+      dgp_id        = "synth_overlap_stressed",
+      version       = "1.4.0",
+      type          = "synthetic",
+      params        = list(n = n, seed = seed),
+      structural_te = tau
+    )
+  )
+
+  cs_check_dgp_synthetic(out)
+  out
+}
+
 #' @export
 dgp_synth_overlap_stressed <- function(n, seed = NULL) {
-  dgp_synth_overlap_stressed_v130(n = n, seed = seed)
+  dgp_synth_overlap_stressed_v140(n = n, seed = seed)
 }

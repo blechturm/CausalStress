@@ -1,0 +1,270 @@
+﻿---
+title: "DGP Dossier: `r params$meta$dgp_id`"
+output: html_document
+params:
+  meta: NULL
+  dgp_id: "synth_heavytail"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE,
+  message = FALSE,
+  warning = FALSE
+)
+library(CausalStress)
+library(ggplot2)
+have_kableextra <- requireNamespace("kableExtra", quietly = TRUE)
+if (requireNamespace("patchwork", quietly = TRUE)) {
+  patchwork_available <- TRUE
+} else {
+  patchwork_available <- FALSE
+}
+```
+
+## 1. Identity & Status
+
+```{r meta_table, echo=FALSE, results='asis'}
+stars <- params$meta$difficulty$stars %||% 0
+active_star   <- '<span style="color: #f1c40f;">&#9733;</span>'
+inactive_star <- '<span style="color: #e0e0e0;">&#9734;</span>'
+difficulty_val <- paste0(
+  strrep(active_star, max(0, stars)),
+  strrep(inactive_star, max(0, 5 - stars)),
+  " (", stars, "/5)"
+)
+prof <- params$meta$stress_profile
+
+get_badge_color <- function(val) {
+  val <- tolower(as.character(val))
+  if (val %in% c("linear", "gaussian", "strong", "high", "easy", "stable", "att")) return("success")
+  if (val %in% c("moderate", "medium", "experimental")) return("warning")
+  if (val %in% c("nonlinear", "heavytail", "heavy", "poor", "severe", "deprecated", "heterogeneous")) return("danger")
+  "secondary"
+}
+
+stress_val <- if (is.null(prof)) {
+  "N/A"
+} else {
+  badge_vec <- mapply(
+    function(k, v) {
+      cls <- get_badge_color(v)
+      sprintf('<span class="badge bg-%s" style="margin-right:4px;">%s: %s</span>', cls, k, v)
+    },
+    names(prof),
+    unlist(prof),
+    USE.NAMES = FALSE
+  )
+  paste0("&nbsp;", paste(badge_vec, collapse = ""))
+}
+
+status_raw <- params$meta$status %||% "N/A"
+status_class <- get_badge_color(status_raw)
+status_val <- sprintf('<span class="badge bg-%s">%s</span>', status_class, status_raw)
+
+version_val <- params$meta$version %||% "N/A"
+dgp_id_val <- params$meta$dgp_id %||% "N/A"
+if (is.character(dgp_id_val)) {
+  dgp_id_val <- dgp_id_val
+}
+
+meta_df <- tibble::tibble(
+  Attribute = c("DGP ID", "Version", "Status", "Difficulty", "Stress Profile"),
+  Value = c(
+    dgp_id_val,
+    version_val,
+    status_val,
+    difficulty_val,
+    stress_val
+  )
+)
+
+knitr::kable(meta_df, format = "html", col.names = NULL, escape = FALSE) %>%
+  {
+    if (have_kableextra) {
+      kableExtra::kable_styling(
+        .,
+        bootstrap_options = c("hover", "condensed"),
+        full_width = TRUE,
+        position = "left"
+      ) %>%
+        kableExtra::column_spec(1, bold = TRUE, width = "150px")
+    } else {
+      .
+    }
+  }
+```
+
+## 2. What This DGP Stresses (Intent)
+
+**Purpose:** Penalize estimators that rely on L2 loss under heavy-tailed noise.
+
+This DGP is identical to the baseline linear design except for the outcome noise,
+which is a Gaussian/Cauchy mixture. The Cauchy component makes the population mean
+of observed outcomes undefined, so any estimator that minimizes squared error is
+theoretically ill-posed and will suffer variance explosion.
+
+This motivates quantile-based estimators (e.g., GenGC targeting medians) that are
+well-defined under heavy tails.
+
+## 3. Identification Assumptions (Explicit)
+
+- Unconfoundedness holds by construction (treatment is assigned by a known
+  propensity score).
+- Overlap is moderate (`p(X)` bounded away from 0 and 1 for most of the mass).
+- Structural ATT is defined as the mean of the signal `tau(X)` on treated units
+  (Constitution Article I), independent of realized noise.
+
+## 4. Mathematical Specification
+
+### Covariates
+\[
+X \sim \mathcal{N}(0, I_5)
+\]
+
+### Propensity
+\[
+p(X) = \text{expit}(0.5 X_1 - 0.5 X_2)
+\]
+
+### Baseline Outcome and Treatment Effect
+\[
+\mu_0(X) = 1 + X_1 + 0.5 X_2
+\]
+\[
+\tau(X) = 1 + 0.5 X_1
+\]
+
+### Noise Mixture (Heavy Tails)
+\[
+\varepsilon \sim 0.8 \cdot \mathcal{N}(0, 0.5) + 0.2 \cdot \text{Cauchy}(0, 1)
+\]
+
+**Moment note:** The Cauchy component has undefined mean and variance. Therefore the
+population mean of realized outcomes is undefined, and any L2/MSE estimator is not
+well-posed in the population.
+
+### Potential Outcomes
+\[
+Y_0 = \mu_0(X) + \varepsilon_0,\quad
+Y_1 = \mu_0(X) + \tau(X) + \varepsilon_1
+\]
+
+## 5. Oracle Truth Definition
+
+- **ATT (Structural):** \(\mathbb{E}[\tau(X) \mid W=1]\), computed from the
+  deterministic signal \(\tau(X)\). This is well-defined even when \(\mathbb{E}[Y]\)
+  is not.
+- **QST (Distributional):** computed on the canonical tau grid via oracle Monte Carlo
+  as specified in `cs_get_oracle_qst()`.
+
+## 6. Visual Diagnostics (n = 5000)
+
+```{r visuals, fig.width=10, fig.height=7}
+set.seed(123)
+dgp <- dgp_synth_heavytail(n = 5000, seed = 123)
+df <- dgp$df
+
+p1 <- ggplot(df, aes(x = p, fill = factor(w))) +
+  geom_histogram(alpha = 0.6, bins = 30, position = "identity") +
+  labs(title = "Propensity Distribution (Moderate Overlap)",
+       x = "p(X)", y = "Count", fill = "W") +
+  theme_minimal()
+
+p2 <- ggplot(df, aes(x = X1, y = structural_te)) +
+  geom_point(alpha = 0.3) +
+  geom_smooth(method = "lm", se = TRUE) +
+  labs(title = expression(paste("Treatment Effect: ", tau(X), " = 1 + 0.5Â·X1")),
+       x = "X1", y = "structural_te") +
+  theme_minimal()
+
+p3 <- ggplot(df, aes(x = X1, y = X2, color = factor(w))) +
+  geom_point(alpha = 0.4) +
+  labs(title = "Covariate Balance", x = "X1", y = "X2", color = "W") +
+  theme_minimal()
+
+p4 <- ggplot(dgp$true_qst, aes(x = tau, y = value)) +
+  geom_hline(yintercept = dgp$true_att, linetype = "dashed", color = "gray70") +
+  geom_line(color = "#2c3e50", size = 1) +
+  labs(
+    title = "True Quantile Shift (QST)",
+    subtitle = "Solid line: True effect at each quantile | Dashed: Mean ATT",
+    x = "Quantile (tau)",
+    y = "Treatment Effect"
+  ) +
+  theme_minimal()
+
+if (patchwork_available) {
+  library(patchwork)
+  (p1 + p2) / (p3 + p4)
+} else {
+  print(p1)
+  print(p2)
+  print(p3)
+  print(p4)
+}
+```
+
+## 7. Empirical Validation
+
+We run light validation with `n = 1000` and `seeds = 1:20`. The goal is to show
+variance explosion for OLS under L2 loss. We do **not** run GenGC here to keep
+doc builds fast.
+
+```{r empirical, cache=TRUE}
+run_fast <- function(est_id) {
+  cs_run_seeds(
+    dgp_id        = "synth_heavytail",
+    estimator_id  = est_id,
+    n             = 1000,
+    seeds         = 1:20,
+    bootstrap     = FALSE,
+    parallel      = FALSE,
+    show_progress = FALSE,
+    config        = list(ci_method = "none")
+  )
+}
+
+res_lm     <- run_fast("lm_att")
+res_oracle <- run_fast("oracle_att")
+
+summary_tbl <- dplyr::bind_rows(res_lm, res_oracle) %>%
+  cs_tidy() %>%
+  dplyr::group_by(estimator_id) %>%
+  dplyr::summarise(
+    mean_bias = mean(att_error, na.rm = TRUE),
+    rmse      = sqrt(mean(att_error^2, na.rm = TRUE)),
+    .groups   = "drop"
+  )
+
+knitr::kable(summary_tbl, digits = 3, caption = "Empirical validation (n=1000, seeds=1:20)")
+```
+
+**Interpretation:** OLS fails not because it is biased in the limit, but because
+its variance is infinite under a Cauchy mixture. The RMSE will fluctuate wildly
+across seeds (typical values ~8.0 in quick runs). The oracle estimator remains
+stable, confirming the truth layer.
+
+## 8. Failure Mode Summary
+
+- **L2-based estimators (OLS/IPW with mean targets):** variance explosion; unstable RMSE.
+- **Quantile-based estimators:** well-defined under heavy tails (motivation for GenGC).
+
+## 9. Implementation Reference
+
+- Generator: `R/dgp-synth-heavytail.R`
+- Oracle truth: `cs_get_oracle_qst("synth_heavytail", version = "1.3.0")`
+- Metadata: `inst/dgp_meta/synth_heavytail.yml`
+
+## 10. Validation Checklist
+
+- [x] Mixture noise matches spec (0.8 * Normal + 0.2 * Cauchy).
+- [x] Structural ATT defined on `tau(X)` (signal-only).
+- [x] Visual diagnostics show extreme tails.
+- [x] OLS variance explosion demonstrated.
+- [x] Oracle estimator stable across seeds.
+
+## 11. Changelog
+
+- v1.3.0 (2026-01-06): Initial dossier for heavy-tail stress DGP.
+

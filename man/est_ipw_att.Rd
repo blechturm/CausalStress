@@ -6,6 +6,21 @@
 \usage{
 est_ipw_att(df, config = list(), tau = cs_tau_oracle, ...)
 }
+\arguments{
+\item{df}{Data frame containing at least \code{y}, \code{w}, and covariates named \verb{X*}.}
+
+\item{config}{List of estimator configuration options. Common fields include:
+\itemize{
+\item \code{ci_method}: CI intent; one of "none", "default", "bootstrap", "native" (see \link{cs_ci_methods}).
+\item \code{seed}: required when bootstrap CIs are requested.
+\item \code{n_boot}: number of bootstrap draws (default: 200).
+}
+For this estimator, \code{ci_method = "default"} maps to \code{"bootstrap"}.}
+
+\item{tau}{Numeric vector of quantile levels (unused; included for a uniform estimator interface).}
+
+\item{...}{Unused; included for compatibility with runner forwarding.}
+}
 \description{
 Inverse-probability weighted ATT estimator (IPW-ATT)
 }

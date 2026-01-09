@@ -2,7 +2,7 @@
 % Please edit documentation in R/cs-runner.R
 \name{cs_run_seeds}
 \alias{cs_run_seeds}
-\title{Run a DGP × estimator combination over multiple seeds}
+\title{Run a DGP x estimator combination over multiple seeds}
 \usage{
 cs_run_seeds(
   dgp_id,
@@ -43,6 +43,13 @@ in the output tibble.}
 \item{tau}{Numeric vector of quantile levels. Passed through to the
 estimator via \code{\link[=cs_run_single]{cs_run_single()}}. Default is \link{cs_tau_oracle}.}
 
+\item{bootstrap}{Logical; runner-level convenience flag. When \code{TRUE} and
+\code{config$ci_method} is missing, the runner sets it to \code{"bootstrap"} and also
+injects \code{config$seed} from each per-seed \code{seed} (see \link{cs_ci_methods}).}
+
+\item{B}{Integer; convenience alias for \code{config$n_boot} when \code{bootstrap=TRUE}.
+Only used if \code{config$n_boot} is missing.}
+
 \item{config}{List of estimator-specific configuration options. Passed
 through to the estimator via \code{\link[=cs_run_single]{cs_run_single()}}.}
 
@@ -51,6 +58,14 @@ setting \code{skip_existing = FALSE}).}
 
 \item{quiet}{Logical; if \code{TRUE}, suppress DGP governance warnings inside
 per-seed runs (use with care; pre-flight still warns once).}
+
+\item{max_runtime}{Numeric scalar; maximum allowed runtime (seconds) per seed.}
+
+\item{parallel}{Logical; if \code{TRUE}, uses furrr/future for parallel execution.}
+
+\item{experimental_parallel}{Logical; must be \code{TRUE} to enable parallel mode.}
+
+\item{staging_dir}{Optional staging directory for crash recovery.}
 }
 \value{
 A tibble with one row per seed and at least the columns returned

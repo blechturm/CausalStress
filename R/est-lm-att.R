@@ -2,9 +2,19 @@
 #'
 #' Fits a linear model on controls and uses g-computation to estimate ATT.
 #'
+#' @param df Data frame containing at least `y`, `w`, and covariates named `X*`.
+#' @param tau Numeric vector of quantile levels (unused; included for a uniform estimator interface).
+#' @param config List of estimator configuration options. Common fields include:
+#' \itemize{
+#'   \item \code{ci_method}: CI intent; one of "none", "default", "bootstrap", "native" (see [cs_ci_methods]).
+#'   \item \code{seed}: required when bootstrap CIs are requested.
+#'   \item \code{n_boot}: number of bootstrap draws (default: 200).
+#' }
+#' For this estimator, \code{ci_method = "default"} maps to \code{"bootstrap"}.
+#'
 #' @export
 est_lm_att <- function(df, tau = cs_tau_oracle, config = list()) {
-  method_in <- config$ci_method %||% "default"
+  method_in <- config$ci_method %||% "none"
   if (identical(method_in, "default")) {
     ci_method <- "bootstrap"
   } else {
@@ -13,6 +23,15 @@ est_lm_att <- function(df, tau = cs_tau_oracle, config = list()) {
   n_boot <- if (is.null(config$n_boot)) 200 else config$n_boot
   dgp_id <- if (is.null(config$dgp_id)) "unk" else config$dgp_id
   task_seed <- config$seed
+  ci_method_source <- config$ci_method_source %||% {
+    if (is.null(config$ci_method)) {
+      "implicit_none"
+    } else if (identical(config$ci_method, "default")) {
+      "default_mapped"
+    } else {
+      "explicit"
+    }
+  }
 
   if (!is.data.frame(df)) {
     rlang::abort("`df` must be a data.frame.", class = "causalstress_estimator_error")
@@ -84,7 +103,8 @@ est_lm_att <- function(df, tau = cs_tau_oracle, config = list()) {
         class = "causalstress_config_error",
         body = c(
           "x" = "Bootstrap relies on random sampling and requires a deterministic seed for reproducibility.",
-          "i" = "Provide `seed` in the `config` list or use `cs_run_campaign` (which handles this automatically)."
+          "i" = "Provide `seed` in the `config` list or use `cs_run_campaign()` / `cs_run_seeds()` (which handle this automatically).",
+          "i2" = "If you only need point estimates, set `ci_method = \"none\"`."
         )
       )
     } else {
@@ -128,7 +148,10 @@ est_lm_att <- function(df, tau = cs_tau_oracle, config = list()) {
       ci_valid_by_dim = ci_meta$ci_valid_by_dim,
       collapsed    = ci_meta$collapsed,
       ci_type      = ci_meta$ci_type,
-      ci_level     = ci_meta$ci_level
+      ci_level     = ci_meta$ci_level,
+      ci_method_in = method_in,
+      ci_method_source = ci_method_source,
+      seed_used    = task_seed %||% NA_integer_
     )
   )
 

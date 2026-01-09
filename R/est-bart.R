@@ -3,8 +3,14 @@
 #' Soft-dependency wrapper around `bartCause::bartc` targeting the ATT.
 #'
 #' @param df Data frame with outcome `y`, treatment `w`, and covariates.
-#' @param config Optional list of parameters passed through to `bartCause::bartc`.
-#'   Recognised fields: `seed` (numeric scalar).
+#' @param config Optional list of configuration options. Common fields include:
+#' \itemize{
+#'   \item \code{ci_method}: CI intent; one of "none", "default", "bootstrap", "native" (see [cs_ci_methods]).
+#'   \item \code{seed}: required when bootstrap CIs are requested.
+#'   \item \code{n_boot}: number of bootstrap draws if using bootstrap CIs.
+#'   \item Additional parameters passed through to `bartCause::bartc`.
+#' }
+#' For this estimator, \code{ci_method = "default"} maps to \code{"native"}.
 #' @param tau Unused (included for signature compatibility).
 #' @param ... Additional arguments passed to `bartCause::bartc`.
 #'
@@ -39,7 +45,7 @@ est_bart_att <- function(df, config = list(), tau = cs_tau_oracle, ...) {
     tab
   }
 
-  method_in <- config$ci_method %||% "default"
+  method_in <- config$ci_method %||% "none"
   if (identical(method_in, "default")) {
     ci_method <- "native"
   } else {
@@ -48,6 +54,15 @@ est_bart_att <- function(df, config = list(), tau = cs_tau_oracle, ...) {
   n_boot <- if (is.null(config$n_boot)) 200 else config$n_boot
   dgp_id <- if (is.null(config$dgp_id)) "unk" else config$dgp_id
   task_seed <- config$seed
+  ci_method_source <- config$ci_method_source %||% {
+    if (is.null(config$ci_method)) {
+      "implicit_none"
+    } else if (identical(config$ci_method, "default")) {
+      "default_mapped"
+    } else {
+      "explicit"
+    }
+  }
 
   threads <- if (is.null(config$num_threads)) 1L else config$num_threads
 
@@ -108,7 +123,8 @@ est_bart_att <- function(df, config = list(), tau = cs_tau_oracle, ...) {
         class = "causalstress_config_error",
         body = c(
           "x" = "Bootstrap relies on random sampling and requires a deterministic seed for reproducibility.",
-          "i" = "Provide `seed` in the `config` list or use `cs_run_campaign` (which handles this automatically)."
+          "i" = "Provide `seed` in the `config` list or use `cs_run_campaign()` / `cs_run_seeds()` (which handle this automatically).",
+          "i2" = "If you only need point estimates, set `ci_method = \"none\"`."
         )
       )
     }
@@ -158,6 +174,9 @@ est_bart_att <- function(df, config = list(), tau = cs_tau_oracle, ...) {
       collapsed    = ci_meta$collapsed,
       ci_type      = ci_meta$ci_type,
       ci_level     = ci_meta$ci_level,
+      ci_method_in = method_in,
+      ci_method_source = ci_method_source,
+      seed_used    = task_seed %||% NA_integer_,
       n_boot_ok    = ci_meta$n_boot_ok,
       n_boot_fail  = ci_meta$n_boot_fail
     )
