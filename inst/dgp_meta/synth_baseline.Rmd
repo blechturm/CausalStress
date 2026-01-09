@@ -144,7 +144,7 @@ p2 <- ggplot(df, aes(x = X1, y = structural_te)) +
 
 p3 <- ggplot(df, aes(x = X1, y = X2, color = factor(w))) +
   geom_point(alpha = 0.4) +
-  labs(title = "Covariate Balance", x = "X1", y = "X2", color = "W") +
+  labs(title = "Covariate Overlap (Joint Support)", x = "X1", y = "X2", color = "W") +
   theme_minimal()
 
 # Plot the True QST curve (stored in dgp_viz$true_qst)
@@ -226,3 +226,25 @@ knitr::kable(summary_tbl, digits = 3, caption = "Empirical validation (n=5000, s
 ## 11. Changelog
 
 -   v1.0 dossier: Initial dossier following Standard Template v1.0
+
+## Appendix: Implementation
+
+```{r impl_code, echo=FALSE, comment=''}
+# Dynamically retrieve the specific versioned function for this dossier
+dgp_base <- paste0("dgp_", params$dgp_id)
+dgp_ver  <- if (!is.null(params$meta$version)) {
+  paste0(dgp_base, "_v", gsub("\\.", "", params$meta$version))
+} else {
+  dgp_base
+}
+
+if (exists(dgp_ver)) {
+  cat(sprintf("Source code for: %s\n\n", dgp_ver))
+  print(get(dgp_ver))
+} else if (exists(dgp_base)) {
+  cat(sprintf("Source code for: %s (Wrapper)\n\n", dgp_base))
+  print(get(dgp_base))
+} else {
+  cat("Source code not found in loaded namespace.")
+}
+```

@@ -498,6 +498,77 @@ noted</label></li>
 <li>v1.4.0: Parameter hardening (Deprecated v1.3.0).</li>
 </ul>
 </div>
+<div id="appendix-implementation" class="section level2">
+<h2>Appendix: Implementation</h2>
+<pre><code>Source code for: dgp_synth_overlap_stressed_v140
+
+function(n, seed = NULL, include_truth = TRUE, oracle_only = FALSE) {
+  if (!is.null(seed)) {
+    cs_set_rng(seed)
+  }
+
+  X1 &lt;- stats::rnorm(n, mean = 0, sd = 1)
+  X2 &lt;- stats::rnorm(n, mean = 0, sd = 1)
+  if (!isTRUE(oracle_only)) {
+    X3 &lt;- stats::rnorm(n, mean = 0, sd = 1)
+    X4 &lt;- stats::rnorm(n, mean = 0, sd = 1)
+    X5 &lt;- stats::rnorm(n, mean = 0, sd = 1)
+  }
+
+  mu0 &lt;- 1 + X1 + 0.5 * X2
+  tau &lt;- 1 + 0.5 * X1
+  p   &lt;- stats::plogis(9.0 * X1 + 9.0 * X2)
+
+  w &lt;- stats::rbinom(n, size = 1L, prob = p)
+
+  eps0 &lt;- stats::rnorm(n, mean = 0, sd = 0.5)
+  eps1 &lt;- stats::rnorm(n, mean = 0, sd = 0.5)
+
+  y0 &lt;- mu0 + eps0
+  y1 &lt;- mu0 + tau + eps1
+
+  if (isTRUE(oracle_only)) {
+    return(list(df = tibble::tibble(w = w, y0 = y0, y1 = y1)))
+  }
+  y  &lt;- ifelse(w == 1L, y1, y0)
+
+  true_att &lt;- cs_true_att(structural_te = tau, w = w)
+  true_qst &lt;- if (isTRUE(include_truth)) {
+    cs_get_oracle_qst(&quot;synth_overlap_stressed&quot;, version = &quot;1.4.0&quot;)
+  } else {
+    tibble::tibble(tau = cs_tau_oracle, value = rep(NA_real_, length(cs_tau_oracle)))
+  }
+
+  out &lt;- list(
+    df = tibble::tibble(
+      y  = y,
+      w  = w,
+      y0 = y0,
+      y1 = y1,
+      p  = p,
+      structural_te = tau,
+      X1 = X1,
+      X2 = X2,
+      X3 = X3,
+      X4 = X4,
+      X5 = X5
+    ),
+    true_att = true_att,
+    true_qst = true_qst,
+    meta = list(
+      dgp_id        = &quot;synth_overlap_stressed&quot;,
+      version       = &quot;1.4.0&quot;,
+      type          = &quot;synthetic&quot;,
+      params        = list(n = n, seed = seed),
+      structural_te = tau
+    )
+  )
+
+  cs_check_dgp_synthetic(out)
+  out
+}
+&lt;environment: namespace:CausalStress&gt;</code></pre>
+</div>
 
 
 

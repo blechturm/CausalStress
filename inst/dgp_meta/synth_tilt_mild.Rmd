@@ -217,3 +217,25 @@ knitr::kable(summary_tbl, digits = 3, caption = "Empirical validation (n=1000, s
 ## 11. Changelog
 
 - v1.3.0 (2026-01-08): Batch C dossier regenerated with full math specification.
+
+## Appendix: Implementation
+
+```{r impl_code, echo=FALSE, comment=''}
+# Dynamically retrieve the specific versioned function for this dossier
+dgp_base <- paste0("dgp_", params$dgp_id)
+dgp_ver  <- if (!is.null(params$meta$version)) {
+  paste0(dgp_base, "_v", gsub("\\.", "", params$meta$version))
+} else {
+  dgp_base
+}
+
+if (exists(dgp_ver)) {
+  cat(sprintf("Source code for: %s\n\n", dgp_ver))
+  print(get(dgp_ver))
+} else if (exists(dgp_base)) {
+  cat(sprintf("Source code for: %s (Wrapper)\n\n", dgp_base))
+  print(get(dgp_base))
+} else {
+  cat("Source code not found in loaded namespace.")
+}
+```

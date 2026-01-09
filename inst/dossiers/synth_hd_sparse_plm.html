@@ -529,6 +529,75 @@ X2 scatter</label></li>
 <li>v1.4.0: Parameter hardening (Deprecated v1.3.0).</li>
 </ul>
 </div>
+<div id="appendix-implementation" class="section level2">
+<h2>Appendix: Implementation</h2>
+<pre><code>Source code for: dgp_synth_hd_sparse_plm_v140
+
+function(n, seed = NULL, include_truth = TRUE, oracle_only = FALSE) {
+  if (!is.null(seed)) {
+    cs_set_rng(seed)
+  }
+
+  p_hd &lt;- 100L
+  idx &lt;- seq_len(p_hd)
+  Sigma &lt;- outer(idx, idx, function(i, j) 0.95 ^ abs(i - j))
+  L &lt;- chol(Sigma)
+  Z &lt;- matrix(stats::rnorm(n * p_hd), nrow = n)
+  X &lt;- Z %*% L
+
+  colnames(X) &lt;- paste0(&quot;X&quot;, seq_len(p_hd))
+
+  beta_y &lt;- c(rep(1, 5), rep(0, p_hd - 5))
+  mu0    &lt;- as.numeric(X %*% beta_y)
+  eps    &lt;- stats::rnorm(n, mean = 0, sd = 1)
+  y0     &lt;- mu0 + eps
+
+  tau &lt;- rep(1, n)
+  y1  &lt;- y0 + tau
+
+  gamma &lt;- c(2.0, 2.0, 2.0, 2.0, 2.0, rep(0, p_hd - 5))
+  lin_ps &lt;- as.numeric(X %*% gamma)
+  p      &lt;- stats::plogis(lin_ps)
+  w      &lt;- stats::rbinom(n, size = 1L, prob = p)
+
+  y &lt;- ifelse(w == 1L, y1, y0)
+
+  true_att &lt;- cs_true_att(structural_te = tau, w = w)
+  true_qst &lt;- if (isTRUE(include_truth)) {
+    cs_get_oracle_qst(&quot;synth_hd_sparse_plm&quot;, version = &quot;1.4.0&quot;)
+  } else {
+    tibble::tibble(tau = cs_tau_oracle, value = rep(NA_real_, length(cs_tau_oracle)))
+  }
+
+  df &lt;- tibble::tibble(
+    y  = y,
+    w  = w,
+    y0 = y0,
+    y1 = y1,
+    p  = p,
+    structural_te = tau
+  )
+  df &lt;- dplyr::bind_cols(df, tibble::as_tibble(X))
+
+  out &lt;- list(
+    df = df,
+    true_att = true_att,
+    true_qst = true_qst,
+    meta = list(
+      dgp_id        = &quot;synth_hd_sparse_plm&quot;,
+      version       = &quot;1.4.0&quot;,
+      type          = &quot;synthetic&quot;,
+      params        = list(n = n, seed = seed),
+      structural_te = tau
+    )
+  )
+
+  cs_check_dgp_synthetic(out)
+  out
+}
+&lt;bytecode: 0x0000023482c86d50&gt;
+&lt;environment: namespace:CausalStress&gt;</code></pre>
+</div>
 
 
 
