@@ -14,6 +14,7 @@ knitr::opts_chunk$set(
 )
 library(CausalStress)
 library(ggplot2)
+library(dplyr)
 have_kableextra <- requireNamespace("kableExtra", quietly = TRUE)
 if (requireNamespace("patchwork", quietly = TRUE)) {
   patchwork_available <- TRUE
@@ -104,7 +105,7 @@ which is a Gaussian/Cauchy mixture. The Cauchy component makes the population me
 of observed outcomes undefined, so any estimator that minimizes squared error is
 theoretically ill-posed and will suffer variance explosion.
 
-This motivates quantile-based estimators (e.g., GenGC targeting medians) that are
+This motivates robust estimators (e.g., median/quantile targets) that remain
 well-defined under heavy tails.
 
 ## 3. Identification Assumptions (Explicit)
@@ -174,7 +175,7 @@ p1 <- ggplot(df, aes(x = p, fill = factor(w))) +
 p2 <- ggplot(df, aes(x = X1, y = structural_te)) +
   geom_point(alpha = 0.3) +
   geom_smooth(method = "lm", se = TRUE) +
-  labs(title = expression(paste("Treatment Effect: ", tau(X), " = 1 + 0.5Â·X1")),
+  labs(title = expression(paste("Treatment Effect: ", tau(X), " = 1 + 0.5*X1")),
        x = "X1", y = "structural_te") +
   theme_minimal()
 
@@ -208,10 +209,10 @@ if (patchwork_available) {
 ## 7. Empirical Validation
 
 We run light validation with `n = 1000` and `seeds = 1:20`. The goal is to show
-variance explosion for OLS under L2 loss. We do **not** run GenGC here to keep
-doc builds fast.
+variance explosion for OLS under L2 loss. We do **not** run heavier robust
+estimators here to keep doc builds fast.
 
-```{r empirical, cache=TRUE}
+```{r empirical, cache=FALSE}
 run_fast <- function(est_id) {
   cs_run_seeds(
     dgp_id        = "synth_heavytail",
@@ -248,7 +249,7 @@ stable, confirming the truth layer.
 ## 8. Failure Mode Summary
 
 - **L2-based estimators (OLS/IPW with mean targets):** variance explosion; unstable RMSE.
-- **Quantile-based estimators:** well-defined under heavy tails (motivation for GenGC).
+- **Robust estimators (median/quantile targets):** well-defined under heavy tails.
 
 ## 9. Implementation Reference
 

@@ -446,10 +446,13 @@ units.</li>
 </div>
 <div id="empirical-validation" class="section level2">
 <h2>7. Empirical Validation</h2>
-<p>OLS (<code>lm_att</code>) fails in v1.4.0 benchmarks (Bias &gt; 0.4,
-RMSE &gt; 1.0): the cubic confounding drags the linear fit, and
-exponential variance produces “black swan” realizations that dominate
-squared loss. Oracle passes by construction.</p>
+<p>Under the v1.4.0 cubic/exponential regime, OLS (<code>lm_att</code>)
+fails catastrophically: the cubic outcome surface induces structural
+bias, and the exponential noise creates variance explosions that
+dominate squared loss. In quick validation (<code>n = 1000</code>,
+<code>seeds = 1:10</code>), <code>lm_att</code> shows mean bias around
+1.0 and RMSE around 1.0, while <code>oracle_att</code> remains exact by
+construction.</p>
 <table>
 <caption>Empirical validation (n=1000, seeds=1:10)</caption>
 <thead>
@@ -494,10 +497,10 @@ destabilizes uncertainty quantification.</li>
 <div id="validation-checklist" class="section level2">
 <h2>10. Validation Checklist</h2>
 <ul class="task-list">
-<li><label><input type="checkbox" checked></input>mu0(X) specified (sine +
+<li><label><input type="checkbox" checked></input>mu0(X) specified (cubic +
 quadratic)</label></li>
 <li><label><input type="checkbox" checked></input>sigma(X) specified (0.1 +
-1.5|X3|)</label></li>
+exp(0.5 X2))</label></li>
 <li><label><input type="checkbox" checked></input>X1 vs X2 titled
 “Covariate Overlap (Joint Support)”</label></li>
 </ul>

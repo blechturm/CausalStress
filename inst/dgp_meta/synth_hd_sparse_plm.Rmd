@@ -14,6 +14,7 @@ knitr::opts_chunk$set(
 )
 library(CausalStress)
 library(ggplot2)
+library(dplyr)
 have_kableextra <- requireNamespace("kableExtra", quietly = TRUE)
 if (requireNamespace("patchwork", quietly = TRUE)) {
   patchwork_available <- TRUE
@@ -215,7 +216,9 @@ Coefficients are aligned with correlation (\(\rho=0.95\)) to maximize confoundin
 high \(X\) implies high \(Y\) and high \(W\). Standard IPW overfits the nuisance
 model at \(N/P = 5\), so bias can revert toward naive confounding.
 
-Empirical expectation at \(N=500\): IPW Bias \(>\) 0.40 and RMSE \(>\) 0.60.
+In quick validation runs at \(N=500\), IPW can fail catastrophically:
+mean bias \(\approx 4.43\) and RMSE \(\approx 4.44\), while `lm_att` remains much
+closer to the truth (mean bias \(\approx 0.09\), RMSE \(\approx 0.22\)).
 
 ```{r empirical, cache=FALSE}
 run_fast <- function(est_id) {
@@ -249,7 +252,7 @@ knitr::kable(summary_tbl, digits = 3, caption = "Empirical validation (n=500, se
 ## 8. Failure Mode Summary
 
 - High-dimensional nuisance estimation can drown out the sparse signal.
-- Methods that require flexible regression over 100D covariates can degrade sharply.
+- Non-parametric methods that fit complex nuisance surfaces can degrade sharply in 100D.
 
 ## 9. Implementation Reference
 

@@ -463,8 +463,10 @@ explode.</li>
 <span class="math inline">\(X\)</span> implies high <span class="math inline">\(Y\)</span> and high <span class="math inline">\(W\)</span>. Standard IPW overfits the nuisance
 model at <span class="math inline">\(N/P = 5\)</span>, so bias can
 revert toward naive confounding.</p>
-<p>Empirical expectation at <span class="math inline">\(N=500\)</span>:
-IPW Bias <span class="math inline">\(&gt;\)</span> 0.40 and RMSE <span class="math inline">\(&gt;\)</span> 0.60.</p>
+<p>In quick validation runs at <span class="math inline">\(N=500\)</span>, IPW can fail catastrophically:
+mean bias <span class="math inline">\(\approx 4.43\)</span> and RMSE
+<span class="math inline">\(\approx 4.44\)</span>, while
+<code>lm_att</code> remains much closer to the truth (mean bias <span class="math inline">\(\approx 0.09\)</span>, RMSE <span class="math inline">\(\approx 0.22\)</span>).</p>
 <table>
 <caption>Empirical validation (n=500, seeds=1:20)</caption>
 <thead>
@@ -498,8 +500,8 @@ IPW Bias <span class="math inline">\(&gt;\)</span> 0.40 and RMSE <span class="ma
 <ul>
 <li>High-dimensional nuisance estimation can drown out the sparse
 signal.</li>
-<li>Methods that require flexible regression over 100D covariates can
-degrade sharply.</li>
+<li>Non-parametric methods that fit complex nuisance surfaces can
+degrade sharply in 100D.</li>
 </ul>
 </div>
 <div id="implementation-reference" class="section level2">
@@ -595,7 +597,7 @@ function(n, seed = NULL, include_truth = TRUE, oracle_only = FALSE) {
   cs_check_dgp_synthetic(out)
   out
 }
-&lt;bytecode: 0x0000023482c86d50&gt;
+&lt;bytecode: 0x0000023494c10840&gt;
 &lt;environment: namespace:CausalStress&gt;</code></pre>
 </div>
 
