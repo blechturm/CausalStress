@@ -36,6 +36,7 @@ cs_dgp_executable_meta <- function(dgp_id, version) {
     "synth_placebo_nonlinear@1.3.0" = list(noise_family = "gaussian", effect_type = "constant"),
     "synth_placebo_heavytail@1.3.0" = list(noise_family = "heavy", effect_type = "constant"),
     "synth_placebo_tilted@1.3.0" = list(noise_family = "gaussian", effect_type = "constant"),
+    "synth_placebo_tilted@1.4.0" = list(noise_family = "gaussian", effect_type = "constant"),
 
     "synth_placebo_kangschafer@1.4.0" = list(noise_family = "gaussian", effect_type = "constant"),
     "synth_hd_sparse_plm@1.3.0" = list(noise_family = "gaussian", effect_type = "constant"),

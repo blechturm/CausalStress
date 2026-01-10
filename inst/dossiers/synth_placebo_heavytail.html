@@ -405,14 +405,15 @@ linear</span><span class="badge bg-secondary" style="margin-right:4px;">effect: 
 </div>
 <div id="what-this-dgp-stresses-intent" class="section level2">
 <h2>2. What This DGP Stresses (Intent)</h2>
-<p>This is a <strong>Sharp Null</strong> placebo with heavy-tailed
-noise. By construction, <span class="math inline">\(Y_1 \equiv
-Y_0\)</span> and <span class="math inline">\(\tau(X) \equiv 0\)</span>.
-Any estimator that discovers a nonzero effect here fails the Gatekeeper
-check (Constitution Article IV).</p>
-<p><strong>Note:</strong> The mean of the observed outcomes is undefined
-because of the Cauchy component, but the treatment effect is strictly
-zero.</p>
+<p><strong>Intent:</strong> The “Infinite Variance Test.” The data
+generation contains a mixture of Normal and Cauchy noise. Crucially, the
+<strong>Cauchy distribution has no defined mean</strong>.</p>
+<p><strong>The Scientific Question:</strong> “Does the estimator fail
+when the theoretical expectation <span class="math inline">\(E[Y]\)</span> is undefined?” This is a lethal
+stress test for <strong>Mean-Based Estimators</strong> (OLS, IPW, ATE)
+which rely on the Central Limit Theorem. Since the mean does not exist,
+the sample mean will never converge. Only Robust Estimators (e.g.,
+Median/Quantile treatment effects) are theoretically valid here.</p>
 </div>
 <div id="identification-assumptions-explicit" class="section level2">
 <h2>3. Identification Assumptions (Explicit)</h2>
@@ -469,10 +470,12 @@ Y_0\)</span>.</li>
 <div id="failure-mode-summary" class="section level2">
 <h2>8. Failure Mode Summary</h2>
 <ul>
-<li>Any estimator reporting a nonzero effect fails the Gatekeeper
-check.</li>
-<li>Heavy tails can induce false positives if estimators hallucinate
-signal.</li>
+<li><strong>Mean Non-Convergence:</strong> Standard estimators (OLS,
+IPW) will jump erratically as sample size increases, driven by extreme
+outliers.</li>
+<li><strong>Finite Sample Breakdown:</strong> A single extreme value can
+pull the estimate arbitrarily far from zero, as the estimator chases a
+mean that doesn’t exist.</li>
 </ul>
 </div>
 <div id="implementation-reference" class="section level2">
@@ -569,6 +572,7 @@ function(n, seed = NULL, include_truth = TRUE, oracle_only = FALSE) {
   cs_check_dgp_synthetic(out)
   out
 }
+&lt;bytecode: 0x000002402fd4de78&gt;
 &lt;environment: namespace:CausalStress&gt;</code></pre>
 </div>
 

@@ -97,17 +97,11 @@ knitr::kable(meta_df, format = "html", col.names = NULL, escape = FALSE) %>%
 
 ## 2. What This DGP Stresses (Intent)
 
-This is the canonical Kang-Schafer misspecification trap adapted as a sharp-null placebo.
-It is designed to create a practical violation of positivity: the true propensity is
-generated from latent variables, but analysts only observe nonlinear transforms.
-A logistic regression on the observed covariates looks reasonable yet is slightly
-misspecified, leading to unstable inverse probability weights.
+**Intent:** The "Blindfold Test" (Misspecification).
+Based on the classic Kang & Schafer (2007) design. The true selection mechanism relies on latent variables $Z$, but the analyst only observes nonlinear transformations $X$. This guarantees the propensity model (Linear in $X$) is misspecified.
 
-Reference: *Kang, J. D. Y., & Schafer, J. L. (2007). Demystifying Double Robustness:
-A Comparison of Alternative Strategies for Estimating a Population Mean from Incomplete Data.
-Statistical Science, 22(4), 523-539.*
-
-Estimators that report a nonzero effect here fail the Gatekeeper check.
+**The Scientific Question:** "Does Double Robustness hold when the propensity model is dead wrong?"
+Since $\hat{p}(X)$ is wrong, the estimator must rely on the outcome model ($\hat{\mu}_0(X)$) to save the day. This stresses the "Double Robust" property of modern estimators (AIPW, TMLE, DR-Learners).
 
 ## 3. Identification Assumptions (Explicit)
 
@@ -241,8 +235,8 @@ covariate space, producing unstable weights.
 
 ## 8. Failure Mode Summary
 
-- IPW and DR methods are fragile to mild misspecification here (weight explosion).
-- Any detected nonzero effect indicates failure of the gatekeeper check.
+-   **Weight Explosion:** IPW estimators will likely produce extreme weights due to the misspecified propensity fit, leading to massive variance.
+-   **Model Dependence:** If the estimator cannot rely on the outcome model to correct the propensity errors, bias will be significant.
 
 ## 9. Implementation Reference
 

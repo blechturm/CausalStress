@@ -26,7 +26,7 @@ cs_run_campaign_plan <- function(plan,
     stop("plan must be a tibble from cs_plan_campaign().")
   }
 
-  staging_files <- list.files(staging_dir, pattern = "^batch_[0-9]+", full.names = FALSE)
+  staging_files <- list.files(staging_dir, pattern = "^batch_[0-9]+.*\\.qs$", full.names = FALSE)
   staged_ids <- unique(as.integer(gsub("^batch_([0-9]+).*", "\\1", staging_files)))
   staged_ids <- staged_ids[!is.na(staged_ids)]
 

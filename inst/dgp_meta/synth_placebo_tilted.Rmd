@@ -96,12 +96,11 @@ knitr::kable(meta_df, format = "html", col.names = NULL, escape = FALSE) %>%
 ```
 ## 2. What This DGP Stresses (Intent)
 
-This is a **Sharp Null** placebo with moderate propensity tilt: $Y_1 \equiv Y_0$ and
-$\tau(X) \equiv 0$. Any estimator that detects an effect here fails the
-Gatekeeper check (Constitution Article IV).
+**Intent:** The "Spurious Correlation Trap."
+This DGP induces strong (but manageable) linear confounding where treated units have naturally higher outcomes than control units ($p(X)$ aligns with $\mu_0(X)$).
 
-This variant specifically introduces **moderate propensity tilt**
-propensity score.
+**The Scientific Question:** "Can the estimator distinguish Selection Bias from Treatment Effect?"
+A naive comparison suggests a strong positive effect. The estimator must vigorously adjust for covariates to recover the true zero. This tests resistance to "Bias Leakage."
 
 ## 3. Identification Assumptions (Explicit)
 
@@ -116,11 +115,11 @@ Covariates: $X_1, X_2, X_3, X_4, X_5 \sim \mathcal{N}(0, 1^2)$ independently.
 
 **Outcome (control):** $$\mu_0(X) = 1 + X_1 + 0.5 X_2$$
 
-**Propensity (tilted):** $$p(X) = \text{expit}(1.0 X_1 + 1.2 X_2)$$
+**Propensity (tilted):** $$p(X) = \text{expit}(0.6 X_1 + 0.8 X_2)$$
 
 **Treatment effect (sharp null):** $$\tau(X) \equiv 0$$
 
-Noise is Gaussian: $\varepsilon \sim \mathcal{N}(0, 0.5^2)$ and $Y_1 \equiv Y_0$ pathwise.
+**Noise:** $$\varepsilon \sim \mathcal{N}(0, 0.5^2)$$ (Shared noise $Y_1 \equiv Y_0$)
 
 ## 5. Oracle Truth Definition
 
@@ -200,14 +199,15 @@ knitr::kable(summary_tbl, digits = 4, caption = "Oracle validation (n=1000, seed
 
 ## 8. Failure Mode Summary
 
--   Any estimator reporting a nonzero effect fails the Gatekeeper check.
--   Overlap stress increases the chance of false positives for unstable methods.
+-   **Bias Leakage:** The primary failure mode is reporting a positive effect (Type I error) because the estimator failed to fully scrub the confounding.
+-   **Under-adjustment:** Regularized estimators (like Lasso) might over-shrink coefficients, leaving residual confounding that masquerades as a treatment effect.
 
 ## 9. Implementation Reference
 
--   Code: `R/dgp-synth-placebo-tilted.R` (v1.3.0)
+-   Code: `R/dgp-synth-placebo-tilted.R` (v1.4.0)
 -   Registry: `cs_dgp_registry()` entry for `synth_placebo_tilted`
 -   Oracle: `true_att = 0`, `true_qst = 0`
+-   Oracle QST: `cs_get_oracle_qst("synth_placebo_tilted", version = "1.4.0")`
 
 ## 10. Validation Checklist
 
@@ -219,6 +219,7 @@ knitr::kable(summary_tbl, digits = 4, caption = "Oracle validation (n=1000, seed
 ## 11. Changelog
 
 -   v1.0 dossier: Initial placebo dossier
+-   v1.4.0: Reduced tilt coefficients to 0.6/0.8. v1.3.0 deprecated to avoid confounding variance explosion with bias.
 
 ## Appendix: Implementation
 

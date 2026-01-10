@@ -96,12 +96,11 @@ knitr::kable(meta_df, format = "html", col.names = NULL, escape = FALSE) %>%
 ```
 ## 2. What This DGP Stresses (Intent)
 
-This is a **Sharp Null** placebo with heavy-tailed noise. By construction,
-$Y_1 \equiv Y_0$ and $\tau(X) \equiv 0$. Any estimator that discovers a nonzero
-effect here fails the Gatekeeper check (Constitution Article IV).
+**Intent:** The "Infinite Variance Test."
+The data generation contains a mixture of Normal and Cauchy noise. Crucially, the **Cauchy distribution has no defined mean**.
 
-**Note:** The mean of the observed outcomes is undefined because of the Cauchy
-component, but the treatment effect is strictly zero.
+**The Scientific Question:** "Does the estimator fail when the theoretical expectation $E[Y]$ is undefined?"
+This is a lethal stress test for **Mean-Based Estimators** (OLS, IPW, ATE) which rely on the Central Limit Theorem. Since the mean does not exist, the sample mean will never converge. Only Robust Estimators (e.g., Median/Quantile treatment effects) are theoretically valid here.
 
 ## 3. Identification Assumptions (Explicit)
 
@@ -202,8 +201,8 @@ knitr::kable(summary_tbl, digits = 4, caption = "Oracle validation (n=1000, seed
 
 ## 8. Failure Mode Summary
 
--   Any estimator reporting a nonzero effect fails the Gatekeeper check.
--   Heavy tails can induce false positives if estimators hallucinate signal.
+-   **Mean Non-Convergence:** Standard estimators (OLS, IPW) will jump erratically as sample size increases, driven by extreme outliers.
+-   **Finite Sample Breakdown:** A single extreme value can pull the estimate arbitrarily far from zero, as the estimator chases a mean that doesn't exist.
 
 ## 9. Implementation Reference
 

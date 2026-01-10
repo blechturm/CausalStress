@@ -405,18 +405,16 @@ smooth</span><span class="badge bg-secondary" style="margin-right:4px;">effect: 
 </div>
 <div id="what-this-dgp-stresses-intent" class="section level2">
 <h2>2. What This DGP Stresses (Intent)</h2>
-<p>This is the canonical Kang-Schafer misspecification trap adapted as a
-sharp-null placebo. It is designed to create a practical violation of
-positivity: the true propensity is generated from latent variables, but
-analysts only observe nonlinear transforms. A logistic regression on the
-observed covariates looks reasonable yet is slightly misspecified,
-leading to unstable inverse probability weights.</p>
-<p>Reference: <em>Kang, J. D. Y., &amp; Schafer, J. L. (2007).
-Demystifying Double Robustness: A Comparison of Alternative Strategies
-for Estimating a Population Mean from Incomplete Data. Statistical
-Science, 22(4), 523-539.</em></p>
-<p>Estimators that report a nonzero effect here fail the Gatekeeper
-check.</p>
+<p><strong>Intent:</strong> The “Blindfold Test” (Misspecification).
+Based on the classic Kang &amp; Schafer (2007) design. The true
+selection mechanism relies on latent variables <span class="math inline">\(Z\)</span>, but the analyst only observes
+nonlinear transformations <span class="math inline">\(X\)</span>. This
+guarantees the propensity model (Linear in <span class="math inline">\(X\)</span>) is misspecified.</p>
+<p><strong>The Scientific Question:</strong> “Does Double Robustness
+hold when the propensity model is dead wrong?” Since <span class="math inline">\(\hat{p}(X)\)</span> is wrong, the estimator must
+rely on the outcome model (<span class="math inline">\(\hat{\mu}_0(X)\)</span>) to save the day. This
+stresses the “Double Robust” property of modern estimators (AIPW, TMLE,
+DR-Learners).</p>
 </div>
 <div id="identification-assumptions-explicit" class="section level2">
 <h2>3. Identification Assumptions (Explicit)</h2>
@@ -495,10 +493,12 @@ unstable weights.</p>
 <div id="failure-mode-summary" class="section level2">
 <h2>8. Failure Mode Summary</h2>
 <ul>
-<li>IPW and DR methods are fragile to mild misspecification here (weight
-explosion).</li>
-<li>Any detected nonzero effect indicates failure of the gatekeeper
-check.</li>
+<li><strong>Weight Explosion:</strong> IPW estimators will likely
+produce extreme weights due to the misspecified propensity fit, leading
+to massive variance.</li>
+<li><strong>Model Dependence:</strong> If the estimator cannot rely on
+the outcome model to correct the propensity errors, bias will be
+significant.</li>
 </ul>
 </div>
 <div id="implementation-reference" class="section level2">
@@ -598,6 +598,7 @@ function(n, seed = NULL, include_truth = TRUE, oracle_only = FALSE) {
   cs_check_dgp_synthetic(out)
   out
 }
+&lt;bytecode: 0x000002402bb59890&gt;
 &lt;environment: namespace:CausalStress&gt;</code></pre>
 </div>
 

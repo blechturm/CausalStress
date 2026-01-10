@@ -12,6 +12,41 @@ suppressPackageStartupMessages({
 
 or_else <- function(x, y) if (is.null(x)) y else x
 
+ensure_pandoc_available <- function() {
+  if (rmarkdown::pandoc_available()) {
+    return(invisible(TRUE))
+  }
+
+  candidates <- c(
+    Sys.getenv("RSTUDIO_PANDOC", unset = ""),
+    Sys.which("pandoc"),
+    "C:/Program Files/RStudio/resources/app/bin/quarto/bin/tools/pandoc.exe",
+    "C:/Program Files/RStudio/resources/app/bin/pandoc/pandoc.exe",
+    "C:/Program Files/RStudio/resources/app/bin/pandoc.exe",
+    "C:/Program Files/Quarto/bin/pandoc.exe",
+    "C:/Program Files/Pandoc/pandoc.exe"
+  )
+
+  candidates <- candidates[nzchar(candidates)]
+  candidates <- unique(path_norm(candidates))
+
+  for (pandoc_path in candidates) {
+    if (!file_exists(pandoc_path)) next
+    Sys.setenv(RSTUDIO_PANDOC = path_dir(pandoc_path))
+    if (rmarkdown::pandoc_available()) {
+      return(invisible(TRUE))
+    }
+  }
+
+  cli::cli_warn(
+    paste0(
+      "Pandoc not found; cannot render Rmd dossiers. ",
+      "Install RStudio/Quarto or set `RSTUDIO_PANDOC` to the directory containing `pandoc.exe`."
+    )
+  )
+  invisible(FALSE)
+}
+
 load_causalstress_dev <- function() {
   if (requireNamespace("devtools", quietly = TRUE)) {
     devtools::load_all(quiet = TRUE)
@@ -35,7 +70,7 @@ get_registry_ids <- function() {
   if (is.null(reg_fn)) {
     stop("cs_dgp_registry not found; load CausalStress before rendering dossiers.")
   }
-  reg_fn()$dgp_id
+  unique(reg_fn()$dgp_id)
 }
 
 render_dossier <- function(dgp_id, force = FALSE, output_dir = "inst/dossiers") {
@@ -90,6 +125,10 @@ render_dossier <- function(dgp_id, force = FALSE, output_dir = "inst/dossiers") 
 render_all_dossiers <- function(force = FALSE) {
   dir_create(path("inst", "dossiers"), recurse = TRUE)
 
+  if (!isTRUE(ensure_pandoc_available())) {
+    return(invisible(NULL))
+  }
+
   load_causalstress_dev()
 
   dgp_ids <- get_registry_ids()
@@ -102,5 +141,7 @@ render_all_dossiers <- function(force = FALSE) {
 }
 
 if (identical(environmentName(topenv()), "R_GlobalEnv") || !interactive()) {
-  render_all_dossiers(force = FALSE)
+  args <- commandArgs(trailingOnly = TRUE)
+  force_flag <- any(args %in% c("--force", "-f"))
+  render_all_dossiers(force = force_flag)
 }

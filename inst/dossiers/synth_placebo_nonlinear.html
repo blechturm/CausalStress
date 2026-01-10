@@ -405,10 +405,14 @@ smooth</span><span class="badge bg-secondary" style="margin-right:4px;">effect: 
 </div>
 <div id="what-this-dgp-stresses-intent" class="section level2">
 <h2>2. What This DGP Stresses (Intent)</h2>
-<p>This is a <strong>Sharp Null</strong> placebo with nonlinear baseline
-outcome: <span class="math inline">\(Y_1 \equiv Y_0\)</span> and <span class="math inline">\(\tau(X) \equiv 0\)</span>. Any estimator that
-detects an effect here fails the Gatekeeper check (Constitution Article
-IV).</p>
+<p><strong>Intent:</strong> The “Hallucination Test.” The outcome
+surface is smooth but highly nonlinear (<span class="math inline">\(\mu_0(X) = \sin(X_1) + \cos(X_2)\)</span>). There
+is no treatment effect.</p>
+<p><strong>The Scientific Question:</strong> “Does the estimator mistake
+background structure for a signal?” Flexible ML estimators (like BART or
+Forests) risk overfitting the “wiggles” of the outcome surface and
+attributing some of that variance to the treatment indicator. This tests
+for “False Discovery via Overfitting.”</p>
 </div>
 <div id="identification-assumptions-explicit" class="section level2">
 <h2>3. Identification Assumptions (Explicit)</h2>
@@ -465,10 +469,12 @@ Y_0\)</span>.</li>
 <div id="failure-mode-summary" class="section level2">
 <h2>8. Failure Mode Summary</h2>
 <ul>
-<li>Any estimator reporting a nonzero effect fails the Gatekeeper
-check.</li>
-<li>Nonlinearity here tests false positives under smooth outcome
-surfaces.</li>
+<li><strong>Overfitting:</strong> ML methods may capture the sine/cosine
+waves but misattribute residuals to the treatment, resulting in non-zero
+estimates.</li>
+<li><strong>Model Misspecification:</strong> Linear estimators (OLS/IPW)
+will fail to fit the surface, potentially leading to bias if the
+nonlinearity correlates with propensity.</li>
 </ul>
 </div>
 <div id="implementation-reference" class="section level2">
@@ -560,6 +566,7 @@ function(n, seed = NULL, include_truth = TRUE, oracle_only = FALSE) {
   cs_check_dgp_synthetic(out)
   out
 }
+&lt;bytecode: 0x0000024037260070&gt;
 &lt;environment: namespace:CausalStress&gt;</code></pre>
 </div>
 

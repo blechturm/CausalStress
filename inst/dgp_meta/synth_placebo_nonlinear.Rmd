@@ -96,9 +96,11 @@ knitr::kable(meta_df, format = "html", col.names = NULL, escape = FALSE) %>%
 ```
 ## 2. What This DGP Stresses (Intent)
 
-This is a **Sharp Null** placebo with nonlinear baseline outcome:
-$Y_1 \equiv Y_0$ and $\tau(X) \equiv 0$. Any estimator that detects an effect
-here fails the Gatekeeper check (Constitution Article IV).
+**Intent:** The "Hallucination Test."
+The outcome surface is smooth but highly nonlinear ($\mu_0(X) = \sin(X_1) + \cos(X_2)$). There is no treatment effect.
+
+**The Scientific Question:** "Does the estimator mistake background structure for a signal?"
+Flexible ML estimators (like BART or Forests) risk overfitting the "wiggles" of the outcome surface and attributing some of that variance to the treatment indicator. This tests for "False Discovery via Overfitting."
 
 ## 3. Identification Assumptions (Explicit)
 
@@ -197,8 +199,8 @@ knitr::kable(summary_tbl, digits = 4, caption = "Oracle validation (n=1000, seed
 
 ## 8. Failure Mode Summary
 
--   Any estimator reporting a nonzero effect fails the Gatekeeper check.
--   Nonlinearity here tests false positives under smooth outcome surfaces.
+-   **Overfitting:** ML methods may capture the sine/cosine waves but misattribute residuals to the treatment, resulting in non-zero estimates.
+-   **Model Misspecification:** Linear estimators (OLS/IPW) will fail to fit the surface, potentially leading to bias if the nonlinearity correlates with propensity.
 
 ## 9. Implementation Reference
 

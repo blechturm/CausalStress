@@ -21,12 +21,13 @@ cs_dgp_registry <- function() {
       "synth_placebo_nonlinear",
       "synth_placebo_heavytail",
       "synth_placebo_tilted",
+      "synth_placebo_tilted",
       "synth_placebo_kangschafer",
       "synth_hd_sparse_plm",
       "synth_hd_sparse_plm",
       "synth_hd_sparse_plm"
     ),
-    type = rep("synthetic", 17),
+    type = rep("synthetic", 18),
     generator = list(
       dgp_synth_baseline_v130,
       dgp_synth_heavytail_v130,
@@ -41,6 +42,7 @@ cs_dgp_registry <- function() {
       dgp_synth_placebo_nonlinear_v130,
       dgp_synth_placebo_heavytail_v130,
       dgp_synth_placebo_tilted_v130,
+      dgp_synth_placebo_tilted_v140,
       dgp_synth_placebo_kangschafer_v140,
       dgp_synth_hd_sparse_plm_v130,
       dgp_synth_hd_sparse_plm_v140,
@@ -61,6 +63,7 @@ cs_dgp_registry <- function() {
       "1.3.0",
       "1.3.0",
       "1.4.0",
+      "1.4.0",
       "1.3.0",
       "1.4.0",
       "1.5.0"
@@ -78,7 +81,8 @@ cs_dgp_registry <- function() {
       "Mildly tilted propensity: baseline outcomes/noise, propensity plogis(0.45*X1 - 0.3*X2 - 0.25*X4).",
       "Placebo nonlinear: mu0 = sin(X1) + cos(X2), sharp null Y1 == Y0.",
       "Placebo heavy-tail: baseline mu0, heavy-tailed epsilon (0.8 N + 0.2 Cauchy), sharp null.",
-      "Placebo tilted: baseline mu0/noise, strong tilt propensity plogis(1*X1 + 1.2*X2), sharp null.",
+      "Placebo tilted (v1.3.0): baseline mu0/noise, stronger tilt propensity plogis(1*X1 + 1.2*X2), sharp null.",
+      "Placebo tilted (v1.4.0): baseline mu0/noise, moderate tilt propensity plogis(0.6*X1 + 0.8*X2) to avoid variance explosion.",
       "Kang-Schafer misspecification placebo: tau=0, linear in latent Z, nonlinear observed X.",
       "High-dim sparse partially linear (v1.3.0): correlated Gaussian X (p=50, rho=0.5), sparse outcome/PS, tau=1.",
       "High-dim sparse partially linear (v1.4.0): correlated Gaussian X (p=100, rho=0.95), sparse outcome/PS, tau=1; propensity strengthened.",
@@ -87,17 +91,17 @@ cs_dgp_registry <- function() {
     status = c(
       "stable",      # synth_baseline
       "stable",      # synth_heavytail
-      rep("experimental", 15)
+      rep("experimental", 16)
     ),
     rationale = c(
       "Validated in v0.1.x",
       "Validated in v0.1.x",
-      rep("Pending human validation", 15)
+      rep("Pending human validation", 16)
     ),
     date_status_changed = c(
       "2025-11-30",
       "2025-11-30",
-      rep("2025-11-30", 15)
+      rep("2025-11-30", 16)
     ),
     design_spec = c(
       "1.3.0",
@@ -113,6 +117,7 @@ cs_dgp_registry <- function() {
       "1.3.0",
       "1.3.0",
       "1.3.0",
+      "1.4.0",
       "1.4.0",
       "1.3.0",
       "1.4.0",

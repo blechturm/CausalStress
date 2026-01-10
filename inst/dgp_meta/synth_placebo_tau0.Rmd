@@ -96,9 +96,11 @@ knitr::kable(meta_df, format = "html", col.names = NULL, escape = FALSE) %>%
 ```
 ## 2. What This DGP Stresses (Intent)
 
-This is a **Sharp Null** placebo. By construction, $Y_1 \equiv Y_0$ pathwise and
-$\tau(X) \equiv 0$. Any estimator that discovers a nonzero effect here fails the
-Gatekeeper check (Constitution Article IV).
+**Intent:** The "Calibration Check."
+This is the baseline placebo design. It generates data under ideal conditions: linear confounding, Gaussian noise, and a sharp null effect ($\tau(X) \equiv 0$).
+
+**The Scientific Question:** "Does the estimator respect the Null Hypothesis under ideal conditions?"
+Any estimator that fails here suffers from fundamental coding errors, extreme bias, or improper tuning. It serves as the control group for the stress suite.
 
 ## 3. Identification Assumptions (Explicit)
 
@@ -197,8 +199,8 @@ knitr::kable(summary_tbl, digits = 4, caption = "Oracle validation (n=1000, seed
 
 ## 8. Failure Mode Summary
 
--   Any estimator reporting a nonzero effect fails the Gatekeeper check.
--   Sharp null ensures no real signal exists to exploit.
+-   **Bias:** Deviation from zero indicates fundamental estimator flaws (e.g., regularization bias in simple settings).
+-   **Variance:** Extremely wide CIs suggest poor data efficiency even in ideal settings.
 
 ## 9. Implementation Reference
 

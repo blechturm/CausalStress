@@ -405,9 +405,13 @@ linear</span><span class="badge bg-secondary" style="margin-right:4px;">effect: 
 </div>
 <div id="what-this-dgp-stresses-intent" class="section level2">
 <h2>2. What This DGP Stresses (Intent)</h2>
-<p>This is a <strong>Sharp Null</strong> placebo. By construction, <span class="math inline">\(Y_1 \equiv Y_0\)</span> pathwise and <span class="math inline">\(\tau(X) \equiv 0\)</span>. Any estimator that
-discovers a nonzero effect here fails the Gatekeeper check (Constitution
-Article IV).</p>
+<p><strong>Intent:</strong> The “Calibration Check.” This is the
+baseline placebo design. It generates data under ideal conditions:
+linear confounding, Gaussian noise, and a sharp null effect (<span class="math inline">\(\tau(X) \equiv 0\)</span>).</p>
+<p><strong>The Scientific Question:</strong> “Does the estimator respect
+the Null Hypothesis under ideal conditions?” Any estimator that fails
+here suffers from fundamental coding errors, extreme bias, or improper
+tuning. It serves as the control group for the stress suite.</p>
 </div>
 <div id="identification-assumptions-explicit" class="section level2">
 <h2>3. Identification Assumptions (Explicit)</h2>
@@ -464,9 +468,10 @@ Y_0\)</span>.</li>
 <div id="failure-mode-summary" class="section level2">
 <h2>8. Failure Mode Summary</h2>
 <ul>
-<li>Any estimator reporting a nonzero effect fails the Gatekeeper
-check.</li>
-<li>Sharp null ensures no real signal exists to exploit.</li>
+<li><strong>Bias:</strong> Deviation from zero indicates fundamental
+estimator flaws (e.g., regularization bias in simple settings).</li>
+<li><strong>Variance:</strong> Extremely wide CIs suggest poor data
+efficiency even in ideal settings.</li>
 </ul>
 </div>
 <div id="implementation-reference" class="section level2">
@@ -558,6 +563,7 @@ function(n, seed = NULL, include_truth = TRUE, oracle_only = FALSE) {
   cs_check_dgp_synthetic(out)
   out
 }
+&lt;bytecode: 0x000002402b03aa88&gt;
 &lt;environment: namespace:CausalStress&gt;</code></pre>
 </div>
 
