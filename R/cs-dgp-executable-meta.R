@@ -29,6 +29,7 @@ cs_dgp_executable_meta <- function(dgp_id, version) {
     "synth_qte1@1.3.0" = list(noise_family = "heavy", effect_type = "heterogeneous"),
     "synth_nonlinear_heteroskedastic@1.3.0" = list(noise_family = "heteroskedastic", effect_type = "constant"),
     "synth_nonlinear_heteroskedastic@1.4.0" = list(noise_family = "heteroskedastic", effect_type = "constant"),
+    "synth_nonlinear_heteroskedastic@1.5.0" = list(noise_family = "heteroskedastic", effect_type = "constant"),
     "synth_overlap_stressed@1.3.0" = list(noise_family = "gaussian", effect_type = "linear"),
     "synth_overlap_stressed@1.4.0" = list(noise_family = "gaussian", effect_type = "linear"),
     "synth_tilt_mild@1.3.0" = list(noise_family = "gaussian", effect_type = "linear"),
@@ -38,7 +39,8 @@ cs_dgp_executable_meta <- function(dgp_id, version) {
 
     "synth_placebo_kangschafer@1.4.0" = list(noise_family = "gaussian", effect_type = "constant"),
     "synth_hd_sparse_plm@1.3.0" = list(noise_family = "gaussian", effect_type = "constant"),
-    "synth_hd_sparse_plm@1.4.0" = list(noise_family = "gaussian", effect_type = "constant")
+    "synth_hd_sparse_plm@1.4.0" = list(noise_family = "gaussian", effect_type = "constant"),
+    "synth_hd_sparse_plm@1.5.0" = list(noise_family = "gaussian", effect_type = "constant")
   )
 
   if (!key %in% names(map)) {

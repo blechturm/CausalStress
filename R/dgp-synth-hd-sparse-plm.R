@@ -166,7 +166,81 @@ dgp_synth_hd_sparse_plm_v140 <- function(n, seed = NULL, include_truth = TRUE, o
   out
 }
 
+#' High-dimensional sparse partially linear DGP (v1.5.0)
+#'
+#' Version bump that reduces propensity coefficients to 0.2 to restore moderate
+#' overlap under high correlation.
+#'
+#' Other components follow the v1.4.0 design.
+#'
+#' @inheritParams dgp_synth_hd_sparse_plm_v130
+#'
+#' @return A synthetic DGP list with df, true_att, true_qst, and meta.
+#' @export
+dgp_synth_hd_sparse_plm_v150 <- function(n, seed = NULL, include_truth = TRUE, oracle_only = FALSE) {
+  if (!is.null(seed)) {
+    cs_set_rng(seed)
+  }
+
+  p_hd <- 100L
+  idx <- seq_len(p_hd)
+  Sigma <- outer(idx, idx, function(i, j) 0.95 ^ abs(i - j))
+  L <- chol(Sigma)
+  Z <- matrix(stats::rnorm(n * p_hd), nrow = n)
+  X <- Z %*% L
+
+  colnames(X) <- paste0("X", seq_len(p_hd))
+
+  beta_y <- c(rep(1, 5), rep(0, p_hd - 5))
+  mu0    <- as.numeric(X %*% beta_y)
+  eps    <- stats::rnorm(n, mean = 0, sd = 1)
+  y0     <- mu0 + eps
+
+  tau <- rep(1, n)
+  y1  <- y0 + tau
+
+  gamma <- c(0.2, 0.2, 0.2, 0.2, 0.2, rep(0, p_hd - 5))
+  lin_ps <- as.numeric(X %*% gamma)
+  p      <- stats::plogis(lin_ps)
+  w      <- stats::rbinom(n, size = 1L, prob = p)
+
+  y <- ifelse(w == 1L, y1, y0)
+
+  true_att <- cs_true_att(structural_te = tau, w = w)
+  true_qst <- if (isTRUE(include_truth)) {
+    cs_get_oracle_qst("synth_hd_sparse_plm", version = "1.5.0")
+  } else {
+    tibble::tibble(tau = cs_tau_oracle, value = rep(NA_real_, length(cs_tau_oracle)))
+  }
+
+  df <- tibble::tibble(
+    y  = y,
+    w  = w,
+    y0 = y0,
+    y1 = y1,
+    p  = p,
+    structural_te = tau
+  )
+  df <- dplyr::bind_cols(df, tibble::as_tibble(X))
+
+  out <- list(
+    df = df,
+    true_att = true_att,
+    true_qst = true_qst,
+    meta = list(
+      dgp_id        = "synth_hd_sparse_plm",
+      version       = "1.5.0",
+      type          = "synthetic",
+      params        = list(n = n, seed = seed),
+      structural_te = tau
+    )
+  )
+
+  cs_check_dgp_synthetic(out)
+  out
+}
+
 #' @export
 dgp_synth_hd_sparse_plm <- function(n, seed = NULL) {
-  dgp_synth_hd_sparse_plm_v140(n = n, seed = seed)
+  dgp_synth_hd_sparse_plm_v150(n = n, seed = seed)
 }

@@ -8,7 +8,7 @@ library(ggplot2)
 library(purrr)
 
 # 1. Connect to Board
-board_path <- "C:/Simulations/CausalStress_Board_v1"
+board_path <- "C:/Simulations/CausalStress_Board_v2"
 board <- board_folder(board_path)
 
 # ------------------------------------------------------------------------------
@@ -50,7 +50,7 @@ df_att <- cs_collect_att(df_tidy)
 df_qst <- cs_collect_qst(df_tidy)
 
 # Create Output Directory
-output_dir <- "C:/Simulations/Analysis_Output"
+output_dir <- "C:/Simulations/Analysis_Output_v2"
 if (!dir.exists(output_dir)) dir.create(output_dir)
 
 # ------------------------------------------------------------------------------

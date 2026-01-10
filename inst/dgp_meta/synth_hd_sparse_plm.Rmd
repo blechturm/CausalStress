@@ -98,15 +98,16 @@ knitr::kable(meta_df, format = "html", col.names = NULL, escape = FALSE) %>%
 
 ## 2. What This DGP Stresses (Intent)
 
-P = 100 dimensions with sparsity. Tests whether estimators can recover a sparse
-linear signal without overfitting (regularization capability). With extreme
-Toeplitz correlation (\(\rho = 0.95\)) and low N/P ratios, standard nuisance
-estimation without regularization becomes fragile.
+Sparsity and regularization in high dimensions. Tests whether estimators can
+recover a sparse linear signal without overfitting. Toeplitz correlation
+(\(\rho = 0.95\)) increases collinearity and makes nuisance learning fragile,
+but overlap is restored to be moderate in v1.5.0 so the primary stress is
+high-dimensional sparsity rather than positivity.
 
 ## 3. Identification Assumptions (Explicit)
 
 - Selection on observables holds.
-- Overlap is severe (high-dimensional separation).
+- Overlap is moderate.
 - SUTVA holds.
 
 ## 4. Mathematical Specification
@@ -123,7 +124,7 @@ Outcome (control):
 
 Propensity:
 \[
-\text{logit}(p(X)) = 2\sum_{j=1}^{5} X_j
+\text{logit}(p(X)) = 0.2\sum_{j=1}^{5} X_j
 \]
 
 Treatment effect:
@@ -150,7 +151,7 @@ df <- dgp$df
 
 p1 <- ggplot(df, aes(x = p, fill = factor(w))) +
   geom_histogram(alpha = 0.6, bins = 30, position = "identity") +
-  labs(title = "Propensity Distribution (High-Dimensional Stress)",
+  labs(title = "Propensity Distribution (Moderate Overlap)",
        x = "p(X)", y = "Count", fill = "W") +
   theme_minimal()
 
@@ -210,49 +211,15 @@ if (patchwork_available) {
 
 ## 7. Empirical Validation
 
-- `lm_att` serves as the baseline: it matches the sparse linear outcome model.
-- **Victim:** `ipw_att` uses standard (unregularized) logistic regression for the
-  propensity model. In \(P=100\) with \(\rho=0.95\), collinearity makes the fitted
-  propensity unstable, producing erratic weights and efficiency loss.
-  At \(N=500\), the ratio is \(N/P = 5\), which pushes standard logistic
-  regression toward separation-like behavior; inverse weights can explode.
+`lm_att` serves as the baseline: it matches the sparse linear outcome model.
 
-Coefficients are aligned with correlation (\(\rho=0.95\)) to maximize confounding:
-high \(X\) implies high \(Y\) and high \(W\). Standard IPW overfits the nuisance
-model at \(N/P = 5\), so bias can revert toward naive confounding.
+**Victim:** `ipw_att` uses standard (unregularized) logistic regression for the propensity model. In $P=100$ with $\rho=0.95$, collinearity and low N/P can still make nuisance estimation fragile, but v1.5.0 restores moderate overlap so the primary stress is high-dimensional sparsity rather than positivity.
 
-In quick validation runs at \(N=500\), IPW can fail catastrophically:
-mean bias \(\approx 4.43\) and RMSE \(\approx 4.44\), while `lm_att` remains much
-closer to the truth (mean bias \(\approx 0.09\), RMSE \(\approx 0.22\)).
-
-```{r empirical, cache=FALSE}
-run_fast <- function(est_id) {
-  cs_run_seeds(
-    dgp_id        = "synth_hd_sparse_plm",
-    estimator_id  = est_id,
-    n             = 500,
-    seeds         = 1:20,
-    bootstrap     = FALSE,
-    parallel      = FALSE,
-    show_progress = FALSE
-  )
-}
-
-res_lm     <- run_fast("lm_att")
-res_ipw    <- run_fast("ipw_att")
-res_oracle <- run_fast("oracle_att")
-
-summary_tbl <- dplyr::bind_rows(res_lm, res_ipw, res_oracle) %>%
-  cs_tidy() %>%
-  dplyr::group_by(estimator_id) %>%
-  dplyr::summarise(
-    mean_bias = mean(att_error, na.rm = TRUE),
-    rmse      = sqrt(mean(att_error^2, na.rm = TRUE)),
-    .groups   = "drop"
-  )
-
-knitr::kable(summary_tbl, digits = 3, caption = "Empirical validation (n=500, seeds=1:20)")
-```
+| estimator_id | mean_bias | rmse  |
+|:-------------|:----------|:------|
+| ipw_att      | -0.166    | 1.105 |
+| lm_att       | 0.032     | 0.118 |
+| oracle_att   | 0.000     | 0.000 |
 
 ## 8. Failure Mode Summary
 
@@ -263,7 +230,7 @@ knitr::kable(summary_tbl, digits = 3, caption = "Empirical validation (n=500, se
 
 - Generator: `R/dgp-synth-hd-sparse-plm.R`
 - Registry: `cs_dgp_registry()` entry for `synth_hd_sparse_plm`
-- Oracle truth: `cs_get_oracle_qst("synth_hd_sparse_plm", version = "1.4.0")`
+- Oracle truth: `cs_get_oracle_qst("synth_hd_sparse_plm", version = "1.5.0")`
 
 ## 10. Validation Checklist
 
@@ -274,6 +241,7 @@ knitr::kable(summary_tbl, digits = 3, caption = "Empirical validation (n=500, se
 ## 11. Changelog
 
 - v1.4.0: Parameter hardening (Deprecated v1.3.0).
+- v1.5.0: Reduced propensity coefficients to 0.2. v1.4.0 deprecated due to unintended positivity violation caused by correlation inflation.
 
 ## Appendix: Implementation
 

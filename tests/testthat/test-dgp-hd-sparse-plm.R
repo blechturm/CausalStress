@@ -55,8 +55,8 @@ test_that("estimators behave reasonably on synth_hd_sparse_plm", {
   # Sparse linear target: OLS should remain reasonably accurate.
   expect_true(abs(lm_row$mean_error) < 0.8)
 
-  # With v1.4.0, propensity is intentionally strengthened under high collinearity
-  # to make standard IPW unstable at low N/P.
+  # With v1.5.0, overlap is restored to be moderate; IPW should not blow up
+  # purely due to deterministic treatment assignment.
   expect_true(is.finite(ipw_row$mean_error))
-  expect_gt(abs(ipw_row$mean_error), 0.3)
+  expect_true(abs(ipw_row$mean_error) < 1.5)
 })

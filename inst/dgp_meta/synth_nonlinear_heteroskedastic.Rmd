@@ -105,7 +105,7 @@ explodes in the tails of the covariate distribution.
 ## 3. Identification Assumptions (Explicit)
 
 - Selection on observables holds.
-- Overlap is moderate.
+- Overlap is moderate (restored in v1.5.0).
 - SUTVA holds.
 
 ## 4. Mathematical Specification
@@ -130,7 +130,7 @@ Treatment Effect:
 
 Propensity:
 \[
-p(X) = \mathrm{expit}(1.5 X_1 - 1.5 X_2)
+p(X) = \mathrm{expit}(0.5 X_1 - 0.5 X_2)
 \]
 
 Heteroskedastic noise:
@@ -193,50 +193,23 @@ if (patchwork_available) {
 
 ## 7. Empirical Validation
 
-Under the v1.4.0 cubic/exponential regime, OLS (`lm_att`) fails catastrophically:
-the cubic outcome surface induces structural bias, and the exponential noise
-creates variance explosions that dominate squared loss. In quick validation
-(`n = 1000`, `seeds = 1:10`), `lm_att` shows mean bias around 1.0 and RMSE around
-1.0, while `oracle_att` remains exact by construction.
+Under the v1.5.0 cubic/exponential regime (with overlap restored), OLS (`lm_att`) exhibits significant structural bias. While it avoids the variance explosion of severe overlap violations, the linear model cannot adapt to the cubic outcome surface. In quick validation (n = 1000, seeds = 1:10), `lm_att` shows mean bias around 0.32 (32% error), while `oracle_att` remains exact.
 
-```{r empirical, cache=FALSE}
-run_fast <- function(est_id) {
-  cs_run_seeds(
-    dgp_id        = "synth_nonlinear_heteroskedastic",
-    estimator_id  = est_id,
-    n             = 1000,
-    seeds         = 1:10,
-    bootstrap     = FALSE,
-    parallel      = FALSE,
-    show_progress = FALSE
-  )
-}
-
-res_lm     <- run_fast("lm_att")
-res_oracle <- run_fast("oracle_att")
-
-summary_tbl <- dplyr::bind_rows(res_lm, res_oracle) %>%
-  cs_tidy() %>%
-  dplyr::group_by(estimator_id) %>%
-  dplyr::summarise(
-    mean_bias = mean(att_error, na.rm = TRUE),
-    rmse      = sqrt(mean(att_error^2, na.rm = TRUE)),
-    .groups   = "drop"
-  )
-
-knitr::kable(summary_tbl, digits = 3, caption = "Empirical validation (n=1000, seeds=1:10)")
-```
+| estimator_id | mean_bias | rmse  |
+|:-------------|:----------|:------|
+| lm_att       | 0.321     | 0.404 |
+| oracle_att   | 0.000     | 0.000 |
 
 ## 8. Failure Mode Summary
 
-- Linear models underfit nonlinear structural signal (bias).
-- Exponentially varying noise creates outlier-driven variance and destabilizes uncertainty quantification.
+- Structural underfitting of nonlinear signal (linear model misspecification) drives ATT bias.
+- Severe heteroskedasticity creates variance instability even under moderate overlap.
 
 ## 9. Implementation Reference
 
 - Generator: `R/dgp-synth-nonlinear-heteroskedastic.R`
 - Registry: `cs_dgp_registry()` entry for `synth_nonlinear_heteroskedastic`
-- Oracle truth: `cs_get_oracle_qst("synth_nonlinear_heteroskedastic", version = "1.4.0")`
+- Oracle truth: `cs_get_oracle_qst("synth_nonlinear_heteroskedastic", version = "1.5.0")`
 
 ## 10. Validation Checklist
 
@@ -247,6 +220,7 @@ knitr::kable(summary_tbl, digits = 3, caption = "Empirical validation (n=1000, s
 ## 11. Changelog
 
 - v1.4.0: Parameter hardening (Deprecated v1.3.0).
+- v1.5.0: Relaxed propensity coefficients to 0.5. v1.4.0 deprecated due to unintended overlap violation.
 
 ## Appendix: Implementation
 

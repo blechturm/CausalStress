@@ -26,7 +26,7 @@ test_that("cs_dgp_registry has required columns and sane types", {
   expect_true(all(reg$type == "synthetic"))
 
   # Registry versions allowed
-  expect_true(all(reg$version %in% c("1.3.0", "1.4.0")))
+  expect_true(all(reg$version %in% c("1.3.0", "1.4.0", "1.5.0")))
 
   # Known IDs must be present
   expect_true("synth_baseline"   %in% reg$dgp_id)
@@ -104,7 +104,7 @@ test_that("cs_get_dgp returns a valid descriptor for synth_hd_sparse_plm", {
   expect_equal(desc$dgp_id[[1]], "synth_hd_sparse_plm")
   expect_identical(desc$type[[1]], "synthetic")
   expect_true(is.function(desc$generator[[1]]))
-  expect_true(desc$version[[1]] %in% c("1.4.0"))
+  expect_true(desc$version[[1]] %in% c("1.4.0", "1.5.0"))
 
   dgp <- desc$generator[[1]](n = 30, seed = 4L)
   expect_invisible(cs_check_dgp_synthetic(dgp))

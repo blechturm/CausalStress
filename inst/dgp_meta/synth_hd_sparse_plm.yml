@@ -1,10 +1,10 @@
 dgp_id: "synth_hd_sparse_plm"
-version: "1.4.0"
+version: "1.5.0"
 status: "experimental"
 type: "synthetic"
 
 stress_profile:
-  overlap: "severe"
+  overlap: "moderate"
   noise: "gaussian"
   linearity: "linear"
   effect: "constant"

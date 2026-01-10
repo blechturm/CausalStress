@@ -15,8 +15,8 @@ library(dplyr)
 library(future)
 
 # Define storage locations
-staging_dir <- "C:/Simulations/CausalStress_Staging_v1" 
-board_path  <- "C:/Simulations/CausalStress_Board_v1"
+staging_dir <- "C:/Simulations/CausalStress_Staging_v3" 
+board_path  <- "C:/Simulations/CausalStress_Board_v3"
 
 if (!dir.exists(staging_dir)) dir.create(staging_dir, recursive = TRUE)
 board <- pins::board_folder(board_path)
