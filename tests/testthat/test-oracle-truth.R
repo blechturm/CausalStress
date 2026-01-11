@@ -1,5 +1,5 @@
 test_that("cs_get_oracle_qst returns qst for synth_baseline", {
-  res <- cs_get_oracle_qst("synth_baseline")
+  res <- cs_get_oracle_qst("synth_baseline", version = "1.6.0")
   expect_s3_class(res, "tbl_df")
   expect_equal(nrow(res), length(cs_tau_oracle))
 })
@@ -11,7 +11,7 @@ test_that("placebo oracle returns zeros", {
 
 test_that("oracle cache returns identical results on repeat", {
   dgp_id <- "synth_baseline"
-  version <- "1.3.0"
+  version <- "1.6.0"
   cache_dir <- tempfile("cs_oracle_cache_")
   dir.create(cache_dir, recursive = TRUE, showWarnings = FALSE)
   cache_file <- file.path(cache_dir, paste0("truth_", dgp_id, "_", version, ".qs"))
@@ -31,7 +31,7 @@ test_that("oracle cache returns identical results on repeat", {
 test_that("oracle call does not disturb global RNG state", {
   set.seed(42)
   before <- .Random.seed
-  cs_get_oracle_qst("synth_baseline")
+  cs_get_oracle_qst("synth_baseline", version = "1.6.0")
   after <- .Random.seed
   expect_identical(before, after)
 })

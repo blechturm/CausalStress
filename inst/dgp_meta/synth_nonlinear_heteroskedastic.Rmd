@@ -105,7 +105,7 @@ explodes in the tails of the covariate distribution.
 ## 3. Identification Assumptions (Explicit)
 
 - Selection on observables holds.
-- Overlap is moderate (restored in v1.5.0).
+- Overlap is moderate (restored in v1.5.0, carried forward to v1.6.0).
 - SUTVA holds.
 
 ## 4. Mathematical Specification
@@ -193,7 +193,7 @@ if (patchwork_available) {
 
 ## 7. Empirical Validation
 
-Under the v1.5.0 cubic/exponential regime (with overlap restored), OLS (`lm_att`) exhibits significant structural bias. While it avoids the variance explosion of severe overlap violations, the linear model cannot adapt to the cubic outcome surface. In quick validation (n = 1000, seeds = 1:10), `lm_att` shows mean bias around 0.32 (32% error), while `oracle_att` remains exact.
+Under the v1.6.0 cubic/exponential regime (with overlap restored), OLS (`lm_att`) exhibits significant structural bias. While it avoids the variance explosion of severe overlap violations, the linear model cannot adapt to the cubic outcome surface. In quick validation (n = 1000, seeds = 1:10), `lm_att` shows mean bias around 0.32 (32% error), while `oracle_att` remains exact.
 
 | estimator_id | mean_bias | rmse  |
 |:-------------|:----------|:------|
@@ -209,7 +209,7 @@ Under the v1.5.0 cubic/exponential regime (with overlap restored), OLS (`lm_att`
 
 - Generator: `R/dgp-synth-nonlinear-heteroskedastic.R`
 - Registry: `cs_dgp_registry()` entry for `synth_nonlinear_heteroskedastic`
-- Oracle truth: `cs_get_oracle_qst("synth_nonlinear_heteroskedastic", version = "1.5.0")`
+- Oracle truth: `cs_get_oracle_qst("synth_nonlinear_heteroskedastic", version = "1.6.0")`
 
 ## 10. Validation Checklist
 
@@ -221,6 +221,7 @@ Under the v1.5.0 cubic/exponential regime (with overlap restored), OLS (`lm_att`
 
 - v1.4.0: Parameter hardening (Deprecated v1.3.0).
 - v1.5.0: Relaxed propensity coefficients to 0.5. v1.4.0 deprecated due to unintended overlap violation.
+- v1.6.0: Implemented Common Random Numbers (CRN) for Oracle generation. Eliminates Monte Carlo noise in QST truth benchmarks.
 
 ## Appendix: Implementation
 

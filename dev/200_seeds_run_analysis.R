@@ -7,8 +7,16 @@ library(dplyr)
 library(ggplot2)
 library(purrr)
 
+# ------------------------------------------------------------------------------
+# Parameters
+# ------------------------------------------------------------------------------
+# All artifact outputs should derive from this single base directory.
+output_dir <- "C:/Simulations/Analysis_Output_v3"
+if (!dir.exists(output_dir)) dir.create(output_dir, recursive = TRUE)
+out_path <- function(...) file.path(output_dir, ...)
+
 # 1. Connect to Board
-board_path <- "C:/Simulations/CausalStress_Board_v2"
+board_path <- "C:/Simulations/CausalStress_Board_v3"
 board <- board_folder(board_path)
 
 # ------------------------------------------------------------------------------
@@ -49,10 +57,6 @@ df_att <- cs_collect_att(df_tidy)
 # This handles the unnesting automatically
 df_qst <- cs_collect_qst(df_tidy)
 
-# Create Output Directory
-output_dir <- "C:/Simulations/Analysis_Output_v2"
-if (!dir.exists(output_dir)) dir.create(output_dir)
-
 # ------------------------------------------------------------------------------
 # 4. Plot 1: Parity (Using cs_plot_att_error)
 # ------------------------------------------------------------------------------
@@ -66,7 +70,7 @@ p1 <- cs_plot_att_error(subset_parity) +
   labs(title = "Validation: GenGC Parity vs SOTA",
        subtitle = "Standardized Error Distribution (N=1000)")
 
-ggsave(file.path(output_dir, "plot1_parity.png"), p1, width = 8, height = 5)
+ggsave(out_path("plot1_parity.png"), p1, width = 8, height = 5)
 
 # ------------------------------------------------------------------------------
 # 5. Plot 2: Robustness (Heavy Tails)
@@ -85,7 +89,7 @@ p2 <- ggplot(subset_robust, aes(x = estimator_id, y = est_att)) +
        subtitle = "IPW Instability vs GenGC Robustness",
        y = "Estimated ATT", x = NULL)
 
-ggsave(file.path(output_dir, "plot2_robustness.png"), p2, width = 6, height = 5)
+ggsave(out_path("plot2_robustness.png"), p2, width = 6, height = 5)
 
 # ------------------------------------------------------------------------------
 # 6. Plot 3: The Money Plot (Using cs_plot_qst)
@@ -116,7 +120,7 @@ if (nrow(subset_money) > 0) {
     labs(title = "The Distributional Insight (QST)",
          subtitle = "Recovering the sign-switching effect structure")
 
-  ggsave(file.path(output_dir, "plot3_money.png"), p3, width = 7, height = 5)
+  ggsave(out_path("plot3_money.png"), p3, width = 7, height = 5)
 }
 
 message("🚀 Analysis Complete. Outputs in: ", output_dir)
@@ -152,7 +156,7 @@ if (nrow(subset_money) > 0) {
     labs(title = "The Distributional Insight (QST)",
          subtitle = "Recovering heavvy tail effect structure")
 
-  ggsave(file.path(output_dir, "plot3.1_money.png"), p3, width = 7, height = 5)
+  ggsave(out_path("plot3.1_money.png"), p3, width = 7, height = 5)
 }
 
 message("🚀 Analysis Complete. Outputs in: ", output_dir)
@@ -170,8 +174,7 @@ library(dplyr)
 library(ggplot2)
 library(CausalStress)
 
-# Ensure output directory exists
-output_dir <- "C:/Simulations/Analysis_Output"
+# Outputs continue to be written under `output_dir` defined at the top of this script.
 
 # ------------------------------------------------------------------------------
 # 7. The "Lie Detector" (Placebo Validation)
@@ -182,7 +185,7 @@ p_placebo <- cs_plot_placebo(df_att) +
   labs(title = "Validation: Placebo Tests (The Lie Detector)",
        subtitle = "Estimates should be centered at 0 (Dashed Line)")
 
-ggsave(file.path(output_dir, "plot4_placebos.png"), p_placebo, width = 10, height = 6)
+ggsave(out_path("plot4_placebos.png"), p_placebo, width = 10, height = 6)
 
 # ------------------------------------------------------------------------------
 # 8. The "Torture Chamber" (Overlap & High-Dim)
@@ -208,7 +211,7 @@ p_torture <- df_att %>%
   theme(legend.position = "none", 
         axis.text.x = element_text(angle = 45, hjust = 1))
 
-ggsave(file.path(output_dir, "plot5_stress_tests.png"), p_torture, width = 9, height = 5)
+ggsave(out_path("plot5_stress_tests.png"), p_torture, width = 9, height = 5)
 
 # ------------------------------------------------------------------------------
 # 9. The "Leaderboard" (Grand Summary Table)
@@ -228,7 +231,7 @@ leaderboard <- df_att %>%
   arrange(dgp_id, rmse)
 
 # Save to CSV
-write.csv(leaderboard, file.path(output_dir, "table_leaderboard.csv"), row.names = FALSE)
+write.csv(leaderboard, out_path("table_leaderboard.csv"), row.names = FALSE)
 
 # Print a preview of the "Hardest" cases (Highest RMSE)
 print(leaderboard %>% arrange(dgp_id,desc(rmse)), n = 1000)
@@ -340,7 +343,7 @@ p_stability <- ggplot(plot_data, aes(x = type, y = error, fill = type)) +
   theme_minimal() +
   theme(legend.position = "none")
 
-ggsave("C:/Simulations/Analysis_Output/plot_heavytail_median.png", p_stability, width = 6, height = 5)
+ggsave(out_path("plot_heavytail_median.png"), p_stability, width = 6, height = 5)
 
 message("🚀 Comparison Complete.")
 
@@ -388,7 +391,7 @@ leaderboard <- bind_rows(
   arrange(mad)
 
 print(leaderboard)
-write.csv(leaderboard, "C:/Simulations/Analysis_Output/table_heavytail_robustness.csv")
+write.csv(leaderboard, out_path("table_heavytail_robustness.csv"), row.names = FALSE)
 
 # ------------------------------------------------------------------------------
 # 3. Visualization: The "Ghost Hunter" Plot (Fixed)
@@ -434,7 +437,7 @@ p_ghost <- ggplot(plot_data, aes(x = reorder(estimator_id, abs(error)), y = erro
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-ggsave("C:/Simulations/Analysis_Output/plot_heavytail_all.png", p_ghost, width = 8, height = 5)
+ggsave(out_path("plot_heavytail_all.png"), p_ghost, width = 8, height = 5)
 
 message("🚀 Plot saved. Look at the difference in width between GenGC and BART!")
 
@@ -489,7 +492,7 @@ ranking_matrix <- ranking_by_type %>%
   arrange(estimator_id)
 
 # Save table
-write.csv(ranking_matrix, file.path(output_dir, "table_ranking_by_type.csv"), row.names = FALSE)
+write.csv(ranking_matrix, out_path("table_ranking_by_type.csv"), row.names = FALSE)
 print("Rankings by scenario type:")
 print(ranking_matrix)
 
@@ -524,7 +527,7 @@ p6_heatmap <- ggplot(success_rates,
     x = NULL, y = NULL, fill = "Success\nRate"
   )
 
-ggsave(file.path(output_dir, "plot6_success_heatmap.png"), p6_heatmap, 
+ggsave(out_path("plot6_success_heatmap.png"), p6_heatmap, 
        width = 10, height = 6)
 
 # ------------------------------------------------------------------------------
@@ -567,7 +570,7 @@ p7_headtohead <- ggplot(win_summary, aes(x = dgp_id, y = pct, fill = winner)) +
     x = NULL, y = "Win Rate", fill = "Winner"
   )
 
-ggsave(file.path(output_dir, "plot7_headtohead.png"), p7_headtohead, 
+ggsave(out_path("plot7_headtohead.png"), p7_headtohead, 
        width = 8, height = 6)
 
 # Print summary
@@ -599,7 +602,7 @@ severe_miscoverage <- coverage_check %>%
   filter(deviation > 0.1)
 
 write.csv(coverage_check, 
-          file.path(output_dir, "table_coverage_calibration.csv"), 
+          out_path("table_coverage_calibration.csv"), 
           row.names = FALSE)
 
 print("Severe coverage violations (deviation > 10%):")
@@ -639,7 +642,7 @@ p8_error_dist <- ggplot(error_comparison,
     x = NULL, y = "Error (Estimate - Truth)"
   )
 
-ggsave(file.path(output_dir, "plot8_error_distribution.png"), p8_error_dist, 
+ggsave(out_path("plot8_error_distribution.png"), p8_error_dist, 
        width = 10, height = 7)
 
 # ------------------------------------------------------------------------------
@@ -680,7 +683,7 @@ p9_qst_calibration <- ggplot(qst_calibration,
     y = "Bias (Estimate - Truth)"
   )
 
-ggsave(file.path(output_dir, "plot9_qst_calibration.png"), p9_qst_calibration, 
+ggsave(out_path("plot9_qst_calibration.png"), p9_qst_calibration, 
        width = 10, height = 6)
 
 # ------------------------------------------------------------------------------
@@ -728,7 +731,7 @@ p10_placebo_diagnostic <- ggplot(placebo_failures,
     fill = "Severity"
   )
 
-ggsave(file.path(output_dir, "plot10_placebo_diagnostic.png"), 
+ggsave(out_path("plot10_placebo_diagnostic.png"), 
        p10_placebo_diagnostic, width = 10, height = 5)
 
 # ------------------------------------------------------------------------------
@@ -747,7 +750,7 @@ recommendations <- tribble(
 )
 
 write.csv(recommendations, 
-          file.path(output_dir, "table_method_recommendations.csv"), 
+          out_path("table_method_recommendations.csv"), 
           row.names = FALSE)
 
 print("Method recommendations by scenario:")
@@ -772,7 +775,7 @@ summary_stats <- df_att %>%
   arrange(median_rmse)
 
 write.csv(summary_stats, 
-          file.path(output_dir, "table_summary_statistics.csv"), 
+          out_path("table_summary_statistics.csv"), 
           row.names = FALSE)
 
 print("Overall method performance:")

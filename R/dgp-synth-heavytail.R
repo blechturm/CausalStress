@@ -103,7 +103,95 @@ dgp_synth_heavytail_v130 <- function(n, seed = NULL, include_truth = TRUE, oracl
   out
 }
 
+#' Heavy-tailed synthetic DGP for CausalStress (v1.6.0)
+#'
+#' Version bump that enables oracle precision via common random numbers (CRN)
+#' when `oracle_only = TRUE`.
+#'
+#' @inheritParams dgp_synth_heavytail_v130
+#'
+#' @return A synthetic DGP list satisfying the contract.
+#' @export
+dgp_synth_heavytail_v160 <- function(n, seed = NULL, include_truth = TRUE, oracle_only = FALSE) {
+  if (!is.null(seed)) {
+    cs_set_rng(seed)
+  }
+
+  X1 <- stats::rnorm(n, mean = 0, sd = 1)
+  X2 <- stats::rnorm(n, mean = 0, sd = 1)
+  if (!isTRUE(oracle_only)) {
+    X3 <- stats::rnorm(n, mean = 0, sd = 1)
+    X4 <- stats::rnorm(n, mean = 0, sd = 1)
+    X5 <- stats::rnorm(n, mean = 0, sd = 1)
+  }
+
+  mu0 <- 1 + X1 + 0.5 * X2
+  tau <- 1 + 0.5 * X1
+  p <- stats::plogis(0.5 * X1 - 0.5 * X2)
+
+  w <- stats::rbinom(n, size = 1, prob = p)
+
+  mix_ind0 <- stats::rbinom(n, size = 1, prob = 0.8)
+  eps0 <- ifelse(
+    mix_ind0 == 1L,
+    stats::rnorm(n, mean = 0, sd = 0.5),
+    stats::rcauchy(n, location = 0, scale = 1)
+  )
+
+  if (isTRUE(oracle_only)) {
+    # CRN: Lock error term to eliminate MC variance and regime mismatch
+    eps1 <- eps0
+  } else {
+    mix_ind1 <- stats::rbinom(n, size = 1, prob = 0.8)
+    eps1 <- ifelse(
+      mix_ind1 == 1L,
+      stats::rnorm(n, mean = 0, sd = 0.5),
+      stats::rcauchy(n, location = 0, scale = 1)
+    )
+  }
+
+  y0 <- mu0 + eps0
+  y1 <- mu0 + tau + eps1
+
+  if (isTRUE(oracle_only)) {
+    return(list(df = tibble::tibble(w = w, y0 = y0, y1 = y1)))
+  }
+  y <- ifelse(w == 1L, y1, y0)
+
+  true_att <- cs_true_att(structural_te = tau, w = w)
+  true_qst <- if (isTRUE(include_truth)) cs_get_oracle_qst("synth_heavytail", version = "1.6.0") else NULL
+
+  out <- list(
+    df = tibble::tibble(
+      y  = y,
+      w  = w,
+      y0 = y0,
+      y1 = y1,
+      p  = p,
+      structural_te = tau,
+      X1 = X1,
+      X2 = X2,
+      X3 = X3,
+      X4 = X4,
+      X5 = X5
+    ),
+    true_att = true_att,
+    true_qst = true_qst,
+    meta = list(
+      dgp_id        = "synth_heavytail",
+      version       = "1.6.0",
+      type          = "synthetic",
+      params        = list(n = n, seed = seed),
+      structural_te = tau
+    )
+  )
+
+  cs_check_dgp_synthetic(out)
+
+  out
+}
+
 #' @export
 dgp_synth_heavytail <- function(n, seed = NULL) {
-  dgp_synth_heavytail_v130(n = n, seed = seed)
+  dgp_synth_heavytail_v160(n = n, seed = seed)
 }

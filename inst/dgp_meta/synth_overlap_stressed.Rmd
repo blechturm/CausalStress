@@ -189,7 +189,7 @@ if (patchwork_available) {
 
 ## 7. Empirical Validation
 
-IPW fails in benchmarks under this v1.4.0 hardening: weights explode and the effective sample size collapses toward 0.
+IPW fails in benchmarks under this v1.6.0 hardened overlap design: weights explode and the effective sample size collapses toward 0.
 
 ```{r empirical, cache=TRUE}
 run_fast <- function(est_id) {
@@ -228,7 +228,7 @@ knitr::kable(summary_tbl, digits = 3, caption = "Empirical validation (n=1000, s
 
 - Generator: `R/dgp-synth-overlap-stressed.R`
 - Registry: `cs_dgp_registry()` entry for `synth_overlap_stressed`
-- Oracle truth: `cs_get_oracle_qst("synth_overlap_stressed", version = "1.4.0")`
+- Oracle truth: `cs_get_oracle_qst("synth_overlap_stressed", version = "1.6.0")`
 
 ## 10. Validation Checklist
 
@@ -239,6 +239,7 @@ knitr::kable(summary_tbl, digits = 3, caption = "Empirical validation (n=1000, s
 ## 11. Changelog
 
 - v1.4.0: Parameter hardening (Deprecated v1.3.0).
+- v1.6.0: Implemented Common Random Numbers (CRN) for Oracle generation. Eliminates Monte Carlo noise in QST truth benchmarks.
 
 ## Appendix: Implementation
 

@@ -26,7 +26,7 @@ test_that("cs_dgp_registry has required columns and sane types", {
   expect_true(all(reg$type == "synthetic"))
 
   # Registry versions allowed
-  expect_true(all(reg$version %in% c("1.3.0", "1.4.0", "1.5.0")))
+  expect_true(all(reg$version %in% c("1.3.0", "1.4.0", "1.5.0", "1.6.0")))
 
   # Known IDs must be present
   expect_true("synth_baseline"   %in% reg$dgp_id)
@@ -51,7 +51,7 @@ test_that("cs_get_dgp returns a valid descriptor for synth_baseline", {
   expect_equal(desc$dgp_id[[1]], "synth_baseline")
   expect_identical(desc$type[[1]], "synthetic")
   expect_true(is.function(desc$generator[[1]]))
-  expect_equal(desc$version[[1]], "1.3.0")
+  expect_equal(desc$version[[1]], "1.6.0")
 
   # Generator should produce a DGP object that passes the synthetic contract
   dgp <- desc$generator[[1]](n = 50, seed = 1L)
@@ -65,7 +65,7 @@ test_that("cs_get_dgp returns a valid descriptor for synth_heavytail", {
   expect_equal(desc$dgp_id[[1]], "synth_heavytail")
   expect_identical(desc$type[[1]], "synthetic")
   expect_true(is.function(desc$generator[[1]]))
-  expect_equal(desc$version[[1]], "1.3.0")
+  expect_equal(desc$version[[1]], "1.6.0")
 
   dgp <- desc$generator[[1]](n = 50, seed = 1L)
   expect_invisible(cs_check_dgp_synthetic(dgp))

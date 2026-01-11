@@ -9,14 +9,20 @@ cs_dgp_registry <- function() {
   tibble::tibble(
     dgp_id = c(
       "synth_baseline",
+      "synth_baseline",
+      "synth_heavytail",
       "synth_heavytail",
       "synth_placebo_tau0",
+      "synth_qte1",
       "synth_qte1",
       "synth_nonlinear_heteroskedastic",
       "synth_nonlinear_heteroskedastic",
       "synth_nonlinear_heteroskedastic",
+      "synth_nonlinear_heteroskedastic",
       "synth_overlap_stressed",
       "synth_overlap_stressed",
+      "synth_overlap_stressed",
+      "synth_tilt_mild",
       "synth_tilt_mild",
       "synth_placebo_nonlinear",
       "synth_placebo_heavytail",
@@ -27,18 +33,24 @@ cs_dgp_registry <- function() {
       "synth_hd_sparse_plm",
       "synth_hd_sparse_plm"
     ),
-    type = rep("synthetic", 18),
+    type = rep("synthetic", 24),
     generator = list(
       dgp_synth_baseline_v130,
+      dgp_synth_baseline_v160,
       dgp_synth_heavytail_v130,
+      dgp_synth_heavytail_v160,
       dgp_synth_placebo_tau0_v130,
       dgp_synth_qte1_v130,
+      dgp_synth_qte1_v160,
       dgp_synth_nonlinear_heteroskedastic_v130,
       dgp_synth_nonlinear_heteroskedastic_v140,
       dgp_synth_nonlinear_heteroskedastic_v150,
+      dgp_synth_nonlinear_heteroskedastic_v160,
       dgp_synth_overlap_stressed_v130,
       dgp_synth_overlap_stressed_v140,
+      dgp_synth_overlap_stressed_v160,
       dgp_synth_tilt_mild_v130,
+      dgp_synth_tilt_mild_v160,
       dgp_synth_placebo_nonlinear_v130,
       dgp_synth_placebo_heavytail_v130,
       dgp_synth_placebo_tilted_v130,
@@ -50,15 +62,21 @@ cs_dgp_registry <- function() {
     ),
     version = c(
       "1.3.0",
+      "1.6.0",
+      "1.3.0",
+      "1.6.0",
       "1.3.0",
       "1.3.0",
-      "1.3.0",
+      "1.6.0",
       "1.3.0",
       "1.4.0",
       "1.5.0",
+      "1.6.0",
       "1.3.0",
       "1.4.0",
+      "1.6.0",
       "1.3.0",
+      "1.6.0",
       "1.3.0",
       "1.3.0",
       "1.3.0",
@@ -70,15 +88,21 @@ cs_dgp_registry <- function() {
     ),
     description = c(
       "Baseline linear DGP with Gaussian noise (sanity check).",
+      "Baseline linear DGP with Gaussian noise (v1.6.0): oracle-only uses CRN for higher-precision QST truth.",
       "Same linear signal as synth_baseline but with heavy-tailed noise: 0.8 * N(0, 0.5) + 0.2 * Cauchy(0, 1); robustness (L2 break).",
+      "Same linear signal as synth_baseline but heavy-tailed noise (v1.6.0): oracle-only uses CRN (shared mixture/error) for higher-precision QST truth.",
       "Sharp-null placebo: tau(X) = 0 with Y1 identical to Y0 pathwise.",
       "Sign-flip QTE DGP: tau(X)=+1 if X1>0, -1 otherwise; Student-t noise (df=4, sigma=0.5).",
+      "Sign-flip QTE DGP (v1.6.0): oracle-only uses CRN for higher-precision QST truth.",
       "Nonlinear heteroskedastic DGP: sine/quadratic mu0, tau=1, sigma(X)=0.3+0.2|X3|.",
       "Nonlinear heteroskedastic DGP (hardened): mu0 = 1 + 0.5*X1^3 + 1.5*X2^2 - 1.0*X4; sigma(X)=0.1+exp(0.5*X2); strong selection p=plogis(1.5*X1-1.5*X2).",
       "Nonlinear heteroskedastic DGP (relaxed overlap): mu0 = 1 + 0.5*X1^3 + 1.5*X2^2 - 1.0*X4; sigma(X)=0.1+exp(0.5*X2); moderate overlap p=plogis(0.5*X1-0.5*X2).",
+      "Nonlinear heteroskedastic DGP (v1.6.0): oracle-only uses CRN for higher-precision QST truth; otherwise matches v1.5.0.",
       "Overlap-stressed DGP: same outcome/noise as synth_baseline; propensity plogis(3*X1 + 3*X2) to push p toward 0/1.",
       "Overlap-stressed DGP (hardened): same outcome/noise as synth_baseline; propensity plogis(9*X1 + 9*X2) for extreme positivity stress.",
+      "Overlap-stressed DGP (v1.6.0): oracle-only uses CRN for higher-precision QST truth; otherwise matches v1.4.0.",
       "Mildly tilted propensity: baseline outcomes/noise, propensity plogis(0.45*X1 - 0.3*X2 - 0.25*X4).",
+      "Mildly tilted propensity (v1.6.0): oracle-only uses CRN for higher-precision QST truth; otherwise matches v1.3.0.",
       "Placebo nonlinear: mu0 = sin(X1) + cos(X2), sharp null Y1 == Y0.",
       "Placebo heavy-tail: baseline mu0, heavy-tailed epsilon (0.8 N + 0.2 Cauchy), sharp null.",
       "Placebo tilted (v1.3.0): baseline mu0/noise, stronger tilt propensity plogis(1*X1 + 1.2*X2), sharp null.",
@@ -89,31 +113,43 @@ cs_dgp_registry <- function() {
       "High-dim sparse partially linear (v1.5.0): correlated Gaussian X (p=100, rho=0.95), sparse outcome/PS, tau=1; propensity coefficients reduced for moderate overlap."
     ),
     status = c(
-      "stable",      # synth_baseline
-      "stable",      # synth_heavytail
-      rep("experimental", 16)
+      "deprecated",  # synth_baseline (v1.3.0)
+      "stable",      # synth_baseline (v1.6.0)
+      "deprecated",  # synth_heavytail (v1.3.0)
+      "stable",      # synth_heavytail (v1.6.0)
+      rep("experimental", 20)
     ),
     rationale = c(
+      "Superseded by v1.6.0 (CRN oracle precision update).",
       "Validated in v0.1.x",
+      "Superseded by v1.6.0 (CRN oracle precision update).",
       "Validated in v0.1.x",
-      rep("Pending human validation", 16)
+      rep("Pending human validation", 20)
     ),
     date_status_changed = c(
-      "2025-11-30",
-      "2025-11-30",
-      rep("2025-11-30", 16)
+      "2026-01-11",
+      "2026-01-11",
+      "2026-01-11",
+      "2026-01-11",
+      rep("2025-11-30", 20)
     ),
     design_spec = c(
       "1.3.0",
+      "1.6.0",
+      "1.3.0",
+      "1.6.0",
       "1.3.0",
       "1.3.0",
-      "1.3.0",
+      "1.6.0",
       "1.3.0",
       "1.4.0",
       "1.5.0",
+      "1.6.0",
       "1.3.0",
       "1.4.0",
+      "1.6.0",
       "1.3.0",
+      "1.6.0",
       "1.3.0",
       "1.3.0",
       "1.3.0",

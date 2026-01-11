@@ -213,9 +213,10 @@ knitr::kable(summary_tbl, digits = 3, caption = "Empirical validation (n=5000, s
 
 ## 9. Implementation Reference
 
--   Code: `R/dgp-synth-baseline.R` (v1.3.0)
+-   Code: `R/dgp-synth-baseline.R` (v1.6.0)
 -   Registry: `cs_dgp_registry()` entry for `synth_baseline`
 -   Oracle: `true_att` computed from `structural_te` among treated
+-   Oracle truth: `cs_get_oracle_qst("synth_baseline", version = "1.6.0")`
 -   Airlock: oracle columns removed unless explicitly allowed
 
 ## 10. Validation Checklist
@@ -229,6 +230,7 @@ knitr::kable(summary_tbl, digits = 3, caption = "Empirical validation (n=5000, s
 ## 11. Changelog
 
 -   v1.0 dossier: Initial dossier following Standard Template v1.0
+- v1.6.0: Implemented Common Random Numbers (CRN) for Oracle generation. Eliminates Monte Carlo noise in QST truth benchmarks.
 
 ## Appendix: Implementation
 

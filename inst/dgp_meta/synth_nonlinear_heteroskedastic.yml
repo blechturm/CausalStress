@@ -1,5 +1,5 @@
 dgp_id: "synth_nonlinear_heteroskedastic"
-version: "1.5.0"
+version: "1.6.0"
 status: "experimental"
 type: "synthetic"
 
