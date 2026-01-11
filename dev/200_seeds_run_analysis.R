@@ -655,7 +655,11 @@ qst_calibration <- df_qst %>%
   group_by(dgp_id, tau) %>%
   summarise(
     bias = mean(error, na.rm = TRUE),
+    mae  = mean(abs(error), na.rm = TRUE),
     rmse = sqrt(mean(error^2, na.rm = TRUE)),
+    # "Centered" dispersion around the bias curve (not a CI).
+    mae_centered = mean(abs(error - mean(error, na.rm = TRUE)), na.rm = TRUE),
+    sd_from_rmse = sqrt(pmax(mean(error^2, na.rm = TRUE) - mean(error, na.rm = TRUE)^2, 0)),
     .groups = "drop"
   ) %>%
   mutate(
@@ -685,6 +689,50 @@ p9_qst_calibration <- ggplot(qst_calibration,
 
 ggsave(out_path("plot9_qst_calibration.png"), p9_qst_calibration, 
        width = 10, height = 6)
+
+# ------------------------------------------------------------------------------
+# PLOT 9b: QST Bias Decomposition (Bias + Error Band)
+# ------------------------------------------------------------------------------
+# Shaded band is a dispersion proxy around the bias curve (not a CI).
+# Recommended: "sd_from_rmse" (variance component via RMSE^2 - bias^2).
+band_metric <- "sd_from_rmse" # options: "sd_from_rmse", "mae_centered", "rmse", "mae"
+band_label <- switch(
+  band_metric,
+  sd_from_rmse = "SD(error) around bias (from RMSE decomposition)",
+  mae_centered = "Mean |error - bias| (dispersion around bias)",
+  rmse = "RMSE (total error)",
+  mae = "MAE (total error)",
+  "Dispersion around bias"
+)
+
+qst_decomp <- qst_calibration %>%
+  mutate(
+    band = case_when(
+      identical(band_metric, "sd_from_rmse") ~ sd_from_rmse,
+      identical(band_metric, "mae_centered") ~ mae_centered,
+      identical(band_metric, "rmse") ~ rmse,
+      identical(band_metric, "mae") ~ mae,
+      TRUE ~ sd_from_rmse
+    )
+  ) %>%
+  arrange(dgp_id, tau)
+
+p9b_qst_bias_decomp <- ggplot(qst_decomp, aes(x = tau, y = bias)) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "gray40") +
+  geom_ribbon(aes(ymin = bias - band, ymax = bias + band),
+              fill = "#D55E00", alpha = 0.18) +
+  geom_line(color = "#D55E00", size = 1) +
+  facet_wrap(~dgp_id, scales = "free_y", nrow = 3) +
+  theme_minimal() +
+  labs(
+    title = "QST Bias Decomposition",
+    subtitle = paste0("Red line = Systematic Bias | Shaded band = ", band_label),
+    x = "Quantile (tau)",
+    y = "Error"
+  )
+
+ggsave(out_path("plot9b_qst_bias_decomposition.png"), p9b_qst_bias_decomp,
+       width = 16, height = 9)
 
 # ------------------------------------------------------------------------------
 # PLOT 10: Placebo Diagnostic (Focus on Failures)
