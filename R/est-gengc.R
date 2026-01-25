@@ -8,6 +8,8 @@
 #'   \item \code{seed}: required when bootstrap CIs are requested.
 #'   \item \code{n_boot}: number of bootstrap draws (default: 200).
 #'   \item \code{n_draws}, \code{num_trees}, \code{num_threads}: GenGC tuning parameters.
+#'   \item \code{method}: GenGC engine; one of "qrf" (default) or "qr".
+#'   \item \code{screen}: logical; whether to enable GenGC screening (default: FALSE).
 #' }
 #' For this estimator, \code{ci_method = "default"} maps to \code{"bootstrap"}.
 #'
@@ -27,6 +29,8 @@ est_gengc <- function(df, tau = cs_tau_oracle, config = list()) {
     rlang::abort("`df` must contain columns `y` and `w`.", class = "causalstress_estimator_error")
   }
 
+  current_id <- config$estimator_id %||% "gengc"
+
   drop_cols <- intersect(c("y0", "y1", "p", "structural_te"), names(df))
   keep_cols <- setdiff(names(df), drop_cols)
   df_run <- df[, keep_cols, drop = FALSE]
@@ -34,6 +38,8 @@ est_gengc <- function(df, tau = cs_tau_oracle, config = list()) {
   n_draws    <- if (!is.null(config$n_draws)) config$n_draws else 300
   num_trees  <- if (!is.null(config$num_trees)) config$num_trees else 800
   num_threads <- if (!is.null(config$num_threads)) config$num_threads else 1L
+  method     <- config$method %||% "qrf"
+  screen     <- config$screen %||% FALSE
 
   formula <- stats::as.formula("y ~ . - w")
 
@@ -45,7 +51,9 @@ est_gengc <- function(df, tau = cs_tau_oracle, config = list()) {
     tau_grid   = tau,
     n_draws    = n_draws,
     num_trees  = num_trees,
-    num_threads = num_threads
+    num_threads = num_threads,
+    method     = method,
+    screen     = screen
   )
 
   att_hat <- as.numeric(fit$att)
@@ -83,7 +91,9 @@ est_gengc <- function(df, tau = cs_tau_oracle, config = list()) {
       tau_grid    = tau,
       n_draws     = n_draws,
       num_trees   = num_trees,
-      num_threads = num_threads
+      num_threads = num_threads,
+      method      = method,
+      screen      = screen
     )
     c(as.numeric(fit_b$att), as.numeric(fit_b$qst))
   }
@@ -218,7 +228,7 @@ est_gengc <- function(df, tau = cs_tau_oracle, config = list()) {
     qst = qst_tbl,
     cf  = NULL,
     meta = list(
-      estimator_id = "gengc",
+      estimator_id = current_id,
       version      = as.character(utils::packageVersion("GenGC")),
       capabilities = c("att", "qst"),
       target_level = "population",
@@ -226,6 +236,8 @@ est_gengc <- function(df, tau = cs_tau_oracle, config = list()) {
         n_draws    = n_draws,
         num_trees  = num_trees,
         num_threads = num_threads,
+        method     = method,
+        screen     = screen,
         ci_method  = ci_method,
         n_boot     = n_boot
       ),

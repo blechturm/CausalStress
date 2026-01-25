@@ -38,8 +38,8 @@ cs_estimator_registry_base <- function() {
       "Oracle ATT using structural treatment effects.",
       "Linear outcome regression g-computation ATT estimator.",
       "Inverse-probability weighted ATT estimator based on logistic propensity.",
-      "GenGC distributional estimator (ATT + QST).",
-      "GenGC doubly-robust distributional estimator (ATT + QST).",
+      "GenGC distributional estimator (ATT + QST); supports dual-engine (qrf/qr) and optional screening.",
+      "GenGC doubly-robust distributional estimator (ATT + QST); supports dual-engine (qrf/qr) and optional screening.",
       "GRF causal forest doubly-robust ATT estimator.",
       "BART ATT estimator via bartCause::bartc.",
       "TMLE estimator (ATE target) via tmle::tmle."

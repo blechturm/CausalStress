@@ -136,6 +136,10 @@ cs_run_single <- function(
   t_est_start <- Sys.time()
   res <- NULL
   config <- config_local
+  # Ensure estimators can echo the intended registry ID (e.g., benchmark variants).
+  if (is.null(config$estimator_id)) {
+    config$estimator_id <- estimator_id
+  }
   res <- tryCatch(
     withCallingHandlers(
       {

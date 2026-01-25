@@ -37,6 +37,8 @@ est_grf_dr_att <- function(df, config = list(), tau = cs_tau_oracle, ...) {
     )
   }
 
+  current_id <- config$estimator_id %||% "grf_dr_att"
+
   required <- c("y", "w")
   missing <- setdiff(required, names(df))
   if (length(missing) > 0L) {
@@ -71,10 +73,13 @@ est_grf_dr_att <- function(df, config = list(), tau = cs_tau_oracle, ...) {
   if (is.null(grf_config$num.threads)) {
     grf_config$num.threads <- 1L
   }
+  # Strip CausalStress runner keys that may be injected automatically.
+  grf_config$estimator_id <- NULL
   grf_config$ci_method <- NULL
   grf_config$n_boot <- NULL
   grf_config$dgp_id <- NULL
   grf_config$seed <- NULL
+  grf_config$ci_method_source <- NULL
 
   method_in <- config$ci_method %||% "none"
   if (identical(method_in, "default")) {
@@ -136,6 +141,13 @@ est_grf_dr_att <- function(df, config = list(), tau = cs_tau_oracle, ...) {
     ci_meta$collapsed <- !is.na(ci_lo) && !is.na(ci_hi) && abs(ci_hi - ci_lo) < 1e-8
     ci_meta$ci_valid_by_dim <- valid
     ci_meta$ci_type <- "wald"
+  } else if (identical(ci_method, "none")) {
+    forest <- do.call(grf::causal_forest, args)
+    ate <- grf::average_treatment_effect(
+      forest,
+      target.sample = "treated"
+    )
+    att_hat <- as.numeric(ate[["estimate"]])
   } else if (identical(ci_method, "bootstrap")) {
     if (is.null(task_seed)) {
       rlang::abort(
@@ -194,8 +206,8 @@ est_grf_dr_att <- function(df, config = list(), tau = cs_tau_oracle, ...) {
     qst = NULL,
     cf  = NULL,
     meta = list(
-      estimator_id = "grf_dr_att",
-      version      = "0.1.0",
+      estimator_id = current_id,
+      version      = as.character(utils::packageVersion("grf")),
       capabilities = c("att"),
       target_level = "population",
       config       = config,

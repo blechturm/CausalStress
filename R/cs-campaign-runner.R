@@ -63,11 +63,37 @@ cs_run_campaign_plan <- function(plan,
   on.exit(future::plan(old_plan), add = TRUE)
   future::plan(future::multisession, workers = workers)
 
+  # If the caller dynamically registered estimators (e.g., benchmarking variants),
+  # propagate those registrations to each worker session.
+  registry_extra <- .causalstress_estimator_registry_extra$tbl
+
   run_batches <- function() {
     p <- if (isTRUE(show_progress)) progressr::progressor(along = todo_ids) else NULL
     furrr::future_walk(
       todo_ids,
       function(id) {
+        if (nrow(registry_extra) > 0L) {
+          reg <- cs_estimator_registry()
+          missing <- registry_extra$estimator_id[!registry_extra$estimator_id %in% reg$estimator_id]
+          if (length(missing) > 0L) {
+            for (i in seq_len(nrow(registry_extra))) {
+              est_id <- registry_extra$estimator_id[[i]]
+              if (est_id %in% missing) {
+                cs_register_estimator(
+                  estimator_id  = est_id,
+                  type          = registry_extra$type[[i]],
+                  generator     = registry_extra$generator[[i]],
+                  oracle        = registry_extra$oracle[[i]],
+                  supports_qst  = registry_extra$supports_qst[[i]],
+                  version       = registry_extra$version[[i]],
+                  description   = registry_extra$description[[i]],
+                  source        = registry_extra$source[[i]],
+                  requires_pkgs = registry_extra$requires_pkgs[[i]]
+                )
+              }
+            }
+          }
+        }
         cs_run_batch(id, plan = plan, staging_dir = staging_dir)
         if (!is.null(p)) {
           p(message = glue::glue("batch {id} done"))
