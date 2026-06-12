@@ -25,6 +25,7 @@ cs_run_batch <- function(batch_id, plan, staging_dir) {
   tasks <- plan$tasks[[idx]]
   results <- list()
   error_rows <- list()
+  n_tasks <- nrow(tasks)
 
   for (i in seq_len(nrow(tasks))) {
     task <- tasks[i, , drop = FALSE]
@@ -32,6 +33,16 @@ cs_run_batch <- function(batch_id, plan, staging_dir) {
     estimator_id <- task[["estimator_id"]][[1]]
     seed <- task[["seed"]][[1]]
     task_config <- task[["task_config"]][[1]]
+    task_fingerprint <- if ("task_fingerprint" %in% names(task)) {
+      task[["task_fingerprint"]][[1]]
+    } else {
+      NA_character_
+    }
+    config_fingerprint_schema <- if ("config_fingerprint_schema" %in% names(task)) {
+      task[["config_fingerprint_schema"]][[1]]
+    } else {
+      NA_integer_
+    }
 
     n_val <- NULL
     if ("n" %in% names(task)) {
@@ -46,7 +57,10 @@ cs_run_batch <- function(batch_id, plan, staging_dir) {
         dgp_id = dgp_id,
         estimator_id = estimator_id,
         message = "Task missing n (provide task$n or task_config$n).",
+        error_class = "causalstress_task_config_error",
         traceback = NA_character_,
+        task_fingerprint = task_fingerprint,
+        config_fingerprint_schema = config_fingerprint_schema,
         timestamp = as.character(Sys.time())
       )
       next
@@ -77,12 +91,8 @@ cs_run_batch <- function(batch_id, plan, staging_dir) {
         if (!is.null(res$qst) && !"tau_id" %in% names(res$qst)) {
           res$qst$tau_id <- cs_tau_id(res$qst$tau)
         }
-        if ("task_fingerprint" %in% names(task)) {
-          res$meta$task_fingerprint <- task[["task_fingerprint"]][[1]]
-        }
-        if ("config_fingerprint_schema" %in% names(task)) {
-          res$meta$config_fingerprint_schema <- task[["config_fingerprint_schema"]][[1]]
-        }
+        res$meta$task_fingerprint <- task_fingerprint
+        res$meta$config_fingerprint_schema <- config_fingerprint_schema
 
         results[[length(results) + 1L]] <- res
       },
@@ -91,12 +101,15 @@ cs_run_batch <- function(batch_id, plan, staging_dir) {
           paste(utils::capture.output(rlang::trace_back()), collapse = "\n"),
           error = function(...) NA_character_
         )
-        error_rows[[length(error_rows) + 1L]] <- tibble::tibble(
+        error_rows[[length(error_rows) + 1L]] <<- tibble::tibble(
           seed = seed,
           dgp_id = dgp_id,
           estimator_id = estimator_id,
           message = conditionMessage(e),
+          error_class = class(e)[[1]] %||% NA_character_,
           traceback = tb,
+          task_fingerprint = task_fingerprint,
+          config_fingerprint_schema = config_fingerprint_schema,
           timestamp = as.character(Sys.time())
         )
         NULL
@@ -112,8 +125,23 @@ cs_run_batch <- function(batch_id, plan, staging_dir) {
       dgp_id = character(),
       estimator_id = character(),
       message = character(),
+      error_class = character(),
       traceback = character(),
+      task_fingerprint = character(),
+      config_fingerprint_schema = integer(),
       timestamp = character()
+    )
+  }
+
+  n_results <- length(results)
+  n_errors <- nrow(errors_tbl)
+  if (!identical(n_results + n_errors, n_tasks)) {
+    rlang::abort(
+      glue::glue(
+        "Batch task count reconciliation failed: {n_tasks} planned, ",
+        "{n_results} results, {n_errors} errors."
+      ),
+      class = "causalstress_batch_reconciliation_error"
     )
   }
 
@@ -130,7 +158,11 @@ cs_run_batch <- function(batch_id, plan, staging_dir) {
       timestamp = as.character(Sys.time()),
       node_info = Sys.info(),
       session_info = list(utils::sessionInfo()),
-      git_hash = git_hash
+      git_hash = git_hash,
+      n_tasks = n_tasks,
+      n_results = n_results,
+      n_errors = n_errors,
+      task_count_reconciled = TRUE
     ),
     results = results,
     errors = errors_tbl

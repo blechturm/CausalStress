@@ -1,6 +1,6 @@
 # CausalStress v0.1.10 Batch Plan
 
-**Status:** Batch 0 complete after Claude review.
+**Status:** Batch 1 implementation complete; awaiting review.
 
 ## Review Protocol
 
@@ -37,9 +37,25 @@ stop and ask before continuing.
 
 ## Batch 1 - Mechanical High-Yield Fixes
 
+- **Status:** Implementation complete; awaiting review.
 - **Purpose:** Fix top-priority correctness and packaging defects with focused
   tests.
 - **Tickets:** CS-1101, CS-1102, CS-1103, CS-1104
+- **Scope completed:** TMLE now extracts `fit$estimates$ATT` under the existing
+  `tmle_att` id; batch workers preserve task errors and reconcile planned tasks
+  against result/error counts; runtime imports are declared in `DESCRIPTION`;
+  DGP validation iterates every registered `(dgp_id, version)` row and rejects
+  missing potential outcomes.
+- **Checks run:** June 12, 2026, with
+  `C:/PROGRA~1/R/R-45~1.2/bin/x64/Rscript.exe` and `.libPaths()` =
+  `C:/Users/maxth/Documents/R/win-library/4.5`;
+  `C:/Users/maxth/AppData/Local/R/win-library/4.5`;
+  `C:/Program Files/R/R-4.5.2/library`. Focused testthat filter
+  `est-tmle|v019-worker|v019-e2e|validate-dgp|validate-all` passed; local
+  runtime probe confirmed `tmle::tmle()` exposes `ATT$psi` and `ATT$CI`;
+  `devtools::check()` with `--no-manual --ignore-vignettes` and build-stage
+  vignette rebuilding disabled completed with 0 errors and dependency checks
+  OK.
 - **Review checkpoint:** Codex code review confirms C4 uses
   `fit$estimates$ATT` under the existing `tmle_att` id, C1 semantics,
   dependency declarations, and validator negative tests.

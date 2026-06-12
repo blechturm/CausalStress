@@ -1,9 +1,7 @@
-#' TMLE estimator (ATE target)
+#' TMLE ATT estimator
 #'
-#' Soft-dependency wrapper around `tmle::tmle`. Note: the tmle package targets
-#' the ATE; when used in CausalStress (ATT benchmarking), the result may be
-#' biased under treatment effect heterogeneity. This wrapper records the
-#' estimand target in the metadata and adds a warning.
+#' Soft-dependency wrapper around `tmle::tmle`. The CausalStress estimator
+#' contract is ATT, so this wrapper extracts `fit$estimates$ATT`.
 #'
 #' @param df Data frame with outcome `y`, treatment `w`, and covariates.
 #' @param config Optional list of configuration options. Common fields include:
@@ -80,8 +78,8 @@ est_tmle_att <- function(df, config = list(), tau = cs_tau_oracle, ...) {
       family = "gaussian",
       ...
     )
-    est <- fit$estimates$ATE$psi
-    ci   <- fit$estimates$ATE$CI
+    est <- cs_tmle_att_component(fit, "psi")
+    ci   <- cs_tmle_att_component(fit, "CI")
     ci_lo <- as.numeric(ci[1])
     ci_hi <- as.numeric(ci[2])
     valid <- is.finite(ci_lo) && is.finite(ci_hi) && ci_lo <= ci_hi
@@ -103,13 +101,14 @@ est_tmle_att <- function(df, config = list(), tau = cs_tau_oracle, ...) {
       )
     }
     stat_fn <- function(boot_df) {
-      tmle::tmle(
+      fit <- tmle::tmle(
         Y      = boot_df$y,
         A      = boot_df$w,
         W      = boot_df[, setdiff(names(boot_df), c("y", "w")), drop = FALSE],
         family = "gaussian",
         ...
-      )$estimates$ATE$psi
+      )
+      cs_tmle_att_component(fit, "psi")
     }
     salt <- paste("est_tmle_att", dgp_id, sep = "|")
     boot_seed <- cs_derive_seed(task_seed, salt)
@@ -122,13 +121,14 @@ est_tmle_att <- function(df, config = list(), tau = cs_tau_oracle, ...) {
     warning("Unsupported ci_method; falling back to none.")
     ci_meta$ci_method <- "none"
     ci_meta$ci_fail_code <- "unsupported_ci_method"
-    est <- tmle::tmle(
+    fit <- tmle::tmle(
       Y      = Y,
       A      = A,
       W      = W,
       family = "gaussian",
       ...
-    )$estimates$ATE$psi
+    )
+    est <- cs_tmle_att_component(fit, "psi")
   }
 
   res <- list(
@@ -143,8 +143,8 @@ est_tmle_att <- function(df, config = list(), tau = cs_tau_oracle, ...) {
       oracle            = FALSE,
       supports_qst      = FALSE,
       estimator_pkgs    = c("tmle", "SuperLearner"),
-      estimand_target   = "ATE",
-      warnings          = "TMLE package targets ATE; result may be biased for ATT if treatment effect is heterogeneous.",
+      estimand_target   = "ATT",
+      warnings          = character(),
       num_threads       = threads,
       ci_method    = ci_meta$ci_method,
       ci_valid     = ci_meta$ci_valid,
@@ -162,4 +162,21 @@ est_tmle_att <- function(df, config = list(), tau = cs_tau_oracle, ...) {
   )
 
   res
+}
+
+cs_tmle_att_component <- function(fit, component) {
+  if (is.null(fit$estimates) || is.null(fit$estimates$ATT)) {
+    rlang::abort(
+      "tmle::tmle result did not contain an ATT estimate.",
+      class = "causalstress_estimator_error"
+    )
+  }
+  value <- fit$estimates$ATT[[component]]
+  if (is.null(value)) {
+    rlang::abort(
+      glue::glue("tmle::tmle ATT result did not contain `{component}`."),
+      class = "causalstress_estimator_error"
+    )
+  }
+  value
 }

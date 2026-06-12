@@ -42,7 +42,7 @@ cs_estimator_registry_base <- function() {
       "GenGC doubly-robust distributional estimator (ATT + QST); supports dual-engine (qrf/qr) and optional screening.",
       "GRF causal forest doubly-robust ATT estimator.",
       "BART ATT estimator via bartCause::bartc.",
-      "TMLE estimator (ATE target) via tmle::tmle."
+      "TMLE ATT estimator via tmle::tmle."
     ),
     source = c("core", "core", "core", "optional", "optional", "optional", "optional", "optional"),
     requires_pkgs = list(

@@ -24,13 +24,31 @@ Suggests:
     bartCause,
     tmle,
     SuperLearner,
-    pins,
     knitr,
     rmarkdown,
-    withr,
     patchwork,
-    yaml,
     fs
 Config/testthat/edition: 3
-Imports: glue, rlang, progressr, cli, digest, ggplot2, tidyr, furrr, future, qs
+Imports:
+    glue,
+    rlang,
+    progressr,
+    cli,
+    digest,
+    ggplot2,
+    dplyr,
+    tidyr,
+    purrr,
+    furrr,
+    future,
+    tibble,
+    qs,
+    pins,
+    methods,
+    yaml,
+    stats,
+    utils,
+    parallel,
+    tools,
+    withr
 VignetteBuilder: knitr

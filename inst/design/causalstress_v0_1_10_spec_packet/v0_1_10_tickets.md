@@ -26,7 +26,7 @@
   `fit$estimates$ATT`.
 - **Review gate:** Batch 1 Codex review verifies the implementation follows the
   recorded C4 disposition.
-- **Disposition:** open; decision recorded, implementation pending.
+- **Disposition:** implementation complete; awaiting review.
 
 ### CS-1102 - Preserve batch task errors and reconcile task counts
 
@@ -36,7 +36,7 @@
 - **Test obligation:** Estimator errors become result rows; escaping task errors
   become `batch$errors`; task counts reconcile.
 - **Review gate:** Batch 1 runner/batch contract review.
-- **Disposition:** open
+- **Disposition:** implementation complete; awaiting review.
 
 ### CS-1103 - Fix package dependencies
 
@@ -46,7 +46,7 @@
 - **Test obligation:** `R CMD check` reaches package checks without missing
   namespace failures.
 - **Review gate:** Batch 1 packaging review.
-- **Disposition:** open
+- **Disposition:** implementation complete; awaiting review.
 
 ### CS-1104 - Make DGP validation version-aware and non-vacuous
 
@@ -56,7 +56,7 @@
 - **Test obligation:** every registered `(dgp_id, version)` is validated; missing
   potential outcomes fail `cs_validate_dgp()`.
 - **Review gate:** Batch 1 validation review.
-- **Disposition:** open
+- **Disposition:** implementation complete; awaiting review.
 
 ## Batch 2 - Schema 3, RNG Isolation, and Oracle Truth Cache Identity
 

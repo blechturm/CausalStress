@@ -53,6 +53,19 @@ cs_consolidate <- function(staging_dir, board) {
       warning("Batch results missing or invalid: ", path)
       next
     }
+    if (!is.data.frame(batch_obj$errors)) {
+      warning("Batch errors missing or invalid: ", path)
+      next
+    }
+    n_results <- length(batch_obj$results)
+    n_errors <- nrow(batch_obj$errors)
+    # Legacy artifacts did not record planned task count, so only new artifacts
+    # can be independently reconciled against their original plan.
+    n_tasks <- batch_obj$meta$n_tasks %||% (n_results + n_errors)
+    if (!identical(as.integer(n_results + n_errors), as.integer(n_tasks))) {
+      warning("Batch task count reconciliation failed: ", path)
+      next
+    }
     if (length(batch_obj$results) > 0L) {
       has_tau_id <- vapply(
         batch_obj$results,
@@ -79,8 +92,6 @@ cs_consolidate <- function(staging_dir, board) {
         node_name <- node_info[["nodename"]] %||% NA_character_
       }
     }
-    n_tasks <- length(batch_obj$results)
-
     suppressMessages(
       pins::pin_write(
         board = board,

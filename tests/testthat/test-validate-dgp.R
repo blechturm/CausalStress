@@ -28,3 +28,19 @@ test_that("cs_validate_dgp fails on missing columns", {
   expect_false(res$valid)
   expect_false(res$checks["schema"])
 })
+
+test_that("cs_validate_dgp fails when potential outcomes are missing", {
+  bad_dgp <- function(n, seed) {
+    set.seed(seed)
+    w <- rbinom(n, 1, 0.5)
+    y <- rnorm(n) + w
+    list(
+      df = data.frame(y = y, w = w),
+      true_att = 1
+    )
+  }
+
+  res <- cs_validate_dgp(bad_dgp, n = 20, seeds = 1:3, verbose = FALSE)
+  expect_false(res$valid)
+  expect_false(res$checks["schema"])
+})

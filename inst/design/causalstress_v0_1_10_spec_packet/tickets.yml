@@ -27,7 +27,7 @@ tickets:
     test_obligation: "Heterogeneous-effect repro distinguishes ATE from ATT"
     decision: "Keep tmle_att and extract fit$estimates$ATT"
     review_gate: "Batch 1 Codex review verifies implementation follows recorded C4 disposition"
-    disposition: "open"
+    disposition: "implementation_complete_awaiting_review"
   - id: "CS-1102"
     title: "Preserve batch task errors and reconcile task counts"
     batch: 1
@@ -36,7 +36,7 @@ tickets:
     constitutional_check: "Article VII provenance/error reporting"
     test_obligation: "Estimator errors become result rows; escaping task errors become batch errors"
     review_gate: "Batch 1 runner/batch contract review"
-    disposition: "open"
+    disposition: "implementation_complete_awaiting_review"
   - id: "CS-1103"
     title: "Fix package dependencies"
     batch: 1
@@ -45,7 +45,7 @@ tickets:
     constitutional_check: "none"
     test_obligation: "R CMD check has no missing namespace failures"
     review_gate: "Batch 1 packaging review"
-    disposition: "open"
+    disposition: "implementation_complete_awaiting_review"
   - id: "CS-1104"
     title: "Make DGP validation version-aware and non-vacuous"
     batch: 1
@@ -54,7 +54,7 @@ tickets:
     constitutional_check: "DGP certification must reject unconstitutional DGPs"
     test_obligation: "Every registered version validated; missing potential outcomes fail"
     review_gate: "Batch 1 validation review"
-    disposition: "open"
+    disposition: "implementation_complete_awaiting_review"
   - id: "CS-1105"
     title: "RFC schema-3 fingerprint, RNG isolation, and oracle truth cache design"
     batch: 2

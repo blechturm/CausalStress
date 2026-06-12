@@ -26,14 +26,23 @@ cs_validate_dgp <- function(dgp_fn, n = 1000, seeds = 1:50, verbose = TRUE) {
   true_att_scalar <- if (!is.null(run_once$true_att)) run_once$true_att else {
     if ("true_att" %in% names(df)) df$true_att else NA_real_
   }
-  true_y0 <- df$true_y0 %||% df$y0
-  true_y1 <- df$true_y1 %||% df$y1
+  true_y0 <- if ("true_y0" %in% names(df)) df$true_y0 else {
+    if ("y0" %in% names(df)) df$y0 else NULL
+  }
+  true_y1 <- if ("true_y1" %in% names(df)) df$true_y1 else {
+    if ("y1" %in% names(df)) df$y1 else NULL
+  }
+  has_potential_outcomes <- !is.null(true_y0) &&
+    !is.null(true_y1) &&
+    length(true_y0) == nrow(df) &&
+    length(true_y1) == nrow(df)
 
   schema_ok <- is.data.frame(df) &&
     has_required &&
     is.numeric(df$y) &&
     is.numeric(df$w) &&
     !any(is.na(true_att_scalar)) &&
+    has_potential_outcomes &&
     !any(is.na(true_y0)) &&
     !any(is.na(true_y1))
 
