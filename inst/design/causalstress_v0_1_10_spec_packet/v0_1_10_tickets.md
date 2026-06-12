@@ -26,7 +26,7 @@
   `fit$estimates$ATT`.
 - **Review gate:** Batch 1 Codex review verifies the implementation follows the
   recorded C4 disposition.
-- **Disposition:** implementation complete; awaiting review.
+- **Disposition:** complete after review.
 
 ### CS-1102 - Preserve batch task errors and reconcile task counts
 
@@ -36,7 +36,7 @@
 - **Test obligation:** Estimator errors become result rows; escaping task errors
   become `batch$errors`; task counts reconcile.
 - **Review gate:** Batch 1 runner/batch contract review.
-- **Disposition:** implementation complete; awaiting review.
+- **Disposition:** complete after review.
 
 ### CS-1103 - Fix package dependencies
 
@@ -46,7 +46,7 @@
 - **Test obligation:** `R CMD check` reaches package checks without missing
   namespace failures.
 - **Review gate:** Batch 1 packaging review.
-- **Disposition:** implementation complete; awaiting review.
+- **Disposition:** complete after review.
 
 ### CS-1104 - Make DGP validation version-aware and non-vacuous
 
@@ -56,7 +56,7 @@
 - **Test obligation:** every registered `(dgp_id, version)` is validated; missing
   potential outcomes fail `cs_validate_dgp()`.
 - **Review gate:** Batch 1 validation review.
-- **Disposition:** implementation complete; awaiting review.
+- **Disposition:** complete after review.
 
 ## Batch 2 - Schema 3, RNG Isolation, and Oracle Truth Cache Identity
 
@@ -64,10 +64,10 @@
 
 - **Source:** audit C2, C3, M3, M7, M8, M12
 - **Files:** `inst/design/rfc/`
-- **Constitutional check:** Articles II and VII.
+- **Constitutional check:** Articles II, VI, and VII.
 - **Test obligation:** RFC synthesis accepted before implementation.
 - **Review gate:** RFC final review and maintainer acceptance.
-- **Disposition:** open
+- **Disposition:** complete; RFC accepted as amended.
 
 ### CS-1106 - Implement schema-3 resume/fingerprint model
 
@@ -77,7 +77,7 @@
 - **Test obligation:** default-config resume skips; DGP version and canonical
   config are fingerprinted.
 - **Review gate:** Batch 2 fingerprint/resume review.
-- **Disposition:** open; blocked by CS-1105.
+- **Disposition:** open; unblocked by CS-1105 acceptance.
 
 ### CS-1107 - Isolate RNG side effects
 
@@ -87,7 +87,7 @@
 - **Test obligation:** package load preserves absent and existing `.Random.seed`
   states; campaign plans are stable under the mandated RNG policy.
 - **Review gate:** Batch 2 RNG isolation review.
-- **Disposition:** open; blocked by CS-1105.
+- **Disposition:** open; unblocked by CS-1105 acceptance.
 
 ### CS-1117 - Version oracle truth cache identity and atomic writes
 
@@ -100,7 +100,7 @@
   algorithm parameters/fingerprint; stale cache entries invalidate; cache writes
   use checked temp+rename semantics.
 - **Review gate:** Batch 2 truth-cache identity review.
-- **Disposition:** open; blocked by CS-1105.
+- **Disposition:** open; unblocked by CS-1105 acceptance.
 
 ## Batch 3 - Constitutionally Gated Fixes
 

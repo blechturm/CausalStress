@@ -1,6 +1,6 @@
 # CausalStress v0.1.10 Batch Plan
 
-**Status:** Batch 1 implementation complete; awaiting review.
+**Status:** Batch 2 RFC accepted; implementation tickets unblocked.
 
 ## Review Protocol
 
@@ -37,7 +37,7 @@ stop and ask before continuing.
 
 ## Batch 1 - Mechanical High-Yield Fixes
 
-- **Status:** Implementation complete; awaiting review.
+- **Status:** Complete after review.
 - **Purpose:** Fix top-priority correctness and packaging defects with focused
   tests.
 - **Tickets:** CS-1101, CS-1102, CS-1103, CS-1104
@@ -56,15 +56,32 @@ stop and ask before continuing.
   `devtools::check()` with `--no-manual --ignore-vignettes` and build-stage
   vignette rebuilding disabled completed with 0 errors and dependency checks
   OK.
+- **Review evidence:** Claude review found one blocking dependency issue
+  (`yaml` still Suggests-only) and three non-blocking routing notes; the
+  dependency issue and routing notes were fixed, re-reviewed, and cleared for
+  commit. Batch 1 committed as `068c0ff`.
 - **Review checkpoint:** Codex code review confirms C4 uses
   `fit$estimates$ATT` under the existing `tmle_att` id, C1 semantics,
   dependency declarations, and validator negative tests.
 
 ## Batch 2 - Schema 3, RNG Isolation, and Oracle Truth Cache Identity
 
+- **Status:** RFC accepted; implementation tickets unblocked.
 - **Purpose:** Coordinate resume/fingerprint, RNG, and oracle truth cache
   identity changes under one design.
 - **Tickets:** CS-1105, CS-1106, CS-1107, CS-1117
+- **Scope completed:** CS-1105 draft synthesis added at
+  `inst/design/rfc/20260612_schema3_rng_oracle_synthesis.md`, covering
+  schema-3 fingerprint payload, versioned pin identity, canonical planner
+  fingerprints, RNG isolation, and oracle truth cache identity/atomicity.
+- **Review evidence:** CS-1105 synthesis was reviewed with no blocking findings;
+  non-blocking amendments were routed in the RFC; maintainer accepted CS-1105 as
+  amended on 2026-06-12.
+- **Implementation status:** CS-1106, CS-1107, and CS-1117 are unblocked and
+  must implement the accepted RFC.
+- **Checks run:** design-document consistency review against audit C2, C3, M3,
+  M7, M8, M12; `contracts.md`; and the current fingerprint, runner, campaign,
+  planner, load-validation, RNG, and oracle truth-cache code paths.
 - **Review checkpoint:** accepted RFC synthesis before implementation; focused
   Codex code review after implementation.
 

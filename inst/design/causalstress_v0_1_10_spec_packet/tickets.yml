@@ -27,7 +27,7 @@ tickets:
     test_obligation: "Heterogeneous-effect repro distinguishes ATE from ATT"
     decision: "Keep tmle_att and extract fit$estimates$ATT"
     review_gate: "Batch 1 Codex review verifies implementation follows recorded C4 disposition"
-    disposition: "implementation_complete_awaiting_review"
+    disposition: "complete_after_review"
   - id: "CS-1102"
     title: "Preserve batch task errors and reconcile task counts"
     batch: 1
@@ -36,7 +36,7 @@ tickets:
     constitutional_check: "Article VII provenance/error reporting"
     test_obligation: "Estimator errors become result rows; escaping task errors become batch errors"
     review_gate: "Batch 1 runner/batch contract review"
-    disposition: "implementation_complete_awaiting_review"
+    disposition: "complete_after_review"
   - id: "CS-1103"
     title: "Fix package dependencies"
     batch: 1
@@ -45,7 +45,7 @@ tickets:
     constitutional_check: "none"
     test_obligation: "R CMD check has no missing namespace failures"
     review_gate: "Batch 1 packaging review"
-    disposition: "implementation_complete_awaiting_review"
+    disposition: "complete_after_review"
   - id: "CS-1104"
     title: "Make DGP validation version-aware and non-vacuous"
     batch: 1
@@ -54,7 +54,7 @@ tickets:
     constitutional_check: "DGP certification must reject unconstitutional DGPs"
     test_obligation: "Every registered version validated; missing potential outcomes fail"
     review_gate: "Batch 1 validation review"
-    disposition: "implementation_complete_awaiting_review"
+    disposition: "complete_after_review"
   - id: "CS-1105"
     title: "RFC schema-3 fingerprint, RNG isolation, and oracle truth cache design"
     batch: 2
@@ -63,7 +63,7 @@ tickets:
     constitutional_check: "Articles II, VI, and VII"
     test_obligation: "Accepted RFC synthesis"
     review_gate: "RFC final review and maintainer acceptance"
-    disposition: "open"
+    disposition: "complete_accepted_as_amended"
   - id: "CS-1106"
     title: "Implement schema-3 resume/fingerprint model"
     batch: 2
@@ -72,7 +72,7 @@ tickets:
     constitutional_check: "Article VII provenance and legacy compatibility"
     test_obligation: "Default-config resume skips; DGP version and canonical config are fingerprinted"
     review_gate: "Batch 2 fingerprint/resume review"
-    disposition: "blocked_by_CS-1105"
+    disposition: "open_unblocked_by_CS-1105_acceptance"
   - id: "CS-1107"
     title: "Isolate RNG side effects"
     batch: 2
@@ -81,7 +81,7 @@ tickets:
     constitutional_check: "Article II"
     test_obligation: "Package load preserves absent and existing RNG state"
     review_gate: "Batch 2 RNG isolation review"
-    disposition: "blocked_by_CS-1105"
+    disposition: "open_unblocked_by_CS-1105_acceptance"
   - id: "CS-1117"
     title: "Version oracle truth cache identity and atomic writes"
     batch: 2
@@ -90,7 +90,7 @@ tickets:
     constitutional_check: "Articles II, VI, and VII"
     test_obligation: "Oracle truth cache key includes DGP version and oracle algorithm identity; cache writes are atomic"
     review_gate: "Batch 2 truth-cache identity review"
-    disposition: "blocked_by_CS-1105"
+    disposition: "open_unblocked_by_CS-1105_acceptance"
   - id: "CS-1108"
     title: "Decide and implement oracle access mechanism"
     batch: 3
