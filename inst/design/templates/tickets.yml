@@ -12,4 +12,8 @@ tickets:
     constitutional_check: "<article/invariant or none>"
     test_obligation: "<public/default contract test>"
     review_gate: "<review checkpoint>"
+    # Allowed examples: open, open_decision_required,
+    # open_rfc_or_amendment_required, blocked_by_<ticket_id>,
+    # implementation_complete_awaiting_review, complete_after_review, deferred,
+    # rejected.
     disposition: open

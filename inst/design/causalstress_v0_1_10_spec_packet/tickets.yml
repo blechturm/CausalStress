@@ -17,7 +17,7 @@ tickets:
     constitutional_check: "Constitution remains apex authority"
     test_obligation: "Design review"
     review_gate: "Batch 0 governance scaffold review"
-    disposition: "in_progress"
+    disposition: "complete_after_review"
   - id: "CS-1101"
     title: "Resolve C4 TMLE estimand disposition"
     batch: 1
@@ -168,7 +168,7 @@ tickets:
     source: {type: "audit", id: "minors,M17,D1-D5,ex-M14"}
     files: ["inst/design", "R", "tests/testthat"]
     constitutional_check: "varies"
-    test_obligation: "No stale non-registry design doc remains active; closeout routes residuals"
+    test_obligation: "No stale non-registry design doc remains active; closeout routes residuals; consider Markdown/YAML line-ending policy"
     review_gate: "Batch 5 cleanup and audit-routing review"
     disposition: "open"
   - id: "CS-1118"

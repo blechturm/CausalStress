@@ -14,7 +14,10 @@
 - **Constitutional check:** `<article and invariant, or "none">`
 - **Test obligation:** `<contract-level test through public/default path>`
 - **Review gate:** `<reviewer or checkpoint>`
-- **Disposition:** open / done / deferred / rejected
+- **Disposition:** one of the packet's allowed disposition values, for example
+  `open`, `open_decision_required`, `open_rfc_or_amendment_required`,
+  `blocked_by_<ticket_id>`, `implementation_complete_awaiting_review`,
+  `complete_after_review`, `deferred`, or `rejected`.
 
 ## Tickets
 

@@ -10,7 +10,7 @@ destination. It must be completed before v0.1.10 closes.
 
 | Ticket | Evidence |
 | --- | --- |
-| TBD | TBD |
+| CS-1100 | Governance scaffold committed in `a05679b`; Batch 0 Claude review reported no blocking findings and declared Batch 0 ready to close after review. |
 
 ## Deferred
 

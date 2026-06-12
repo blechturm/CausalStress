@@ -1,13 +1,35 @@
 # CausalStress v0.1.10 Batch Plan
 
-**Status:** ACTIVE DRAFT
+**Status:** Batch 0 complete after Claude review.
+
+## Review Protocol
+
+A batch is the unit of external review. Work one batch at a time.
+
+For implementation or governance batches:
+
+- finish the scoped batch;
+- run targeted consistency checks;
+- update `v0_1_10_tickets.md`, `tickets.yml`, and this batch plan together;
+- stop and ask for Claude review with an inline prompt;
+- do not proceed to the next batch until the review findings are routed.
+
+If a batch starts requiring broad unrelated diffs or work outside the ticket,
+stop and ask before continuing.
 
 ## Batch 0 - Governance Bootstrap
 
+- **Status:** Complete after Claude review.
 - **Purpose:** Install the spec-packet governance structure.
 - **Tickets:** CS-1100
+- **Scope completed:** authority README, contract index, release gate, RFC cycle,
+  roadmap, horizon, archive index, audit records, canonical templates, v0.1.10
+  spec packet, ticket files, batch plan, and release closeout scaffold.
 - **Review checkpoint:** authority index and packet scaffold reviewed before
   implementation batches begin.
+- **Review evidence:** Claude review reported no blocking findings and confirmed
+  Batch 0 is ready to close. Non-blocking wording/process fixes were routed in
+  the Batch 0 closeout commit.
 
 ## Batch 1 - Mechanical High-Yield Fixes
 

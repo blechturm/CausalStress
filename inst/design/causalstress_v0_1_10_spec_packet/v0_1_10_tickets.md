@@ -12,7 +12,7 @@
 - **Constitutional check:** Constitution remains apex authority.
 - **Test obligation:** Design review only.
 - **Review gate:** Batch 0 governance scaffold review.
-- **Disposition:** in progress
+- **Disposition:** complete after Claude review
 
 ## Batch 1 - Mechanical High-Yield Fixes
 
@@ -190,7 +190,9 @@
 - **Files:** design docs, cleanup tests as needed
 - **Constitutional check:** depends on item
 - **Test obligation:** no known stale non-registry design doc remains active;
-  residual code minors are ticketed/deferred/rejected in closeout.
+  residual code minors are ticketed/deferred/rejected in closeout; consider a
+  `.gitattributes` line-ending policy for Markdown/YAML governance files to
+  avoid LF/CRLF churn.
 - **Review gate:** Batch 5 cleanup and audit-routing review.
 - **Disposition:** open
 

@@ -39,7 +39,7 @@ This is a maintainer product decision, not an RFC and not coupled to M1/M9.
 
 ## Design
 
-The release is organized into six batches:
+The release is organized into seven batches (Batch 0-Batch 6):
 
 1. Batch 0: governance bootstrap.
 2. Batch 1: mechanical high-yield fixes and contract tests.
