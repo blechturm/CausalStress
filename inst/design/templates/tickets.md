@@ -13,7 +13,7 @@
 - **Files:** `<expected files>`
 - **Constitutional check:** `<article and invariant, or "none">`
 - **Test obligation:** `<contract-level test through public/default path>`
-- **Review gate:** `<reviewer or checkpoint>`
+- **Review gate:** `<Codex code review checkpoint or explicit release gate>`
 - **Disposition:** one of the packet's allowed disposition values, for example
   `open`, `open_decision_required`, `open_rfc_or_amendment_required`,
   `blocked_by_<ticket_id>`, `implementation_complete_awaiting_review`,

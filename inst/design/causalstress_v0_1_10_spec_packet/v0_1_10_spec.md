@@ -27,13 +27,15 @@ before further feature work.
 - Python spoke work.
 - Broad documentation polish outside the governance migration and audit fixes.
 
-## Required Product Decision
+## C4 Product Decision
 
-C4 disposition must be recorded before Batch 1 implementation begins:
+C4 disposition was recorded by the maintainer on 2026-06-12 before Batch 1
+implementation began:
 
-1. extract `fit$estimates$ATT` under the existing `tmle_att` id;
-2. relabel the estimator to `tmle_ate` and exclude it from ATT scoring; or
-3. drop the estimator.
+1. **Selected:** extract `fit$estimates$ATT` under the existing `tmle_att` id.
+2. Rejected for v0.1.10: relabel the estimator to `tmle_ate` and exclude it
+   from ATT scoring.
+3. Rejected for v0.1.10: drop the estimator.
 
 This is a maintainer product decision, not an RFC and not coupled to M1/M9.
 
@@ -73,7 +75,8 @@ is amended through its own process.
   `horizon.md`, `roadmap.md`, and `templates/` exist and are self-contained.
 - The v0.1.9 audit Rev 2 findings are routed in `v0_1_10_tickets.md` or this
   spec with ticket/defer/reject rationale.
-- C4 disposition is recorded before Batch 1 implementation starts.
+- C4 implementation uses `fit$estimates$ATT` under the existing `tmle_att` id,
+  matching the recorded maintainer disposition.
 - Contract tests cover these public/default paths directly in the packet:
   default-config resume skips instead of erroring; batch error semantics produce
   result rows for estimator/task execution failures and `batch$errors` rows for

@@ -25,8 +25,9 @@ tickets:
     files: ["R/est-tmle.R", "R/cs-estimator-registry.R", "tests/testthat"]
     constitutional_check: "Estimator target must match output/scoring contract"
     test_obligation: "Heterogeneous-effect repro distinguishes ATE from ATT"
-    review_gate: "Batch 1 review after maintainer C4 disposition is recorded"
-    disposition: "open_decision_required"
+    decision: "Keep tmle_att and extract fit$estimates$ATT"
+    review_gate: "Batch 1 Codex review verifies implementation follows recorded C4 disposition"
+    disposition: "open"
   - id: "CS-1102"
     title: "Preserve batch task errors and reconcile task counts"
     batch: 1

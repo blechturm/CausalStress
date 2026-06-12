@@ -22,8 +22,11 @@
 - **Files:** `R/est-tmle.R`, estimator registry, tests
 - **Constitutional check:** Estimator target must match output/scoring contract.
 - **Test obligation:** Heterogeneous-effect repro distinguishes ATE from ATT.
-- **Review gate:** Batch 1 review after maintainer C4 disposition is recorded.
-- **Disposition:** open; maintainer decision required before implementation.
+- **Maintainer disposition:** keep the existing `tmle_att` id and extract
+  `fit$estimates$ATT`.
+- **Review gate:** Batch 1 Codex review verifies the implementation follows the
+  recorded C4 disposition.
+- **Disposition:** open; decision recorded, implementation pending.
 
 ### CS-1102 - Preserve batch task errors and reconcile task counts
 
