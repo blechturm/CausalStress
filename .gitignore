@@ -54,3 +54,12 @@ inst/doc
 inst/dgp_meta/*_cache/
 inst/dgp_meta/*_files/
 _experiments/
+
+# Claude Code: ignore local/machine-specific artifacts by default,
+# but allow intentionally shareable project config to be committed
+.claude/*
+!.claude/settings.json
+!.claude/commands/
+!.claude/skills/
+!.claude/agents/
+CLAUDE.local.md
