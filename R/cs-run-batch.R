@@ -30,6 +30,7 @@ cs_run_batch <- function(batch_id, plan, staging_dir) {
   for (i in seq_len(nrow(tasks))) {
     task <- tasks[i, , drop = FALSE]
     dgp_id <- task[["dgp_id"]][[1]]
+    dgp_version <- if ("dgp_version" %in% names(task)) task[["dgp_version"]][[1]] else NULL
     estimator_id <- task[["estimator_id"]][[1]]
     seed <- task[["seed"]][[1]]
     task_config <- task[["task_config"]][[1]]
@@ -51,6 +52,7 @@ cs_run_batch <- function(batch_id, plan, staging_dir) {
     if (is.null(n_val) && !is.null(task_config)) {
       n_val <- task_config$n %||% NULL
     }
+    tau_val <- if (!is.null(task_config)) task_config$tau %||% cs_tau_oracle else cs_tau_oracle
     if (is.null(n_val)) {
       error_rows[[length(error_rows) + 1L]] <- tibble::tibble(
         seed = seed,
@@ -71,7 +73,7 @@ cs_run_batch <- function(batch_id, plan, staging_dir) {
         CausalStress::cs_set_rng(seed)
         cs_enforce_threads(1L)
 
-        cs_get_dgp(dgp_id)
+        cs_get_dgp(dgp_id, version = dgp_version)
         cs_get_estimator(estimator_id)
 
         boot_flag <- if (!is.null(task_config)) task_config$bootstrap %||% FALSE else FALSE
@@ -82,7 +84,8 @@ cs_run_batch <- function(batch_id, plan, staging_dir) {
           estimator_id = estimator_id,
           n            = n_val,
           seed         = seed,
-          tau          = cs_tau_oracle,
+          version      = dgp_version,
+          tau          = tau_val,
           bootstrap    = boot_flag,
           B            = B_val,
           config       = task_config %||% list()

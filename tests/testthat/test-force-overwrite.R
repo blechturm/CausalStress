@@ -6,7 +6,7 @@ test_that("force and skip_existing=FALSE overwrite pins", {
   est_id <- "lm_att"
   n <- 40
   seeds <- 1
-  name <- glue::glue("results__dgp={dgp_id}__est={est_id}__n={n}__seed={seeds}")
+  name <- CausalStress:::cs_result_pin_name(dgp_id, est_id, n, seeds, "1.6.0")
 
   # First run writes pin
   cs_run_seeds(

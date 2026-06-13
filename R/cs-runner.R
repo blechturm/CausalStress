@@ -98,6 +98,7 @@ cs_run_single <- function(
   oracle_allowed <- isTRUE(est_desc$oracle)
   df_run <- cs_airlock(df_raw, oracle_allowed = oracle_allowed)
 
+  config_caller <- config
   config_local <- config
   if (is.null(config_local$seed)) {
     config_local$seed <- seed
@@ -127,9 +128,10 @@ cs_run_single <- function(
     B                 = B,
     oracle            = oracle_allowed,
     estimator_version = est_desc$version,
-    config            = config_local,
+    config            = config_caller,
     tau               = tau,
-    max_runtime       = max_runtime
+    max_runtime       = max_runtime,
+    dgp_version       = dgp_desc$version[[1L]]
   )
 
   # Run estimator
@@ -318,7 +320,7 @@ cs_run_single <- function(
       dgp_design_spec = dgp_desc$design_spec[[1L]] %||% NA_character_,
       estimator_version = est_desc$version %||% NA_character_,
       estimator_reported_version = reported_ver,
-      config_fingerprint_schema = 2L,
+      config_fingerprint_schema = 3L,
       estimator_pkgs = estimator_pkgs,
       n_boot_ok      = n_boot_ok,
       n_boot_fail    = n_boot_fail,
@@ -462,11 +464,19 @@ cs_run_seeds <- function(
     cs_gather_results(board, staging_dir)
   }
 
+  dgp_desc <- cs_get_dgp(dgp_id = dgp_id, version = version, status = status, quiet = TRUE)
+  dgp_version <- dgp_desc$version[[1L]]
   est_desc <- cs_get_estimator(estimator_id)
 
-  pin_name_for_seed <- function(s) {
-    glue::glue(
-      "results__dgp={dgp_id}__est={estimator_id}__n={n}__seed={s}"
+  pin_name_for_seed <- function(s, include_legacy = TRUE) {
+    cs_find_result_pin(
+      board = board,
+      dgp_id = dgp_id,
+      dgp_version = dgp_version,
+      estimator_id = estimator_id,
+      n = n,
+      seed = s,
+      include_legacy = include_legacy
     )
   }
 
@@ -480,9 +490,26 @@ cs_run_seeds <- function(
     cfg
   }
 
+  build_expected_fp_schema3 <- function(seed_i) {
+    cs_build_config_fingerprint(
+      dgp_id            = dgp_id,
+      estimator_id      = estimator_id,
+      n                 = n,
+      seed              = seed_i,
+      bootstrap         = bootstrap,
+      B                 = B,
+      oracle            = isTRUE(est_desc$oracle),
+      estimator_version = est_desc$version,
+      config            = config,
+      tau               = tau,
+      max_runtime       = max_runtime,
+      dgp_version       = dgp_version
+    )
+  }
+
   build_expected_fp_schema2 <- function(seed_i) {
     expected_cfg <- apply_runner_defaults(config, seed_i)
-    cs_build_config_fingerprint(
+    cs_build_config_fingerprint_schema2(
       dgp_id            = dgp_id,
       estimator_id      = estimator_id,
       n                 = n,
@@ -527,9 +554,8 @@ cs_run_seeds <- function(
     cached <- logical(length(seeds))
     for (i in seq_along(seeds)) {
       s <- seeds[[i]]
-      if (!cs_pin_exists(board, dgp_id, estimator_id, n, s)) next
-
       name <- pin_name_for_seed(s)
+      if (is.na(name)) next
       meta_obj <- pins::pin_meta(board, name)
       md <- cs_pin_meta_user_or_metadata(meta_obj)
       stored_fp <- md$config_fingerprint %||% NULL
@@ -537,7 +563,16 @@ cs_run_seeds <- function(
       expected_fp <- if (is.na(stored_schema) || stored_schema == 1L) {
         build_expected_fp_legacy(s)
       } else if (stored_schema == 2L) {
+        stored_dgp_version <- as.character(md$dgp_version %||% NA_character_)
+        if (is.na(stored_dgp_version) || !identical(stored_dgp_version, as.character(dgp_version))) {
+          rlang::abort(
+            message = "Cannot resume schema-2 pin because its DGP version metadata does not match the resolved DGP version.",
+            class   = "causalstress_fingerprint_error"
+          )
+        }
         build_expected_fp_schema2(s)
+      } else if (stored_schema == 3L) {
+        build_expected_fp_schema3(s)
       } else {
         rlang::abort(
           message = glue::glue("Unsupported config fingerprint schema: {stored_schema}."),
@@ -576,8 +611,9 @@ cs_run_seeds <- function(
   # If we are forcing recompute and a pin exists, delete it to avoid stale metadata
   if (!is.null(board) && !isTRUE(should_try_cache)) {
     for (s in seeds_to_run) {
-      if (!cs_pin_exists(board, dgp_id, estimator_id, n, s)) next
-      pins::pin_delete(board, pin_name_for_seed(s))
+      name <- pin_name_for_seed(s, include_legacy = FALSE)
+      if (is.na(name)) next
+      pins::pin_delete(board, name)
     }
   }
 

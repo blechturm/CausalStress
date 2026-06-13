@@ -77,7 +77,7 @@
 - **Test obligation:** default-config resume skips; DGP version and canonical
   config are fingerprinted.
 - **Review gate:** Batch 2 fingerprint/resume review.
-- **Disposition:** open; unblocked by CS-1105 acceptance.
+- **Disposition:** complete after review.
 
 ### CS-1107 - Isolate RNG side effects
 
@@ -87,7 +87,7 @@
 - **Test obligation:** package load preserves absent and existing `.Random.seed`
   states; campaign plans are stable under the mandated RNG policy.
 - **Review gate:** Batch 2 RNG isolation review.
-- **Disposition:** open; unblocked by CS-1105 acceptance.
+- **Disposition:** complete after review.
 
 ### CS-1117 - Version oracle truth cache identity and atomic writes
 
@@ -100,7 +100,7 @@
   algorithm parameters/fingerprint; stale cache entries invalidate; cache writes
   use checked temp+rename semantics.
 - **Review gate:** Batch 2 truth-cache identity review.
-- **Disposition:** open; unblocked by CS-1105 acceptance.
+- **Disposition:** complete after review.
 
 ## Batch 3 - Constitutionally Gated Fixes
 

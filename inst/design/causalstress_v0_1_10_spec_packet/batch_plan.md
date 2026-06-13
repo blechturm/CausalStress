@@ -1,6 +1,6 @@
 # CausalStress v0.1.10 Batch Plan
 
-**Status:** Batch 2 RFC accepted; implementation tickets unblocked.
+**Status:** Batch 2 complete after review.
 
 ## Review Protocol
 
@@ -66,7 +66,7 @@ stop and ask before continuing.
 
 ## Batch 2 - Schema 3, RNG Isolation, and Oracle Truth Cache Identity
 
-- **Status:** RFC accepted; implementation tickets unblocked.
+- **Status:** Complete after review.
 - **Purpose:** Coordinate resume/fingerprint, RNG, and oracle truth cache
   identity changes under one design.
 - **Tickets:** CS-1105, CS-1106, CS-1107, CS-1117
@@ -77,13 +77,29 @@ stop and ask before continuing.
 - **Review evidence:** CS-1105 synthesis was reviewed with no blocking findings;
   non-blocking amendments were routed in the RFC; maintainer accepted CS-1105 as
   amended on 2026-06-12.
-- **Implementation status:** CS-1106, CS-1107, and CS-1117 are unblocked and
-  must implement the accepted RFC.
+- **Implementation completed:** CS-1106 schema-3 fingerprints, versioned pin
+  identity, exact-version resume, schema-2/v0.1.7 compatibility handling, and
+  canonical planner fingerprints; CS-1107 RNG preservation for load validation,
+  validation helpers, and campaign planning; CS-1117 oracle algorithm
+  fingerprinted cache identity and atomic temp-write/rename cache writes.
 - **Checks run:** design-document consistency review against audit C2, C3, M3,
   M7, M8, M12; `contracts.md`; and the current fingerprint, runner, campaign,
   planner, load-validation, RNG, and oracle truth-cache code paths.
+- **Implementation checks run:** June 12, 2026, with
+  `C:/Program Files/R/R-4.5.2/bin/x64/Rscript.exe`; focused testthat filter
+  `fingerprint|resume|v019-planner|rng-isolation|oracle-truth|pins-integration|pin-management|force-overwrite|usability-permutations|v018-parallel-gating|parallel-protocol|v019-worker|v019-e2e`
+  passed. Remaining warnings are pre-existing tidyselect `.data` deprecations
+  in the v0.1.9 e2e path. `devtools::check(document = FALSE,
+  build_args = '--no-build-vignettes', args = c('--no-manual',
+  '--ignore-vignettes'), error_on = 'never')` completed with 0 errors, 4
+  warnings, and 4 notes; the remaining warnings/notes are pre-existing
+  documentation/package-structure items, and dependency/codoc checks are OK.
 - **Review checkpoint:** accepted RFC synthesis before implementation; focused
   Codex code review after implementation.
+- **Review evidence:** Claude review reported no blocking findings, verified
+  all CS-1105 amendments and Batch 2 code paths, and cleared Batch 2 for
+  commit after confirming no `withr::` calls remain in `R/`. Non-blocking
+  migration note for legacy v0.1.9 boards was routed to release closeout.
 
 ## Batch 3 - Constitutionally Gated Fixes
 

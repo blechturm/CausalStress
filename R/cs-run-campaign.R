@@ -192,16 +192,24 @@ cs_run_campaign <- function(
       est_id_i  <- tasks$estimator_id[i]
       n_i       <- tasks$n[i]
       seed_i    <- tasks$seed[i]
+      dgp_desc_i <- cs_get_dgp(dgp_id_i, version = version, status = status, quiet = TRUE)
+      dgp_version_i <- dgp_desc_i$version[[1L]]
 
-      if (cs_pin_exists(board, dgp_id_i, est_id_i, n_i, seed_i)) {
-        name <- glue::glue(
-          "results__dgp={dgp_id_i}__est={est_id_i}__n={n_i}__seed={seed_i}"
-        )
+      name <- cs_find_result_pin(
+        board = board,
+        dgp_id = dgp_id_i,
+        dgp_version = dgp_version_i,
+        estimator_id = est_id_i,
+        n = n_i,
+        seed = seed_i
+      )
+      if (!is.na(name)) {
         meta_obj <- pins::pin_meta(board, name)
         md <- cs_pin_meta_user_or_metadata(meta_obj)
         stored_fp <- md$config_fingerprint %||% NULL
         est_desc <- cs_get_estimator(est_id_i)
-        task_config <- apply_runner_defaults(resolve_config(est_id_i), seed_i)
+        caller_config <- resolve_config(est_id_i)
+        task_config <- apply_runner_defaults(caller_config, seed_i)
         stored_schema <- suppressWarnings(as.integer(md$config_fingerprint_schema %||% NA_integer_))
         expected_fp <- if (is.na(stored_schema) || stored_schema == 1L) {
           if (is.finite(max_runtime)) {
@@ -223,7 +231,14 @@ cs_run_campaign <- function(
             tau               = tau
           )
         } else if (stored_schema == 2L) {
-          cs_build_config_fingerprint(
+          stored_dgp_version <- as.character(md$dgp_version %||% NA_character_)
+          if (is.na(stored_dgp_version) || !identical(stored_dgp_version, as.character(dgp_version_i))) {
+            rlang::abort(
+              message = "Cannot resume schema-2 pin because its DGP version metadata does not match the resolved DGP version.",
+              class   = "causalstress_fingerprint_error"
+            )
+          }
+          cs_build_config_fingerprint_schema2(
             dgp_id            = dgp_id_i,
             estimator_id      = est_id_i,
             n                 = n_i,
@@ -235,6 +250,21 @@ cs_run_campaign <- function(
             config            = task_config,
             tau               = tau,
             max_runtime       = max_runtime
+          )
+        } else if (stored_schema == 3L) {
+          cs_build_config_fingerprint(
+            dgp_id            = dgp_id_i,
+            estimator_id      = est_id_i,
+            n                 = n_i,
+            seed              = seed_i,
+            bootstrap         = bootstrap,
+            B                 = B,
+            oracle            = isTRUE(est_desc$oracle),
+            estimator_version = est_desc$version,
+            config            = caller_config,
+            tau               = tau,
+            max_runtime       = max_runtime,
+            dgp_version       = dgp_version_i
           )
         } else {
           rlang::abort(
@@ -278,12 +308,12 @@ cs_run_campaign <- function(
 
   # Shuffle tasks (deterministically when campaign_seed is provided)
   if (!is.null(campaign_seed)) {
-    idx <- withr::with_seed(as.integer(campaign_seed), sample.int(nrow(tasks)))
+    idx <- cs_with_mandated_rng(as.integer(campaign_seed), sample.int(nrow(tasks)))
     tasks <- tasks[idx, , drop = FALSE]
   }
 
   run_task <- function(dgp_id, estimator_id, seed, n, p = NULL) {
-    task_config <- apply_runner_defaults(resolve_config(estimator_id), seed)
+    task_config <- resolve_config(estimator_id)
     do.call(
       cs_run_one_seed_internal,
       c(

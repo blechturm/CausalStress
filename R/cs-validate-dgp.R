@@ -12,6 +12,9 @@
 #'   - `checks` (named logical vector): individual check outcomes.
 #' @export
 cs_validate_dgp <- function(dgp_fn, n = 1000, seeds = 1:50, verbose = TRUE) {
+  rng_state <- cs_rng_state_capture()
+  on.exit(cs_rng_state_restore(rng_state), add = TRUE)
+
   stopifnot(is.function(dgp_fn))
 
   checks <- c(schema = FALSE, determinism = FALSE)

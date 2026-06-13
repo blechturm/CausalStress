@@ -1,16 +1,37 @@
 #' Delete a single result pin
+#'
+#' @param board A pins board.
+#' @param dgp_id Character scalar identifying the DGP.
+#' @param estimator_id Character scalar identifying the estimator.
+#' @param n Integer sample size.
+#' @param seed Integer simulation seed.
+#' @param version Optional DGP version. When supplied, only the exact versioned
+#'   result pin is deleted; when omitted, legacy and versioned pins matching the
+#'   tuple are deleted.
+#'
+#' @return Logical scalar indicating whether any pin was deleted.
 #' @export
-cs_delete_result <- function(board, dgp_id, estimator_id, n, seed) {
-  pin_name <- glue::glue(
-    "results__dgp={dgp_id}__est={estimator_id}__n={n}__seed={seed}"
-  )
+cs_delete_result <- function(board, dgp_id, estimator_id, n, seed, version = NULL) {
+  pin_names <- if (!is.null(version)) {
+    cs_result_pin_name(dgp_id, estimator_id, n, seed, dgp_version = version)
+  } else {
+    pins_vec <- pins::pin_list(board)
+    all_names <- if (is.data.frame(pins_vec)) pins_vec$name else pins_vec
+    pattern <- glue::glue(
+      "^results__dgp={dgp_id}__(dgpver=[^_]+__)?est={estimator_id}__n={n}__seed={seed}$"
+    )
+    all_names[grepl(pattern, all_names)]
+  }
 
-  if (pins::pin_exists(board, pin_name)) {
-    pins::pin_delete(board, pin_name)
-    message(glue::glue("Deleted pin: {pin_name}"))
+  pin_names <- pin_names[pins::pin_exists(board, pin_names)]
+  if (length(pin_names) > 0L) {
+    for (pin_name in pin_names) {
+      pins::pin_delete(board, pin_name)
+      message(glue::glue("Deleted pin: {pin_name}"))
+    }
     return(TRUE)
   } else {
-    warning(glue::glue("Pin not found: {pin_name}"))
+    warning("Pin not found.")
     return(FALSE)
   }
 }
@@ -30,7 +51,7 @@ cs_delete_campaign <- function(board, dgp_id, estimator_id) {
   pin_names <- if (is.data.frame(pins_vec)) pins_vec$name else pins_vec
 
   pattern <- glue::glue(
-    "^results__dgp={dgp_id}__est={estimator_id}__.*"
+    "^results__dgp={dgp_id}__(dgpver=[^_]+__)?est={estimator_id}__.*"
   )
   matches <- pin_names[grepl(pattern, pin_names)]
 

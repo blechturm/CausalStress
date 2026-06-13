@@ -72,7 +72,7 @@ tickets:
     constitutional_check: "Article VII provenance and legacy compatibility"
     test_obligation: "Default-config resume skips; DGP version and canonical config are fingerprinted"
     review_gate: "Batch 2 fingerprint/resume review"
-    disposition: "open_unblocked_by_CS-1105_acceptance"
+    disposition: "complete_after_review"
   - id: "CS-1107"
     title: "Isolate RNG side effects"
     batch: 2
@@ -81,7 +81,7 @@ tickets:
     constitutional_check: "Article II"
     test_obligation: "Package load preserves absent and existing RNG state"
     review_gate: "Batch 2 RNG isolation review"
-    disposition: "open_unblocked_by_CS-1105_acceptance"
+    disposition: "complete_after_review"
   - id: "CS-1117"
     title: "Version oracle truth cache identity and atomic writes"
     batch: 2
@@ -90,7 +90,7 @@ tickets:
     constitutional_check: "Articles II, VI, and VII"
     test_obligation: "Oracle truth cache key includes DGP version and oracle algorithm identity; cache writes are atomic"
     review_gate: "Batch 2 truth-cache identity review"
-    disposition: "open_unblocked_by_CS-1105_acceptance"
+    disposition: "complete_after_review"
   - id: "CS-1108"
     title: "Decide and implement oracle access mechanism"
     batch: 3

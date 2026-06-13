@@ -27,7 +27,8 @@ Suggests:
     knitr,
     rmarkdown,
     patchwork,
-    fs
+    fs,
+    withr
 Config/testthat/edition: 3
 Imports:
     glue,
@@ -49,6 +50,5 @@ Imports:
     stats,
     utils,
     parallel,
-    tools,
-    withr
+    tools
 VignetteBuilder: knitr

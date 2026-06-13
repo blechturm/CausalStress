@@ -18,12 +18,13 @@ test_that("cs_run_seeds can resume from existing pins without recomputing", {
     boot_draws = NULL,
     meta = list(
       dgp_id         = "synth_baseline",
+      dgp_version    = "1.6.0",
       estimator_id   = "lm_att",
       n              = 100L,
       seed           = 1L,
       oracle         = FALSE,
       supports_qst   = FALSE,
-      config_fingerprint_schema = 2L,
+      config_fingerprint_schema = 3L,
       estimator_pkgs = "",
       n_boot_ok      = 0L,
       log            = NA_character_,
@@ -38,7 +39,8 @@ test_that("cs_run_seeds can resume from existing pins without recomputing", {
         estimator_version = cs_estimator_registry()$version[cs_estimator_registry()$estimator_id == "lm_att"],
         config = list(seed = 1L),
         tau = cs_tau_oracle,
-        max_runtime = Inf
+        max_runtime = Inf,
+        dgp_version = "1.6.0"
       )
     )
   )
@@ -105,6 +107,64 @@ test_that("fingerprint mismatch triggers error on resume", {
   ),
   "Configuration fingerprint mismatch"
 )
+})
+
+test_that("schema-3 resume works for default config and bootstrap B=0 edge", {
+  skip_if_not_installed("pins")
+
+  board <- pins::board_temp()
+
+  first <- cs_run_seeds(
+    dgp_id       = "synth_baseline",
+    estimator_id = "lm_att",
+    n            = 40,
+    seeds        = 1,
+    bootstrap    = FALSE,
+    B            = 0,
+    board        = board,
+    skip_existing = FALSE,
+    show_progress = FALSE,
+    quiet = TRUE
+  )
+  resumed <- cs_run_seeds(
+    dgp_id       = "synth_baseline",
+    estimator_id = "lm_att",
+    n            = 40,
+    seeds        = 1,
+    bootstrap    = FALSE,
+    B            = 0,
+    board        = board,
+    skip_existing = TRUE,
+    show_progress = FALSE,
+    quiet = TRUE
+  )
+  expect_identical(resumed$est_att, first$est_att)
+
+  edge <- cs_run_seeds(
+    dgp_id       = "synth_baseline",
+    estimator_id = "lm_att",
+    n            = 41,
+    seeds        = 1,
+    bootstrap    = TRUE,
+    B            = 0,
+    board        = board,
+    skip_existing = FALSE,
+    show_progress = FALSE,
+    quiet = TRUE
+  )
+  edge_resumed <- cs_run_seeds(
+    dgp_id       = "synth_baseline",
+    estimator_id = "lm_att",
+    n            = 41,
+    seeds        = 1,
+    bootstrap    = TRUE,
+    B            = 0,
+    board        = board,
+    skip_existing = TRUE,
+    show_progress = FALSE,
+    quiet = TRUE
+  )
+  expect_identical(edge_resumed$est_att, edge$est_att)
 })
 
 test_that("force=TRUE overwrites mismatched pins", {

@@ -6,7 +6,7 @@ test_that("skip_existing/force permutations behave as intended", {
   est_id <- "lm_att"
   n <- 50
   seed <- 1
-  name <- glue::glue("results__dgp={dgp_id}__est={est_id}__n={n}__seed={seed}")
+  name <- CausalStress:::cs_result_pin_name(dgp_id, est_id, n, seed, "1.6.0")
 
   # Setup: base pin without bootstrap
   cs_run_seeds(

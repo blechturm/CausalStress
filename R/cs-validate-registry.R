@@ -10,6 +10,9 @@
 #' @return Invisible `TRUE` on success.
 #' @export
 cs_validate_dgp_registry <- function(strict = FALSE) {
+  rng_state <- cs_rng_state_capture()
+  on.exit(cs_rng_state_restore(rng_state), add = TRUE)
+
   reg <- cs_dgp_registry()
   required_cols <- c(
     "dgp_id", "type", "generator", "version", "description",

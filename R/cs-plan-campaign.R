@@ -108,42 +108,54 @@ cs_plan_campaign <- function(dgp_list,
   )
 
   grid$task_config <- lapply(grid$estimator_id, resolve_config)
+  grid$n <- vapply(
+    grid$task_config,
+    function(cfg) as.integer(cfg$n %||% NA_integer_),
+    integer(1)
+  )
+  dgp_versions <- vapply(
+    grid$dgp_id,
+    function(id) cs_get_dgp(id, quiet = TRUE)$version[[1L]],
+    character(1)
+  )
+  estimator_versions <- vapply(
+    grid$estimator_id,
+    function(id) cs_get_estimator(id)$version,
+    character(1)
+  )
+  grid$dgp_version <- dgp_versions
+  grid$estimator_version <- estimator_versions
   grid$resolved_config_hash <- vapply(
     grid$task_config,
-    function(cfg) digest::digest(cfg, algo = "sha256"),
+    function(cfg) digest::digest(cs_fingerprint_config_payload(cfg), algo = "sha256"),
     character(1)
   )
   grid$task_fingerprint <- vapply(
     seq_len(nrow(grid)),
     function(i) {
-      digest::digest(
-        list(
-          dgp_id = grid$dgp_id[[i]],
-          estimator_id = grid$estimator_id[[i]],
-          seed = grid$seed[[i]],
-          task_config = grid$task_config[[i]]
-        ),
-        algo = "sha256"
+      cfg <- grid$task_config[[i]]
+      cs_build_task_fingerprint(
+        dgp_id = grid$dgp_id[[i]],
+        dgp_version = grid$dgp_version[[i]],
+        estimator_id = grid$estimator_id[[i]],
+        estimator_version = grid$estimator_version[[i]],
+        n = grid$n[[i]],
+        seed = grid$seed[[i]],
+        config = cfg,
+        tau = cfg$tau %||% cs_tau_oracle,
+        bootstrap = identical(cfg$ci_method %||% NULL, "bootstrap"),
+        B = cfg$B %||% cfg$n_boot %||% 0L
       )
     },
     character(1)
   )
-  grid$fingerprint_version <- 2L
-  grid$config_fingerprint_schema <- 2L
+  grid$fingerprint_version <- 3L
+  grid$config_fingerprint_schema <- 3L
 
-  old_seed <- NULL
-  if (exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)) {
-    old_seed <- .GlobalEnv[[".Random.seed"]]
+  if (!is.null(campaign_seed)) {
+    perm <- cs_with_mandated_rng(as.integer(campaign_seed), sample.int(nrow(grid)))
+    grid <- grid[perm, , drop = FALSE]
   }
-  on.exit({
-    if (!is.null(old_seed)) {
-      .GlobalEnv[[".Random.seed"]] <- old_seed
-    }
-  }, add = TRUE)
-  set.seed(campaign_seed)
-
-  perm <- sample.int(nrow(grid))
-  grid <- grid[perm, , drop = FALSE]
   grid$batch_id <- ceiling(seq_len(nrow(grid)) / batch_size)
 
   tasks_by_batch <- split(grid, grid$batch_id)

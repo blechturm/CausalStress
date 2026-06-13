@@ -8,6 +8,51 @@
 ORACLE_SEED <- 99999L
 ORACLE_N <- 1e6L
 
+cs_oracle_algorithm_descriptor <- function(dgp_id, version, tau_grid, N_oracle) {
+  list(
+    oracle_algorithm_version = "1.0.0",
+    oracle_seed = ORACLE_SEED,
+    oracle_n = as.integer(N_oracle),
+    chunk_n = 200000L,
+    tau_id = cs_tau_id(tau_grid),
+    quantile_type = 7L,
+    retention_rule = "retain_treated_until_N_oracle",
+    package_version = as.character(utils::packageVersion("CausalStress")),
+    dgp_id = dgp_id,
+    dgp_version = version
+  )
+}
+
+cs_oracle_algorithm_fingerprint <- function(descriptor) {
+  digest::digest(descriptor, algo = "sha256")
+}
+
+cs_oracle_cache_file <- function(cache_dir, dgp_id, version, oracle_algorithm_fingerprint) {
+  file.path(
+    cache_dir,
+    paste0("truth_", dgp_id, "_", version, "_oracle_", oracle_algorithm_fingerprint, ".qs")
+  )
+}
+
+cs_oracle_cache_write <- function(payload, cache_file) {
+  dir.create(dirname(cache_file), recursive = TRUE, showWarnings = FALSE)
+  tmp <- tempfile(pattern = paste0(basename(cache_file), "."), tmpdir = dirname(cache_file), fileext = ".tmp")
+  qs::qsave(payload, tmp)
+  if (!file.exists(tmp) || is.na(file.info(tmp)$size) || file.info(tmp)$size <= 0L) {
+    if (file.exists(tmp)) unlink(tmp)
+    rlang::abort("Oracle cache temp write failed.", class = "causalstress_oracle_error")
+  }
+  ok <- file.rename(tmp, cache_file)
+  if (!isTRUE(ok)) {
+    if (file.exists(tmp)) unlink(tmp)
+    rlang::abort(
+      glue::glue("Failed to atomically write oracle cache file: {cache_file}"),
+      class = "causalstress_oracle_error"
+    )
+  }
+  invisible(cache_file)
+}
+
 cs_get_oracle_qst <- function(dgp_id,
                               version  = "1.3.0",
                               tau_grid = cs_tau_oracle,
@@ -29,14 +74,19 @@ cs_get_oracle_qst <- function(dgp_id,
     )
   }
 
-  key <- paste(dgp_id, version, sep = "_")
+  oracle_descriptor <- cs_oracle_algorithm_descriptor(dgp_id, version, tau_grid, N_oracle)
+  oracle_fp <- cs_oracle_algorithm_fingerprint(oracle_descriptor)
+  key <- paste(dgp_id, version, oracle_fp, sep = "_")
   dir.create(cache_dir, recursive = TRUE, showWarnings = FALSE)
-  cache_file <- file.path(cache_dir, paste0("truth_", dgp_id, "_", version, ".qs"))
+  cache_file <- cs_oracle_cache_file(cache_dir, dgp_id, version, oracle_fp)
 
   if (file.exists(cache_file)) {
-    truth <- qs::qread(cache_file)
-    if (is.data.frame(truth)) {
-      return(truth)
+    payload <- tryCatch(qs::qread(cache_file), error = function(e) NULL)
+    if (is.list(payload) &&
+        identical(payload$oracle_algorithm_fingerprint, oracle_fp) &&
+        identical(payload$oracle_algorithm_descriptor, oracle_descriptor) &&
+        is.data.frame(payload$truth)) {
+      return(payload$truth)
     }
     unlink(cache_file)
   }
@@ -57,16 +107,8 @@ cs_get_oracle_qst <- function(dgp_id,
     }
   }, add = TRUE)
 
-  # preserve global RNG state
-  has_seed <- exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
-  if (has_seed) old_seed <- get(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
-  on.exit({
-    if (has_seed) {
-      assign(".Random.seed", old_seed, envir = .GlobalEnv)
-    } else if (exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)) {
-      remove(list = ".Random.seed", envir = .GlobalEnv)
-    }
-  }, add = TRUE)
+  rng_state <- cs_rng_state_capture()
+  on.exit(cs_rng_state_restore(rng_state), add = TRUE)
 
   # Optimizations for simple cases
   if (startsWith(dgp_id, "synth_placebo")) {
@@ -75,7 +117,14 @@ cs_get_oracle_qst <- function(dgp_id,
       tau = tau_grid,
       value = rep(0, length(tau_grid))
     )
-    qs::qsave(truth, cache_file)
+    cs_oracle_cache_write(
+      list(
+        oracle_algorithm_fingerprint = oracle_fp,
+        oracle_algorithm_descriptor = oracle_descriptor,
+        truth = truth
+      ),
+      cache_file
+    )
     return(truth)
   }
   if (dgp_id == "synth_hd_sparse_plm") {
@@ -84,7 +133,14 @@ cs_get_oracle_qst <- function(dgp_id,
       tau = tau_grid,
       value = rep(1, length(tau_grid))
     )
-    qs::qsave(truth, cache_file)
+    cs_oracle_cache_write(
+      list(
+        oracle_algorithm_fingerprint = oracle_fp,
+        oracle_algorithm_descriptor = oracle_descriptor,
+        truth = truth
+      ),
+      cache_file
+    )
     return(truth)
   }
 
@@ -130,6 +186,13 @@ cs_get_oracle_qst <- function(dgp_id,
     )
   )
 
-  qs::qsave(truth, cache_file)
+  cs_oracle_cache_write(
+    list(
+      oracle_algorithm_fingerprint = oracle_fp,
+      oracle_algorithm_descriptor = oracle_descriptor,
+      truth = truth
+    ),
+    cache_file
+  )
   truth
 }

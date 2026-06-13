@@ -23,14 +23,21 @@ cs_run_one_seed_internal <- function(dgp_id,
   cs_require_experimental_parallel(parallel = parallel, experimental_parallel = experimental_parallel)
   cs_require_staging_for_parallel_persistence(parallel = parallel, board = board, staging_dir = staging_dir)
 
+  dgp_desc <- cs_get_dgp(dgp_id = dgp_id, version = version, status = status, quiet = TRUE)
+  dgp_version <- dgp_desc$version[[1L]]
   est_desc <- cs_get_estimator(estimator_id)
 
   should_try_cache <- isTRUE(skip_existing) && !isTRUE(force)
   if (!is.null(board) && isTRUE(should_try_cache)) {
-      if (cs_pin_exists(board, dgp_id, estimator_id, n, seed)) {
-        name <- glue::glue(
-          "results__dgp={dgp_id}__est={estimator_id}__n={n}__seed={seed}"
-        )
+      name <- cs_find_result_pin(
+        board = board,
+        dgp_id = dgp_id,
+        dgp_version = dgp_version,
+        estimator_id = estimator_id,
+        n = n,
+        seed = seed
+      )
+      if (!is.na(name)) {
         meta_obj <- pins::pin_meta(board, name)
         md <- cs_pin_meta_user_or_metadata(meta_obj)
       stored_fp <- md$config_fingerprint %||% NULL
@@ -55,7 +62,14 @@ cs_run_one_seed_internal <- function(dgp_id,
           tau               = tau
         )
       } else if (stored_schema == 2L) {
-        cs_build_config_fingerprint(
+        stored_dgp_version <- as.character(md$dgp_version %||% NA_character_)
+        if (is.na(stored_dgp_version) || !identical(stored_dgp_version, as.character(dgp_version))) {
+          rlang::abort(
+            message = "Cannot resume schema-2 pin because its DGP version metadata does not match the resolved DGP version.",
+            class   = "causalstress_fingerprint_error"
+          )
+        }
+        cs_build_config_fingerprint_schema2(
           dgp_id            = dgp_id,
           estimator_id      = estimator_id,
           n                 = n,
@@ -67,6 +81,21 @@ cs_run_one_seed_internal <- function(dgp_id,
           config            = config,
           tau               = tau,
           max_runtime       = max_runtime
+        )
+      } else if (stored_schema == 3L) {
+        cs_build_config_fingerprint(
+          dgp_id            = dgp_id,
+          estimator_id      = estimator_id,
+          n                 = n,
+          seed              = seed,
+          bootstrap         = bootstrap,
+          B                 = B,
+          oracle            = isTRUE(est_desc$oracle),
+          estimator_version = est_desc$version,
+          config            = config,
+          tau               = tau,
+          max_runtime       = max_runtime,
+          dgp_version       = dgp_version
         )
       } else {
         rlang::abort(
@@ -93,11 +122,16 @@ cs_run_one_seed_internal <- function(dgp_id,
     }
 
   if (!is.null(board) && !isTRUE(should_try_cache) &&
-      cs_pin_exists(board, dgp_id, estimator_id, n, seed)) {
-    pins::pin_delete(
-      board,
-      glue::glue("results__dgp={dgp_id}__est={estimator_id}__n={n}__seed={seed}")
-    )
+      cs_pin_exists(board, dgp_id, estimator_id, n, seed, dgp_version = dgp_version, include_legacy = FALSE)) {
+    pins::pin_delete(board, cs_find_result_pin(
+      board = board,
+      dgp_id = dgp_id,
+      dgp_version = dgp_version,
+      estimator_id = estimator_id,
+      n = n,
+      seed = seed,
+      include_legacy = FALSE
+    ))
     }
 
   worker_board <- if (isTRUE(parallel) || !is.null(staging_dir)) NULL else board
