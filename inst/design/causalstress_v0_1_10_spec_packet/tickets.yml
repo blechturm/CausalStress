@@ -99,7 +99,7 @@ tickets:
     constitutional_check: "Article III"
     test_obligation: "Propensity-only oracle cannot access counterfactual truth"
     review_gate: "Batch 3 constitutional decision review"
-    disposition: "open_rfc_or_amendment_required"
+    disposition: "complete_after_review"
   - id: "CS-1109"
     title: "Decide and implement bitwise scope for BLAS-sensitive DGPs"
     batch: 3
@@ -108,7 +108,7 @@ tickets:
     constitutional_check: "Article II"
     test_obligation: "Deterministic path or amended documented scope"
     review_gate: "Batch 3 constitutional decision review"
-    disposition: "open_rfc_or_amendment_required"
+    disposition: "complete_after_review"
   - id: "CS-1110"
     title: "Fix gatekeeper unverified semantics"
     batch: 4
@@ -166,10 +166,10 @@ tickets:
   - id: "CS-1116"
     title: "Route minors and design-document corrections"
     batch: 5
-    source: {type: "audit", id: "minors,M17,D1-D5,ex-M14"}
+    source: {type: "audit/review", id: "minors,M17,D1-D5,ex-M14,Batch3-full-suite-future-state"}
     files: ["inst/design", "R", "tests/testthat"]
     constitutional_check: "varies"
-    test_obligation: "No stale non-registry design doc remains active; closeout routes residuals; consider Markdown/YAML line-ending policy"
+    test_obligation: "No stale non-registry design doc remains active; closeout routes residuals; full-suite future/parallel state contamination fixed before release gate; consider Markdown/YAML line-ending policy"
     review_gate: "Batch 5 cleanup and audit-routing review"
     disposition: "open"
   - id: "CS-1118"

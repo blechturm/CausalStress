@@ -31,9 +31,13 @@ Normative source: Constitution Article III.
 
 Estimators receive sanitized runner data by default. The runner must remove
 `y0`, `y1`, `p`, and `structural_te` before estimator execution unless an
-explicit oracle-access mechanism permits a narrower grant. The v0.1.10 packet
-must resolve audit M1: either implement column-scoped config-based oracle access
-or amend the Constitution to authorize the registry-flag mechanism.
+explicit oracle-access mechanism permits a narrower grant. The v0.1.10 Batch 3
+RFC selected column-scoped oracle access: `config$use_true_propensity = TRUE`
+may grant `p`, `config$use_structural_te = TRUE` or an internal benchmark
+default may grant `structural_te`, and `y0`/`y1` are never exposed through the
+ordinary runner airlock in v0.1.10. Estimator descriptors declare
+`oracle_columns` and `oracle_default_columns`; the registry `oracle` flag is
+provenance/eligibility metadata, not a blanket raw-data grant.
 
 Estimator outputs must be structured lists with:
 
@@ -61,6 +65,7 @@ Runner outputs must expose:
 - seed, sample size, tau identifiers where relevant.
 - CI provenance including method, type, level, validity, fail code, and bootstrap
   success counts.
+- granted oracle columns, when any.
 - configuration and task fingerprints under the active schema.
 
 Failures attributable to a single task's estimator execution should become a
@@ -110,9 +115,10 @@ Normative source: Constitution Article II.
 Benchmark execution uses the Constitution's mandated RNG kind. Package load and
 validation paths must not leak RNG side effects into the user's session.
 
-The v0.1.10 packet must define which entry points set RNG state, which restore
-state, and how validation-on-load preserves both `.Random.seed` absence and
-byte-identical existing seed state.
+Same-substrate bitwise identity is required for DGP data and truth outputs under
+the declared R/platform/numeric-library/thread substrate. Cross-substrate
+reproducibility is tolerance-level unless a version-specific regression corpus
+proves bitwise identity. The release gate records the validation substrate.
 
 ## Validation Contract
 

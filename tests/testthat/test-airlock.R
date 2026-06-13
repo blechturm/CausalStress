@@ -37,37 +37,121 @@ test_that("airlock strips forbidden columns and attributes for non-oracle estima
   )
 })
 
-test_that("airlock allows forbidden columns for oracle estimators", {
-  spy_oracle <- function(df, config = list(), tau = cs_tau_oracle, ...) {
-    if (!all(c("y0", "y1") %in% names(df))) {
-      stop("Oracle columns not visible for oracle estimator")
+test_that("airlock grants only requested eligible propensity oracle column", {
+  spy_propensity_oracle <- function(df, config = list(), tau = cs_tau_oracle, ...) {
+    if (!"p" %in% names(df)) {
+      stop("Propensity oracle column not visible")
+    }
+    forbidden <- c("y0", "y1", "structural_te")
+    if (any(forbidden %in% names(df))) {
+      stop("Airlock over-granted counterfactual or structural truth")
     }
     list(
       att = list(estimate = 0),
       qst = NULL,
-      meta = list(estimator_id = "spy_oracle", oracle = TRUE, supports_qst = FALSE)
+      meta = list(estimator_id = "spy_propensity_oracle", oracle = TRUE, supports_qst = FALSE)
     )
   }
 
   cs_register_estimator(
-    estimator_id  = "spy_oracle",
+    estimator_id  = "spy_propensity_oracle",
     type          = "spy",
-    generator     = spy_oracle,
+    generator     = spy_propensity_oracle,
     oracle        = TRUE,
+    oracle_columns = "p",
     supports_qst  = FALSE,
     version       = "0.0.0",
-    description   = "Spy oracle estimator for airlock test",
+    description   = "Spy propensity oracle estimator for airlock test",
     source        = "test",
     requires_pkgs = character(0)
   )
 
-  expect_no_error(
+  res <- cs_run_single(
+    dgp_id       = "synth_baseline",
+    estimator_id = "spy_propensity_oracle",
+    n            = 50,
+    seed         = 2L,
+    config       = list(use_true_propensity = TRUE)
+  )
+  expect_identical(res$meta$oracle_columns_granted, "p")
+})
+
+test_that("registry oracle flag alone does not grant raw DGP truth columns", {
+  spy_oracle_no_grant <- function(df, config = list(), tau = cs_tau_oracle, ...) {
+    forbidden <- c("y0", "y1", "p", "structural_te")
+    if (any(forbidden %in% names(df))) {
+      stop("Airlock over-granted raw DGP truth columns")
+    }
+    list(
+      att = list(estimate = 0),
+      qst = NULL,
+      meta = list(estimator_id = "spy_oracle_no_grant", oracle = TRUE, supports_qst = FALSE)
+    )
+  }
+
+  cs_register_estimator(
+    estimator_id  = "spy_oracle_no_grant",
+    type          = "spy",
+    generator     = spy_oracle_no_grant,
+    oracle        = TRUE,
+    supports_qst  = FALSE,
+    version       = "0.0.0",
+    description   = "Spy oracle estimator without grant for airlock test",
+    source        = "test",
+    requires_pkgs = character(0)
+  )
+
+  res <- cs_run_single(
+    dgp_id       = "synth_baseline",
+    estimator_id = "spy_oracle_no_grant",
+    n            = 50,
+    seed         = 3L
+  )
+  expect_identical(res$meta$oracle_columns_granted, character(0))
+})
+
+test_that("oracle_att receives only structural_te and records grant metadata", {
+  res <- cs_run_single(
+    dgp_id       = "synth_baseline",
+    estimator_id = "oracle_att",
+    n            = 50,
+    seed         = 4L
+  )
+  expect_identical(res$meta$oracle_columns_granted, "structural_te")
+  expect_true(isTRUE(res$meta$success))
+})
+
+test_that("airlock fails closed on ineligible oracle column requests", {
+  spy_propensity_only <- function(df, config = list(), tau = cs_tau_oracle, ...) {
+    list(
+      att = list(estimate = 0),
+      qst = NULL,
+      meta = list(estimator_id = "spy_propensity_only", oracle = TRUE, supports_qst = FALSE)
+    )
+  }
+
+  cs_register_estimator(
+    estimator_id  = "spy_propensity_only",
+    type          = "spy",
+    generator     = spy_propensity_only,
+    oracle        = TRUE,
+    oracle_columns = "p",
+    supports_qst  = FALSE,
+    version       = "0.0.0",
+    description   = "Spy propensity-only oracle estimator for airlock test",
+    source        = "test",
+    requires_pkgs = character(0)
+  )
+
+  expect_error(
     cs_run_single(
       dgp_id       = "synth_baseline",
-      estimator_id = "spy_oracle",
+      estimator_id = "spy_propensity_only",
       n            = 50,
-      seed         = 2L
-    )
+      seed         = 5L,
+      config       = list(use_structural_te = TRUE)
+    ),
+    class = "causalstress_airlock_error"
   )
 })
 

@@ -41,6 +41,10 @@ appropriate ticket, and rerun the affected gates.
 7. The packet has a `release_closeout.md`.
 8. No constitutional violation is known open. A constitutional violation can be
    deferred only by constitutional amendment, not by ticket.
+9. Reproducibility evidence records the computational substrate used for
+   validation: R version, platform, RNG kind, BLAS/LAPACK/libm-relevant
+   substrate where observable, and thread-cap environment relevant to
+   same-substrate bitwise claims.
 
 ## Gate Sequence
 
@@ -57,6 +61,7 @@ appropriate ticket, and rerun the affected gates.
 
 ## Evidence Standard
 
-Evidence should name the command, date, result, and any relevant artifact path.
-For design-only gates, evidence should name the reviewed file and accepted
+Evidence should name the command, date, result, R binary/version, platform,
+library paths where package availability matters, and any relevant artifact
+path. For design-only gates, evidence should name the reviewed file and accepted
 decision.

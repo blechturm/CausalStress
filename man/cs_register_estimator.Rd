@@ -9,6 +9,8 @@ cs_register_estimator(
   type,
   generator,
   oracle = FALSE,
+  oracle_columns = character(0),
+  oracle_default_columns = character(0),
   supports_qst = FALSE,
   version = "0.0.0-local",
   description = "",
@@ -26,6 +28,14 @@ cs_register_estimator(
 arguments \verb{(df, config = list(), tau = cs_tau_oracle, ...)}.}
 
 \item{oracle}{Logical, whether this is an oracle estimator.}
+
+\item{oracle_columns}{Character vector of truth columns this estimator is
+eligible to receive through the runner airlock. Allowed values in v0.1.10
+are \code{"p"} and \code{"structural_te"}.}
+
+\item{oracle_default_columns}{Character vector of eligible truth columns the
+runner grants without a user config flag. This should be empty except for
+internal benchmark estimators that cannot function otherwise.}
 
 \item{supports_qst}{Logical, whether the estimator returns QST values.}
 

@@ -47,6 +47,7 @@ cs_science_payload <- function(x) {
       n                 = meta$n %||% NA_integer_,
       seed              = meta$seed %||% NA_integer_,
       oracle            = meta$oracle %||% NA,
+      oracle_columns_granted = meta$oracle_columns_granted %||% character(0),
       supports_qst       = meta$supports_qst %||% NA,
       config_fingerprint = meta$config_fingerprint %||% NA_character_
     )
@@ -101,6 +102,7 @@ cs_meta_flatten <- function(x) {
     seed = meta$seed %||% NA_integer_,
     tau_id = meta$tau_id %||% NA_character_,
     oracle = meta$oracle %||% NA,
+    oracle_columns_granted = list(meta$oracle_columns_granted %||% character(0)),
     supports_qst = meta$supports_qst %||% NA,
     config_fingerprint = meta$config_fingerprint %||% NA_character_,
     config_fingerprint_schema = meta$config_fingerprint_schema %||% NA_integer_,

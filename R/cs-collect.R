@@ -16,7 +16,7 @@ cs_collect_att <- function(tidy) {
     tidy,
     dplyr::any_of(c(
       "dgp_id", "estimator_id", "n", "seed",
-      "oracle", "supports_qst",
+      "oracle", "oracle_columns_granted", "supports_qst",
       "true_att", "est_att", "att_error", "att_abs_error",
       "att_ci_lo", "att_ci_hi", "att_covered", "att_ci_width",
       "att_ci_method", "att_ci_type", "att_ci_level", "att_ci_valid",

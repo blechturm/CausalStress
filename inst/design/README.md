@@ -1,7 +1,7 @@
 # CausalStress Design Governance Index
 
 **Status:** Active authority index
-**Last updated:** 2026-06-11
+**Last updated:** 2026-06-13
 **Current active packet:** `causalstress_v0_1_10_spec_packet`
 **Latest completed packet:** none under the packet system; prior releases are historical records in `archive/`.
 

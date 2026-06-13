@@ -17,6 +17,8 @@ A list with elements:
 \item type: character scalar
 \item fn: function(df, tau, config) returning an estimator result
 \item oracle: logical, TRUE if this is an oracle estimator
+\item oracle_columns: character vector of eligible oracle columns
+\item oracle_default_columns: character vector of default-granted oracle columns
 \item supports_qst: logical, TRUE if estimator returns QST
 \item version: character scalar
 \item description: character scalar

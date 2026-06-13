@@ -1,7 +1,7 @@
 # CAUSALSTRESS CONSTITUTION
 
-**Version:** 1.8.1\
-**Date:** 2025-12-01\
+**Version:** 1.8.2\
+**Date:** 2026-06-13\
 **Status:** Ratified (Stabilized Protocol)
 
 ------------------------------------------------------------------------
@@ -57,7 +57,7 @@ The Quantile Shift (QST) is defined on the **full realized distribution** (Signa
 
 ## Article II: Immutability and Reproducibility
 
-Scientific benchmarks are worthless if the ground moves under our feet. To ensure that "Truth" remains identical across time, machines, and R versions, the computational substrate must be frozen.
+Scientific benchmarks are worthless if the ground moves under our feet. To ensure that "Truth" remains stable across time, machines, and R versions, the computational substrate must be frozen and declared.
 
 ### Section 2.1: The Frozen Logic Clause
 
@@ -87,7 +87,9 @@ Reproducibility is not optional; it is the primary function of the instrument.
 
 -   **Traceability:** The Runner **must** capture and store the seed in the result metadata.
 
--   **Bitwise Identity:** Two runs with the same `DGP ID`, `Version`, and `Seed` must produce **bitwise identical** dataframes and truth tables, regardless of the operating system or R version used.
+-   **Same-Substrate Bitwise Identity:** Two runs with the same `DGP ID`, `Version`, and `Seed` must produce **bitwise identical** dataframes and truth tables when executed on the same declared computational substrate: R version, operating system/platform, RNG kind, BLAS/LAPACK/libm-relevant numeric substrate, and thread-cap environment.
+
+-   **Cross-Substrate Reproducibility:** Across different operating systems, R versions, BLAS/LAPACK implementations, or platform math libraries, CausalStress claims documented tolerance-level numerical reproducibility unless a version-specific regression corpus proves bitwise identity. Release evidence MUST record the computational substrate used for reproducibility validation.
 
 ------------------------------------------------------------------------
 
@@ -97,8 +99,10 @@ Reproducibility is not optional; it is the primary function of the instrument.
 
 Every estimator function must conform to: `function(df, tau, config) -> list(att, qst, meta)`.
 
--   **Covariate Access:** The Runner MUST physically sanitize `y0`, `y1`, `p`, and `structural_te` from the input dataframe before execution. Estimators will not receive these columns unless explicitly configured as Oracle
-    -   *Exception:* Estimators explicitly configured as "Oracle" (e.g., `config$use_true_propensity = TRUE`) MAY access `p`.
+-   **Covariate Access:** The Runner MUST physically sanitize `y0`, `y1`, `p`, and `structural_te` from the input dataframe before execution. Estimators will not receive these columns unless explicitly configured as Oracle. Oracle access MUST be column-scoped.
+    -   *Exception:* Estimators explicitly configured for true-propensity oracle access (e.g., `config$use_true_propensity = TRUE`) MAY access `p`.
+    -   *Exception:* Structural benchmark estimators explicitly configured for structural-treatment-effect access (e.g., `config$use_structural_te = TRUE`, or an internal descriptor default for benchmark-only estimators) MAY access `structural_te`.
+    -   No ordinary runner airlock grant MAY expose `y0` or `y1` in v1.8.x.
 -   **Tau Compliance:** Estimators **MUST** calculate QST only for the `tau` values provided by the Runner. The canonical grid applies to truth tables, not estimator inputs.
 -   **Confidence Intervals:**
     -   Gatekeeper testing applies primarily to ATT.
@@ -246,7 +250,7 @@ No mutation after release
 
 -   **Version identity** A version is uniquely identified by its `(dgp_id, version)` pair. Both fields MUST be permanent, immutable, and globally unique.
 
--   **Performance-only Refactors** A code change MAY keep the same version **only if** a regression corpus demonstrates **bitwise-identical outputs**. The regression corpus MUST cover **both the generated data and the derived truth/oracle outputs**. If full bitwise verification across seeds or parameters is not feasible, the default requirement is to **bump the version**.
+-   **Performance-only Refactors** A code change MAY keep the same version **only if** a regression corpus demonstrates **bitwise-identical outputs** under the same-substrate scope defined in Article II Section 2.2. The regression corpus MUST cover **both the generated data and the derived truth/oracle outputs**. If full bitwise verification across seeds or parameters is not feasible, the default requirement is to **bump the version**.
 
 ### Section 7.3: File Organization and Implementation Structure
 

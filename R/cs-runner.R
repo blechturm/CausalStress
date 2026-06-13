@@ -95,8 +95,16 @@ cs_run_single <- function(
   df_raw    <- dgp$df
   true_att  <- dgp$true_att
 
-  oracle_allowed <- isTRUE(est_desc$oracle)
-  df_run <- cs_airlock(df_raw, oracle_allowed = oracle_allowed)
+  oracle_flag <- isTRUE(est_desc$oracle)
+  oracle_columns_granted <- cs_oracle_columns_granted(
+    config = config,
+    estimator_desc = est_desc
+  )
+  df_run <- cs_airlock(
+    df_raw,
+    config = config,
+    estimator_desc = est_desc
+  )
 
   config_caller <- config
   config_local <- config
@@ -126,7 +134,7 @@ cs_run_single <- function(
     seed              = seed,
     bootstrap         = bootstrap,
     B                 = B,
-    oracle            = oracle_allowed,
+    oracle            = oracle_flag,
     estimator_version = est_desc$version,
     config            = config_caller,
     tau               = tau,
@@ -314,6 +322,7 @@ cs_run_single <- function(
       n              = as.integer(n),
       seed           = as.integer(seed),
       oracle         = est_desc$oracle,
+      oracle_columns_granted = oracle_columns_granted,
       supports_qst   = est_desc$supports_qst,
       dgp_version    = dgp_desc$version[[1L]] %||% NA_character_,
       dgp_status     = dgp_desc$status[[1L]] %||% NA_character_,

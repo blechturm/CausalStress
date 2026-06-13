@@ -1,6 +1,6 @@
 # CausalStress v0.1.10 Batch Plan
 
-**Status:** Batch 2 complete after review.
+**Status:** Batch 3 complete after review.
 
 ## Review Protocol
 
@@ -103,10 +103,40 @@ stop and ask before continuing.
 
 ## Batch 3 - Constitutionally Gated Fixes
 
+- **Status:** Complete after review.
 - **Purpose:** Resolve issues requiring constitutional decisions.
 - **Tickets:** CS-1108, CS-1109
+- **Scope completed:** Draft synthesis added at
+  `inst/design/rfc/20260613_oracle_access_bitwise_scope_synthesis.md`.
+  Recommended decisions: implement column-scoped config-based oracle access for
+  CS-1108, and amend Article II to same-substrate bitwise identity plus
+  tolerance-level cross-substrate reproducibility for CS-1109. The synthesis was
+  amended after design review to clarify Article III structural-oracle access,
+  name the `config$use_structural_te` flag, specify estimator descriptor fields
+  for oracle-column grants, add metadata tests, cross-reference Article VII
+  performance refactors, and add a release-gate substrate-evidence hook.
+- **Decision evidence:** Maintainer accepted the Batch 3 RFC as amended on
+  2026-06-13.
+- **Implementation completed:** CS-1108 column-scoped oracle grants implemented
+  through estimator descriptor fields, config flags, fail-closed airlock checks,
+  metadata recording, and tests. CS-1109 Article II/VII substrate-scoped
+  reproducibility amendment implemented with same-substrate regression evidence
+  for `synth_hd_sparse_plm` and a release-gate substrate-evidence requirement.
+- **Implementation checks run:** June 13, 2026, with
+  `C:/Program Files/R/R-4.5.2/bin/x64/Rscript.exe`; focused testthat filter
+  `airlock|estimator-registry|integrity-capabilities|reproducibility-scope|runner-single|collect`
+  passed. Remaining warnings are pre-existing estimator/tidyselect warnings in
+  existing tests. `devtools::check(document = FALSE,
+  build_args = '--no-build-vignettes', args = c('--no-manual',
+  '--ignore-vignettes'), error_on = 'never')` completed with 0 errors, 4
+  warnings, and 4 notes; the remaining warnings/notes are pre-existing
+  documentation/package-structure items, and dependency/codoc checks are OK.
 - **Review checkpoint:** RFC/amendment path complete before code change; Codex
   code review after implementation.
+- **Review evidence:** Claude review reported no blocking findings and verified
+  the accepted amended RFC was implemented faithfully for CS-1108 and CS-1109.
+  Non-blocking full-suite future-state contamination was routed to CS-1116, and
+  the oracle-truth-path same-substrate evidence gap was recorded in closeout.
 
 ## Batch 4 - Governance Conformance
 
@@ -120,6 +150,8 @@ stop and ask before continuing.
 
 - **Purpose:** Route minors and design-document corrections.
 - **Tickets:** CS-1116
+- **Scope note:** includes Batch 3 review routing for full-suite future-plan
+  state contamination in heavyweight/parallel tests before the release gate.
 - **Review checkpoint:** Codex code review confirms every audit finding is
   ticketed, deferred, or rejected.
 

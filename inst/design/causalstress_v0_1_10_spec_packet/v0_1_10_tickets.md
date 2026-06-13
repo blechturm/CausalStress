@@ -111,7 +111,7 @@
 - **Constitutional check:** Article III.
 - **Test obligation:** propensity-only oracle cannot access counterfactual truth.
 - **Review gate:** Batch 3 constitutional decision review.
-- **Disposition:** open; requires RFC/amendment decision.
+- **Disposition:** complete after review.
 
 ### CS-1109 - Decide and implement bitwise scope for BLAS-sensitive DGPs
 
@@ -121,7 +121,7 @@
 - **Test obligation:** either pure-R deterministic path or documented amended
   scope with validation evidence.
 - **Review gate:** Batch 3 constitutional decision review.
-- **Disposition:** open; requires RFC/amendment decision.
+- **Disposition:** complete after review.
 
 ## Batch 4 - Governance Conformance
 
@@ -189,13 +189,15 @@
 
 - **Source:** audit minors including downgraded M17, D1-D5, ex-M14 residual
   tau-NA item; D4 registry-spec stale entries deferred to a registry-spec
-  version bump
+  version bump; Batch 3 review non-blocking full-suite future-state
+  contamination
 - **Files:** design docs, cleanup tests as needed
 - **Constitutional check:** depends on item
 - **Test obligation:** no known stale non-registry design doc remains active;
-  residual code minors are ticketed/deferred/rejected in closeout; consider a
-  `.gitattributes` line-ending policy for Markdown/YAML governance files to
-  avoid LF/CRLF churn.
+  residual code minors are ticketed/deferred/rejected in closeout; full-suite
+  future/parallel state contamination is fixed before release-gate full tests;
+  consider a `.gitattributes` line-ending policy for Markdown/YAML governance
+  files to avoid LF/CRLF churn.
 - **Review gate:** Batch 5 cleanup and audit-routing review.
 - **Disposition:** open
 

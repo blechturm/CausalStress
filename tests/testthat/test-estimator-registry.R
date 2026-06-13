@@ -3,7 +3,7 @@ test_that("cs_estimator_registry has required columns and sane types", {
 
   required_cols <- c(
     "estimator_id", "type", "generator",
-    "oracle", "supports_qst",
+    "oracle", "oracle_columns", "oracle_default_columns", "supports_qst",
     "version", "description",
     "source", "requires_pkgs"
   )
@@ -17,6 +17,8 @@ test_that("cs_estimator_registry has required columns and sane types", {
 
   expect_true(all(vapply(reg$generator, is.function, logical(1))))
   expect_true(is.logical(reg$oracle))
+  expect_true(all(vapply(reg$oracle_columns, is.character, logical(1))))
+  expect_true(all(vapply(reg$oracle_default_columns, is.character, logical(1))))
   expect_true(is.logical(reg$supports_qst))
   expect_true(all(vapply(reg$requires_pkgs, is.character, logical(1))))
 })
@@ -38,6 +40,8 @@ test_that("cs_get_estimator returns a valid descriptor for oracle_att", {
   expect_equal(desc$estimator_id, "oracle_att")
   expect_true(is.function(desc$generator))
   expect_true(desc$oracle)
+  expect_equal(desc$oracle_columns, "structural_te")
+  expect_equal(desc$oracle_default_columns, "structural_te")
   expect_false(desc$supports_qst)
   expect_type(desc$version, "character")
   expect_type(desc$description, "character")
@@ -114,6 +118,8 @@ test_that("cs_register_estimator adds a new estimator and prevents duplicates", 
   expect_equal(desc$estimator_id, "dummy_ext")
   expect_equal(desc$source, "external")
   expect_equal(desc$requires_pkgs, c("somePackage"))
+  expect_equal(desc$oracle_columns, character(0))
+  expect_equal(desc$oracle_default_columns, character(0))
 
   expect_error(
     cs_register_estimator(

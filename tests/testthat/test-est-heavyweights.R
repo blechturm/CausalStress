@@ -3,7 +3,7 @@ if (!requireNamespace("tmle", quietly = TRUE)) testthat::skip("tmle not installe
 
 test_that("bart_att returns ATT with CI", {
   dgp <- dgp_synth_baseline(n = 50, seed = 123)
-  df <- cs_airlock(dgp$df, oracle_allowed = FALSE)
+  df <- cs_airlock(dgp$df, estimator_desc = cs_get_estimator("bart_att"))
 
   res <- est_bart_att(df = df, config = list(seed = 1))
   expect_type(res, "list")
@@ -16,7 +16,7 @@ test_that("bart_att returns ATT with CI", {
 
 test_that("tmle_att returns ATT-like output structure", {
   dgp <- dgp_synth_baseline(n = 50, seed = 321)
-  df <- cs_airlock(dgp$df, oracle_allowed = FALSE)
+  df <- cs_airlock(dgp$df, estimator_desc = cs_get_estimator("tmle_att"))
 
   res <- est_tmle_att(df = df, config = list())
   expect_type(res, "list")
