@@ -11,12 +11,12 @@ library(purrr)
 # Parameters
 # ------------------------------------------------------------------------------
 # All artifact outputs should derive from this single base directory.
-output_dir <- "C:/Simulations/Analysis_Output_v4"
+output_dir <- "C:/Simulations/Analysis_Output_v5"
 if (!dir.exists(output_dir)) dir.create(output_dir, recursive = TRUE)
 out_path <- function(...) file.path(output_dir, ...)
 
 # 1. Connect to Board
-board_path <- "C:/Simulations/CausalStress_GenGC_Benchmark_v4_Board"
+board_path <- "C:/Simulations/CausalStress_GenGC_Benchmark_v5_Board"
 board <- board_folder(board_path)
 
 # ------------------------------------------------------------------------------

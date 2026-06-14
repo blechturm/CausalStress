@@ -1,9 +1,9 @@
 # CausalStress Design Governance Index
 
 **Status:** Active authority index
-**Last updated:** 2026-06-13
-**Current active packet:** `causalstress_v0_1_10_spec_packet`
-**Latest completed packet:** none under the packet system; prior releases are historical records in `archive/`.
+**Last updated:** 2026-06-14
+**Current active packet:** none
+**Latest completed packet:** `causalstress_v0_1_10_spec_packet`
 
 This file is the entry point for design and governance work in `inst/design/`.
 Every design-document add, move, retirement, or authority change must update this
@@ -28,7 +28,7 @@ For non-trivial code or design work, read in this order:
 
 1. `CAUSAL_STRESS_CONSTITUTION.md`
 2. `contracts.md`
-3. The active packet in `causalstress_v0_1_10_spec_packet/`
+3. The active packet, if one exists
 4. Relevant accepted RFCs in `rfc/`
 5. Relevant audits in `audit/`
 
@@ -50,8 +50,9 @@ active packet, the current authority wins.
 | `release_gate.md` | Process | Release checklist. |
 | `templates/` | Process | Canonical packet and closeout templates. |
 | `audit/` | Audit input | Findings must be routed before release. |
-| `causalstress_v0_1_10_spec_packet/` | Final packet | v0.1.10 governance and defect-repair packet, closed on 2026-06-14 pending tag/merge. |
+| `causalstress_v0_1_10_spec_packet/` | Final packet | v0.1.10 governance and defect-repair packet, closed on 2026-06-14. |
 | `rfc/` | RFC records | Accepted syntheses become binding in stated scope. |
+| `research/` | Research notes | Literature/prior-art assessments; informative only unless promoted via RFC or packet. |
 | `spikes/` | Exploratory notes | Informative only unless promoted. |
 | `archive/` | Historical records | Superseded docs, kept verbatim. |
 

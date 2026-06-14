@@ -47,6 +47,93 @@ scopes the gatekeeper exclusively to ATT and QST, so any addition is a
 constitutional amendment fed by an accepted RFC synthesis, not a feature
 ticket.
 
+## Deferred Inference Work
+
+### Bootstrap CI validity for GenGC QST (parked 2026-06-14; routes through an RFC + GenGC's bootstrap RFC)
+
+`est_gengc()` currently computes percentile CIs via an iid row bootstrap that
+refits `GenGC::gengc()` per replicate (`cs_bootstrap_ci()`), gating each
+dimension at 90% replicate success. The engineering is sound; the **statistical
+status is not**, and this must be treated as experimental, not as valid
+inference:
+
+- **No theorem, structurally suspect — *not* "known invalid".** No result
+  establishes *or* refutes nominal coverage for forest-based QST bootstrap; the
+  honest status is **unvalidated and structurally suspect**. The structural
+  doubt is bias-blindness: the percentile interval is centred on the forest's
+  *biased* QST estimate, and every resample/jackknife replicate shares that
+  bias, so the interval measures spread around the wrong centre. The
+  adaptive-nearest-neighbour analogy — naive bootstrap fails for *fixed*-k
+  matching (Abadie & Imbens 2008) — is a reason for caution **by analogy, not a
+  theorem about forests** (corrected per Codex review 2026-06-14). The
+  matching-bootstrap failure is now understood to hinge on fixed vs. diverging
+  neighbour counts (arXiv:2410.23525); forests have *diverging* effective
+  neighbours (growing leaves, many trees), so the pathology may not transfer.
+  Treat as caution, never as proof of invalidity.
+- **Heavy tails: keep the quantile-vs-mean distinction straight.** The QST
+  *estimand* is heavy-tail-robust — that is the kill-plot result; the median is
+  bootstrappable even for Cauchy, and Athreya's (1987) infinite-variance
+  pathology applies to the *mean* estimators, not to GenGC QST. The bootstrap
+  concern here is the *narrower* pair — forest bias and extreme-τ instability —
+  not heavy tails killing the quantile. The families campaign runs exactly where
+  both bite: expect high `qst_n_boot_fail` → `low_boot_success` NA CIs at extreme
+  τ (honest behaviour, not a bug), and poor coverage-against-oracle where the
+  bootstrap "succeeds".
+- **Gatekeeper interaction (Art. IV).** If GenGC reports QST CIs it is judged by
+  the placebo gatekeeper and can be marked **Non-Robust** in the registry on no
+  theoretical basis. Art. IV §4.2.3 gives the clean posture: estimators without
+  CIs are **"Unverified"**, not failed. **Decision for the heavy-tail robustness
+  campaign: run GenGC with `ci_method = "none"`** so the kill plot is a clean
+  point-estimation result with no inference asterisk.
+- **The CI degradation is itself a separate result, not a robustness claim.** A
+  dedicated *coverage* study (ci on, coverage scored against oracle across the
+  tail-index grid) is expected to show every naive bootstrap degrading — mean
+  estimators' CIs collapse at the variance boundary (Athreya 1987), GenGC's
+  QST bootstrap degrades via bias-blindness. That figure motivates the GenGC
+  DR-QST orthogonal-inference theory (Paper 2) and belongs in the stress-testing
+  paper (Paper 3), explicitly framed as "naive bootstrap inference is unreliable
+  here," never as a GenGC capability claim.
+- **CausalStress is the empirical-calibration instrument — produce a coverage
+  *map*, not a calibration *patch*.** Because the suite carries oracle truth, it
+  can measure actual coverage and document a *validity envelope* (e.g. "GenGC QST
+  bootstrap holds nominal coverage for df > 4, central τ, n ≥ 1000"). Three
+  guardrails: (1) a coverage map is evidence conditional on the DGPs resembling
+  reality, not a theorem — report "documented coverage on the suite," never
+  "valid CIs"; (2) do NOT recalibrate intervals to hit nominal in the
+  bias-dominated regime — the interval is mis-*centred*, not merely narrow, so
+  widening (incl. BCa, which corrects bootstrap-distribution skew, not
+  estimator-vs-truth bias) cannot reach the truth, and tuning a correction to
+  this suite is teaching-to-the-test; (3) the map's job is to *locate and later
+  confirm* the DR-QST theorem (show DR-QST CIs hitting nominal exactly where the
+  plug-in fails), not to substitute for it. The envelope is a legitimate
+  deliverable; a fudge-factor correction is not.
+
+Cross-reference: `GenGC/inst/design/roadmap.md` bootstrap RFC queue and
+`GenGC/inst/design/research/cfm_2013_positioning.md` (Route A, the resolved
+"why consistency does not license the bootstrap" entry). Any move from
+experimental to claimed inference here requires both an RFC in this repo and the
+GenGC bootstrap theorem; it is not a feature ticket.
+
+### DR-QST direction (GenGC RFC accepted 2026-06-14; narrow spike authorized)
+
+Carried forward from the accepted synthesis
+(`GenGC/inst/design/rfc/20260614_dr_qst_orthogonal_architecture_synthesis.md`),
+parked here so the decisive campaign and Paper-2 work inherit them:
+
+- **CFM comparator is required** in the decisive 200-seed campaign **if** the narrow
+  GenGC spike (`GenGC/inst/design/spikes/dr_qst_shootout/`) shows signal: CRAN `Counterfactual`
+  (Chen-Chernozhukov-Fernández-Val-Melly, the QST incumbent) or a threshold-regression
+  baseline. Without it there is no answer to "why not the incumbent?" This resolves the
+  earlier open question on adding `Counterfactual` to the benchmark: **yes, as the
+  comparator, gated on spike signal.**
+- **The CDF-nuisance construction is itself a research variable.** If forest-weight
+  CDF extraction loses the spike, do **not** kill orthogonalization — try threshold
+  (binary) models over a small y-grid or distributional regression before concluding
+  option D. The bottleneck may be the CDF estimator, not the AIPW score.
+- **Stabilizer/target drift.** Propensity clipping + CDF clip+rearrange target a
+  stabilized object if not asymptotically negligible — fine for the package if
+  documented, not for a theorem if hidden. Track in Paper 2.
+
 ## Deferred Tooling Work
 
 ### Spike: evaluate mirai (+ mori) as the parallel backend (parked 2026-06-12)
