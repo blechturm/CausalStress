@@ -182,4 +182,4 @@ tickets:
     constitutional_check: "No known constitutional violation remains open except by constitutional amendment"
     test_obligation: "Run or explicitly defer-with-rationale every release gate and record evidence"
     review_gate: "Final release-gate review before tagging or merging"
-    disposition: "open"
+    disposition: "complete_after_review"

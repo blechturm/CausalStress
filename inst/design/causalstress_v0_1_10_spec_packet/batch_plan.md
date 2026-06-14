@@ -1,6 +1,6 @@
 # CausalStress v0.1.10 Batch Plan
 
-**Status:** Batch 5 complete after review.
+**Status:** Batch 6 complete after final release-gate review.
 
 ## Review Protocol
 
@@ -136,7 +136,8 @@ stop and ask before continuing.
 - **Review evidence:** Claude review reported no blocking findings and verified
   the accepted amended RFC was implemented faithfully for CS-1108 and CS-1109.
   Non-blocking full-suite future-state contamination was routed to CS-1116, and
-  the oracle-truth-path same-substrate evidence gap was recorded in closeout.
+  the oracle-truth-path same-substrate evidence gap was closed by the Batch 6
+  release-gate evidence.
 
 ## Batch 4 - Governance Conformance
 
@@ -197,10 +198,26 @@ stop and ask before continuing.
 
 - **Purpose:** Verify release readiness and record closeout evidence.
 - **Tickets:** CS-1118
+- **Status:** Complete after final release-gate review.
 - **Scope:** read `inst/design/release_gate.md`; run or explicitly defer every
   required gate; verify the design README planning state; complete
   `release_closeout.md`; stop for final review before tagging or merging.
+- **Scope completed:** `DESCRIPTION` and `NEWS.md` now identify v0.1.10;
+  package-check warnings/notes were fixed rather than deferred; the release
+  closeout records validation, full-test, full-check, audit-routing, README,
+  constitutional, substrate, and include-truth same-substrate evidence.
+- **Test evidence:** On 2026-06-14 with
+  `C:\Program Files\R\R-4.5.2\bin\x64\Rscript.exe`, final
+  `devtools::check(document = FALSE, build_args = "--no-build-vignettes",
+  args = c("--no-manual", "--ignore-vignettes"), error_on = "never")`
+  returned `Status: OK` for `CausalStress_0.1.10` with 0 errors, 0 warnings,
+  and 0 notes. Focused validation returned `registry_strict_rows=24`,
+  `validate_registry_rows=24; all_valid=TRUE`, and
+  `include_truth_bitwise=TRUE`; all focused validation test files passed.
 - **Review checkpoint:** final Codex code review confirms all release-gate
   evidence is recorded, skipped gates have rationale, audit routing is complete,
   and no constitutional violation is known open except by constitutional
   amendment.
+- **Review evidence:** Claude review accepted Batch 6 / CS-1118 on 2026-06-14
+  with no blocking findings, independently reproducing the full check,
+  validation suite, and include-truth same-substrate bitwise evidence.

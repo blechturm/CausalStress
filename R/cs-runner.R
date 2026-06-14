@@ -466,8 +466,11 @@ cs_run_single <- function(
 #'   Only used if `config$n_boot` is missing.
 #' @param config List of estimator-specific configuration options. Passed
 #'   through to the estimator via [cs_run_single()].
+#' @param board Optional pins board for persistence.
 #' @param force Logical; if `TRUE`, recompute even when pins exist (alias for
 #'   setting `skip_existing = FALSE`).
+#' @param skip_existing Logical; whether to resume from existing pins.
+#' @param show_progress Logical; whether to display per-seed progress messages.
 #' @param quiet Logical; if `TRUE`, suppress DGP governance warnings inside
 #'   per-seed runs (use with care; pre-flight still warns once).
 #' @param max_runtime Numeric scalar; maximum allowed runtime (seconds) per seed.

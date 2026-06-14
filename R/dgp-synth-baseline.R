@@ -16,6 +16,8 @@
 #'
 #' @param n Integer, number of observations.
 #' @param seed Optional seed for reproducibility (passed to `cs_set_rng()`).
+#' @param include_truth Logical; if TRUE, include oracle truth tables where supported.
+#' @param oracle_only Logical; if TRUE, return only columns needed for oracle truth generation where supported.
 #'
 #' @return A list with:
 #'   - df: tibble with columns `y`, `w`, `y0`, `y1`, `p`, `structural_te`, `X1`, `X2`, `X3`, `X4`, `X5`
@@ -158,6 +160,16 @@ dgp_synth_baseline_v160 <- function(n, seed = NULL, include_truth = TRUE, oracle
   )
 }
 
+#' Latest-version synthetic DGP wrappers
+#'
+#' Convenience wrappers that dispatch to the current stable implementation for each synthetic DGP family.
+#'
+#' @param n Integer, number of observations.
+#' @param seed Optional seed for reproducibility.
+#'
+#' @return A DGP result list with `df`, `true_att`, `true_qst`, and `meta`,
+#'   following the synthetic DGP contract.
+#' @rdname dgp_synth_latest_wrappers
 #' @export
 dgp_synth_baseline <- function(n, seed = NULL) {
   dgp_synth_baseline_v160(n = n, seed = seed)

@@ -1,3 +1,21 @@
+# CausalStress 0.1.10
+
+## Governed Repair Cycle and Release Gate
+* Governance: Added the active design authority index, contract ledger, RFC cycle,
+  release gate, and v0.1.10 spec packet with machine-readable tickets.
+* Correctness: Fixed ATT extraction for TMLE, batch error capture/reconciliation,
+  dependency declarations, and version-aware DGP validation.
+* Reproducibility: Introduced schema-3 fingerprints, versioned DGP pins, RNG
+  isolation for validation/planning/oracle paths, and substrate-scoped bitwise
+  reproducibility claims.
+* Oracle safety: Replaced blanket oracle access with column-scoped airlock
+  grants and recorded oracle-column provenance in result metadata.
+* Statistical gates: Hardened CI-less gatekeeper handling, QST run-failure
+  arithmetic, low-bootstrap CI semantics, and registry/sidecar validation.
+* Release hygiene: Removed stale duplicate aliases, documented exported wrappers
+  and runner arguments, cleaned package-check notes, and recorded release-gate
+  evidence.
+
 # CausalStress 0.1.8
 
 ## Patch-Only: Reproducibility & Audit Closure

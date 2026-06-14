@@ -235,6 +235,7 @@ est_grf_dr_att <- function(df, config = list(), tau = cs_tau_oracle, ...) {
   res
 }
 
+#' @rdname est_grf_dr_att
 #' @export
 est_grf_dr <- function(df, config = list(), tau = cs_tau_oracle, ...) {
   est_grf_dr_att(df = df, config = config, tau = tau, ...)

@@ -17,6 +17,8 @@
 #'
 #' @param n Integer, number of observations.
 #' @param seed Optional seed for reproducibility (passed to `cs_set_rng()`).
+#' @param include_truth Logical; if TRUE, include oracle truth tables where supported.
+#' @param oracle_only Logical; if TRUE, return only columns needed for oracle truth generation where supported.
 #'
 #' @return A list with df, true_att, true_qst, and meta following the synthetic
 #'   DGP contract.
@@ -160,6 +162,7 @@ dgp_synth_tilt_mild_v160 <- function(n, seed = NULL, include_truth = TRUE, oracl
   out
 }
 
+#' @rdname dgp_synth_latest_wrappers
 #' @export
 dgp_synth_tilt_mild <- function(n, seed = NULL) {
   dgp_synth_tilt_mild_v160(n = n, seed = seed)

@@ -11,6 +11,10 @@ cs_run_suite(suite_id, estimator_ids, seeds = 1:50, n = 2000, ...)
 
 \item{estimator_ids}{Character vector of estimator IDs.}
 
+\item{seeds}{Integer vector of seeds to run for each DGP/estimator pair.}
+
+\item{n}{Integer, sample size per run.}
+
 \item{...}{Passed through to \code{\link[=cs_run_grid]{cs_run_grid()}}.}
 }
 \value{

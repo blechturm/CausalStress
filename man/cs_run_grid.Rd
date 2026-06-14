@@ -52,6 +52,16 @@ cs_run_grid(
 
 \item{force}{Logical, whether to overwrite existing pins (alias for
 \code{skip_existing = FALSE}).}
+
+\item{max_runtime}{Numeric scalar; maximum allowed runtime (seconds) per seed.}
+
+\item{parallel}{Logical; if \code{TRUE}, uses furrr/future for parallel execution.}
+
+\item{experimental_parallel}{Logical; must be \code{TRUE} to enable parallel mode.}
+
+\item{staging_dir}{Optional staging directory for crash recovery.}
+
+\item{show_progress}{Logical; whether to display per-seed progress messages.}
 }
 \value{
 A tibble with one row per (dgp_id, estimator_id, seed) run, including

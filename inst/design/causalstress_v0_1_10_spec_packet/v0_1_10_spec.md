@@ -1,6 +1,6 @@
 # CausalStress v0.1.10 Spec
 
-**Status:** ACTIVE DRAFT
+**Status:** FINAL
 **Date opened:** 2026-06-11
 **Authority:** Active packet under `inst/design/README.md`
 

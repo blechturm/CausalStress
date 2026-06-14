@@ -1,6 +1,6 @@
 # CausalStress v0.1.10 Tickets
 
-**Status:** ACTIVE DRAFT
+**Status:** FINAL
 
 ## Batch 0 - Governance Bootstrap
 
@@ -218,4 +218,4 @@
   tests, acceptance criteria, audit routing, README planning-state check, and
   constitutional-violation check.
 - **Review gate:** final release-gate review before tagging or merging.
-- **Disposition:** open
+- **Disposition:** complete after review

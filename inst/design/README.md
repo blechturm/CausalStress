@@ -50,7 +50,7 @@ active packet, the current authority wins.
 | `release_gate.md` | Process | Release checklist. |
 | `templates/` | Process | Canonical packet and closeout templates. |
 | `audit/` | Audit input | Findings must be routed before release. |
-| `causalstress_v0_1_10_spec_packet/` | Active packet | v0.1.10 governance and defect-repair packet. |
+| `causalstress_v0_1_10_spec_packet/` | Final packet | v0.1.10 governance and defect-repair packet, closed on 2026-06-14 pending tag/merge. |
 | `rfc/` | RFC records | Accepted syntheses become binding in stated scope. |
 | `spikes/` | Exploratory notes | Informative only unless promoted. |
 | `archive/` | Historical records | Superseded docs, kept verbatim. |

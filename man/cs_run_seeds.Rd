@@ -53,8 +53,14 @@ Only used if \code{config$n_boot} is missing.}
 \item{config}{List of estimator-specific configuration options. Passed
 through to the estimator via \code{\link[=cs_run_single]{cs_run_single()}}.}
 
+\item{board}{Optional pins board for persistence.}
+
 \item{force}{Logical; if \code{TRUE}, recompute even when pins exist (alias for
 setting \code{skip_existing = FALSE}).}
+
+\item{skip_existing}{Logical; whether to resume from existing pins.}
+
+\item{show_progress}{Logical; whether to display per-seed progress messages.}
 
 \item{quiet}{Logical; if \code{TRUE}, suppress DGP governance warnings inside
 per-seed runs (use with care; pre-flight still warns once).}

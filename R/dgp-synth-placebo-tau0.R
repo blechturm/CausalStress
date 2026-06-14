@@ -11,6 +11,8 @@
 #'
 #' @param n Integer, number of observations.
 #' @param seed Optional seed for reproducibility (passed to `cs_set_rng()`).
+#' @param include_truth Logical; if TRUE, include oracle truth tables where supported.
+#' @param oracle_only Logical; if TRUE, return only columns needed for oracle truth generation where supported.
 #'
 #' @return A list with components:
 #'   - df: tibble with columns `y`, `w`, `y0`, `y1`, `p`, `structural_te`,
@@ -77,6 +79,7 @@ dgp_synth_placebo_tau0_v130 <- function(n, seed = NULL, include_truth = TRUE, or
   out
 }
 
+#' @rdname dgp_synth_latest_wrappers
 #' @export
 dgp_synth_placebo_tau0 <- function(n, seed = NULL) {
   dgp_synth_placebo_tau0_v130(n = n, seed = seed)

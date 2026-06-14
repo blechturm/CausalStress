@@ -147,7 +147,7 @@ cs_get_oracle_qst <- function(dgp_id,
   # General case: simulate from treated population distribution X|W=1.
   # We obtain N_oracle treated draws by sampling batches from the DGP and
   # retaining treated units until we reach N_oracle.
-  dgp_desc <- cs_get_dgp(dgp_id, version = version)
+  dgp_desc <- cs_get_dgp(dgp_id, version = version, quiet = TRUE)
   gen <- dgp_desc$generator[[1]]
 
   cs_set_rng(ORACLE_SEED)

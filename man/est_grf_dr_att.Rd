@@ -2,9 +2,12 @@
 % Please edit documentation in R/est-grf-dr.R
 \name{est_grf_dr_att}
 \alias{est_grf_dr_att}
+\alias{est_grf_dr}
 \title{GRF-based doubly-robust ATT estimator (causal forest)}
 \usage{
 est_grf_dr_att(df, config = list(), tau = cs_tau_oracle, ...)
+
+est_grf_dr(df, config = list(), tau = cs_tau_oracle, ...)
 }
 \arguments{
 \item{df}{Data frame as returned in \code{dgp$df}, containing at least

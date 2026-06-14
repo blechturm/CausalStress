@@ -7,3 +7,8 @@
 ^_experiments$
 ^inst/dgp_meta/.*_cache$
 ^inst/dgp_meta/.*_files$
+^\.claude$
+^dev$
+^figure$
+^tmp_eval\.R$
+^tmp_flaky\.R$
