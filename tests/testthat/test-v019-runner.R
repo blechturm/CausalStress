@@ -13,7 +13,15 @@ test_that("cs_run_campaign resumes based on staged batches", {
 
   file.create(file.path(staging_dir, "batch_1_dummy.qs"))
 
-  cs_run_campaign(plan = plan, staging_dir = staging_dir, workers = 1)
+  expect_warning(
+    cs_run_campaign(
+      plan = plan,
+      staging_dir = staging_dir,
+      workers = 1,
+      experimental_parallel = TRUE
+    ),
+    class = "causalstress_experimental_parallel"
+  )
 
   files <- list.files(staging_dir, pattern = "^batch_[0-9]+", full.names = FALSE)
   batch1 <- files[grepl("^batch_1", files)]
@@ -36,7 +44,15 @@ test_that("cs_run_campaign executes batches in parallel", {
     strategy_map = list(defaults = list(n = 100))
   )
 
-  cs_run_campaign(plan = plan, staging_dir = staging_dir, workers = 2)
+  expect_warning(
+    cs_run_campaign(
+      plan = plan,
+      staging_dir = staging_dir,
+      workers = 2,
+      experimental_parallel = TRUE
+    ),
+    class = "causalstress_experimental_parallel"
+  )
 
   files <- list.files(staging_dir, pattern = "^batch_[0-9]+", full.names = FALSE)
   expect_true(any(grepl("^batch_1", files)))

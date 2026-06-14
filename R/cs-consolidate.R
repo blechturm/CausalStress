@@ -66,6 +66,55 @@ cs_consolidate <- function(staging_dir, board) {
       warning("Batch task count reconciliation failed: ", path)
       next
     }
+    is_new_artifact <- !is.null(batch_obj$meta$n_tasks)
+    if (isTRUE(is_new_artifact)) {
+      if (!identical(batch_obj$schema_version, "v1.0.0")) {
+        warning("Unsupported batch schema_version in new artifact: ", path)
+        next
+      }
+      result_schema_ok <- vapply(
+        batch_obj$results,
+        function(res) {
+          meta <- res$meta %||% list()
+          task_fp <- meta$task_fingerprint %||% NA_character_
+          schema <- suppressWarnings(as.integer(meta$config_fingerprint_schema %||% NA_integer_))
+          length(task_fp) == 1L &&
+            !is.na(task_fp) &&
+            nzchar(task_fp) &&
+            length(schema) == 1L &&
+            !is.na(schema)
+        },
+        logical(1)
+      )
+      if (length(result_schema_ok) > 0L && any(!result_schema_ok)) {
+        warning("Batch results missing required task fingerprint or config schema metadata: ", path)
+        next
+      }
+      required_error_cols <- c(
+        "task_fingerprint",
+        "config_fingerprint_schema",
+        "error_class",
+        "message"
+      )
+      missing_error_cols <- setdiff(required_error_cols, names(batch_obj$errors))
+      if (length(missing_error_cols) > 0L) {
+        warning(
+          "Batch errors missing required schema columns: ",
+          paste(missing_error_cols, collapse = ", "),
+          " in ",
+          path
+        )
+        next
+      }
+      if (nrow(batch_obj$errors) > 0L) {
+        error_fp <- batch_obj$errors$task_fingerprint
+        error_schema <- suppressWarnings(as.integer(batch_obj$errors$config_fingerprint_schema))
+        if (any(is.na(error_fp) | !nzchar(error_fp)) || any(is.na(error_schema))) {
+          warning("Batch errors contain missing task fingerprint or config schema metadata: ", path)
+          next
+        }
+      }
+    }
     if (length(batch_obj$results) > 0L) {
       has_tau_id <- vapply(
         batch_obj$results,

@@ -24,6 +24,23 @@ test_that("parallel=TRUE requires experimental_parallel=TRUE (campaign and seeds
     ),
     "experimental_parallel"
   )
+
+  plan <- cs_plan_campaign(
+    dgp_list = "synth_baseline",
+    estimator_list = "lm_att",
+    n_seeds = 1L,
+    batch_size = 1,
+    strategy_map = list(defaults = list(n = 30))
+  )
+  expect_error(
+    cs_run_campaign(
+      plan = plan,
+      staging_dir = tempfile("cs_stage_plan_gate_"),
+      workers = 1,
+      show_progress = FALSE
+    ),
+    "experimental_parallel"
+  )
 })
 
 test_that("experimental parallel warning is emitted exactly once per call", {

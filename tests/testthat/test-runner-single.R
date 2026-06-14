@@ -213,12 +213,15 @@ test_that("cs_run_single warns for non-stable DGPs via accessor", {
     cs_dgp_executable_meta = function(dgp_id, version) list(noise_family = "gaussian", effect_type = "constant"),
     {
       expect_warning(
-        cs_run_single(
-          dgp_id       = "mock_dgp",
-          estimator_id = "lm_att",
-          n            = 20,
-          seed         = 1L,
-          bootstrap    = FALSE
+        expect_warning(
+          cs_run_single(
+            dgp_id       = "mock_dgp",
+            estimator_id = "lm_att",
+            n            = 20,
+            seed         = 1L,
+            bootstrap    = FALSE
+          ),
+          "No stable version"
         ),
         "experimental"
       )
@@ -297,6 +300,45 @@ test_that("cs_run_single handles estimator crashes gracefully", {
   expect_type(res, "list")
   expect_false(res$meta$success)
   expect_true(grepl("Boom", res$meta$error))
+
+  row <- cs_result_to_row(res)
+  expect_s3_class(row, "tbl_df")
+  expect_equal(nrow(row), 1L)
+  expect_false(row$success)
+  expect_true(is.na(row$est_att))
+})
+
+test_that("cs_run_single returns failed rows for missing estimator packages", {
+  missing_pkg_est <- function(df, config = list(), tau = cs_tau_oracle, ...) {
+    stop("estimator should not run when a required package is missing")
+  }
+
+  cs_register_estimator(
+    estimator_id  = "missing_pkg_est_runner_single",
+    type          = "test",
+    generator     = missing_pkg_est,
+    oracle        = FALSE,
+    supports_qst  = FALSE,
+    version       = "0.0.0",
+    description   = "Missing package estimator for robustness test",
+    source        = "test",
+    requires_pkgs = "definitelyMissingPkgCausalStress"
+  )
+
+  expect_warning(
+    res <- cs_run_single(
+      dgp_id       = "synth_baseline",
+      estimator_id = "missing_pkg_est_runner_single",
+      n            = 50,
+      seed         = 123
+    ),
+    class = "causalstress_missing_package"
+  )
+
+  expect_type(res, "list")
+  expect_false(res$meta$success)
+  expect_match(res$meta$error, "definitelyMissingPkgCausalStress")
+  expect_match(res$meta$estimator_pkgs, "definitelyMissingPkgCausalStress=NA", fixed = TRUE)
 
   row <- cs_result_to_row(res)
   expect_s3_class(row, "tbl_df")

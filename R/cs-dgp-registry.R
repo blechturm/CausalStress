@@ -217,9 +217,16 @@ cs_resolve_dgp <- function(reg, dgp_id, version = NULL, status = "stable", quiet
     } else if (st %in% c("deprecated", "invalidated")) {
       rationale <- row$rationale
       rationale <- ifelse(is.na(rationale) || rationale == "", "rationale not provided", rationale)
+      date_changed <- row$date_status_changed
+      date_txt <- if (!is.na(date_changed) && nzchar(date_changed)) {
+        paste0(". Date status changed: ", date_changed)
+      } else {
+        ""
+      }
       rlang::warn(paste0(
         "Using ", st, " DGP: ", row$dgp_id, " v", row$version,
-        ". Rationale: ", rationale
+        ". Rationale: ", rationale,
+        date_txt
       ))
     }
     invisible(NULL)

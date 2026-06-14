@@ -132,7 +132,7 @@
 - **Constitutional check:** Article IV.
 - **Test obligation:** CI-less ATT/QST paths are Unverified, never PASS/NA.
 - **Review gate:** Batch 4 gatekeeper review.
-- **Disposition:** open
+- **Disposition:** implementation complete; awaiting review.
 
 ### CS-1111 - Restore parallel governance on campaign paths
 
@@ -142,7 +142,7 @@
 - **Test obligation:** parallel requires opt-in, emits provenance, restores env,
   and does not silence DGP governance warnings.
 - **Review gate:** Batch 4 parallel governance review.
-- **Disposition:** open
+- **Disposition:** implementation complete; awaiting review.
 
 ### CS-1112 - Enhance registry and sidecar validation
 
@@ -152,7 +152,7 @@
 - **Test obligation:** strict validation checks sidecar version/status and
   deprecation warning includes date when present.
 - **Review gate:** Batch 4 registry validation review.
-- **Disposition:** open
+- **Disposition:** implementation complete; awaiting review.
 
 ### CS-1113 - Fix CI/bootstrap and optional-package failure semantics
 
@@ -162,7 +162,7 @@
 - **Test obligation:** low bootstrap success is explicit failure/warning as
   specified; missing packages produce `success = FALSE` rows.
 - **Review gate:** Batch 4 CI/failure semantics review.
-- **Disposition:** open
+- **Disposition:** implementation complete; awaiting review.
 
 ### CS-1114 - Fix campaign forwarding and batch tau handling
 
@@ -171,7 +171,7 @@
 - **Constitutional check:** estimator requested tau contract.
 - **Test obligation:** documented `...` and strategy tau reach `cs_run_single()`.
 - **Review gate:** Batch 4 campaign forwarding review.
-- **Disposition:** open
+- **Disposition:** implementation complete; awaiting review.
 
 ### CS-1115 - Close batching schema and consolidation gaps
 
@@ -181,7 +181,7 @@
 - **Test obligation:** error schema includes task fingerprint/class; consolidator
   validates fingerprints/schema; tidy rows propagate required fields.
 - **Review gate:** Batch 4 batching schema review.
-- **Disposition:** open
+- **Disposition:** implementation complete; awaiting review.
 
 ## Batch 5 - Cleanup
 
@@ -190,12 +190,14 @@
 - **Source:** audit minors including downgraded M17, D1-D5, ex-M14 residual
   tau-NA item; D4 registry-spec stale entries deferred to a registry-spec
   version bump; Batch 3 review non-blocking full-suite future-state
-  contamination
+  contamination; Batch 4 review low-bootstrap success contract wording
 - **Files:** design docs, cleanup tests as needed
 - **Constitutional check:** depends on item
 - **Test obligation:** no known stale non-registry design doc remains active;
   residual code minors are ticketed/deferred/rejected in closeout; full-suite
   future/parallel state contamination is fixed before release-gate full tests;
+  Batch 4 low-bootstrap `success = FALSE` semantics are reconciled with the
+  written CI/bootstrap contract;
   consider a `.gitattributes` line-ending policy for Markdown/YAML governance
   files to avoid LF/CRLF churn.
 - **Review gate:** Batch 5 cleanup and audit-routing review.

@@ -150,28 +150,52 @@ cs_run_single <- function(
   if (is.null(config$estimator_id)) {
     config$estimator_id <- estimator_id
   }
-  res <- tryCatch(
-    withCallingHandlers(
-      {
-        setTimeLimit(cpu = max_runtime, elapsed = max_runtime, transient = TRUE)
-        on.exit(setTimeLimit(cpu = Inf, elapsed = Inf, transient = TRUE), add = TRUE)
-        est_desc$generator(
-          df     = df_run,
-          config = config,
-          tau    = tau,
-          ...
-        )
-      },
-      message = collect_msg,
-      warning = collect_warn
-    ),
-    error = function(e) {
-      logs <<- c(logs, paste0("[error] ", conditionMessage(e)))
-      errors_vec <<- c(errors_vec, conditionMessage(e))
-      success <<- FALSE
-      list(att = list(estimate = NA_real_), qst = NULL)
-    }
-  )
+  required_pkgs <- est_desc$requires_pkgs %||% character(0L)
+  required_pkgs <- required_pkgs[!is.na(required_pkgs) & nzchar(required_pkgs)]
+  missing_pkgs <- required_pkgs[!vapply(required_pkgs, requireNamespace, logical(1), quietly = TRUE)]
+  if (length(missing_pkgs) > 0L) {
+    missing_msg <- paste0(
+      "Required package(s) for estimator `", estimator_id, "` are not installed: ",
+      paste(missing_pkgs, collapse = ", ")
+    )
+    rlang::warn(missing_msg, class = "causalstress_missing_package")
+    logs <- c(logs, paste0("[warning] ", missing_msg))
+    warnings_vec <- c(warnings_vec, missing_msg)
+    errors_vec <- c(errors_vec, missing_msg)
+    success <- FALSE
+    res <- list(
+      att = list(estimate = NA_real_),
+      qst = NULL,
+      meta = list(
+        estimator_id = estimator_id,
+        oracle = est_desc$oracle,
+        supports_qst = est_desc$supports_qst
+      )
+    )
+  } else {
+    res <- tryCatch(
+      withCallingHandlers(
+        {
+          setTimeLimit(cpu = max_runtime, elapsed = max_runtime, transient = TRUE)
+          on.exit(setTimeLimit(cpu = Inf, elapsed = Inf, transient = TRUE), add = TRUE)
+          est_desc$generator(
+            df     = df_run,
+            config = config,
+            tau    = tau,
+            ...
+          )
+        },
+        message = collect_msg,
+        warning = collect_warn
+      ),
+      error = function(e) {
+        logs <<- c(logs, paste0("[error] ", conditionMessage(e)))
+        errors_vec <<- c(errors_vec, conditionMessage(e))
+        success <<- FALSE
+        list(att = list(estimate = NA_real_), qst = NULL)
+      }
+    )
+  }
   if (isTRUE(success)) {
     cs_check_estimator_output(res, require_qst = est_desc$supports_qst, tau = tau)
   }
@@ -188,6 +212,33 @@ cs_run_single <- function(
   n_boot_ok <- res_meta$n_boot_ok %||% 0L
   n_boot_fail <- res_meta$n_boot_fail %||% 0L
   boot_draws <- res$boot_draws %||% NULL
+
+  ci_fail_codes <- c(
+    res_meta$ci_fail_code %||% NA_character_,
+    res_meta$qst_ci_fail_code %||% NA_character_
+  )
+  ci_fail_codes <- ci_fail_codes[!is.na(ci_fail_codes) & nzchar(ci_fail_codes)]
+  reported_bootstrap_ci <- identical(res_meta$ci_method %||% NA_character_, "bootstrap") ||
+    identical(res_meta$qst_ci_method %||% NA_character_, "bootstrap")
+  expected_boot <- suppressWarnings(as.integer(config_local$n_boot %||% B %||% NA_integer_))
+  boot_success_counts <- suppressWarnings(as.integer(n_boot_ok))
+  low_boot_by_count <- isTRUE(reported_bootstrap_ci) &&
+    is.finite(expected_boot) &&
+    expected_boot > 0L &&
+    length(boot_success_counts) > 0L &&
+    any(boot_success_counts < ceiling(0.9 * expected_boot), na.rm = TRUE)
+  low_boot_by_code <- any(ci_fail_codes %in% c("low_boot_success", "initial_failure"))
+  if (isTRUE(success) && (isTRUE(low_boot_by_code) || isTRUE(low_boot_by_count))) {
+    ci_msg <- paste0(
+      "Bootstrap CI failed validation for estimator `", estimator_id,
+      "`: fewer than 90% of bootstrap replicates succeeded."
+    )
+    rlang::warn(ci_msg, class = "causalstress_ci_warning")
+    logs <- c(logs, paste0("[warning] ", ci_msg))
+    warnings_vec <- c(warnings_vec, ci_msg)
+    errors_vec <- c(errors_vec, ci_msg)
+    success <- FALSE
+  }
 
   att_error      <- est_att - true_att
   att_abs_error  <- abs(att_error)
@@ -264,7 +315,13 @@ cs_run_single <- function(
   } else {
     dep_versions <- vapply(
       est_desc$requires_pkgs,
-      function(pkg) as.character(utils::packageVersion(pkg)),
+      function(pkg) {
+        if (requireNamespace(pkg, quietly = TRUE)) {
+          as.character(utils::packageVersion(pkg))
+        } else {
+          NA_character_
+        }
+      },
       character(1)
     )
     pkg_versions <- c(CausalStress = cs_ver, dep_versions)

@@ -15,7 +15,8 @@ cs_run_campaign_plan <- function(plan,
                                  staging_dir,
                                  board = NULL,
                                  workers = parallel::detectCores() - 1L,
-                                 show_progress = TRUE) {
+                                 show_progress = TRUE,
+                                 experimental_parallel = FALSE) {
   if (is.null(staging_dir) || !nzchar(staging_dir)) {
     stop("staging_dir must be provided.")
   }
@@ -59,9 +60,16 @@ cs_run_campaign_plan <- function(plan,
     workers <- 1L
   }
 
+  cs_require_experimental_parallel(parallel = TRUE, experimental_parallel = experimental_parallel)
+  rlang::warn(
+    "Experimental parallel execution enabled for this planned campaign call.",
+    class = "causalstress_experimental_parallel"
+  )
+
   old_plan <- future::plan()
   on.exit(future::plan(old_plan), add = TRUE)
   future::plan(future::multisession, workers = workers)
+  parallel_backend <- cs_parallel_backend_string()
 
   # If the caller dynamically registered estimators (e.g., benchmarking variants),
   # propagate those registrations to each worker session.
@@ -79,7 +87,7 @@ cs_run_campaign_plan <- function(plan,
             for (i in seq_len(nrow(registry_extra))) {
               est_id <- registry_extra$estimator_id[[i]]
               if (est_id %in% missing) {
-                cs_register_estimator(
+                register_args <- list(
                   estimator_id  = est_id,
                   type          = registry_extra$type[[i]],
                   generator     = registry_extra$generator[[i]],
@@ -92,11 +100,23 @@ cs_run_campaign_plan <- function(plan,
                   source        = registry_extra$source[[i]],
                   requires_pkgs = registry_extra$requires_pkgs[[i]]
                 )
+                register_args <- register_args[names(register_args) %in% names(formals(cs_register_estimator))]
+                do.call(cs_register_estimator, register_args)
               }
             }
           }
         }
-        cs_run_batch(id, plan = plan, staging_dir = staging_dir)
+        batch_args <- list(
+          batch_id = id,
+          plan = plan,
+          staging_dir = staging_dir,
+          parallel = TRUE,
+          experimental_parallel = experimental_parallel,
+          parallel_backend = parallel_backend,
+          parallel_warning_emitted = TRUE
+        )
+        batch_args <- batch_args[names(batch_args) %in% names(formals(cs_run_batch))]
+        do.call(cs_run_batch, batch_args)
         if (!is.null(p)) {
           p(message = glue::glue("batch {id} done"))
         }

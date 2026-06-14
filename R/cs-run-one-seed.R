@@ -161,7 +161,8 @@ cs_run_one_seed_internal <- function(dgp_id,
       B            = B,
       config       = config_eff,
       board        = worker_board,
-      max_runtime  = max_runtime
+      max_runtime  = max_runtime,
+      ...
     )
   )
 

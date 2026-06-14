@@ -1,6 +1,6 @@
 # CausalStress v0.1.10 Batch Plan
 
-**Status:** Batch 3 complete after review.
+**Status:** Batch 4 implementation complete; awaiting code review.
 
 ## Review Protocol
 
@@ -140,9 +140,26 @@ stop and ask before continuing.
 
 ## Batch 4 - Governance Conformance
 
+- **Status:** Implementation complete; awaiting code review.
 - **Purpose:** Close remaining major runner, registry, gatekeeper, and batching
   conformance gaps.
 - **Tickets:** CS-1110, CS-1111, CS-1112, CS-1113, CS-1114, CS-1115
+- **Scope completed:** CS-1110 gatekeeper ATT/QST CI-less paths now report
+  `UNVERIFIED`; CS-1111 planned campaign parallel execution requires
+  `experimental_parallel`, records provenance, scopes thread caps, and leaves
+  DGP warnings loud by default; CS-1112 strict registry validation checks
+  sidecar version/status and dated deprecation warnings; CS-1113 missing
+  estimator packages and low bootstrap CI success become explicit failed rows
+  with classed warnings; CS-1114 campaign `...` and planned task `tau` reach
+  `cs_run_single()`; CS-1115 new batch artifacts validate task
+  fingerprint/schema metadata and tidy rows propagate required schema fields.
+- **Implementation checks run:** June 14, 2026, with
+  `C:/Program Files/R/R-4.5.2/bin/x64/Rscript.exe` and `NOT_CRAN=true`;
+  focused test files `test-gatekeeper.R`, `test-validate-dgp-registry.R`,
+  `test-robust-bootstrap.R`, `test-runner-single.R`, `test-run-campaign.R`,
+  `test-v018-parallel-gating.R`, `test-v019-worker.R`,
+  `test-v019-runner.R`, and `test-consolidate-schema.R` passed with 0
+  failures, 0 warnings, and 0 skips in the executed set.
 - **Review checkpoint:** Codex code review confirms the release-gate validation
   suite can pass after this batch.
 
@@ -151,7 +168,9 @@ stop and ask before continuing.
 - **Purpose:** Route minors and design-document corrections.
 - **Tickets:** CS-1116
 - **Scope note:** includes Batch 3 review routing for full-suite future-plan
-  state contamination in heavyweight/parallel tests before the release gate.
+  state contamination in heavyweight/parallel tests before the release gate, and
+  Batch 4 review routing for reconciling low-bootstrap `success = FALSE`
+  semantics with the written CI/bootstrap contract.
 - **Review checkpoint:** Codex code review confirms every audit finding is
   ticketed, deferred, or rejected.
 

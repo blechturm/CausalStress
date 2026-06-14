@@ -73,10 +73,12 @@ cs_validate_dgp_registry <- function(strict = FALSE) {
     }
   }
 
-  # YAML sidecar consistency (minimal executable meta) -----------------------
-  for (i in seq_len(nrow(reg))) {
-    id <- reg$dgp_id[[i]]
-    ver <- reg$version[[i]]
+  signal_sidecar <- function(msg) {
+    if (strict) cli::cli_abort(msg) else cli::cli_warn(msg)
+  }
+
+  # YAML sidecar consistency (one sidecar represents its declared DGP version) -
+  for (id in unique(reg$dgp_id)) {
 
     yaml_path <- system.file("dgp_meta", paste0(id, ".yml"), package = "CausalStress")
     if (yaml_path == "") {
@@ -87,31 +89,55 @@ cs_validate_dgp_registry <- function(strict = FALSE) {
     yml <- try(yaml::read_yaml(yaml_path), silent = TRUE)
     if (inherits(yml, "try-error")) {
       msg <- paste0("Failed to read YAML sidecar for ", id, ": ", yaml_path)
-      if (strict) cli::cli_abort(msg) else cli::cli_warn(msg)
+      signal_sidecar(msg)
       next
+    }
+
+    y_version <- as.character(yml$version %||% NA_character_)
+    y_status <- as.character(yml$status %||% NA_character_)
+    if (is.na(y_version) || !nzchar(y_version)) {
+      signal_sidecar(glue::glue("YAML sidecar missing version for {id}."))
+      next
+    }
+    if (is.na(y_status) || !nzchar(y_status)) {
+      signal_sidecar(glue::glue("YAML sidecar missing status for {id}."))
+      next
+    }
+
+    sidecar_row <- reg[reg$dgp_id == id & as.character(reg$version) == y_version, , drop = FALSE]
+    if (nrow(sidecar_row) != 1L) {
+      signal_sidecar(glue::glue(
+        "YAML sidecar for {id} declares version {y_version}, but registry has {nrow(sidecar_row)} matching rows."
+      ))
+      next
+    }
+    if (!identical(y_status, as.character(sidecar_row$status[[1L]]))) {
+      signal_sidecar(glue::glue(
+        "YAML sidecar mismatch for {id} v{y_version}: status='{y_status}' but registry says '{sidecar_row$status[[1L]]}'."
+      ))
     }
 
     y_noise <- yml$stress_profile$noise %||% NA_character_
     y_eff <- yml$stress_profile$effect %||% NA_character_
 
-    exec <- try(cs_dgp_executable_meta(id, ver), silent = TRUE)
+    exec <- try(cs_dgp_executable_meta(id, y_version), silent = TRUE)
     if (inherits(exec, "try-error")) {
-      msg <- paste0("Executable meta mapping missing for ", id, " v", ver, ".")
-      if (strict) cli::cli_abort(msg) else cli::cli_warn(msg)
+      msg <- paste0("Executable meta mapping missing for ", id, " v", y_version, ".")
+      signal_sidecar(msg)
       next
     }
 
     if (!identical(as.character(y_noise), as.character(exec$noise_family))) {
       msg <- glue::glue(
-        "YAML sidecar mismatch for {id} v{ver}: noise='{y_noise}' but executable meta says '{exec$noise_family}'."
+        "YAML sidecar mismatch for {id} v{y_version}: noise='{y_noise}' but executable meta says '{exec$noise_family}'."
       )
-      if (strict) cli::cli_abort(msg) else cli::cli_warn(msg)
+      signal_sidecar(msg)
     }
     if (!identical(as.character(y_eff), as.character(exec$effect_type))) {
       msg <- glue::glue(
-        "YAML sidecar mismatch for {id} v{ver}: effect='{y_eff}' but executable meta says '{exec$effect_type}'."
+        "YAML sidecar mismatch for {id} v{y_version}: effect='{y_eff}' but executable meta says '{exec$effect_type}'."
       )
-      if (strict) cli::cli_abort(msg) else cli::cli_warn(msg)
+      signal_sidecar(msg)
     }
   }
 

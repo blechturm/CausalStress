@@ -85,3 +85,42 @@ test_that("registry validation enforces single stable per dgp_id", {
     expect_error(cs_validate_dgp_registry(strict = TRUE), "more than one stable", ignore.case = TRUE)
   )
 })
+
+test_that("strict registry validation compares sidecar version and status", {
+  real_row <- cs_dgp_registry()[cs_dgp_registry()$dgp_id == "synth_baseline" &
+    cs_dgp_registry()$version == "1.6.0", , drop = FALSE]
+
+  with_mocked_bindings(
+    cs_dgp_registry = function() {
+      reg <- real_row
+      reg$version <- "9.9.9"
+      reg
+    },
+    expect_error(
+      cs_validate_dgp_registry(strict = TRUE),
+      "declares version 1.6.0",
+      ignore.case = TRUE
+    )
+  )
+
+  with_mocked_bindings(
+    cs_dgp_registry = function() {
+      reg <- real_row
+      reg$status <- "deprecated"
+      reg$rationale <- "test status mismatch"
+      reg
+    },
+    expect_error(
+      cs_validate_dgp_registry(strict = TRUE),
+      "status='stable'.*registry says 'deprecated'",
+      ignore.case = TRUE
+    )
+  )
+})
+
+test_that("deprecated DGP warnings include date_status_changed when present", {
+  expect_warning(
+    cs_get_dgp("synth_baseline", version = "1.3.0", quiet = FALSE),
+    "2026-01-11"
+  )
+})

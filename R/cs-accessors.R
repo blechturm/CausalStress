@@ -106,6 +106,7 @@ cs_meta_flatten <- function(x) {
     supports_qst = meta$supports_qst %||% NA,
     config_fingerprint = meta$config_fingerprint %||% NA_character_,
     config_fingerprint_schema = meta$config_fingerprint_schema %||% NA_integer_,
+    task_fingerprint = meta$task_fingerprint %||% NA_character_,
     max_runtime = prov$max_runtime %||% NA_real_,
     experimental_parallel = prov$experimental_parallel %||% FALSE,
     parallel_warning_emitted = prov$parallel_warning_emitted %||% FALSE,

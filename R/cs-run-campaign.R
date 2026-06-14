@@ -51,7 +51,7 @@
 #'   campaign_seed = 123,
 #'   strategy_map = list(defaults = list(n = 200))
 #' )
-#' cs_run_campaign(plan = plan, staging_dir = "staging_batches", workers = 2)
+#' cs_run_campaign(plan = plan, staging_dir = "staging_batches", workers = 2, experimental_parallel = TRUE)
 #' cs_consolidate(staging_dir = "staging_batches", board = pins::board_temp())
 #' }
 cs_run_campaign <- function(
@@ -78,7 +78,7 @@ cs_run_campaign <- function(
   workers = parallel::detectCores() - 1L,
   show_progress = TRUE,
   force = FALSE,
-  quiet = TRUE,
+  quiet = FALSE,
   max_runtime = Inf,
   ...
 ) {
@@ -91,7 +91,8 @@ cs_run_campaign <- function(
       staging_dir = staging_dir,
       board = board,
       workers = workers,
-      show_progress = show_progress
+      show_progress = show_progress,
+      experimental_parallel = experimental_parallel
     ))
   }
   dots <- list(...)

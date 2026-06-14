@@ -7,9 +7,20 @@
 #' @param plan A tibble from `cs_plan_campaign()`.
 #' @param staging_dir Directory to write the batch artifact.
 #'
+#' @param parallel Logical; `TRUE` when invoked from a parallel planned campaign.
+#' @param experimental_parallel Logical; must be `TRUE` when `parallel = TRUE`.
+#' @param parallel_backend Character backend label recorded in batch metadata.
+#' @param parallel_warning_emitted Logical provenance flag from the parent runner.
+#'
 #' @return The path to the staged `.qs` file (invisible).
 #' @export
-cs_run_batch <- function(batch_id, plan, staging_dir) {
+cs_run_batch <- function(batch_id,
+                         plan,
+                         staging_dir,
+                         parallel = FALSE,
+                         experimental_parallel = FALSE,
+                         parallel_backend = NA_character_,
+                         parallel_warning_emitted = FALSE) {
   if (is.null(staging_dir) || !nzchar(staging_dir)) {
     stop("staging_dir must be provided.")
   }
@@ -21,6 +32,7 @@ cs_run_batch <- function(batch_id, plan, staging_dir) {
   if (length(idx) != 1L) {
     stop("batch_id not found in plan.")
   }
+  cs_require_experimental_parallel(parallel = parallel, experimental_parallel = experimental_parallel)
 
   tasks <- plan$tasks[[idx]]
   results <- list()
@@ -71,31 +83,48 @@ cs_run_batch <- function(batch_id, plan, staging_dir) {
     tryCatch(
       {
         CausalStress::cs_set_rng(seed)
-        cs_enforce_threads(1L)
 
-        cs_get_dgp(dgp_id, version = dgp_version)
-        cs_get_estimator(estimator_id)
+        run_task_once <- function() {
+          cs_get_dgp(dgp_id, version = dgp_version, quiet = FALSE)
+          cs_get_estimator(estimator_id)
 
-        boot_flag <- if (!is.null(task_config)) task_config$bootstrap %||% FALSE else FALSE
-        B_val <- if (!is.null(task_config)) task_config$B %||% 0L else 0L
+          boot_flag <- if (!is.null(task_config)) task_config$bootstrap %||% FALSE else FALSE
+          B_val <- if (!is.null(task_config)) task_config$B %||% 0L else 0L
 
-        res <- cs_run_single(
-          dgp_id       = dgp_id,
-          estimator_id = estimator_id,
-          n            = n_val,
-          seed         = seed,
-          version      = dgp_version,
-          tau          = tau_val,
-          bootstrap    = boot_flag,
-          B            = B_val,
-          config       = task_config %||% list()
-        )
+          cs_run_single(
+            dgp_id       = dgp_id,
+            estimator_id = estimator_id,
+            n            = n_val,
+            seed         = seed,
+            version      = dgp_version,
+            quiet        = FALSE,
+            tau          = tau_val,
+            bootstrap    = boot_flag,
+            B            = B_val,
+            config       = task_config %||% list()
+          )
+        }
+
+        res <- if (isTRUE(parallel) && isTRUE(experimental_parallel)) {
+          cs_with_envvar(cs_thread_caps_env(), run_task_once())
+        } else {
+          run_task_once()
+        }
 
         if (!is.null(res$qst) && !"tau_id" %in% names(res$qst)) {
           res$qst$tau_id <- cs_tau_id(res$qst$tau)
         }
         res$meta$task_fingerprint <- task_fingerprint
         res$meta$config_fingerprint_schema <- config_fingerprint_schema
+        if (!is.null(res$provenance) && isTRUE(parallel) && isTRUE(experimental_parallel)) {
+          res$provenance$experimental_parallel <- TRUE
+          res$provenance$parallel_warning_emitted <- isTRUE(parallel_warning_emitted)
+          res$provenance$parallel_backend <- parallel_backend
+          res$provenance$thread_caps_applied <- TRUE
+          res$provenance$thread_caps_env <- cs_thread_caps_env()
+          res$provenance$effective_num_threads <- 1L
+          res$provenance$staging_dir_used <- TRUE
+        }
 
         results[[length(results) + 1L]] <- res
       },
@@ -165,7 +194,12 @@ cs_run_batch <- function(batch_id, plan, staging_dir) {
       n_tasks = n_tasks,
       n_results = n_results,
       n_errors = n_errors,
-      task_count_reconciled = TRUE
+      task_count_reconciled = TRUE,
+      experimental_parallel = isTRUE(experimental_parallel),
+      parallel_warning_emitted = isTRUE(parallel_warning_emitted),
+      parallel_backend = parallel_backend,
+      thread_caps_applied = isTRUE(parallel) && isTRUE(experimental_parallel),
+      thread_caps_env = if (isTRUE(parallel) && isTRUE(experimental_parallel)) cs_thread_caps_env() else character(0L)
     ),
     results = results,
     errors = errors_tbl
