@@ -5,6 +5,7 @@
 #' @param x Value to test.
 #' @param y Fallback if `x` is `NULL`.
 #' @return `x` or `y`.
+#' @name null_coalesce
 #' @export
 `%||%` <- function(x, y) {
   if (!is.null(x)) x else y

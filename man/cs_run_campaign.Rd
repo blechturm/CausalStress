@@ -28,7 +28,7 @@ cs_run_campaign(
   workers = parallel::detectCores() - 1L,
   show_progress = TRUE,
   force = FALSE,
-  quiet = TRUE,
+  quiet = FALSE,
   max_runtime = Inf,
   ...
 )
@@ -63,6 +63,12 @@ shuffle task execution order for better load balancing without relying on
 ambient RNG state. If \code{NULL}, tasks are executed in deterministic grid
 order.}
 
+\item{version}{Optional DGP version string forwarded to \code{\link[=cs_get_dgp]{cs_get_dgp()}}.}
+
+\item{status}{Optional DGP status filter forwarded to \code{\link[=cs_get_dgp]{cs_get_dgp()}}.}
+
+\item{tau}{Numeric vector of quantile levels forwarded to \code{\link[=cs_run_single]{cs_run_single()}}.}
+
 \item{bootstrap}{Logical; runner-level convenience flag forwarded to
 \code{\link[=cs_run_single]{cs_run_single()}}. When \code{TRUE} and \code{ci_method} is missing in the resolved
 config, bootstrap CIs are requested and the per-task seed is injected (see
@@ -79,9 +85,20 @@ config, bootstrap CIs are requested and the per-task seed is injected (see
 
 \item{parallel}{Logical; if TRUE, uses furrr/future for parallel execution.}
 
+\item{experimental_parallel}{Logical; must be \code{TRUE} to enable experimental
+parallel execution.}
+
 \item{workers}{Number of parallel workers for plan-based execution.}
 
 \item{show_progress}{Logical; show progressr-based progress.}
+
+\item{force}{Logical; if \code{TRUE}, recompute even when existing pins are found.}
+
+\item{quiet}{Logical; if \code{TRUE}, suppress DGP governance warnings in
+per-task runs. Defaults to \code{FALSE} so governance warnings remain loud.}
+
+\item{max_runtime}{Numeric scalar; maximum allowed runtime in seconds per
+task.}
 
 \item{...}{Additional arguments forwarded to cs_run_single() (tau, etc.).}
 }
@@ -104,7 +121,12 @@ plan <- cs_plan_campaign(
   campaign_seed = 123,
   strategy_map = list(defaults = list(n = 200))
 )
-cs_run_campaign(plan = plan, staging_dir = "staging_batches", workers = 2)
+cs_run_campaign(
+  plan = plan,
+  staging_dir = "staging_batches",
+  workers = 2,
+  experimental_parallel = TRUE
+)
 cs_consolidate(staging_dir = "staging_batches", board = pins::board_temp())
 }
 }

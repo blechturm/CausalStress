@@ -1,6 +1,6 @@
 # CausalStress v0.1.10 Batch Plan
 
-**Status:** Batch 4 implementation complete; awaiting code review.
+**Status:** Batch 5 complete after review.
 
 ## Review Protocol
 
@@ -140,7 +140,7 @@ stop and ask before continuing.
 
 ## Batch 4 - Governance Conformance
 
-- **Status:** Implementation complete; awaiting code review.
+- **Status:** Complete after review.
 - **Purpose:** Close remaining major runner, registry, gatekeeper, and batching
   conformance gaps.
 - **Tickets:** CS-1110, CS-1111, CS-1112, CS-1113, CS-1114, CS-1115
@@ -165,12 +165,31 @@ stop and ask before continuing.
 
 ## Batch 5 - Cleanup
 
+- **Status:** Complete after review.
 - **Purpose:** Route minors and design-document corrections.
 - **Tickets:** CS-1116
-- **Scope note:** includes Batch 3 review routing for full-suite future-plan
-  state contamination in heavyweight/parallel tests before the release gate, and
-  Batch 4 review routing for reconciling low-bootstrap `success = FALSE`
-  semantics with the written CI/bootstrap contract.
+- **Scope completed:** removed the duplicate `cs_tidy_run` alias/Rd entry;
+  added a classed warning for requested QST tau values without matching truth
+  rows; restored prior `future::plan()` state in the robust-bootstrap test;
+  reconciled low-bootstrap `success = FALSE` semantics in `contracts.md`; added
+  explicit Markdown/YAML LF rules in `.gitattributes`; routed D1-D5 and
+  remaining release-gate documentation backlog in `release_closeout.md`; and
+  fixed Batch 4 `cs_run_batch()`/`cs_run_campaign()` Rd drift plus the `%||%`
+  Rd-name warning.
+- **Checks run:** June 14, 2026, with
+  `C:/Program Files/R/R-4.5.2/bin/x64/Rscript.exe` and `NOT_CRAN=true`;
+  focused test files `test-v018-contract-fail-loud.R`,
+  `test-robust-bootstrap.R`, `test-runner-single.R`, `test-tidy.R`,
+  `test-timing.R`, `test-v019-e2e.R`, and `test-v019-worker.R` passed. Full
+  `devtools::test(reporter='summary')` passed. `devtools::check(document =
+  FALSE, build_args = '--no-build-vignettes', args = c('--no-manual',
+  '--ignore-vignettes', '--no-tests'), error_on = 'never')` completed with 0
+  errors, 2 warnings, and 4 notes; the remaining warnings/notes are routed to
+  the release gate as documentation/package-structure backlog, and code/doc
+  mismatches are OK.
+- **Review evidence:** Batch 5 review reported no blocking findings, verified
+  every CS-1116 cleanup item, and found one non-blocking Batch 4 status drift;
+  the status drift was corrected before commit.
 - **Review checkpoint:** Codex code review confirms every audit finding is
   ticketed, deferred, or rejected.
 

@@ -23,12 +23,22 @@
 #'   shuffle task execution order for better load balancing without relying on
 #'   ambient RNG state. If `NULL`, tasks are executed in deterministic grid
 #'   order.
+#' @param version Optional DGP version string forwarded to [cs_get_dgp()].
+#' @param status Optional DGP status filter forwarded to [cs_get_dgp()].
+#' @param tau Numeric vector of quantile levels forwarded to [cs_run_single()].
 #' @param skip_existing Logical; if TRUE, skip tasks already pinned on `board`.
 #' @param board Optional pins board for persistence.
 #' @param staging_dir Optional staging directory for crash recovery.
 #' @param parallel Logical; if TRUE, uses furrr/future for parallel execution.
+#' @param experimental_parallel Logical; must be `TRUE` to enable experimental
+#'   parallel execution.
 #' @param workers Number of parallel workers for plan-based execution.
 #' @param show_progress Logical; show progressr-based progress.
+#' @param force Logical; if `TRUE`, recompute even when existing pins are found.
+#' @param quiet Logical; if `TRUE`, suppress DGP governance warnings in
+#'   per-task runs. Defaults to `FALSE` so governance warnings remain loud.
+#' @param max_runtime Numeric scalar; maximum allowed runtime in seconds per
+#'   task.
 #' @param bootstrap Logical; runner-level convenience flag forwarded to
 #'   [cs_run_single()]. When `TRUE` and `ci_method` is missing in the resolved
 #'   config, bootstrap CIs are requested and the per-task seed is injected (see
@@ -51,7 +61,12 @@
 #'   campaign_seed = 123,
 #'   strategy_map = list(defaults = list(n = 200))
 #' )
-#' cs_run_campaign(plan = plan, staging_dir = "staging_batches", workers = 2, experimental_parallel = TRUE)
+#' cs_run_campaign(
+#'   plan = plan,
+#'   staging_dir = "staging_batches",
+#'   workers = 2,
+#'   experimental_parallel = TRUE
+#' )
 #' cs_consolidate(staging_dir = "staging_batches", board = pins::board_temp())
 #' }
 cs_run_campaign <- function(

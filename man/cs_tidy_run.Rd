@@ -4,7 +4,7 @@
 \alias{cs_tidy_run}
 \title{Convert a single CausalStress run to a one-row tibble}
 \usage{
-cs_tidy_run(x)
+cs_tidy_run(result)
 }
 \arguments{
 \item{result}{A list as returned by \code{\link[=cs_run_single]{cs_run_single()}}.}

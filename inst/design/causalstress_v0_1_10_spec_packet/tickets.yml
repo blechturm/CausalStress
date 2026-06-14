@@ -117,7 +117,7 @@ tickets:
     constitutional_check: "Article IV"
     test_obligation: "CI-less ATT/QST paths are Unverified"
     review_gate: "Batch 4 gatekeeper review"
-    disposition: "implementation_complete_awaiting_review"
+    disposition: "complete_after_review"
   - id: "CS-1111"
     title: "Restore parallel governance on campaign paths"
     batch: 4
@@ -126,7 +126,7 @@ tickets:
     constitutional_check: "Articles V, VI, and VII"
     test_obligation: "Parallel opt-in/provenance/env restore/warnings"
     review_gate: "Batch 4 parallel governance review"
-    disposition: "implementation_complete_awaiting_review"
+    disposition: "complete_after_review"
   - id: "CS-1112"
     title: "Enhance registry and sidecar validation"
     batch: 4
@@ -135,7 +135,7 @@ tickets:
     constitutional_check: "Article VII"
     test_obligation: "Strict validation checks sidecar version/status and warning dates"
     review_gate: "Batch 4 registry validation review"
-    disposition: "implementation_complete_awaiting_review"
+    disposition: "complete_after_review"
   - id: "CS-1113"
     title: "Fix CI/bootstrap and optional-package failure semantics"
     batch: 4
@@ -144,7 +144,7 @@ tickets:
     constitutional_check: "Runner output contract"
     test_obligation: "Low bootstrap success and missing packages surface as specified"
     review_gate: "Batch 4 CI/failure semantics review"
-    disposition: "implementation_complete_awaiting_review"
+    disposition: "complete_after_review"
   - id: "CS-1114"
     title: "Fix campaign forwarding and batch tau handling"
     batch: 4
@@ -153,7 +153,7 @@ tickets:
     constitutional_check: "Requested tau contract"
     test_obligation: "Documented dots and strategy tau reach cs_run_single"
     review_gate: "Batch 4 campaign forwarding review"
-    disposition: "implementation_complete_awaiting_review"
+    disposition: "complete_after_review"
   - id: "CS-1115"
     title: "Close batching schema and consolidation gaps"
     batch: 4
@@ -162,7 +162,7 @@ tickets:
     constitutional_check: "Article VII"
     test_obligation: "Batch schema and tidy propagation match spec"
     review_gate: "Batch 4 batching schema review"
-    disposition: "implementation_complete_awaiting_review"
+    disposition: "complete_after_review"
   - id: "CS-1116"
     title: "Route minors and design-document corrections"
     batch: 5
@@ -171,7 +171,7 @@ tickets:
     constitutional_check: "varies"
     test_obligation: "No stale non-registry design doc remains active; closeout routes residuals; full-suite future/parallel state contamination fixed before release gate; reconcile Batch 4 low-bootstrap success=FALSE semantics with the written CI/bootstrap contract; consider Markdown/YAML line-ending policy"
     review_gate: "Batch 5 cleanup and audit-routing review"
-    disposition: "open"
+    disposition: "complete_after_review"
   - id: "CS-1118"
     title: "Run v0.1.10 release gate and closeout"
     batch: 6

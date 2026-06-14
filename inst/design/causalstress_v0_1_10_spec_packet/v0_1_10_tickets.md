@@ -132,7 +132,7 @@
 - **Constitutional check:** Article IV.
 - **Test obligation:** CI-less ATT/QST paths are Unverified, never PASS/NA.
 - **Review gate:** Batch 4 gatekeeper review.
-- **Disposition:** implementation complete; awaiting review.
+- **Disposition:** complete after review.
 
 ### CS-1111 - Restore parallel governance on campaign paths
 
@@ -142,7 +142,7 @@
 - **Test obligation:** parallel requires opt-in, emits provenance, restores env,
   and does not silence DGP governance warnings.
 - **Review gate:** Batch 4 parallel governance review.
-- **Disposition:** implementation complete; awaiting review.
+- **Disposition:** complete after review.
 
 ### CS-1112 - Enhance registry and sidecar validation
 
@@ -152,7 +152,7 @@
 - **Test obligation:** strict validation checks sidecar version/status and
   deprecation warning includes date when present.
 - **Review gate:** Batch 4 registry validation review.
-- **Disposition:** implementation complete; awaiting review.
+- **Disposition:** complete after review.
 
 ### CS-1113 - Fix CI/bootstrap and optional-package failure semantics
 
@@ -162,7 +162,7 @@
 - **Test obligation:** low bootstrap success is explicit failure/warning as
   specified; missing packages produce `success = FALSE` rows.
 - **Review gate:** Batch 4 CI/failure semantics review.
-- **Disposition:** implementation complete; awaiting review.
+- **Disposition:** complete after review.
 
 ### CS-1114 - Fix campaign forwarding and batch tau handling
 
@@ -171,7 +171,7 @@
 - **Constitutional check:** estimator requested tau contract.
 - **Test obligation:** documented `...` and strategy tau reach `cs_run_single()`.
 - **Review gate:** Batch 4 campaign forwarding review.
-- **Disposition:** implementation complete; awaiting review.
+- **Disposition:** complete after review.
 
 ### CS-1115 - Close batching schema and consolidation gaps
 
@@ -181,7 +181,7 @@
 - **Test obligation:** error schema includes task fingerprint/class; consolidator
   validates fingerprints/schema; tidy rows propagate required fields.
 - **Review gate:** Batch 4 batching schema review.
-- **Disposition:** implementation complete; awaiting review.
+- **Disposition:** complete after review.
 
 ## Batch 5 - Cleanup
 
@@ -201,7 +201,7 @@
   consider a `.gitattributes` line-ending policy for Markdown/YAML governance
   files to avoid LF/CRLF churn.
 - **Review gate:** Batch 5 cleanup and audit-routing review.
-- **Disposition:** open
+- **Disposition:** complete after review.
 
 ## Batch 6 - Release Gate
 

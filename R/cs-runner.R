@@ -264,7 +264,7 @@ cs_run_single <- function(
         truth_tbl$tau_id <- cs_tau_id(truth_tbl$tau)
       }
       truth_tbl <- truth_tbl %>%
-        dplyr::select(.data$tau_id, .data$true)
+        dplyr::select("tau_id", "true")
 
       qst_df <- qst_df %>%
         dplyr::left_join(truth_tbl, by = "tau_id") %>%
@@ -272,6 +272,18 @@ cs_run_single <- function(
           error = estimate - true,
           abs_error = abs(error)
         )
+      unmatched_truth <- is.na(qst_df$true)
+      if (any(unmatched_truth)) {
+        unmatched_tau <- paste(qst_df$tau[unmatched_truth], collapse = ", ")
+        qst_truth_msg <- paste0(
+          "QST truth is unavailable for requested tau value(s): ",
+          unmatched_tau,
+          ". Error and coverage fields are NA for those rows."
+        )
+        rlang::warn(qst_truth_msg, class = "causalstress_qst_truth_warning")
+        logs <- c(logs, paste0("[warning] ", qst_truth_msg))
+        warnings_vec <- c(warnings_vec, qst_truth_msg)
+      }
     } else {
       qst_df <- qst_df %>%
         dplyr::mutate(

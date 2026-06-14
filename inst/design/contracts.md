@@ -75,6 +75,11 @@ artifacts must reconcile task count as:
 
 `length(results) + nrow(errors) == nrow(tasks)`.
 
+When bootstrap CIs are requested and the estimator reports fewer than 90% of
+requested bootstrap replicates as successful for any reported inferential
+dimension, the runner must emit a classed CI warning, set CI fields for the
+affected dimension to `NA`, and mark the task result `success = FALSE`.
+
 ## Fingerprints and Pins
 
 Normative sources: active packet plus historical specs for legacy artifacts.

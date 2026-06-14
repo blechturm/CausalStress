@@ -4,7 +4,15 @@
 \alias{cs_run_batch}
 \title{Run a single batch from a campaign plan}
 \usage{
-cs_run_batch(batch_id, plan, staging_dir)
+cs_run_batch(
+  batch_id,
+  plan,
+  staging_dir,
+  parallel = FALSE,
+  experimental_parallel = FALSE,
+  parallel_backend = NA_character_,
+  parallel_warning_emitted = FALSE
+)
 }
 \arguments{
 \item{batch_id}{Integer batch id to run.}
@@ -12,6 +20,14 @@ cs_run_batch(batch_id, plan, staging_dir)
 \item{plan}{A tibble from \code{cs_plan_campaign()}.}
 
 \item{staging_dir}{Directory to write the batch artifact.}
+
+\item{parallel}{Logical; \code{TRUE} when invoked from a parallel planned campaign.}
+
+\item{experimental_parallel}{Logical; must be \code{TRUE} when \code{parallel = TRUE}.}
+
+\item{parallel_backend}{Character backend label recorded in batch metadata.}
+
+\item{parallel_warning_emitted}{Logical provenance flag from the parent runner.}
 }
 \value{
 The path to the staged \code{.qs} file (invisible).

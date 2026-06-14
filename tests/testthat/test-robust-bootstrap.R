@@ -63,8 +63,9 @@ test_that("bootstrap instability triggers NA CIs and warning", {
   )
 
   # serial plan for reproducibility
+  old_plan <- future::plan()
+  on.exit(future::plan(old_plan), add = TRUE)
   future::plan(future::sequential)
-  on.exit(future::plan(future::sequential), add = TRUE)
 
   expect_warning(
     res <- cs_run_single(
