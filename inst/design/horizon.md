@@ -49,6 +49,51 @@ ticket.
 
 ## Deferred Tooling Work
 
+### Spike: evaluate mirai (+ mori) as the parallel backend (parked 2026-06-12)
+
+Candidate replacement for the current `future`/`furrr` execution layer:
+
+- `mirai` / `mirai_map()` — minimalist async evaluation over NNG, now the
+  backend behind `purrr::in_parallel()`; lower dispatch overhead than
+  `future::multisession`, structured error values, built-in progress, and
+  daemon-based workers that fit the campaign worker model.
+  Reference: <https://mirai.r-lib.org/articles/mirai-map.html>
+- `mori` — OS-level shared memory for R objects (zero-copy ALTREP via
+  `share()`), integrating with `mirai`/`parallel`/`callr`; workers hold a
+  ~1 KB reference instead of a per-worker copy. Same-machine only.
+  Reference: <https://shikokuchuo.net/mori/>
+
+Spike questions (each maps to a constitutional or audit constraint):
+
+1. **RNG determinism (Art. II):** task results must be identical under serial
+   and parallel dispatch, because workers re-seed per task via `cs_set_rng()`.
+   Verify mirai daemons cannot perturb in-task RNG state, and that plan/task
+   identity is backend-independent (interacts with the schema-3/RNG design,
+   CS-1105–CS-1107).
+2. **Wide & Shallow (Art. V):** can thread caps (`cs_enforce_threads`-style,
+   scoped not permanent) be applied per daemon, and does mirai respect
+   single-threaded worker discipline?
+3. **Worker isolation (Art. VI):** daemons must write staging only, never
+   pins; confirm the staging+consolidate flow works unchanged under
+   `mirai_map()` and that structured errors map cleanly onto the batch error
+   schema (`error_class`, fingerprints, count reconciliation).
+4. **Governance (audit M4):** the experimental-parallel gate, loud warning,
+   and provenance fields (`parallel_backend`, thread caps) must wrap any new
+   backend exactly as they wrap `future`.
+5. **Payoff measurement:** benchmark dispatch overhead and memory for a
+   representative campaign (e.g. 1,000+ tasks across the registry estimators);
+   `mori` is only worth adopting if shared inputs (plan objects, oracle truth
+   tables) are actually large enough to dominate serialization cost — DGPs
+   generate per-task data, so this needs measuring, not assuming.
+6. **Footprint:** dependency cost (`nanonext`/NNG system requirements) vs.
+   dropping `future` + `furrr` from Imports; Windows behavior for both.
+
+Sequencing: run the spike only after CS-1106/CS-1107 (schema-3 + RNG
+isolation) and CS-1111 (parallel governance) land, so it evaluates against the
+repaired baseline rather than the audited defects. Outcome routes through an
+RFC before any backend change — execution-backend swaps touch Art. V/VI and
+are an `rfc_cycle.md` trigger.
+
 - GitHub Actions CI for install, tests, and release-gate smoke checks.
 - Coverage measurement and coverage-regression reporting.
 - Migrate DGP documentation into a pkgdown site structure.
