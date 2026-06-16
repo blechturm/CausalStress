@@ -30,10 +30,14 @@ Candidate scope for a post-v0.1.10 "estimand registry" RFC:
 - **CATE / unit-level tau(X) with PEHE.** The truth layer already carries
   unit-level CATE truth (`meta$structural_te`, Constitution Art. I). Missing
   pieces: a `target_level = "unit"` output schema (sketched in the archived
-  v0.3.0 design's deferred list), PEHE/RMSE-over-tau metrics, and a CATE
-  gatekeeper. Key asset: the sharp-null placebo suite (tau identically 0) is a
-  natural CATE gatekeeper — any estimated heterogeneity on a placebo is
-  hallucination — and is arguably more discriminating for CATE than for ATT.
+  v0.3.0 design's deferred list), PEHE/RMSE-over-tau metrics, and the CATE
+  null/recovery evaluation. Note: the naive "any estimated heterogeneity on a
+  placebo is hallucination" per-unit gate was *superseded* by the F3 prior-art
+  pass (2026-06-16) — it is ill-posed for a unit-level estimand; the principled
+  form is a heterogeneity-*detection* false-positive test (BLP/GATES/Imai-Li/
+  RATE) scored as Type-I error under the sharp null, with CATE accuracy scored
+  on non-null DGPs. See the RFC-1 estimand-registry trail and the Gatekeeper
+  recalibration entry below.
 - **Explicitly rejected for now:** marginal/unconditional QTE (QST already
   covers the distributional tier for the treated; document its QTT flavor
   instead); distribution of treatment effects, i.e. quantiles of `Y1 - Y0`
@@ -46,6 +50,48 @@ Constitutional note: Article I defines exactly two truth tiers and Article IV
 scopes the gatekeeper exclusively to ATT and QST, so any addition is a
 constitutional amendment fed by an accepted RFC synthesis, not a feature
 ticket.
+
+### Gatekeeper recalibration (parked 2026-06-16; requires a dedicated RFC and Article IV amendment)
+
+**Problem.** The current placebo gatekeeper (Article IV §4.2) is miscalibrated:
+it applies a monolithic pass/fail across the *entire* placebo suite and marks an
+estimator **Non-Robust in the registry** (§4.2.4) on systematic deviation. But
+the suite deliberately includes adversarial worst-case traps — e.g.
+`synth_placebo_kangschafer`, whose *entire point* is dual outcome-regression +
+propensity misspecification that naive estimators cannot survive. Failing such a
+trap is **diagnostic** (it locates where an estimator breaks), not
+**disqualifying** (the estimator remains usable elsewhere). The gate conflates
+"failed a known brutal trap" with "is non-robust/unusable," and the binary
+`Non-Robust` label is too blunt for what is really a per-DGP vulnerability
+profile.
+
+**Candidate redesign direction (for the RFC, not decided here):**
+
+- Replace the monolithic suite-level verdict with a **per-DGP robustness
+  profile**: which placebo failure modes (overlap, dual misspecification,
+  heavy tails, …) each estimator is vulnerable to — a breakdown profile, not a
+  pass/fail stamp. This is the same "profile, not binary verdict" philosophy as
+  the kill-plots, so it may share machinery with the families/kill-plot work
+  (the future RFC-3 lineage).
+- Introduce **difficulty tiers** for placebo DGPs (baseline-expectation vs
+  adversarial-trap), so the `Non-Robust` consequence — if retained at all —
+  attaches only to failure on the baseline tier, while trap failures are
+  recorded as characterization.
+- Reconsider what registry consequence, if any, a gate failure should carry,
+  and whether "Unverified" (Art. IV §4.2.3, for estimators without CIs) is the
+  better default than "Non-Robust."
+
+**Coupling — important for RFC-1 (Estimand Registry).** RFC-1 generalizes the
+gatekeeper *structure* (per-estimand pluggable; the CATE detection-test
+decision from the F3 prior-art pass). This entry is about the gate's *policy /
+calibration / labeling* — a distinct, deeper question. **RFC-1 must therefore
+NOT bake the current too-harsh "whole-suite-or-Non-Robust" policy into any new
+(CATE/ATE) gate**; it should make the new gates pluggable and explicitly defer
+their pass/fail *calibration* to this recalibration RFC. Structure now, policy
+later.
+
+Governance note: §4.2 is constitutional, so recalibration is an Article IV
+amendment via the RFC cycle, not a feature ticket.
 
 ## Deferred Inference Work
 

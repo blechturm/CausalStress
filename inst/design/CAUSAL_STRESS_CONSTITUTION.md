@@ -1,8 +1,9 @@
 # CAUSALSTRESS CONSTITUTION
 
-**Version:** 1.8.2\
-**Date:** 2026-06-13\
-**Status:** Ratified (Stabilized Protocol)
+**Version:** 2.0.0\
+**Public name:** CausalStress Scientific Protocol\
+**Date:** 2026-06-16\
+**Status:** Ratified (Estimand Registry Protocol). Ratified by the maintainer on 2026-06-16 after accepted RFC-1 and constitutional review.
 
 ------------------------------------------------------------------------
 
@@ -18,11 +19,15 @@ but MUST NOT change the semantic meaning of any article without a *major* versio
 All contributors must treat this document as the supreme authority.\
 Any code proposal that violates it must be rejected.
 
+### Amendment History
+
+-   **v2.0.0 (Ratified 2026-06-16):** Introduces the typed **estimand registry** (ATT, ATE, QST, CATE) and amends Articles **I, II, III, IV, V, and VI** for internal consistency — the estimand registry and typed scoring (Art. I), held-out evaluation-sample identity (Art. II §2.2), the typed estimator output contract (Art. III §3.1), the per-estimand gatekeeper (Art. IV), and fit-artifact/score-record persistence granularity (Art. V §5.2, Art. VI) — per accepted RFC-1 (`inst/design/rfc/20260616_estimand_registry_synthesis.md`). Existing ATT/QST truth, the real-DGP external-truth clause (§1.3), QST oracle-size immutability (§1.4), and the existing ATT/QST gatekeeper enforcement (§4.2.4) are **preserved**. The bump is *major*. Implementation is staged (Wave 1: ATT/ATE typed scoring; Wave 2: CATE). **Constitutional-review corrections (2026-06-16):** the RATIFY-WITH-AMENDMENTS findings of `rfc/20260616_constitution_2_0_0_review.md` were applied (B1 persistence grain; B2 staged-implementation rule; B3 held-out eval identity; B4 oracle-immutability scope; M1 target-level enumeration; M2 ATE scoring population; M3 stale CI/gatekeeper clause; m1 tau-grid wording; m2 stale release-line wording). Ratified by the maintainer on 2026-06-16.
+
 ------------------------------------------------------------------------
 
 ## Article I: The Definition of Truth
 
-To prevent ambiguity between "Signal" and "Noise," all Synthetic DGPs must adhere to the **Two-Tier Truth Contract**.
+To prevent ambiguity between "Signal" and "Noise," all Synthetic DGPs must adhere to the **Two-Tier Truth Contract**: truth is defined across two **tiers** — Structural (noise-free) and Distributional (full realized) — over a registry of **estimands** at three governed **target levels** — population-scalar, distributional-curve, and unit-level. The estimands governed in v2.x are ATT, ATE, QST, and CATE (Section 1.7).
 
 ### Section 1.1: Interpretation
 
@@ -49,9 +54,42 @@ The Quantile Shift (QST) is defined on the **full realized distribution** (Signa
 
 -   **Grid:** The canonical truth grid is invariant: $u \in \{0.01, 0.02, \dots, 0.99\}$.
 
--   **Computation:** For synthetic data, this **must** be computed via Oracle Monte Carlo ($N=10^6$) or analytic derivation matching oracle precision ($< 10^{-5}$). The oracle size $N=10^6$ is immutable for v1.x.y.
+-   **Computation:** For synthetic data, this **must** be computed via Oracle Monte Carlo ($N=10^6$) or analytic derivation matching oracle precision ($< 10^{-5}$). The oracle size $N=10^6$ is immutable within a major constitutional line and MUST NOT change except by an explicit major constitutional amendment that names the change; the v1.x QST oracle size is carried into v2.x unchanged.
 
 -   **Independence:** Noise MUST be drawn independently across units unless explicitly specified.
+
+### Section 1.5: Structural ATE
+
+The Average Treatment Effect (ATE) is defined on the **noise-free structural component** over **all** units — the population analogue of §1.3 without conditioning on treatment: $$ATE_{true} = \frac{1}{N} \sum_{i} \tau(X_i)$$
+
+-   **Default convention:** finite-sample structural ATE over the **declared scoring population** of the ATE target — by default the full generated run sample — matching the finite-sample convention of Structural ATT (§1.3). A superpopulation ATE MAY be used only if a DGP explicitly declares analytic/oracle support, and the truth descriptor MUST distinguish it from the finite-sample ATE.
+
+-   **Constraint & Prohibition:** identical to §1.3 — $\tau(X)$ is a deterministic function of $X$ only; truth is never the sample mean of realized $y_1 - y_0$.
+
+### Section 1.6: Structural CATE
+
+The Conditional Average Treatment Effect (CATE) is the **unit-level** structural effect $\tau(X_i) = \mathbb{E}[Y_1 - Y_0 \mid X_i]$ — the **conditional-mean** effect, **not** the realized individual effect $Y_1 - Y_0$.
+
+-   **Truth:** the per-unit structural effect vector (`meta$structural_te`); no new oracle is required.
+
+-   **Evaluation:** CATE is scored on a **held-out** evaluation sample by default (see Article III §3.1); the realized individual effect is never the estimand.
+
+### Section 1.7: The Estimand Registry and Typed Scoring
+
+Estimands are a governed, versioned vocabulary. Each is identified by a typed `estimand_target` (id, truth tier, target level, target population, evaluation policy, grid/metric identifiers).
+
+| Estimand | Tier | Level | Population | Truth |
+|---|---|---|---|---|
+| ATT | Structural | population | treated | §1.3 |
+| ATE | Structural | population | all | §1.5 |
+| CATE | Structural | unit | held-out eval | §1.6 |
+| QST | Distributional | distributional | treated | §1.4 |
+
+-   **Typed scoring (no cross-scoring):** an estimator's output for a target MUST be scored only against that target's truth. Scoring is the intersection `requested ∩ estimator-produced ∩ DGP-truth-available`; any unscoreable request is recorded as an explicit **non-comparable** result with a machine-readable reason, never silently cross-scored.
+
+-   **Real DGPs:** estimands lacking externally-supplied truth are **non-comparable** (no truth is regenerated). This extends the §1.3 real-data principle; it does **not** create a new "external truth tier." A generalized external-truth tier for ATE/CATE is deferred to a future real-data RFC.
+
+-   **Staged implementation:** a registered estimand whose typed scoring is not yet implemented in the active release wave is recorded as **non-comparable** with the machine-readable reason `target_not_implemented`. This is an explicit interim status, never a silent omission, and never permits cross-scoring against another target's truth. (v2.0.0 stages CATE to Wave 2; until then a CATE request resolves to `target_not_implemented`.)
 
 ------------------------------------------------------------------------
 
@@ -91,21 +129,28 @@ Reproducibility is not optional; it is the primary function of the instrument.
 
 -   **Cross-Substrate Reproducibility:** Across different operating systems, R versions, BLAS/LAPACK implementations, or platform math libraries, CausalStress claims documented tolerance-level numerical reproducibility unless a version-specific regression corpus proves bitwise identity. Release evidence MUST record the computational substrate used for reproducibility validation.
 
+-   **Held-out Evaluation Samples:** When an estimand is scored on a Runner-generated held-out sample (e.g., CATE per §1.6), that sample is a **second governed random draw** and is itself truth-bearing. The Runner **must** capture and store, alongside the training seed: the held-out evaluation seed, its sample size, and its derivation relative to the training sample. The Runner **must** record the `unit_id` keying that binds held-out structural truth to estimator predictions, and that evaluation-sample identity is part of the score-record identity (Article V §5.2). The same-substrate bitwise-identity and cross-substrate tolerance guarantees above apply to the held-out sample and its truth exactly as to the training sample. Transductive estimators that require the evaluation covariates at fit time are the sole exception to train/eval separation; they MUST declare this, and their evaluation-sample identity is recorded in both the fit-artifact identity and the score-record identity.
+
 ------------------------------------------------------------------------
 
 ## Article III: The Interoperability Contracts
 
 ### Section 3.1: The Estimator Contract
 
-Every estimator function must conform to: `function(df, tau, config) -> list(att, qst, meta)`.
+Every estimator function must conform to: `function(df, tau, config) -> list(outputs, meta)`, where `outputs` is a named collection of **typed estimand outputs** declared in the estimator capability registry, keyed by `estimand_target_id`.
+
+-   **Output shapes:** scalar (point estimate + optional CI) for ATT/ATE; curve (keyed to the Runner-provided QST tau grid) for QST; **unit-keyed** (a table keyed by the Runner-issued `unit_id`, with `estimate` and optional uncertainty) for CATE.
+
+-   **Legacy compatibility:** the legacy `list(att, qst, meta)` shape remains supported as a compatibility shim; the Runner normalizes it to typed `outputs` before scoring.
 
 -   **Covariate Access:** The Runner MUST physically sanitize `y0`, `y1`, `p`, and `structural_te` from the input dataframe before execution. Estimators will not receive these columns unless explicitly configured as Oracle. Oracle access MUST be column-scoped.
     -   *Exception:* Estimators explicitly configured for true-propensity oracle access (e.g., `config$use_true_propensity = TRUE`) MAY access `p`.
     -   *Exception:* Structural benchmark estimators explicitly configured for structural-treatment-effect access (e.g., `config$use_structural_te = TRUE`, or an internal descriptor default for benchmark-only estimators) MAY access `structural_te`.
-    -   No ordinary runner airlock grant MAY expose `y0` or `y1` in v1.8.x.
+    -   No ordinary runner airlock grant MAY expose `y0` or `y1` in v2.x.
+    -   **CATE held-out predict input:** for CATE scoring, the held-out evaluation data passed to the estimator's prediction step MUST be **covariates plus the Runner-issued `unit_id` only** — excluding `y`, `w`, `y0`, `y1`, `p`, and `structural_te`. The `unit_id` is a synthetic row key, not truth. Held-out structural truth is retained by the Runner on a scorer-only channel and never reaches the estimator.
 -   **Tau Compliance:** Estimators **MUST** calculate QST only for the `tau` values provided by the Runner. The canonical grid applies to truth tables, not estimator inputs.
 -   **Confidence Intervals:**
-    -   Gatekeeper testing applies primarily to ATT.
+    -   Gatekeeper testing applies through the **per-estimand components defined in Article IV**; CI-based gate checks apply only where an estimator reports CIs (or declares a valid alternative methodology).
     -   If an estimator reports CIs, they **MUST** be Bootstrap-based (default) unless the estimator explicitly declares an alternative valid methodology (e.g., Asymptotic, Bayesian) in `meta$ci_type`.
 
 ### Section 3.2: The DGP Contract (Bifurcated)
@@ -186,8 +231,15 @@ An estimator **passes** the Gatekeeper if it preserves the Sharp Null within nom
 
 #### 4.2.5 Scope
 
-These rules apply **exclusively** to ATT and QST estimands defined in Article I.\
-They do not constrain heterogeneous-effect estimators or real-data estimators whose target estimands are not placebo-evaluatable.
+The Gatekeeper is composed of **per-estimand components** attached to the estimands defined in Article I. The existing **ATT** and **QST** components (§4.2.2) and their enforcement (§4.2.4) are **unchanged** by this amendment.
+
+-   **ATE:** a scalar placebo-gate component analogous to ATT. Its thresholds, difficulty tiers, and registry consequences are deferred to the Gatekeeper-recalibration RFC.
+
+-   **CATE:** placebo evaluation is **NOT** a per-unit "$\hat\tau(X_i) \approx 0$" test (ill-posed for a unit-level estimand). Under the Sharp Null, a CATE estimator is **"Unverified"** for hallucination unless a principled heterogeneity-**detection** test (e.g. BLP/GATES, grouped-homogeneity, or RATE) is implemented; CATE accuracy is scored on non-null DGPs (PEHE plus a robust companion metric).
+
+-   **Deferred policy:** pass/fail calibration, difficulty tiers, and the `Non-Robust` registry label for the new (ATE/CATE) components — and any recalibration of the existing ATT/QST components — are governed by the future **Gatekeeper recalibration RFC** (`horizon.md`), not by this amendment.
+
+These rules do not constrain estimators whose target estimands are not placebo-evaluatable.
 
 ------------------------------------------------------------------------
 
@@ -202,15 +254,17 @@ They do not constrain heterogeneous-effect estimators or real-data estimators wh
     -   If `config$num_threads == 1`, the Estimator **MUST** restrict internal parallelism to 1 thread.
     -   If `config$num_threads > 1`, the Estimator **MAY** use up to that many threads.
 
--   This article specifies how parallel execution MUST behave when implemented. v0.1.x is **serial by default**; parallel execution is permitted only in **experimental mode** under strict protocol (see Article VI).
+-   This article specifies how parallel execution MUST behave when implemented. Release lines are **serial by default** unless the active release specification authorizes parallel execution under the atomic-persistence protocol of Article VI.
 
 ### Section 5.2: The Granularity Rule
 
-To prevent data loss:
+To prevent data loss, results are persisted at two atomic grains:
 
--   Results **must** be persisted (pinned) at the granularity of a single run (DGP × Estimator × Seed).
+-   A **fit artifact** **must** be persisted at the granularity of a single model fit (DGP × Estimator × Seed × fit configuration). For declared transductive estimators, the fit configuration includes the held-out evaluation-sample identity.
 
--   Aggregation into suites happens only *after* secure storage of atomic results.
+-   A **score record** **must** be persisted at the granularity of one fit × one scored `estimand_target` × one metric, including any held-out scoring-population identity (Article II §2.2). A single fit MAY yield multiple score records.
+
+-   Aggregation into suites happens only *after* secure storage of these atomic results.
 
 ------------------------------------------------------------------------
 
@@ -218,7 +272,7 @@ To prevent data loss:
 
 To ensure the integrity of the benchmark registry during massively parallel execution:
 
--   **Atomicity:** Every simulation result (DGP × Estimator × Seed) must be persisted to a unique storage location or identifiable partition. Workers must never overwrite, append to, or modify existing result pins.
+-   **Atomicity:** Every persisted artifact — each **fit artifact** and each **score record** at the grains defined in Article V §5.2 — must be persisted to a unique storage location or identifiable partition. Workers must never overwrite, append to, or modify existing result pins.
 
 -   **Isolation:** Parallel workers are **strictly prohibited** from modifying shared board state (e.g., updating manifests, indices, or registries).
 

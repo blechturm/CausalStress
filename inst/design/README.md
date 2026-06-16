@@ -1,9 +1,12 @@
 # CausalStress Design Governance Index
 
 **Status:** Active authority index
-**Last updated:** 2026-06-14
+**Last updated:** 2026-06-16
 **Current active packet:** none
 **Latest completed packet:** `causalstress_v0_1_10_spec_packet`
+**Accepted RFCs (authority level 4):** RFC-1 Estimand Registry — `rfc/20260616_estimand_registry_synthesis.md`, accepted 2026-06-16 and consumed by ratified Constitution v2.0.0.
+**Constitution:** **v2.0.0 ratified 2026-06-16** (`CausalStress Scientific Protocol`) — see `CAUSAL_STRESS_CONSTITUTION.md` Amendment History and `rfc/20260616_constitution_2_0_0_review.md`.
+**Active program:** v0.2.0 estimand / UX / families (Constitution 2.0.0 ratified → Wave 1 packet → Wave 2 → RFC-2/RFC-3).
 
 This file is the entry point for design and governance work in `inst/design/`.
 Every design-document add, move, retirement, or authority change must update this
