@@ -1,0 +1,135 @@
+version: "0.2.0"
+packet: "causalstress_v0_2_0_spec_packet"
+status: active
+tickets:
+  - id: "CS-1200"
+    title: "Update contract index for typed estimand outputs"
+    batch: 0
+    source: {type: "spec", id: "v0_2_0_spec"}
+    files:
+      - "inst/design/contracts.md"
+    constitutional_check: "Articles I and III; contracts remain below the Constitution"
+    test_obligation: "Design review confirms contracts.md records typed outputs/meta, legacy shim, Wave 1 target support, non-comparable reasons, and fit/score identity"
+    review_gate: "Batch 0 contract-baseline review"
+    disposition: "open"
+
+  - id: "CS-1201"
+    title: "Implement canonical estimand targets and non-comparable reasons"
+    batch: 1
+    source: {type: "rfc/spec", id: "RFC-1,v0_2_0_spec"}
+    files:
+      - "R"
+      - "tests/testthat"
+    constitutional_check: "Article I target vocabulary and no-cross-scoring"
+    test_obligation: "ATT, ATE, QST, and CATE descriptors expose canonical fields; compact ids derive deterministically; unknown non-comparable reasons are rejected"
+    review_gate: "Batch 1 typed-target review"
+    disposition: "open"
+
+  - id: "CS-1202"
+    title: "Normalize typed outputs and implement the three-way scoring join"
+    batch: 1
+    source: {type: "rfc/spec", id: "RFC-1,v0_2_0_spec"}
+    files:
+      - "R/cs-contracts.R"
+      - "R/cs-runner.R"
+      - "R"
+      - "tests/testthat"
+    constitutional_check: "Article III estimator contract"
+    test_obligation: "Legacy outputs normalize to typed ATT/QST; ATT/QST values match regression corpus; ATE and ATT are never cross-scored; the join emits the correct non-comparable reason for each missing requested/produced/truth branch"
+    review_gate: "Batch 1 output-contract review"
+    disposition: "open"
+
+  - id: "CS-1203"
+    title: "Implement scorer-only structural truth and Wave 1 ATE producer"
+    batch: 1
+    source: {type: "spec", id: "v0_2_0_spec"}
+    files:
+      - "R/cs-runner.R"
+      - "R/cs-truth.R"
+      - "R/est-oracle-att.R"
+      - "R/cs-estimator-registry.R"
+      - "tests/testthat"
+    constitutional_check: "Article I ATE truth and Article III airlock"
+    test_obligation: "oracle_att emits typed ATT and ATE; ATE equals mean(structural_te); ordinary typed-path estimators never receive truth columns; real-DGP ATE/CATE requests without external truth emit truth_unavailable"
+    review_gate: "Batch 1 truth-channel and ATE review"
+    disposition: "open"
+
+  - id: "CS-1204"
+    title: "Implement fit/score identity and schema-4 persistence"
+    batch: 2
+    source: {type: "rfc/spec", id: "RFC-1,v0_2_0_spec"}
+    files:
+      - "R/cs-fingerprint.R"
+      - "R/cs-pins.R"
+      - "R/cs-staging.R"
+      - "R/cs-runner.R"
+      - "R"
+      - "tests/testthat"
+    constitutional_check: "Articles V and VI atomic grains; Article II truth identity where relevant"
+    test_obligation: "Schema-4 score records include fit, target, metric, truth version, and scoring_population_id; Wave 2 nullable fields exist; one fit yields multiple score records without overwrite; schema 1-3 resume fails closed"
+    review_gate: "Batch 2 schema/persistence review"
+    disposition: "open"
+
+  - id: "CS-1205"
+    title: "Implement typed collection, tidy, science payload, and audit surfaces"
+    batch: 2
+    source: {type: "spec", id: "v0_2_0_spec"}
+    files:
+      - "R/cs-collect.R"
+      - "R/cs-tidy-run.R"
+      - "R/cs-result-to-row.R"
+      - "R/cs-accessors.R"
+      - "R"
+      - "tests/testthat"
+    constitutional_check: "Article I no-cross-scoring and Articles V/VI score identity"
+    test_obligation: "Long typed score surface includes scored/non-comparable rows and estimator_error/runner_error statuses; QST is multi-row; ATT/QST helpers are projections or legacy; science/audit outputs preserve statuses and reasons"
+    review_gate: "Batch 2 collection/audit review"
+    disposition: "open"
+
+  - id: "CS-1206"
+    title: "Implement deterministic CATE staging"
+    batch: 3
+    source: {type: "rfc/spec", id: "RFC-1-Rev2,v0_2_0_spec"}
+    files:
+      - "R"
+      - "tests/testthat"
+    constitutional_check: "Article I staged implementation and no-cross-scoring"
+    test_obligation: "CATE-only hard-rejects before estimator execution; mixed-target emits target_not_implemented and scores implemented targets; no held-out CATE sample is generated"
+    review_gate: "Batch 3 CATE-staging review"
+    disposition: "open"
+
+  - id: "CS-1207"
+    title: "Preserve gatekeeper policy and add ATE structural slot only"
+    batch: 3
+    source: {type: "constitution/horizon/spec", id: "Article-IV,gatekeeper-recalibration,v0_2_0_spec"}
+    files:
+      - "R/cs-gatekeeper.R"
+      - "R"
+      - "tests/testthat"
+    constitutional_check: "Article IV per-estimand components; deferred policy remains deferred"
+    test_obligation: "ATT/QST gatekeeper behavior unchanged; ATE slot exists only as structure; no ATE/CATE Non-Robust policy or thresholds are added"
+    review_gate: "Batch 3 gatekeeper-scope review"
+    disposition: "open"
+
+  - id: "CS-1208"
+    title: "Run Wave 1 acceptance regression suite"
+    batch: 3
+    source: {type: "spec", id: "v0_2_0_spec_acceptance"}
+    files:
+      - "tests/testthat"
+    constitutional_check: "Articles I, III, V, and VI"
+    test_obligation: "Focused tests cover output normalization, no-cross-scoring, non-comparable reasons, ATE truth, real-DGP truth unavailable, CATE staging, artifact identity, typed collection/audit, scorer-only airlock, and legacy ATT/QST compatibility"
+    review_gate: "Batch 3 acceptance-regression review"
+    disposition: "open"
+
+  - id: "CS-1209"
+    title: "Run v0.2.0 Wave 1 release gate and closeout"
+    batch: 4
+    source: {type: "process/spec", id: "inst/design/release_gate.md,v0_2_0_spec"}
+    files:
+      - "inst/design/README.md"
+      - "inst/design/causalstress_v0_2_0_spec_packet/release_closeout.md"
+    constitutional_check: "No known constitutional violation remains open except by amendment or explicit deferral"
+    test_obligation: "Run or explicitly defer-with-rationale every release gate and record evidence"
+    review_gate: "Final release-gate review before tagging or merging"
+    disposition: "open"
