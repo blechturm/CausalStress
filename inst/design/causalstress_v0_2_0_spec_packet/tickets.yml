@@ -11,7 +11,7 @@ tickets:
     constitutional_check: "Articles I and III; contracts remain below the Constitution"
     test_obligation: "Design review confirms contracts.md records typed outputs/meta, legacy shim, Wave 1 target support, non-comparable reasons, and fit/score identity"
     review_gate: "Batch 0 contract-baseline review"
-    disposition: "implementation_complete_awaiting_review"
+    disposition: "complete_after_review"
 
   - id: "CS-1201"
     title: "Implement canonical estimand targets and non-comparable reasons"
@@ -23,7 +23,7 @@ tickets:
     constitutional_check: "Article I target vocabulary and no-cross-scoring"
     test_obligation: "ATT, ATE, QST, and CATE descriptors expose canonical fields; compact ids derive deterministically; unknown non-comparable reasons are rejected"
     review_gate: "Batch 1 typed-target review"
-    disposition: "open"
+    disposition: "implementation_complete_awaiting_review"
 
   - id: "CS-1202"
     title: "Normalize typed outputs and implement the three-way scoring join"
@@ -37,7 +37,7 @@ tickets:
     constitutional_check: "Article III estimator contract"
     test_obligation: "Legacy outputs normalize to typed ATT/QST; ATT/QST values match regression corpus; ATE and ATT are never cross-scored; the join emits the correct non-comparable reason for each missing requested/produced/truth branch"
     review_gate: "Batch 1 output-contract review"
-    disposition: "open"
+    disposition: "implementation_complete_awaiting_review"
 
   - id: "CS-1203"
     title: "Implement scorer-only structural truth and Wave 1 ATE producer"
@@ -52,7 +52,7 @@ tickets:
     constitutional_check: "Article I ATE truth and Article III airlock"
     test_obligation: "oracle_att emits typed ATT and ATE; ATE equals mean(structural_te); ordinary typed-path estimators never receive truth columns; real-DGP ATE/CATE requests without external truth emit truth_unavailable"
     review_gate: "Batch 1 truth-channel and ATE review"
-    disposition: "open"
+    disposition: "implementation_complete_awaiting_review"
 
   - id: "CS-1204"
     title: "Implement fit/score identity and schema-4 persistence"

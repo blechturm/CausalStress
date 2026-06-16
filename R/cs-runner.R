@@ -141,6 +141,10 @@ cs_run_single <- function(
     max_runtime       = max_runtime,
     dgp_version       = dgp_desc$version[[1L]]
   )
+  requested_estimand_targets <- cs_requested_estimand_targets(
+    config = config_caller,
+    estimator_desc = est_desc
+  )
 
   # Run estimator
   t_est_start <- Sys.time()
@@ -199,12 +203,22 @@ cs_run_single <- function(
   if (isTRUE(success)) {
     cs_check_estimator_output(res, require_qst = est_desc$supports_qst, tau = tau)
   }
+  typed_outputs <- if (isTRUE(success)) {
+    cs_normalize_estimator_outputs(res, tau = tau)
+  } else {
+    list()
+  }
+  produced_estimand_targets <- names(typed_outputs)
+  truth_available_targets <- cs_truth_available_targets(dgp)
   run_time_est <- as.numeric(difftime(Sys.time(), t_est_start, units = "secs"))
 
-  extracted <- cs_extract_estimator_result(res)
+  extracted <- list(
+    att = typed_outputs$att$estimate %||% NA_real_,
+    qst = typed_outputs$qst %||% NULL
+  )
   est_att <- extracted$att
 
-  att_ci <- res$att %||% list()
+  att_ci <- typed_outputs$att %||% res$att %||% list()
   ci_lo_att <- att_ci$ci_lo %||% NA_real_
   ci_hi_att <- att_ci$ci_hi %||% NA_real_
   res_meta <- res$meta %||% list()
@@ -360,17 +374,30 @@ cs_run_single <- function(
   # Non-deterministic provenance is stored separately from the science payload.
   ts_now <- Sys.time()
 
+  att_result <- list(
+    estimate     = est_att,
+    true         = true_att,
+    error        = att_error,
+    abs_error    = att_abs_error,
+    ci_lo        = ci_lo_att,
+    ci_hi        = ci_hi_att,
+    boot_covered = att_covered,
+    ci_width     = if (!is.na(ci_lo_att) && !is.na(ci_hi_att)) ci_hi_att - ci_lo_att else NA_real_
+  )
+
+  score_surface <- cs_build_score_surface(
+    requested_targets = requested_estimand_targets,
+    outputs = typed_outputs,
+    dgp = dgp,
+    att = att_result,
+    qst = qst_df,
+    failure_status = if (!isTRUE(success)) "estimator_error" else NULL
+  )
+
   result <- list(
-    att = list(
-      estimate     = est_att,
-      true         = true_att,
-      error        = att_error,
-      abs_error    = att_abs_error,
-      ci_lo        = ci_lo_att,
-      ci_hi        = ci_hi_att,
-      boot_covered = att_covered,
-      ci_width     = if (!is.na(ci_lo_att) && !is.na(ci_hi_att)) ci_hi_att - ci_lo_att else NA_real_
-    ),
+    outputs    = typed_outputs,
+    scores     = score_surface,
+    att        = att_result,
     qst        = qst_df %||% NULL,
     boot_draws = boot_draws,
     meta = list(
@@ -393,6 +420,9 @@ cs_run_single <- function(
       oracle         = est_desc$oracle,
       oracle_columns_granted = oracle_columns_granted,
       supports_qst   = est_desc$supports_qst,
+      requested_estimand_targets = requested_estimand_targets,
+      produced_estimand_targets = produced_estimand_targets,
+      truth_available_targets = truth_available_targets,
       dgp_version    = dgp_desc$version[[1L]] %||% NA_character_,
       dgp_status     = dgp_desc$status[[1L]] %||% NA_character_,
       dgp_design_spec = dgp_desc$design_spec[[1L]] %||% NA_character_,

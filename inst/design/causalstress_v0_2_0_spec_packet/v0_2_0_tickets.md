@@ -18,7 +18,7 @@
   `outputs`/`meta`, the legacy shim, Wave 1 target support, non-comparable
   reasons, and fit/score identity at contract level.
 - **Review gate:** Batch 0 contract-baseline review.
-- **Disposition:** implementation_complete_awaiting_review
+- **Disposition:** complete_after_review
 
 ## Batch 1 - Typed Scoring Core
 
@@ -34,7 +34,7 @@
   fields; compact ids derive deterministically; unknown or misspelled
   non-comparable reasons are rejected.
 - **Review gate:** Batch 1 typed-target review.
-- **Disposition:** open
+- **Disposition:** implementation_complete_awaiting_review
 
 ### CS-1202 - Normalize typed outputs and implement the three-way scoring join
 
@@ -52,7 +52,7 @@
   outputs are never scored as ATE; the join emits the correct non-comparable
   reason for each missing requested/produced/truth branch.
 - **Review gate:** Batch 1 output-contract review.
-- **Disposition:** open
+- **Disposition:** implementation_complete_awaiting_review
 
 ### CS-1203 - Implement scorer-only structural truth and Wave 1 ATE producer
 
@@ -69,7 +69,7 @@
   `p`, or `structural_te`; real-DGP ATE/CATE requests without external truth emit
   `truth_unavailable`, never regenerated truth.
 - **Review gate:** Batch 1 truth-channel and ATE review.
-- **Disposition:** open
+- **Disposition:** implementation_complete_awaiting_review
 
 ## Batch 2 - Schema 4 and Output Surfaces
 

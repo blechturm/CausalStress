@@ -10,6 +10,18 @@ cs_true_att <- function(structural_te, w) {
   mean(structural_te[w == 1])
 }
 
+#' True finite-sample ATE calculator
+#'
+#' Computes the average treatment effect over the declared full generated run
+#' sample from structural treatment effects.
+#'
+#' @param structural_te Numeric vector of structural treatment effects.
+#' @return Numeric scalar giving the finite-sample average treatment effect.
+#' @noRd
+cs_true_ate <- function(structural_te) {
+  mean(structural_te)
+}
+
 #' QST truth from potential outcomes
 #'
 #' Computes quantile-specific treatment effects for treated units.

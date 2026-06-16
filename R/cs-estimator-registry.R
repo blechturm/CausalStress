@@ -57,7 +57,7 @@ cs_estimator_registry_base <- function() {
     supports_qst = c(FALSE, FALSE, FALSE, TRUE, TRUE, FALSE, FALSE, FALSE),
     version = rep(pkg_ver, 8L),
     description = c(
-      "Oracle ATT using structural treatment effects.",
+      "Oracle ATT/ATE using structural treatment effects.",
       "Linear outcome regression g-computation ATT estimator.",
       "Inverse-probability weighted ATT estimator based on logistic propensity.",
       "GenGC distributional estimator (ATT + QST); supports dual-engine (qrf/qr) and optional screening.",
