@@ -11,7 +11,7 @@ tickets:
     constitutional_check: "Articles I and III; contracts remain below the Constitution"
     test_obligation: "Design review confirms contracts.md records typed outputs/meta, legacy shim, Wave 1 target support, non-comparable reasons, and fit/score identity"
     review_gate: "Batch 0 contract-baseline review"
-    disposition: "open"
+    disposition: "implementation_complete_awaiting_review"
 
   - id: "CS-1201"
     title: "Implement canonical estimand targets and non-comparable reasons"

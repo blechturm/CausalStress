@@ -18,7 +18,7 @@
   `outputs`/`meta`, the legacy shim, Wave 1 target support, non-comparable
   reasons, and fit/score identity at contract level.
 - **Review gate:** Batch 0 contract-baseline review.
-- **Disposition:** open
+- **Disposition:** implementation_complete_awaiting_review
 
 ## Batch 1 - Typed Scoring Core
 

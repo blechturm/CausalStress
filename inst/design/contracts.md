@@ -31,22 +31,50 @@ Normative source: Constitution Article III.
 
 Estimators receive sanitized runner data by default. The runner must remove
 `y0`, `y1`, `p`, and `structural_te` before estimator execution unless an
-explicit oracle-access mechanism permits a narrower grant. The v0.1.10 Batch 3
-RFC selected column-scoped oracle access: `config$use_true_propensity = TRUE`
-may grant `p`, `config$use_structural_te = TRUE` or an internal benchmark
-default may grant `structural_te`, and `y0`/`y1` are never exposed through the
-ordinary runner airlock in v0.1.10. Estimator descriptors declare
+explicit oracle-access mechanism permits a narrower grant. Column-scoped oracle
+access may grant `p` for true-propensity oracle estimators or `structural_te` for
+internal structural benchmark estimators. `y0`/`y1` are never exposed through the
+ordinary runner airlock in the v2.x line. Estimator descriptors declare
 `oracle_columns` and `oracle_default_columns`; the registry `oracle` flag is
 provenance/eligibility metadata, not a blanket raw-data grant.
 
-Estimator outputs must be structured lists with:
+The v2.0.0 estimator output contract is:
 
-- `att`: ATT point estimate and optional interval fields.
-- `qst`: optional QST table matching the requested tau grid exactly.
-- `meta`: estimator id, version/provenance, CI diagnostics, warnings, and errors.
+`function(df, tau, config) -> list(outputs, meta)`
 
-An estimator id ending in `_att` must not report an ATE into ATT scoring unless
-the active packet explicitly relabels or excludes that estimator.
+where `outputs` is a named collection of typed estimand outputs keyed by
+`estimand_target_id`, and `meta` carries estimator id, version/provenance,
+capabilities, CI diagnostics, warnings, and errors.
+
+Wave 1 target support:
+
+- `att`: scalar point estimate and optional interval fields; scoreable where
+  produced and truth exists.
+- `ate`: scalar point estimate and optional interval fields; scoreable where
+  produced and truth exists. Wave 1 pins ATE scoring to the full generated run
+  sample.
+- `qst`: curve matching the runner-provided tau grid; scoreable where produced
+  and truth exists.
+- `cate`: registered target only in Wave 1. CATE-only tasks hard-reject before
+  estimator execution; mixed-target tasks emit a `target_not_implemented`
+  non-comparable score row for CATE and continue scoring implemented targets.
+
+Legacy `list(att, qst, meta)` outputs remain accepted during Wave 1 as a
+compatibility shim. The runner normalizes `att` and `qst` into typed outputs
+before scoring. Missing legacy fields mean "not produced", not estimator
+failure.
+
+Typed scoring is a three-way join:
+
+`requested` intersect `estimator-produced` intersect `DGP-truth-available`
+
+Outputs must be scored only against their matching target truth. ATE outputs
+must not be scored as ATT, and ATT outputs must not be scored as ATE.
+
+The non-comparable reason vocabulary includes at minimum:
+`estimator_not_produced`, `truth_unavailable`, `metric_invalid_for_regime`,
+`ci_unavailable`, `gate_unimplemented`, `not_requested`, and
+`target_not_implemented`.
 
 ### Security Scope
 
@@ -68,6 +96,31 @@ Runner outputs must expose:
 - granted oracle columns, when any.
 - configuration and task fingerprints under the active schema.
 
+Wave 1 typed scoring additionally exposes a canonical long score surface. It has
+one row per scalar score or QST point coordinate and includes:
+
+- run identity: `dgp_id`, `dgp_version`, `estimator_id`, `estimator_version`,
+  `n`, and `seed`.
+- artifact identity: `fit_fingerprint`, `score_fingerprint`, and
+  `schema_version`.
+- target identity: `estimand_target_id`, target descriptor fields, and
+  `metric_id`.
+- point coordinate: `tau`/`tau_index` for QST rows and `NA` for scalar ATT/ATE
+  rows.
+- values: `estimate`, `truth`, `error`, optional `ci_lo`, and optional `ci_hi`.
+- status: `score_status` in `scored`, `non_comparable`, `estimator_error`, or
+  `runner_error`.
+- non-comparability: `non_comparable_reason`, populated only when
+  `score_status = "non_comparable"`.
+
+Non-comparable requested targets are represented in this surface as rows with
+`NA` value fields and a machine-readable `non_comparable_reason`. ATT/QST
+user-facing helpers may remain as compatibility projections over the typed
+surface, but they are not independent scoring authorities.
+
+ATE truth is computed on the scorer side from runner-owned DGP truth state.
+Ordinary estimators must not receive `structural_te` through the typed path.
+
 Failures attributable to a single task's estimator execution should become a
 `success = FALSE` result row with provenance. Batch-level failures that escape
 `cs_run_single()` must become structured `batch$errors` rows, and batch
@@ -87,10 +140,23 @@ Normative sources: active packet plus historical specs for legacy artifacts.
 Known schemas:
 
 - legacy v0.1.7: historical fingerprint format; migration/read support only.
-- schema 2: current v0.1.9 format; missing DGP version and affected by config
+- schema 2: shipped v0.1.9 format; missing DGP version and affected by config
   normalization defects identified in the audit.
-- schema 3: planned v0.1.10 design change for DGP version, canonical config,
-  CI intent/source, task fingerprint, and resume comparison rules.
+- schema 3: shipped v0.1.10 format for DGP version, canonical config, CI
+  intent/source, task fingerprint, and resume comparison rules.
+- schema 4: active v0.2.0 Wave 1 design change for fit/score identity and typed
+  score records.
+
+Schema 4 separates:
+
+- fit artifact identity: data/model/config identity for one model fit.
+- score record identity: fit identity plus scored estimand target, metric, truth
+  version, and `scoring_population_id`.
+
+`scoring_population_id` is populated in Wave 1 score records. ATT/QST/ATE use
+their declared Wave 1 population ids. Schema 4 reserves nullable Wave 2 CATE
+fields: `seed_eval`, `n_eval`, `eval_derivation`, `unit_id_digest`,
+`prediction_digest`, and `transductive`.
 
 Pin naming and metadata must be documented in the active packet before changes
 ship. Historical specs are authoritative for interpreting artifacts from their
@@ -138,8 +204,9 @@ Release validation must cover three surfaces:
 
 ## Thread Contract
 
-Constitution Article V governs computational safety: v0.1.x is serial by
-default, and experimental parallel paths must require explicit opt-in, emit
-provenance, and cap worker-local threads without permanently mutating process
+Constitution Article V governs computational safety. Release lines are serial by
+default unless the active release specification authorizes parallel execution
+under the Article VI atomic-persistence protocol. Parallel paths must emit
+provenance and cap worker-local threads without permanently mutating process
 environment. Article VI governs atomic persistence, including staged writes,
 worker pin-isolation, and serial consolidation.
