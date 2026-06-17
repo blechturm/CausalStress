@@ -123,6 +123,12 @@ cs_plan_campaign <- function(dgp_list,
     function(id) cs_get_estimator(id)$version,
     character(1)
   )
+  invisible(lapply(seq_len(nrow(grid)), function(i) {
+    cs_assert_wave1_targets_executable(
+      config = grid$task_config[[i]],
+      estimator_desc = cs_get_estimator(grid$estimator_id[[i]])
+    )
+  }))
   grid$dgp_version <- dgp_versions
   grid$estimator_version <- estimator_versions
   grid$resolved_config_hash <- vapply(

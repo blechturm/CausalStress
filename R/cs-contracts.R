@@ -144,6 +144,33 @@ cs_requested_estimand_targets <- function(config = list(), estimator_desc = list
 }
 
 #' @noRd
+cs_abort_target_not_implemented <- function(target_id) {
+  rlang::abort(
+    glue::glue(
+      "{toupper(target_id)} is registered but not implemented in Wave 1 ",
+      "(`target_not_implemented`); {toupper(target_id)}-only tasks cannot be executed."
+    ),
+    class = c(
+      "causalstress_target_not_implemented_error",
+      "target_not_implemented",
+      "causalstress_runner_error"
+    )
+  )
+}
+
+#' @noRd
+cs_assert_wave1_targets_executable <- function(config = list(), estimator_desc = list()) {
+  requested <- cs_requested_estimand_targets(
+    config = config,
+    estimator_desc = estimator_desc
+  )
+  if (identical(requested, "cate")) {
+    cs_abort_target_not_implemented("cate")
+  }
+  requested
+}
+
+#' @noRd
 cs_normalize_scalar_estimand_output <- function(x, target_id) {
   if (is.null(x)) {
     return(NULL)

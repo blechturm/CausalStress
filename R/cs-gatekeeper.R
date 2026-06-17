@@ -7,8 +7,8 @@
 #' @param suite_results Result object from [cs_run_suite()] or [cs_run_grid()].
 #' @param threshold Minimum required coverage rate (default 0.90).
 #'
-#' @return A list with ATT and QST verdicts/culprits. The function also prints a
-#'   short summary via cli.
+#' @return A list with ATT and QST verdicts/culprits plus a deferred ATE
+#'   component slot. The function also prints a short summary via cli.
 #'
 #' @export
 cs_summarise_gatekeeper <- function(suite_results, threshold = 0.90) {
@@ -27,6 +27,8 @@ cs_summarise_gatekeeper <- function(suite_results, threshold = 0.90) {
     return(list(
       att_verdict = tibble::tibble(),
       att_culprits = tibble::tibble(),
+      ate_verdict = tibble::tibble(),
+      ate_culprits = tibble::tibble(),
       qst_verdict = tibble::tibble(),
       qst_culprits = tibble::tibble()
     ))
@@ -63,6 +65,26 @@ cs_summarise_gatekeeper <- function(suite_results, threshold = 0.90) {
       .groups = "drop"
     ) %>%
     dplyr::filter(.data$n_verified > 0L, .data$dgp_coverage < threshold)
+
+  # v0.2.0 Wave 1 exposes the ATE gatekeeper component structurally only.
+  # Calibration, thresholds, and registry consequences are deferred to the
+  # gatekeeper-recalibration RFC; do not infer Non-Robust status from this slot.
+  ate_verdict <- tibble::tibble(
+    estimand_target_id = "ate",
+    estimator_id = unique(placebo$estimator_id),
+    n_verified = 0L,
+    coverage_rate = NA_real_,
+    threshold = NA_real_,
+    status = "UNVERIFIED",
+    policy_status = "deferred_gatekeeper_recalibration",
+    registry_consequence = NA_character_
+  )
+  ate_culprits <- tibble::tibble(
+    estimand_target_id = character(),
+    dgp_id = character(),
+    estimator_id = character(),
+    dgp_coverage = numeric()
+  )
 
   # Console summary
   purrr::pwalk(verdict, function(estimator_id, coverage_rate, status, ...) {
@@ -178,6 +200,8 @@ cs_summarise_gatekeeper <- function(suite_results, threshold = 0.90) {
   list(
     att_verdict = verdict,
     att_culprits = culprits,
+    ate_verdict = ate_verdict,
+    ate_culprits = ate_culprits,
     qst_verdict = qst_verdict,
     qst_culprits = qst_culprits
   )

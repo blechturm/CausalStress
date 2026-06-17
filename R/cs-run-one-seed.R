@@ -26,6 +26,7 @@ cs_run_one_seed_internal <- function(dgp_id,
   dgp_desc <- cs_get_dgp(dgp_id = dgp_id, version = version, status = status, quiet = TRUE)
   dgp_version <- dgp_desc$version[[1L]]
   est_desc <- cs_get_estimator(estimator_id)
+  cs_assert_wave1_targets_executable(config = config, estimator_desc = est_desc)
 
   should_try_cache <- isTRUE(skip_existing) && !isTRUE(force)
   if (!is.null(board) && isTRUE(should_try_cache)) {

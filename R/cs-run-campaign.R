@@ -187,6 +187,12 @@ cs_run_campaign <- function(
     }
     cfg
   }
+  invisible(lapply(unique(tasks$estimator_id), function(est_id) {
+    cs_assert_wave1_targets_executable(
+      config = resolve_config(est_id),
+      estimator_desc = cs_get_estimator(est_id)
+    )
+  }))
 
   # Skip existing pins if requested (with fingerprint/CI checks)
   should_try_cache <- isTRUE(skip_existing) && !isTRUE(force)

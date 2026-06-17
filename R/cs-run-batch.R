@@ -35,6 +35,14 @@ cs_run_batch <- function(batch_id,
   cs_require_experimental_parallel(parallel = parallel, experimental_parallel = experimental_parallel)
 
   tasks <- plan$tasks[[idx]]
+  invisible(lapply(seq_len(nrow(tasks)), function(i) {
+    task <- tasks[i, , drop = FALSE]
+    task_config <- task[["task_config"]][[1]] %||% list()
+    cs_assert_wave1_targets_executable(
+      config = task_config,
+      estimator_desc = cs_get_estimator(task[["estimator_id"]][[1]])
+    )
+  }))
   results <- list()
   error_rows <- list()
   n_tasks <- nrow(tasks)

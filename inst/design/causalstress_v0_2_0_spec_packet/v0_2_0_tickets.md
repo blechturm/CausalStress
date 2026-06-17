@@ -90,7 +90,7 @@
   records without overwrite; schema 1-3 resume attempts fail closed with a
   classed migration/fresh-run error.
 - **Review gate:** Batch 2 schema/persistence review.
-- **Disposition:** implementation_complete_awaiting_review
+- **Disposition:** complete_after_review
 
 ### CS-1205 - Implement typed collection, tidy, science payload, and audit surfaces
 
@@ -110,7 +110,7 @@
   marked legacy; science payload and audit outputs preserve typed target ids,
   score statuses, and non-comparable reasons.
 - **Review gate:** Batch 2 collection/audit review.
-- **Disposition:** implementation_complete_awaiting_review
+- **Disposition:** complete_after_review
 
 ## Batch 3 - Staging, Gatekeeper, and Integration
 
@@ -127,7 +127,7 @@
   `target_not_implemented` CATE score row and continue scoring implemented
   targets; no held-out CATE sample is generated in Wave 1.
 - **Review gate:** Batch 3 CATE-staging review.
-- **Disposition:** open
+- **Disposition:** implementation_complete_awaiting_review
 
 ### CS-1207 - Preserve gatekeeper policy and add ATE structural slot only
 
@@ -143,7 +143,7 @@
   unchanged; ATE slot exists only as structure; ATE/CATE do not receive new
   `Non-Robust` policy or calibrated thresholds in Wave 1.
 - **Review gate:** Batch 3 gatekeeper-scope review.
-- **Disposition:** open
+- **Disposition:** implementation_complete_awaiting_review
 
 ### CS-1208 - Run Wave 1 acceptance regression suite
 
@@ -158,7 +158,7 @@
   staging branches, artifact identity uniqueness, typed collection/audit output,
   scorer-only airlock, and legacy ATT/QST numerical compatibility.
 - **Review gate:** Batch 3 acceptance-regression review.
-- **Disposition:** open
+- **Disposition:** implementation_complete_awaiting_review
 
 ## Batch 4 - Release Gate
 

@@ -154,3 +154,24 @@ test_that("gatekeeper QST failure rate excludes unverified runs from denominator
   expect_equal(res$qst_verdict$run_fail_rate, 1)
   expect_equal(res$qst_verdict$status, "FAIL")
 })
+
+test_that("gatekeeper exposes ATE structure without Wave 1 policy consequences", {
+  dummy <- tibble::tibble(
+    dgp_id = c("synth_placebo_tau0", "synth_placebo_heavytail"),
+    estimator_id = c("lm_att", "oracle_att"),
+    att_covered = c(TRUE, TRUE)
+  )
+
+  res <- cs_summarise_gatekeeper(dummy, threshold = 0.9)
+
+  expect_true(all(c("ate_verdict", "ate_culprits") %in% names(res)))
+  expect_s3_class(res$ate_verdict, "tbl_df")
+  expect_equal(sort(res$ate_verdict$estimator_id), c("lm_att", "oracle_att"))
+  expect_equal(unique(res$ate_verdict$estimand_target_id), "ate")
+  expect_equal(unique(res$ate_verdict$status), "UNVERIFIED")
+  expect_equal(unique(res$ate_verdict$policy_status), "deferred_gatekeeper_recalibration")
+  expect_true(all(is.na(res$ate_verdict$threshold)))
+  expect_true(all(is.na(res$ate_verdict$registry_consequence)))
+  expect_equal(nrow(res$ate_culprits), 0L)
+  expect_false(any(grepl("Non-Robust", unlist(res$ate_verdict, use.names = FALSE), fixed = TRUE)))
+})

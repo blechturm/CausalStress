@@ -83,6 +83,11 @@ cs_run_single <- function(
     quiet   = quiet
   )
   est_desc <- cs_get_estimator(estimator_id)
+  config_caller <- config
+  requested_estimand_targets <- cs_assert_wave1_targets_executable(
+    config = config_caller,
+    estimator_desc = est_desc
+  )
 
   exec_meta <- cs_dgp_executable_meta(dgp_id = dgp_id, version = dgp_desc$version[[1L]])
 
@@ -106,7 +111,6 @@ cs_run_single <- function(
     estimator_desc = est_desc
   )
 
-  config_caller <- config
   config_local <- config
   if (is.null(config_local$seed)) {
     config_local$seed <- seed
@@ -161,11 +165,6 @@ cs_run_single <- function(
     config_fingerprint = config_fingerprint,
     config = config_caller
   )
-  requested_estimand_targets <- cs_requested_estimand_targets(
-    config = config_caller,
-    estimator_desc = est_desc
-  )
-
   # Run estimator
   t_est_start <- Sys.time()
   res <- NULL
@@ -612,6 +611,7 @@ cs_run_seeds <- function(
   dgp_desc <- cs_get_dgp(dgp_id = dgp_id, version = version, status = status, quiet = TRUE)
   dgp_version <- dgp_desc$version[[1L]]
   est_desc <- cs_get_estimator(estimator_id)
+  cs_assert_wave1_targets_executable(config = config, estimator_desc = est_desc)
 
   pin_name_for_seed <- function(s, include_legacy = TRUE) {
     cs_find_result_pin(
