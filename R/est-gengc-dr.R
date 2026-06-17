@@ -50,7 +50,14 @@ est_gengc_dr <- function(df, tau = cs_tau_oracle, config = list()) {
   method         <- config$method %||% "qrf"
   screen         <- config$screen %||% FALSE
 
-  formula <- stats::as.formula("y ~ . - w")
+  covariates <- setdiff(names(df_run), c("y", "w"))
+  if (length(covariates) == 0L) {
+    rlang::abort(
+      "GenGC estimators require at least one covariate column after airlock filtering.",
+      class = "causalstress_estimator_error"
+    )
+  }
+  formula <- stats::reformulate(covariates, response = "y")
 
   fit <- GenGC::gengc_dr(
     formula        = formula,

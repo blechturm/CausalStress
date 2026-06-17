@@ -228,6 +228,13 @@ RFC before any backend change — execution-backend swaps touch Art. V/VI and
 are an `rfc_cycle.md` trigger.
 
 - GitHub Actions CI for install, tests, and release-gate smoke checks.
+  Golden-value tests that depend on generated DGP data or fitted model output
+  must distinguish same-substrate locks from cross-substrate CI tolerances:
+  exact/tight checks are appropriate for schema-preservation identities
+  (e.g. typed row equals the already-computed legacy value), while absolute
+  DGP/model reference values must use documented cross-substrate tolerances or
+  be explicitly limited to a declared reference substrate. This routes the
+  v0.2.0 Batch 3 review note on ATT/QST golden regressions into the CI work.
 - Coverage measurement and coverage-regression reporting.
 - Migrate DGP documentation into a pkgdown site structure.
 - Write user-facing vignettes for DGP families, estimator contracts, runner

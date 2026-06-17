@@ -1,8 +1,8 @@
 # CausalStress Design Governance Index
 
 **Status:** Active authority index
-**Last updated:** 2026-06-16
-**Current active packet:** `causalstress_v0_2_0_spec_packet`
+**Last updated:** 2026-06-17
+**Current active packet:** `causalstress_v0_2_0_spec_packet` (Batch 4 release gate implemented; awaiting final review/tag)
 **Latest completed packet:** `causalstress_v0_1_10_spec_packet`
 **Accepted RFCs (authority level 4):** RFC-1 Estimand Registry — `rfc/20260616_estimand_registry_synthesis.md`, accepted 2026-06-16 and consumed by ratified Constitution v2.0.0.
 **Constitution:** **v2.0.0 ratified 2026-06-16** (`CausalStress Scientific Protocol`) — see `CAUSAL_STRESS_CONSTITUTION.md` Amendment History and `rfc/20260616_constitution_2_0_0_review.md`.

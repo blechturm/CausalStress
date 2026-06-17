@@ -127,7 +127,7 @@
   `target_not_implemented` CATE score row and continue scoring implemented
   targets; no held-out CATE sample is generated in Wave 1.
 - **Review gate:** Batch 3 CATE-staging review.
-- **Disposition:** implementation_complete_awaiting_review
+- **Disposition:** complete_after_review
 
 ### CS-1207 - Preserve gatekeeper policy and add ATE structural slot only
 
@@ -143,7 +143,7 @@
   unchanged; ATE slot exists only as structure; ATE/CATE do not receive new
   `Non-Robust` policy or calibrated thresholds in Wave 1.
 - **Review gate:** Batch 3 gatekeeper-scope review.
-- **Disposition:** implementation_complete_awaiting_review
+- **Disposition:** complete_after_review
 
 ### CS-1208 - Run Wave 1 acceptance regression suite
 
@@ -158,7 +158,7 @@
   staging branches, artifact identity uniqueness, typed collection/audit output,
   scorer-only airlock, and legacy ATT/QST numerical compatibility.
 - **Review gate:** Batch 3 acceptance-regression review.
-- **Disposition:** implementation_complete_awaiting_review
+- **Disposition:** complete_after_review
 
 ## Batch 4 - Release Gate
 
@@ -179,4 +179,4 @@
   acceptance criteria, review routing, planning-state check, and constitutional
   violation check.
 - **Review gate:** Final release-gate review before tagging or merging.
-- **Disposition:** open
+- **Disposition:** implementation_complete_awaiting_final_review

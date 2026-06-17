@@ -1,3 +1,26 @@
+# CausalStress 0.2.0
+
+## Wave 1 Typed Estimand Registry
+* Governance: Ratified Constitution v2.0.0 and activated the v0.2.0 Wave 1
+  packet for typed scoring, schema-4 identity, and staged CATE support.
+* Scoring: Added canonical ATT, ATE, QST, and CATE target descriptors, typed
+  estimator outputs, a legacy `list(att, qst, meta)` shim, and the three-way
+  requested/produced/truth scoring join.
+* ATE: Added finite-sample synthetic ATE scoring from runner-owned structural
+  truth, with ordinary estimator airlock protections and a typed oracle benchmark
+  producer.
+* Persistence: Introduced schema-4 fit and score fingerprints so one fit can
+  produce multiple score records, while schema 1-3 resume attempts fail closed.
+* Surfaces: Added the canonical long-form typed score collection surface and
+  preserved ATT/QST helpers as compatibility projections.
+* Staging: Registered CATE as a governed target while Wave 1 deterministically
+  hard-rejects CATE-only tasks and emits `target_not_implemented` rows for mixed
+  requests.
+* Gatekeeping: Preserved ATT/QST policy and added only an uncalibrated,
+  non-consequential ATE gate slot.
+* Release hygiene: Fixed GenGC wrapper formulas for the v0.2.0 additive-formula
+  parser and routed CI golden-value tolerance guidance into the horizon.
+
 # CausalStress 0.1.10
 
 ## Governed Repair Cycle and Release Gate

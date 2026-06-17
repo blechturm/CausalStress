@@ -96,7 +96,7 @@ tickets:
     constitutional_check: "Article I staged implementation and no-cross-scoring"
     test_obligation: "CATE-only hard-rejects before estimator execution; mixed-target emits target_not_implemented and scores implemented targets; no held-out CATE sample is generated"
     review_gate: "Batch 3 CATE-staging review"
-    disposition: "implementation_complete_awaiting_review"
+    disposition: "complete_after_review"
 
   - id: "CS-1207"
     title: "Preserve gatekeeper policy and add ATE structural slot only"
@@ -109,7 +109,7 @@ tickets:
     constitutional_check: "Article IV per-estimand components; deferred policy remains deferred"
     test_obligation: "ATT/QST gatekeeper behavior unchanged; ATE slot exists only as structure; no ATE/CATE Non-Robust policy or thresholds are added"
     review_gate: "Batch 3 gatekeeper-scope review"
-    disposition: "implementation_complete_awaiting_review"
+    disposition: "complete_after_review"
 
   - id: "CS-1208"
     title: "Run Wave 1 acceptance regression suite"
@@ -120,7 +120,7 @@ tickets:
     constitutional_check: "Articles I, III, V, and VI"
     test_obligation: "Focused tests cover output normalization, no-cross-scoring, non-comparable reasons, ATE truth, real-DGP truth unavailable, CATE staging, artifact identity, typed collection/audit, scorer-only airlock, and legacy ATT/QST compatibility"
     review_gate: "Batch 3 acceptance-regression review"
-    disposition: "implementation_complete_awaiting_review"
+    disposition: "complete_after_review"
 
   - id: "CS-1209"
     title: "Run v0.2.0 Wave 1 release gate and closeout"
@@ -132,4 +132,4 @@ tickets:
     constitutional_check: "No known constitutional violation remains open except by amendment or explicit deferral"
     test_obligation: "Run or explicitly defer-with-rationale every release gate and record evidence"
     review_gate: "Final release-gate review before tagging or merging"
-    disposition: "open"
+    disposition: "implementation_complete_awaiting_final_review"
