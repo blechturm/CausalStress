@@ -2,6 +2,7 @@ cs_result_to_row <- function(result) {
   att  <- result$att %||% list()
   meta <- result$meta %||% list()
   prov <- result$provenance %||% list()
+  scores <- result$scores %||% NULL
 
   collapsed_flag <- NA
   if (!is.null(meta$collapsed) && length(meta$collapsed) > 0L) {
@@ -57,8 +58,12 @@ cs_result_to_row <- function(result) {
     estimator_pkgs = meta$estimator_pkgs %||% NA_character_,
     config_fingerprint = meta$config_fingerprint %||% NA_character_,
     config_fingerprint_schema = meta$config_fingerprint_schema %||% NA_integer_,
+    fit_fingerprint = meta$fit_fingerprint %||% NA_character_,
+    truth_version = meta$truth_version %||% NA_character_,
+    score_fingerprints = list(meta$score_fingerprints %||% character(0)),
     task_fingerprint = meta$task_fingerprint %||% NA_character_,
     log            = meta$log %||% NA_character_,
-    qst            = list(result$qst %||% NULL)
+    qst            = list(result$qst %||% NULL),
+    scores         = list(scores)
   )
 }

@@ -45,8 +45,8 @@ test_that("cs_plan_campaign applies global shuffle", {
       base_grid[, c("dgp_id", "estimator_id", "seed")]
     )
   )
-  expect_true(all(plan_tasks$config_fingerprint_schema == 3L))
-  expect_true(all(plan_tasks$fingerprint_version == 3L))
+  expect_true(all(plan_tasks$config_fingerprint_schema == 4L))
+  expect_true(all(plan_tasks$fingerprint_version == 4L))
   expect_true(all(c("dgp_version", "estimator_version", "task_fingerprint") %in% names(plan_tasks)))
 })
 

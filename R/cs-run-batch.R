@@ -115,7 +115,7 @@ cs_run_batch <- function(batch_id,
           res$qst$tau_id <- cs_tau_id(res$qst$tau)
         }
         res$meta$task_fingerprint <- task_fingerprint
-        res$meta$config_fingerprint_schema <- config_fingerprint_schema
+        res$meta$task_config_fingerprint_schema <- config_fingerprint_schema
         if (!is.null(res$provenance) && isTRUE(parallel) && isTRUE(experimental_parallel)) {
           res$provenance$experimental_parallel <- TRUE
           res$provenance$parallel_warning_emitted <- isTRUE(parallel_warning_emitted)

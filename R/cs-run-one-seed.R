@@ -42,67 +42,21 @@ cs_run_one_seed_internal <- function(dgp_id,
         md <- cs_pin_meta_user_or_metadata(meta_obj)
       stored_fp <- md$config_fingerprint %||% NULL
       stored_schema <- suppressWarnings(as.integer(md$config_fingerprint_schema %||% NA_integer_))
-      expected_fp <- if (is.na(stored_schema) || stored_schema == 1L) {
-        if (is.finite(max_runtime)) {
-          rlang::abort(
-            message = "Cannot resume legacy (v0.1.7) pins with non-infinite `max_runtime`; legacy fingerprints do not encode runtime guards.",
-            class   = "causalstress_fingerprint_error"
-          )
-        }
-        cs_build_config_fingerprint_legacy(
-          dgp_id            = dgp_id,
-          estimator_id      = estimator_id,
-          n                 = n,
-          seed              = seed,
-          bootstrap         = bootstrap,
-          B                 = B,
-          oracle            = isTRUE(est_desc$oracle),
-          estimator_version = est_desc$version,
-          config            = config,
-          tau               = tau
-        )
-      } else if (stored_schema == 2L) {
-        stored_dgp_version <- as.character(md$dgp_version %||% NA_character_)
-        if (is.na(stored_dgp_version) || !identical(stored_dgp_version, as.character(dgp_version))) {
-          rlang::abort(
-            message = "Cannot resume schema-2 pin because its DGP version metadata does not match the resolved DGP version.",
-            class   = "causalstress_fingerprint_error"
-          )
-        }
-        cs_build_config_fingerprint_schema2(
-          dgp_id            = dgp_id,
-          estimator_id      = estimator_id,
-          n                 = n,
-          seed              = seed,
-          bootstrap         = bootstrap,
-          B                 = B,
-          oracle            = isTRUE(est_desc$oracle),
-          estimator_version = est_desc$version,
-          config            = config,
-          tau               = tau,
-          max_runtime       = max_runtime
-        )
-      } else if (stored_schema == 3L) {
-        cs_build_config_fingerprint(
-          dgp_id            = dgp_id,
-          estimator_id      = estimator_id,
-          n                 = n,
-          seed              = seed,
-          bootstrap         = bootstrap,
-          B                 = B,
-          oracle            = isTRUE(est_desc$oracle),
-          estimator_version = est_desc$version,
-          config            = config,
-          tau               = tau,
-          max_runtime       = max_runtime,
-          dgp_version       = dgp_version
-        )
-      } else {
-        rlang::abort(
-          message = glue::glue("Unsupported config fingerprint schema: {stored_schema}."),
-          class   = "causalstress_fingerprint_error"
-        )
-      }
+      cs_assert_schema4_resume(stored_schema)
+      expected_fp <- cs_build_config_fingerprint(
+        dgp_id            = dgp_id,
+        estimator_id      = estimator_id,
+        n                 = n,
+        seed              = seed,
+        bootstrap         = bootstrap,
+        B                 = B,
+        oracle            = isTRUE(est_desc$oracle),
+        estimator_version = est_desc$version,
+        config            = config,
+        tau               = tau,
+        max_runtime       = max_runtime,
+        dgp_version       = dgp_version
+      )
         if (!is.null(stored_fp) && identical(stored_fp, expected_fp)) {
           cached <- pins::pin_read(board, name)
           tidy_row <- cs_result_to_row(cached)

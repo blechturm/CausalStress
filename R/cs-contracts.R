@@ -303,7 +303,8 @@ cs_truth_available_targets <- function(dgp) {
 cs_make_score_row <- function(target_id, estimate = NA_real_, truth = NA_real_,
                               error = NA_real_, abs_error = NA_real_,
                               ci_lo = NA_real_, ci_hi = NA_real_,
-                              tau = NA_real_, tau_index = NA_integer_,
+                              tau = NA_real_, tau_id = NA_character_,
+                              tau_index = NA_integer_,
                               status = "scored", reason = NA_character_) {
   desc <- cs_estimand_target(target_id)
   if (!is.na(reason)) {
@@ -318,6 +319,7 @@ cs_make_score_row <- function(target_id, estimate = NA_real_, truth = NA_real_,
     scoring_population_id = desc$scoring_population_id,
     metric_id = desc$metric_ids[[1L]] %||% "point_error",
     tau = tau,
+    tau_id = tau_id,
     tau_index = tau_index,
     estimate = estimate,
     truth = truth,
@@ -326,7 +328,16 @@ cs_make_score_row <- function(target_id, estimate = NA_real_, truth = NA_real_,
     ci_lo = ci_lo,
     ci_hi = ci_hi,
     score_status = status,
-    non_comparable_reason = reason
+    non_comparable_reason = reason,
+    fit_fingerprint = NA_character_,
+    score_fingerprint = NA_character_,
+    truth_version = NA_character_,
+    seed_eval = NA_integer_,
+    n_eval = NA_integer_,
+    eval_derivation = NA_character_,
+    unit_id_digest = NA_character_,
+    prediction_digest = NA_character_,
+    transductive = NA
   )
 }
 
@@ -434,10 +445,11 @@ cs_build_score_surface <- function(requested_targets, outputs, dgp, att = NULL,
             abs_error = qst$abs_error[[i]] %||% NA_real_,
             ci_lo = qst$ci_lo[[i]] %||% NA_real_,
             ci_hi = qst$ci_hi[[i]] %||% NA_real_,
-            tau = qst$tau[[i]],
-            tau_index = i,
-            status = status_i,
-            reason = reason_i
+          tau = qst$tau[[i]],
+          tau_id = qst$tau_id[[i]] %||% cs_tau_id(qst$tau[[i]]),
+          tau_index = i,
+          status = status_i,
+          reason = reason_i
           )
         }
       }
@@ -448,6 +460,31 @@ cs_build_score_surface <- function(requested_targets, outputs, dgp, att = NULL,
     return(tibble::tibble())
   }
   dplyr::bind_rows(rows)
+}
+
+#' @noRd
+cs_attach_score_identity <- function(scores, fit_fingerprint, truth_version) {
+  if (!is.data.frame(scores) || nrow(scores) == 0L) {
+    return(scores)
+  }
+  scores$fit_fingerprint <- fit_fingerprint
+  scores$truth_version <- truth_version
+  scores$schema_version <- 4L
+  scores$score_fingerprint <- vapply(
+    seq_len(nrow(scores)),
+    function(i) {
+      cs_build_score_fingerprint(
+        fit_fingerprint = fit_fingerprint,
+        estimand_target_id = scores$estimand_target_id[[i]],
+        metric_id = scores$metric_id[[i]],
+        truth_version = truth_version,
+        scoring_population_id = scores$scoring_population_id[[i]],
+        tau_id = scores$tau_id[[i]] %||% NA_character_
+      )
+    },
+    character(1)
+  )
+  scores
 }
 
 #' @noRd

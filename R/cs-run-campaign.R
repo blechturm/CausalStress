@@ -188,16 +188,6 @@ cs_run_campaign <- function(
     cfg
   }
 
-  apply_runner_defaults <- function(cfg, seed_i) {
-    if (is.null(cfg$seed)) {
-      cfg$seed <- seed_i
-    }
-    if (isTRUE(bootstrap) && B > 0L && is.null(cfg$n_boot)) {
-      cfg$n_boot <- B
-    }
-    cfg
-  }
-
   # Skip existing pins if requested (with fingerprint/CI checks)
   should_try_cache <- isTRUE(skip_existing) && !isTRUE(force)
   if (isTRUE(should_try_cache) && !is.null(board)) {
@@ -225,69 +215,22 @@ cs_run_campaign <- function(
         stored_fp <- md$config_fingerprint %||% NULL
         est_desc <- cs_get_estimator(est_id_i)
         caller_config <- resolve_config(est_id_i)
-        task_config <- apply_runner_defaults(caller_config, seed_i)
         stored_schema <- suppressWarnings(as.integer(md$config_fingerprint_schema %||% NA_integer_))
-        expected_fp <- if (is.na(stored_schema) || stored_schema == 1L) {
-          if (is.finite(max_runtime)) {
-            rlang::abort(
-              message = "Cannot resume legacy (v0.1.7) pins with non-infinite `max_runtime`; legacy fingerprints do not encode runtime guards.",
-              class   = "causalstress_fingerprint_error"
-            )
-          }
-          cs_build_config_fingerprint_legacy(
-            dgp_id            = dgp_id_i,
-            estimator_id      = est_id_i,
-            n                 = n_i,
-            seed              = seed_i,
-            bootstrap         = bootstrap,
-            B                 = B,
-            oracle            = isTRUE(est_desc$oracle),
-            estimator_version = est_desc$version,
-            config            = task_config,
-            tau               = tau
-          )
-        } else if (stored_schema == 2L) {
-          stored_dgp_version <- as.character(md$dgp_version %||% NA_character_)
-          if (is.na(stored_dgp_version) || !identical(stored_dgp_version, as.character(dgp_version_i))) {
-            rlang::abort(
-              message = "Cannot resume schema-2 pin because its DGP version metadata does not match the resolved DGP version.",
-              class   = "causalstress_fingerprint_error"
-            )
-          }
-          cs_build_config_fingerprint_schema2(
-            dgp_id            = dgp_id_i,
-            estimator_id      = est_id_i,
-            n                 = n_i,
-            seed              = seed_i,
-            bootstrap         = bootstrap,
-            B                 = B,
-            oracle            = isTRUE(est_desc$oracle),
-            estimator_version = est_desc$version,
-            config            = task_config,
-            tau               = tau,
-            max_runtime       = max_runtime
-          )
-        } else if (stored_schema == 3L) {
-          cs_build_config_fingerprint(
-            dgp_id            = dgp_id_i,
-            estimator_id      = est_id_i,
-            n                 = n_i,
-            seed              = seed_i,
-            bootstrap         = bootstrap,
-            B                 = B,
-            oracle            = isTRUE(est_desc$oracle),
-            estimator_version = est_desc$version,
-            config            = caller_config,
-            tau               = tau,
-            max_runtime       = max_runtime,
-            dgp_version       = dgp_version_i
-          )
-        } else {
-          rlang::abort(
-            message = glue::glue("Unsupported config fingerprint schema: {stored_schema}."),
-            class   = "causalstress_fingerprint_error"
-          )
-        }
+        cs_assert_schema4_resume(stored_schema)
+        expected_fp <- cs_build_config_fingerprint(
+          dgp_id            = dgp_id_i,
+          estimator_id      = est_id_i,
+          n                 = n_i,
+          seed              = seed_i,
+          bootstrap         = bootstrap,
+          B                 = B,
+          oracle            = isTRUE(est_desc$oracle),
+          estimator_version = est_desc$version,
+          config            = caller_config,
+          tau               = tau,
+          max_runtime       = max_runtime,
+          dgp_version       = dgp_version_i
+        )
         if (is.null(stored_fp) || !identical(stored_fp, expected_fp)) {
           old_txt <- if (is.null(stored_fp)) "missing" else stored_fp
           stop(

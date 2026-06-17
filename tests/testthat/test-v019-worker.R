@@ -38,7 +38,8 @@ test_that("cs_run_batch writes staged artifact with results and errors", {
   expect_true(is.list(res$meta))
   expect_true(is.null(res$qst) || "tau_id" %in% names(res$qst))
   expect_equal(res$meta$task_fingerprint, "ok_fingerprint")
-  expect_equal(res$meta$config_fingerprint_schema, 2L)
+  expect_equal(res$meta$config_fingerprint_schema, 4L)
+  expect_equal(res$meta$task_config_fingerprint_schema, 2L)
   expect_true(all(c(
     "seed", "dgp_id", "estimator_id", "message", "error_class",
     "traceback", "task_fingerprint", "config_fingerprint_schema"

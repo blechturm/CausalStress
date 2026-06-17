@@ -34,7 +34,7 @@
   fields; compact ids derive deterministically; unknown or misspelled
   non-comparable reasons are rejected.
 - **Review gate:** Batch 1 typed-target review.
-- **Disposition:** implementation_complete_awaiting_review
+- **Disposition:** complete_after_review
 
 ### CS-1202 - Normalize typed outputs and implement the three-way scoring join
 
@@ -52,7 +52,7 @@
   outputs are never scored as ATE; the join emits the correct non-comparable
   reason for each missing requested/produced/truth branch.
 - **Review gate:** Batch 1 output-contract review.
-- **Disposition:** implementation_complete_awaiting_review
+- **Disposition:** complete_after_review
 
 ### CS-1203 - Implement scorer-only structural truth and Wave 1 ATE producer
 
@@ -69,7 +69,7 @@
   `p`, or `structural_te`; real-DGP ATE/CATE requests without external truth emit
   `truth_unavailable`, never regenerated truth.
 - **Review gate:** Batch 1 truth-channel and ATE review.
-- **Disposition:** implementation_complete_awaiting_review
+- **Disposition:** complete_after_review
 
 ## Batch 2 - Schema 4 and Output Surfaces
 
@@ -90,7 +90,7 @@
   records without overwrite; schema 1-3 resume attempts fail closed with a
   classed migration/fresh-run error.
 - **Review gate:** Batch 2 schema/persistence review.
-- **Disposition:** open
+- **Disposition:** implementation_complete_awaiting_review
 
 ### CS-1205 - Implement typed collection, tidy, science payload, and audit surfaces
 
@@ -110,7 +110,7 @@
   marked legacy; science payload and audit outputs preserve typed target ids,
   score statuses, and non-comparable reasons.
 - **Review gate:** Batch 2 collection/audit review.
-- **Disposition:** open
+- **Disposition:** implementation_complete_awaiting_review
 
 ## Batch 3 - Staging, Gatekeeper, and Integration
 

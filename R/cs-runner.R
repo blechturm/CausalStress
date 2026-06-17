@@ -141,6 +141,26 @@ cs_run_single <- function(
     max_runtime       = max_runtime,
     dgp_version       = dgp_desc$version[[1L]]
   )
+  truth_version <- cs_truth_version_id(
+    dgp_id = dgp_id,
+    dgp_version = dgp_desc$version[[1L]],
+    truth_payload = list(
+      true_att = dgp$true_att,
+      true_qst_tau = dgp$true_qst$tau %||% numeric(0),
+      true_qst_value = dgp$true_qst$value %||% numeric(0),
+      structural_te = dgp$meta$structural_te %||% numeric(0)
+    )
+  )
+  fit_fingerprint <- cs_build_fit_fingerprint(
+    dgp_id = dgp_id,
+    dgp_version = dgp_desc$version[[1L]],
+    estimator_id = estimator_id,
+    estimator_version = est_desc$version,
+    n = n,
+    seed = seed,
+    config_fingerprint = config_fingerprint,
+    config = config_caller
+  )
   requested_estimand_targets <- cs_requested_estimand_targets(
     config = config_caller,
     estimator_desc = est_desc
@@ -369,8 +389,6 @@ cs_run_single <- function(
 
   log_str <- if (length(logs) == 0L) NA_character_ else paste(logs, collapse = "\n")
 
-  log_str <- if (length(logs) == 0L) NA_character_ else paste(logs, collapse = "\n")
-
   # Non-deterministic provenance is stored separately from the science payload.
   ts_now <- Sys.time()
 
@@ -393,6 +411,19 @@ cs_run_single <- function(
     qst = qst_df,
     failure_status = if (!isTRUE(success)) "estimator_error" else NULL
   )
+  score_surface <- cs_attach_score_identity(
+    score_surface,
+    fit_fingerprint = fit_fingerprint,
+    truth_version = truth_version
+  )
+  if (nrow(score_surface) > 0L) {
+    score_surface$dgp_id <- dgp_id
+    score_surface$dgp_version <- dgp_desc$version[[1L]] %||% NA_character_
+    score_surface$estimator_id <- estimator_id
+    score_surface$estimator_version <- est_desc$version %||% NA_character_
+    score_surface$n <- as.integer(n)
+    score_surface$seed <- as.integer(seed)
+  }
 
   result <- list(
     outputs    = typed_outputs,
@@ -428,7 +459,10 @@ cs_run_single <- function(
       dgp_design_spec = dgp_desc$design_spec[[1L]] %||% NA_character_,
       estimator_version = est_desc$version %||% NA_character_,
       estimator_reported_version = reported_ver,
-      config_fingerprint_schema = 3L,
+      config_fingerprint_schema = 4L,
+      fit_fingerprint = fit_fingerprint,
+      truth_version = truth_version,
+      score_fingerprints = score_surface$score_fingerprint %||% character(0),
       estimator_pkgs = estimator_pkgs,
       n_boot_ok      = n_boot_ok,
       n_boot_fail    = n_boot_fail,
@@ -591,17 +625,7 @@ cs_run_seeds <- function(
     )
   }
 
-  apply_runner_defaults <- function(cfg, seed_i) {
-    if (is.null(cfg$seed)) {
-      cfg$seed <- seed_i
-    }
-    if (isTRUE(bootstrap) && B > 0L && is.null(cfg$n_boot)) {
-      cfg$n_boot <- B
-    }
-    cfg
-  }
-
-  build_expected_fp_schema3 <- function(seed_i) {
+  build_expected_fp_schema4 <- function(seed_i) {
     cs_build_config_fingerprint(
       dgp_id            = dgp_id,
       estimator_id      = estimator_id,
@@ -615,45 +639,6 @@ cs_run_seeds <- function(
       tau               = tau,
       max_runtime       = max_runtime,
       dgp_version       = dgp_version
-    )
-  }
-
-  build_expected_fp_schema2 <- function(seed_i) {
-    expected_cfg <- apply_runner_defaults(config, seed_i)
-    cs_build_config_fingerprint_schema2(
-      dgp_id            = dgp_id,
-      estimator_id      = estimator_id,
-      n                 = n,
-      seed              = seed_i,
-      bootstrap         = bootstrap,
-      B                 = B,
-      oracle            = isTRUE(est_desc$oracle),
-      estimator_version = est_desc$version,
-      config            = expected_cfg,
-      tau               = tau,
-      max_runtime       = max_runtime
-    )
-  }
-
-  build_expected_fp_legacy <- function(seed_i) {
-    if (is.finite(max_runtime)) {
-      rlang::abort(
-        message = "Cannot resume legacy (v0.1.7) pins with non-infinite `max_runtime`; legacy fingerprints do not encode runtime guards.",
-        class   = "causalstress_fingerprint_error"
-      )
-    }
-    expected_cfg <- apply_runner_defaults(config, seed_i)
-    cs_build_config_fingerprint_legacy(
-      dgp_id            = dgp_id,
-      estimator_id      = estimator_id,
-      n                 = n,
-      seed              = seed_i,
-      bootstrap         = bootstrap,
-      B                 = B,
-      oracle            = isTRUE(est_desc$oracle),
-      estimator_version = est_desc$version,
-      config            = expected_cfg,
-      tau               = tau
     )
   }
 
@@ -671,25 +656,8 @@ cs_run_seeds <- function(
       md <- cs_pin_meta_user_or_metadata(meta_obj)
       stored_fp <- md$config_fingerprint %||% NULL
       stored_schema <- suppressWarnings(as.integer(md$config_fingerprint_schema %||% NA_integer_))
-      expected_fp <- if (is.na(stored_schema) || stored_schema == 1L) {
-        build_expected_fp_legacy(s)
-      } else if (stored_schema == 2L) {
-        stored_dgp_version <- as.character(md$dgp_version %||% NA_character_)
-        if (is.na(stored_dgp_version) || !identical(stored_dgp_version, as.character(dgp_version))) {
-          rlang::abort(
-            message = "Cannot resume schema-2 pin because its DGP version metadata does not match the resolved DGP version.",
-            class   = "causalstress_fingerprint_error"
-          )
-        }
-        build_expected_fp_schema2(s)
-      } else if (stored_schema == 3L) {
-        build_expected_fp_schema3(s)
-      } else {
-        rlang::abort(
-          message = glue::glue("Unsupported config fingerprint schema: {stored_schema}."),
-          class   = "causalstress_fingerprint_error"
-        )
-      }
+      cs_assert_schema4_resume(stored_schema)
+      expected_fp <- build_expected_fp_schema4(s)
 
       if (is.null(stored_fp) || !identical(stored_fp, expected_fp)) {
         old_txt <- if (is.null(stored_fp)) "missing" else stored_fp

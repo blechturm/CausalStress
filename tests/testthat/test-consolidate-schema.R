@@ -14,7 +14,7 @@ test_that("cs_consolidate rejects new artifacts with missing result fingerprints
     config = list(ci_method = "none")
   )
   res$meta$task_fingerprint <- NA_character_
-  res$meta$config_fingerprint_schema <- 3L
+  res$meta$config_fingerprint_schema <- 4L
 
   batch_obj <- list(
     schema_version = "v1.0.0",
@@ -62,6 +62,6 @@ test_that("cs_result_to_row propagates batch schema fields", {
     "config_fingerprint_schema",
     "task_fingerprint"
   ) %in% names(row)))
-  expect_equal(row$config_fingerprint_schema[[1]], 3L)
+  expect_equal(row$config_fingerprint_schema[[1]], 4L)
   expect_equal(row$task_fingerprint[[1]], "task_fp")
 })

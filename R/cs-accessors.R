@@ -13,6 +13,7 @@ cs_science_payload <- function(x) {
   }
   att <- x$att %||% list()
   meta <- x$meta %||% list()
+  scores <- x$scores %||% NULL
 
   qst <- x$qst %||% NULL
   if (!is.null(qst)) {
@@ -24,6 +25,16 @@ cs_science_payload <- function(x) {
     }
     if ("tau_id" %in% names(qst)) {
       qst <- dplyr::arrange(qst, .data$tau_id)
+    }
+  }
+  if (!is.null(scores)) {
+    scores <- tibble::as_tibble(scores)
+    order_cols <- intersect(
+      c("estimand_target_id", "metric_id", "tau_id", "tau_index"),
+      names(scores)
+    )
+    if (length(order_cols) > 0L) {
+      scores <- dplyr::arrange(scores, dplyr::across(dplyr::all_of(order_cols)))
     }
   }
 
@@ -39,6 +50,7 @@ cs_science_payload <- function(x) {
       ci_width     = att$ci_width %||% NA_real_
     ),
     qst = qst,
+    scores = scores,
     meta = list(
       dgp_id            = meta$dgp_id %||% NA_character_,
       dgp_version       = meta$dgp_version %||% NA_character_,
@@ -49,7 +61,11 @@ cs_science_payload <- function(x) {
       oracle            = meta$oracle %||% NA,
       oracle_columns_granted = meta$oracle_columns_granted %||% character(0),
       supports_qst       = meta$supports_qst %||% NA,
-      config_fingerprint = meta$config_fingerprint %||% NA_character_
+      config_fingerprint = meta$config_fingerprint %||% NA_character_,
+      config_fingerprint_schema = meta$config_fingerprint_schema %||% NA_integer_,
+      fit_fingerprint = meta$fit_fingerprint %||% NA_character_,
+      truth_version = meta$truth_version %||% NA_character_,
+      score_fingerprints = meta$score_fingerprints %||% character(0)
     )
   )
 }
@@ -106,6 +122,9 @@ cs_meta_flatten <- function(x) {
     supports_qst = meta$supports_qst %||% NA,
     config_fingerprint = meta$config_fingerprint %||% NA_character_,
     config_fingerprint_schema = meta$config_fingerprint_schema %||% NA_integer_,
+    fit_fingerprint = meta$fit_fingerprint %||% NA_character_,
+    truth_version = meta$truth_version %||% NA_character_,
+    score_fingerprints = list(meta$score_fingerprints %||% character(0)),
     task_fingerprint = meta$task_fingerprint %||% NA_character_,
     max_runtime = prov$max_runtime %||% NA_real_,
     experimental_parallel = prov$experimental_parallel %||% FALSE,

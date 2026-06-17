@@ -97,7 +97,7 @@ cs_build_config_fingerprint <- function(dgp_id, estimator_id, n, seed,
                                          config = list(), tau = cs_tau_oracle,
                                          max_runtime = Inf,
                                          dgp_version = NA_character_) {
-  fingerprint_schema <- 3L
+  fingerprint_schema <- 4L
   ci_intent <- cs_ci_intent(config = config, bootstrap = bootstrap, B = B)
   config_norm <- cs_fingerprint_config_payload(config)
 
@@ -117,6 +117,80 @@ cs_build_config_fingerprint <- function(dgp_id, estimator_id, n, seed,
       ci_intent = ci_intent,
       config = config_norm,
       tau_id = cs_tau_id(tau)
+    ),
+    algo = "sha256"
+  )
+}
+
+cs_assert_schema4_resume <- function(stored_schema) {
+  stored_schema <- suppressWarnings(as.integer(stored_schema %||% NA_integer_))
+  if (is.na(stored_schema) || stored_schema < 4L) {
+    rlang::abort(
+      message = paste0(
+        "Schema 1-3 artifacts are read-only historical inputs in v0.2.0 and ",
+        "cannot be resumed into schema-4 runs. Use skip_existing = FALSE, ",
+        "force = TRUE, or a fresh board."
+      ),
+      class = "causalstress_schema_migration_error"
+    )
+  }
+  if (!identical(stored_schema, 4L)) {
+    rlang::abort(
+      message = glue::glue("Unsupported config fingerprint schema for resume: {stored_schema}."),
+      class = "causalstress_schema_migration_error"
+    )
+  }
+  invisible(TRUE)
+}
+
+cs_build_fit_fingerprint <- function(dgp_id, dgp_version, estimator_id,
+                                     estimator_version, n, seed,
+                                     config_fingerprint,
+                                     config = list()) {
+  digest::digest(
+    list(
+      fingerprint_version = 4L,
+      artifact_type = "fit",
+      dgp_id = as.character(dgp_id),
+      dgp_version = as.character(dgp_version %||% NA_character_),
+      estimator_id = as.character(estimator_id),
+      estimator_version = as.character(estimator_version %||% NA_character_),
+      n = as.integer(n),
+      seed = as.integer(seed),
+      config_fingerprint = as.character(config_fingerprint %||% NA_character_),
+      transductive = as.logical(config$transductive %||% FALSE)
+    ),
+    algo = "sha256"
+  )
+}
+
+cs_truth_version_id <- function(dgp_id, dgp_version, truth_payload = NULL) {
+  digest::digest(
+    list(
+      fingerprint_version = 4L,
+      artifact_type = "truth",
+      dgp_id = as.character(dgp_id),
+      dgp_version = as.character(dgp_version %||% NA_character_),
+      truth_payload = cs_normalize_for_fingerprint(truth_payload %||% list(), path = "truth_payload")
+    ),
+    algo = "sha256"
+  )
+}
+
+cs_build_score_fingerprint <- function(fit_fingerprint, estimand_target_id,
+                                       metric_id, truth_version,
+                                       scoring_population_id,
+                                       tau_id = NA_character_) {
+  digest::digest(
+    list(
+      fingerprint_version = 4L,
+      artifact_type = "score",
+      fit_fingerprint = as.character(fit_fingerprint),
+      estimand_target_id = as.character(estimand_target_id),
+      metric_id = as.character(metric_id),
+      truth_version = as.character(truth_version),
+      scoring_population_id = as.character(scoring_population_id),
+      tau_id = as.character(tau_id %||% NA_character_)
     ),
     algo = "sha256"
   )
@@ -166,7 +240,7 @@ cs_build_task_fingerprint <- function(dgp_id, dgp_version, estimator_id,
                                       tau = cs_tau_oracle, bootstrap = FALSE, B = 0L) {
   digest::digest(
     list(
-      fingerprint_version = 3L,
+      fingerprint_version = 4L,
       dgp_id = dgp_id,
       dgp_version = as.character(dgp_version %||% NA_character_),
       estimator_id = estimator_id,

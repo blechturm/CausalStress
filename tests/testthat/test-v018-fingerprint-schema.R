@@ -1,4 +1,4 @@
-test_that("v0.1.10 writes config_fingerprint_schema=3 and max_runtime participates in identity", {
+test_that("v0.2.0 writes config_fingerprint_schema=4 and max_runtime participates in identity", {
   skip_if_not_installed("pins")
 
   board <- pins::board_temp()
@@ -17,9 +17,11 @@ test_that("v0.1.10 writes config_fingerprint_schema=3 and max_runtime participat
 
   name <- CausalStress:::cs_result_pin_name("synth_baseline", "lm_att", 30, 1, "1.6.0")
   pin <- pins::pin_read(board, name)
-  expect_identical(pin$meta$config_fingerprint_schema, 3L)
+  expect_identical(pin$meta$config_fingerprint_schema, 4L)
   expect_identical(pin$meta$dgp_version, "1.6.0")
   expect_true(is.character(pin$meta$config_fingerprint))
+  expect_true(is.character(pin$meta$fit_fingerprint))
+  expect_true(is.character(pin$meta$truth_version))
 
   expect_error(
     cs_run_seeds(
@@ -37,7 +39,7 @@ test_that("v0.1.10 writes config_fingerprint_schema=3 and max_runtime participat
   )
 })
 
-test_that("legacy (schema-missing) pins resume deterministically and forbid finite max_runtime", {
+test_that("legacy (schema-missing) pins fail closed as schema-4 resume targets", {
   skip_if_not_installed("pins")
 
   board <- pins::board_temp()
@@ -106,19 +108,6 @@ test_that("legacy (schema-missing) pins resume deterministically and forbid fini
     )
   )
 
-  resumed <- cs_run_seeds(
-    dgp_id       = dgp_id,
-    estimator_id = estimator_id,
-    n            = n,
-    seeds        = seed,
-    board        = board,
-    skip_existing = TRUE,
-    show_progress = FALSE,
-    quiet = TRUE,
-    max_runtime = Inf
-  )
-  expect_equal(resumed$est_att[1], 999)
-
   expect_error(
     cs_run_seeds(
       dgp_id       = dgp_id,
@@ -129,14 +118,13 @@ test_that("legacy (schema-missing) pins resume deterministically and forbid fini
       skip_existing = TRUE,
       show_progress = FALSE,
       quiet = TRUE,
-      max_runtime = 0.5
+      max_runtime = Inf
     ),
-    "legacy.*max_runtime|Cannot resume legacy",
-    ignore.case = TRUE
+    class = "causalstress_schema_migration_error"
   )
 })
 
-test_that("schema-2 pins without DGP version do not satisfy schema-3 resume", {
+test_that("schema-2 pins fail closed as schema-4 resume targets", {
   skip_if_not_installed("pins")
 
   board <- pins::board_temp()
@@ -205,6 +193,6 @@ test_that("schema-2 pins without DGP version do not satisfy schema-3 resume", {
       quiet = TRUE,
       max_runtime = Inf
     ),
-    "DGP version metadata"
+    class = "causalstress_schema_migration_error"
   )
 })

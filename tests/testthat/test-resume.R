@@ -24,7 +24,7 @@ test_that("cs_run_seeds can resume from existing pins without recomputing", {
       seed           = 1L,
       oracle         = FALSE,
       supports_qst   = FALSE,
-      config_fingerprint_schema = 3L,
+      config_fingerprint_schema = 4L,
       estimator_pkgs = "",
       n_boot_ok      = 0L,
       log            = NA_character_,
@@ -109,7 +109,7 @@ test_that("fingerprint mismatch triggers error on resume", {
 )
 })
 
-test_that("schema-3 resume works for default config and bootstrap B=0 edge", {
+test_that("schema-4 resume works for default config and bootstrap B=0 edge", {
   skip_if_not_installed("pins")
 
   board <- pins::board_temp()

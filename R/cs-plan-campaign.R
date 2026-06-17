@@ -149,8 +149,8 @@ cs_plan_campaign <- function(dgp_list,
     },
     character(1)
   )
-  grid$fingerprint_version <- 3L
-  grid$config_fingerprint_schema <- 3L
+  grid$fingerprint_version <- 4L
+  grid$config_fingerprint_schema <- 4L
 
   if (!is.null(campaign_seed)) {
     perm <- cs_with_mandated_rng(as.integer(campaign_seed), sample.int(nrow(grid)))

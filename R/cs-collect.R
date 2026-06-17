@@ -26,6 +26,52 @@ cs_collect_att <- function(tidy) {
   )
 }
 
+#' Collect canonical typed score records
+#'
+#' Converts run results or tidy run rows into the v0.2.0 long-form typed score
+#' surface. The legacy ATT/QST collection helpers remain compatibility
+#' projections; this helper is the canonical typed score surface.
+#'
+#' @param x A run result, list of run results, or tibble produced by [cs_tidy()].
+#'
+#' @return A tibble with one row per scalar score or QST point coordinate.
+#' @export
+cs_collect_scores <- function(x) {
+  if (is.list(x) && !is.null(x$scores) && !is.data.frame(x)) {
+    scores <- x$scores
+    if (is.null(scores)) {
+      return(tibble::tibble())
+    }
+    return(tibble::as_tibble(scores))
+  }
+
+  if (is.list(x) && length(x) > 0L &&
+      is.list(x[[1L]]) && !is.null(x[[1L]]$scores)) {
+    return(dplyr::bind_rows(lapply(x, cs_collect_scores)))
+  }
+
+  if (!is.data.frame(x)) {
+    x <- cs_tidy(x)
+  } else {
+    x <- tibble::as_tibble(x)
+  }
+
+  if ("estimand_target_id" %in% names(x) && "score_status" %in% names(x)) {
+    return(x)
+  }
+
+  if (!"scores" %in% names(x)) {
+    return(tibble::tibble())
+  }
+
+  dplyr::bind_rows(lapply(x$scores, function(scores) {
+    if (is.null(scores)) {
+      return(tibble::tibble())
+    }
+    tibble::as_tibble(scores)
+  }))
+}
+
 #' Collect QST-level results from tidy runs
 #'
 #' Thin helper to subset QST-level columns from a tibble produced by
