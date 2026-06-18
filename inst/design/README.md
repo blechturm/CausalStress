@@ -1,9 +1,9 @@
 # CausalStress Design Governance Index
 
 **Status:** Active authority index
-**Last updated:** 2026-06-17
-**Current active packet:** `causalstress_v0_2_0_spec_packet` (Batch 4 release gate implemented; awaiting final review/tag)
-**Latest completed packet:** `causalstress_v0_1_10_spec_packet`
+**Last updated:** 2026-06-18
+**Current active packet:** `causalstress_v0_2_0_ci_packet`
+**Latest completed packet:** `causalstress_v0_2_0_spec_packet` (Wave 1 implementation closed; public v0.2.0 tag blocked until CI packet closes)
 **Accepted RFCs (authority level 4):** RFC-1 Estimand Registry — `rfc/20260616_estimand_registry_synthesis.md`, accepted 2026-06-16 and consumed by ratified Constitution v2.0.0.
 **Constitution:** **v2.0.0 ratified 2026-06-16** (`CausalStress Scientific Protocol`) — see `CAUSAL_STRESS_CONSTITUTION.md` Amendment History and `rfc/20260616_constitution_2_0_0_review.md`.
 **Active program:** v0.2.0 "Converge & Freeze" (Constitution 2.0.0 ratified → CI + Wave 1 packet → RFC-2a scalar UX freeze → Wave 2 CATE → RFC-2b + RFC-3 families → docs cycle). See `roadmap.md`.
@@ -51,9 +51,11 @@ active packet, the current authority wins.
 | `horizon.md` | Horizon | Deferred work and future directions. |
 | `rfc_cycle.md` | Process | RFC workflow for contested or expensive decisions. |
 | `release_gate.md` | Process | Release checklist. |
+| `release_ci_playbook.md` | Process | CI-backed release sequencing, local WSL gate, and tag-handling playbook. |
 | `templates/` | Process | Canonical packet and closeout templates. |
 | `audit/` | Audit input | Findings must be routed before release. |
-| `causalstress_v0_2_0_spec_packet/` | Active packet | v0.2.0 Wave 1 typed-scoring implementation packet. |
+| `causalstress_v0_2_0_ci_packet/` | Active packet | v0.2.0 CI and release-gate infrastructure packet. |
+| `causalstress_v0_2_0_spec_packet/` | Final packet | v0.2.0 Wave 1 typed-scoring implementation packet, closed before public tag pending CI. |
 | `causalstress_v0_1_10_spec_packet/` | Final packet | v0.1.10 governance and defect-repair packet, closed on 2026-06-14. |
 | `rfc/` | RFC records | Accepted syntheses become binding in stated scope. |
 | `research/` | Research notes | Literature/prior-art assessments; informative only unless promoted via RFC or packet. |

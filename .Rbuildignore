@@ -8,7 +8,9 @@
 ^inst/dgp_meta/.*_cache$
 ^inst/dgp_meta/.*_files$
 ^\.claude$
+^\.github$
 ^dev$
 ^figure$
+^tools/ci-.*\.R$
 ^tmp_eval\.R$
 ^tmp_flaky\.R$

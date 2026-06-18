@@ -1,11 +1,13 @@
 # CausalStress v0.2.0 Release Closeout
 
-**Status:** IMPLEMENTATION COMPLETE - AWAITING FINAL RELEASE-GATE REVIEW
-**Date prepared:** 2026-06-17
+**Status:** CLOSED - PUBLIC TAG BLOCKED BY CI PACKET
+**Date closed:** 2026-06-18
 
 This closeout records evidence for the v0.2.0 Wave 1 typed-scoring packet. It is
-not a tag authorization until the final release-gate review is accepted and the
-open review items below are adjudicated.
+not a public tag authorization. The Wave 1 packet is closed after final review,
+but the public v0.2.0 tag remains blocked until
+`causalstress_v0_2_0_ci_packet` satisfies the roadmap CI release-gate
+requirement.
 
 ## Shipped
 
@@ -39,7 +41,7 @@ open review items below are adjudicated.
 | Item | Rationale | Destination |
 | --- | --- | --- |
 | RFC-2a scalar UX freeze timing | The active spec names this as a maintainer decision required before final closeout. The roadmap default is that RFC-2a follows Wave 1. | Final release-gate review / maintainer acceptance |
-| Roadmap Phase 1 CI infrastructure | `roadmap.md` says green GitHub Actions CI becomes a v0.2.0 release-gate requirement, but the active Wave 1 spec explicitly lists CI/coverage infrastructure as non-scope unless promoted by a later packet. No `.github/` directory exists in this working tree. | Final release-gate review must decide whether local gate evidence is sufficient for this Wave 1 packet or whether a CI packet blocks tag/merge. |
+| Roadmap Phase 1 CI infrastructure | `roadmap.md` says green GitHub Actions CI becomes a v0.2.0 release-gate requirement, but the active Wave 1 spec explicitly lists CI/coverage infrastructure as non-scope unless promoted by a later packet. No `.github/` directory existed at Wave 1 closeout. | `causalstress_v0_2_0_ci_packet`; public v0.2.0 tag remains blocked until this packet closes green. |
 | Gatekeeper recalibration | Wave 1 adds only a structure-only ATE slot and intentionally does not decide thresholds, difficulty tiers, or registry consequences. | `horizon.md` Gatekeeper recalibration RFC |
 | Real-DGP generalized external truth | Wave 1 preserves `truth_unavailable` for ATE/CATE without external truth and does not add a generalized external-truth tier. | Horizon / future RFC |
 | CATE implementation and CATE UX | Wave 1 registers and stages CATE only. Held-out evaluation, PEHE, prediction APIs, and CATE UX remain out of scope. | Roadmap Wave 2 and RFC-2b |
@@ -60,13 +62,13 @@ open review items below are adjudicated.
 | Packet closeout exists | This file records commands, evidence, routed items, and final-review blockers/questions. | Pass |
 | Known constitutional violations | Checked Constitution v2.0.0, the active spec, ticket dispositions, and release-gate findings. | No known Wave 1 implementation violation remains open. The roadmap CI tension is a process/release-scope issue for final review, not a silent constitutional deferral. |
 | Reproducibility substrate | R 4.5.2 x64 at `C:\Program Files\R\R-4.5.2\bin\x64\Rscript.exe`; platform `x86_64-w64-mingw32`; Windows 11 x64 build 26200 as reported by R CMD check; governed generation runs under `RNGkind=Mersenne-Twister / Inversion / Rounding` via the scoped `cs_set_rng()` contract, which restores the ambient session default afterward (`Mersenne-Twister / Inversion / Rejection` in the release-gate shell); `extSoftVersion()` reports `BLAS` as blank and no `LAPACK` entry; thread env vars `OMP_NUM_THREADS`, `OPENBLAS_NUM_THREADS`, `MKL_NUM_THREADS`, `BLAS_NUM_THREADS`, `VECLIB_MAXIMUM_THREADS`, and `RCPP_PARALLEL_NUM_THREADS` all unset; `.libPaths()` = `C:/Users/maxth/Documents/R/win-library/4.5`; `C:/Users/maxth/AppData/Local/R/win-library/4.5`; `C:/Program Files/R/R-4.5.2/library`. Same-substrate truth-path probe: two `dgp_synth_baseline_v160(n=250, seed=20260617L, include_truth=TRUE)` calls compared `df`, `true_att`, `true_qst`, and `meta`. | Pass: `include_truth_bitwise=TRUE`; all four compared fields identical. |
-| Final release-gate review | Pending. The reviewer should independently verify the local gate evidence and adjudicate the two routed open items: RFC-2a timing and roadmap CI scope. | Pending |
+| Final release-gate review | Claude reviewed Batch 4 / CS-1209 and found no code-correctness blocker. Review required correcting the RNG substrate evidence and splitting unrelated `horizon.md` changes out of the CS-1209 commit; both were done before commit `808c6f5`. Review adjudicated CI as tag-blocking but not Wave-1-commit-blocking. | Pass for Wave 1 packet closeout; public tag blocked by CI packet. |
 
-## Final Review Items
+## Final Review Disposition
 
-1. Decide whether RFC-2a begins immediately after Wave 1, as the roadmap's phase
-   order implies, or whether one additional UX cleanup packet is required first.
-2. Decide whether the roadmap's "green CI becomes a v0.2.0 release-gate
-   requirement" blocks this Wave 1 packet because `.github/` is absent, or
-   whether CI remains outside this packet under the spec's explicit non-scope
-   clause and must be opened as the next packet before a broader v0.2.0 tag.
+1. RFC-2a may begin after Wave 1; no additional UX cleanup packet is mandated by
+   governance before RFC-2a, though the maintainer may choose to insert one.
+2. CI absence does not invalidate the Wave 1 packet because CI was out of scope
+   for that active spec, but it does block the public v0.2.0 tag under
+   `roadmap.md`. The CI requirement is promoted into
+   `causalstress_v0_2_0_ci_packet`.

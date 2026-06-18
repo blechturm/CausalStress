@@ -179,4 +179,4 @@
   acceptance criteria, review routing, planning-state check, and constitutional
   violation check.
 - **Review gate:** Final release-gate review before tagging or merging.
-- **Disposition:** implementation_complete_awaiting_final_review
+- **Disposition:** complete_after_review
