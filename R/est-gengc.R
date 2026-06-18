@@ -171,7 +171,7 @@ est_gengc <- function(df, tau = cs_tau_oracle, config = list()) {
             n_boot_ok       = att_ok,
             n_boot_fail     = att_fail,
             ci_valid_by_dim = ci_res$meta$ci_valid_by_dim[1],
-            collapsed       = ci_res$meta$collapsed[1],
+            collapsed       = att_collapsed,
             ci_valid        = att_ci_valid,
             ci_fail_code    = att_fail_code,
             ci_method       = ci_res$meta$ci_method,

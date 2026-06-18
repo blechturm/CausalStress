@@ -399,7 +399,7 @@ cs_run_single <- function(
     ci_lo        = ci_lo_att,
     ci_hi        = ci_hi_att,
     boot_covered = att_covered,
-    ci_width     = if (!is.na(ci_lo_att) && !is.na(ci_hi_att)) ci_hi_att - ci_lo_att else NA_real_
+    ci_width     = att_ci_width
   )
 
   score_surface <- cs_build_score_surface(

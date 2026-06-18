@@ -42,7 +42,7 @@ cs_validate_dgp_registry <- function(strict = FALSE) {
   stable_counts <- table(reg$dgp_id[reg$status == "stable"])
   if (any(stable_counts > 1L)) {
     bad <- names(stable_counts)[stable_counts > 1L]
-    cli::cli_abort("DGP registry has more than one stable version for: {toString(bad)}.")
+    cli::cli_abort(paste("DGP registry has more than one stable version for:", toString(bad), "."))
   }
 
   # semver validation -------------------------------------------------------

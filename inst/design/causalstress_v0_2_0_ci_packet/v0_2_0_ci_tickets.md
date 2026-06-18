@@ -20,7 +20,7 @@
   Ubuntu release, Ubuntu devel, Windows release, and macOS release; any notes
   are classified in closeout.
 - **Review gate:** Batch 0 CI matrix review.
-- **Disposition:** implementation_complete_awaiting_review
+- **Disposition:** complete_after_review
 
 ### CS-1211 - Add full test, validation, and substrate evidence jobs
 
@@ -36,7 +36,7 @@
   records substrate evidence, proves `include_truth_bitwise=TRUE`, and records a
   local WSL/Ubuntu rehearsal or an explicit maintainer-approved skip.
 - **Review gate:** Batch 0 test/validation/substrate review.
-- **Disposition:** implementation_complete_awaiting_review
+- **Disposition:** complete_after_review
 
 ## Batch 1 - Coverage, Lint, and CI Robustness
 
@@ -46,14 +46,14 @@
 - **Source:** `roadmap.md` Phase 1
 - **Motivation:** The roadmap requires coverage tests and lint as part of the
   continuous-enforcement layer.
-- **Files:** `.github/workflows/`, `.lintr` or lint configuration as needed,
-  CI support files as needed
+- **Files:** `.github/workflows/`, `tools/ci-coverage.R`, `tools/ci-lint.R`,
+  lint configuration as needed
 - **Constitutional check:** Article VII continuous enforcement.
 - **Test obligation:** CI produces coverage evidence and lint evidence. Any lint
   baseline, exclusions, or non-blocking mode must be explicit in the closeout and
   must not hide new lint regressions.
 - **Review gate:** Batch 1 coverage/lint review.
-- **Disposition:** open
+- **Disposition:** implementation_complete_awaiting_review
 
 ### CS-1213 - Harden golden-value tests for CI substrates
 
@@ -62,7 +62,7 @@
 - **Motivation:** Absolute DGP/model golden values captured on one substrate can
   flake on Ubuntu/macOS/Windows CI even when the code is constitutionally
   compliant.
-- **Files:** `tests/testthat/`, `inst/design/horizon.md`, CI workflows as needed
+- **Files:** `tests/testthat/`, CI workflows as needed
 - **Constitutional check:** Article II same-substrate bitwise identity and
   cross-substrate tolerance-level reproducibility.
 - **Test obligation:** Exact assertions remain only for in-process
@@ -70,7 +70,7 @@
   use documented tolerances or are explicitly gated to a declared reference
   substrate. CI confirms the tests pass on the declared matrix.
 - **Review gate:** Batch 1 CI tolerance review.
-- **Disposition:** open
+- **Disposition:** implementation_complete_awaiting_review
 
 ## Batch 2 - CI Release Gate
 

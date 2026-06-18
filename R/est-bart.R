@@ -66,10 +66,6 @@ est_bart_att <- function(df, config = list(), tau = cs_tau_oracle, ...) {
 
   threads <- if (is.null(config$num_threads)) 1L else config$num_threads
 
-  y   <- df$y
-  trt <- df$w
-  w   <- df[, setdiff(names(df), c("y", "w")), drop = FALSE]
-
   seed_val <- config$seed
   if (is.null(seed_val)) seed_val <- NA
 

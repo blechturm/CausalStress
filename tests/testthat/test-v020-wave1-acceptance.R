@@ -84,6 +84,9 @@ test_that("CATE-only campaign planning rejects before creating executable tasks"
 })
 
 test_that("legacy ATT and QST numerical values are stable modulo typed schema", {
+  reference_tol <- 1e-8
+  identity_tol <- 1e-12
+
   oracle <- cs_run_single(
     dgp_id = "synth_baseline",
     estimator_id = "oracle_att",
@@ -94,12 +97,15 @@ test_that("legacy ATT and QST numerical values are stable modulo typed schema", 
   oracle_att_score <- oracle$scores[oracle$scores$estimand_target_id == "att", ]
   oracle_ate_score <- oracle$scores[oracle$scores$estimand_target_id == "ate", ]
 
-  expect_equal(oracle$att$estimate, 1.0229701591977549, tolerance = 1e-12)
-  expect_equal(oracle$att$true, 1.0229701591977549, tolerance = 1e-12)
-  expect_equal(oracle_att_score$estimate, oracle$att$estimate, tolerance = 1e-12)
-  expect_equal(oracle_att_score$truth, oracle$att$true, tolerance = 1e-12)
-  expect_equal(oracle_ate_score$estimate, 0.96209042612028262, tolerance = 1e-12)
-  expect_equal(oracle_ate_score$truth, 0.96209042612028262, tolerance = 1e-12)
+  # Absolute DGP/model reference values are cross-substrate-sensitive; identity
+  # checks below remain tight because they compare values already computed in the
+  # same process.
+  expect_equal(oracle$att$estimate, 1.0229701591977549, tolerance = reference_tol)
+  expect_equal(oracle$att$true, 1.0229701591977549, tolerance = reference_tol)
+  expect_equal(oracle_att_score$estimate, oracle$att$estimate, tolerance = identity_tol)
+  expect_equal(oracle_att_score$truth, oracle$att$true, tolerance = identity_tol)
+  expect_equal(oracle_ate_score$estimate, 0.96209042612028262, tolerance = reference_tol)
+  expect_equal(oracle_ate_score$truth, 0.96209042612028262, tolerance = reference_tol)
 
   lm <- cs_run_single(
     dgp_id = "synth_baseline",
@@ -110,12 +116,12 @@ test_that("legacy ATT and QST numerical values are stable modulo typed schema", 
   )
   lm_att_score <- lm$scores[lm$scores$estimand_target_id == "att", ]
 
-  expect_equal(lm$att$estimate, 0.85923944555651943, tolerance = 1e-12)
-  expect_equal(lm$att$true, 1.0909537824436135, tolerance = 1e-12)
-  expect_equal(lm$att$error, -0.23171433688709409, tolerance = 1e-12)
-  expect_equal(lm_att_score$estimate, lm$att$estimate, tolerance = 1e-12)
-  expect_equal(lm_att_score$truth, lm$att$true, tolerance = 1e-12)
-  expect_equal(lm_att_score$error, lm$att$error, tolerance = 1e-12)
+  expect_equal(lm$att$estimate, 0.85923944555651943, tolerance = reference_tol)
+  expect_equal(lm$att$true, 1.0909537824436135, tolerance = reference_tol)
+  expect_equal(lm$att$error, -0.23171433688709409, tolerance = reference_tol)
+  expect_equal(lm_att_score$estimate, lm$att$estimate, tolerance = identity_tol)
+  expect_equal(lm_att_score$truth, lm$att$true, tolerance = identity_tol)
+  expect_equal(lm_att_score$error, lm$att$error, tolerance = identity_tol)
 
   est_id <- "legacy_qst_golden_v020"
   if (!est_id %in% CausalStress:::cs_estimator_registry()$estimator_id) {
@@ -150,24 +156,24 @@ test_that("legacy ATT and QST numerical values are stable modulo typed schema", 
   legacy_att_score <- legacy$scores[legacy$scores$estimand_target_id == "att", ]
   legacy_qst_scores <- legacy$scores[legacy$scores$estimand_target_id == "qst", ]
 
-  expect_equal(legacy$att$estimate, 0.125, tolerance = 1e-12)
-  expect_equal(legacy$att$true, 1.0597021813068508, tolerance = 1e-12)
-  expect_equal(legacy$att$error, -0.93470218130685079, tolerance = 1e-12)
-  expect_equal(legacy_att_score$estimate, legacy$att$estimate, tolerance = 1e-12)
-  expect_equal(legacy_att_score$truth, legacy$att$true, tolerance = 1e-12)
+  expect_equal(legacy$att$estimate, 0.125, tolerance = identity_tol)
+  expect_equal(legacy$att$true, 1.0597021813068508, tolerance = reference_tol)
+  expect_equal(legacy$att$error, -0.93470218130685079, tolerance = reference_tol)
+  expect_equal(legacy_att_score$estimate, legacy$att$estimate, tolerance = identity_tol)
+  expect_equal(legacy_att_score$truth, legacy$att$true, tolerance = identity_tol)
 
-  expect_equal(legacy$qst$estimate, c(-0.2, 0, 0.2), tolerance = 1e-12)
+  expect_equal(legacy$qst$estimate, c(-0.2, 0, 0.2), tolerance = identity_tol)
   expect_equal(
     legacy$qst$true,
     c(0.82726726467016054, 1.11306126932880201, 1.39767668699081304),
-    tolerance = 1e-12
+    tolerance = reference_tol
   )
   expect_equal(
     legacy$qst$error,
     c(-1.0272672646701606, -1.1130612693288020, -1.1976766869908131),
-    tolerance = 1e-12
+    tolerance = reference_tol
   )
-  expect_equal(legacy_qst_scores$estimate, legacy$qst$estimate, tolerance = 1e-12)
-  expect_equal(legacy_qst_scores$truth, legacy$qst$true, tolerance = 1e-12)
-  expect_equal(legacy_qst_scores$error, legacy$qst$error, tolerance = 1e-12)
+  expect_equal(legacy_qst_scores$estimate, legacy$qst$estimate, tolerance = identity_tol)
+  expect_equal(legacy_qst_scores$truth, legacy$qst$true, tolerance = identity_tol)
+  expect_equal(legacy_qst_scores$error, legacy$qst$error, tolerance = identity_tol)
 })
