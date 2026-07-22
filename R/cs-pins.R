@@ -66,7 +66,7 @@ cs_pin_write <- function(board, result) {
       board   = board,
       x       = result,
       name    = name,
-      type    = "qs",
+      type    = "rds",
       metadata = list(
         success      = meta$success %||% NA,
         error        = meta$error %||% NA_character_,

@@ -36,6 +36,10 @@ jobs:
           r-version: ${{ matrix.config.r }}
           use-public-rspm: true
 
+      - name: Install archived qs dependency
+        run: |
+          Rscript tools/ci-install-archived-qs.R
+
       - uses: r-lib/actions/setup-pandoc@v2
 
       - uses: r-lib/actions/setup-r-dependencies@v2
@@ -45,6 +49,10 @@ jobs:
             any::testthat
             any::pkgload
             any::withr
+
+      - name: Install package for worker processes
+        run: |
+          R CMD INSTALL .
 
       - name: Run full test suite
         run: |

@@ -12,5 +12,12 @@
 ^dev$
 ^figure$
 ^tools/ci-.*\.R$
+^ci-substrate\.txt$
+^coverage-summary\.txt$
+^coverage\.rds$
+^lint-results\.txt$
+^lint-results\.rds$
+^check-wsl.*$
+^CausalStress_.*\.tar\.gz$
 ^tmp_eval\.R$
 ^tmp_flaky\.R$

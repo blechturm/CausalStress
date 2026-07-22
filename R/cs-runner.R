@@ -200,7 +200,6 @@ cs_run_single <- function(
       withCallingHandlers(
         {
           setTimeLimit(cpu = max_runtime, elapsed = max_runtime, transient = TRUE)
-          on.exit(setTimeLimit(cpu = Inf, elapsed = Inf, transient = TRUE), add = TRUE)
           est_desc$generator(
             df     = df_run,
             config = config,
@@ -216,8 +215,22 @@ cs_run_single <- function(
         errors_vec <<- c(errors_vec, conditionMessage(e))
         success <<- FALSE
         list(att = list(estimate = NA_real_), qst = NULL)
-      }
+      },
+      finally = setTimeLimit(cpu = Inf, elapsed = Inf, transient = TRUE)
     )
+  }
+  run_time_est <- as.numeric(difftime(Sys.time(), t_est_start, units = "secs"))
+  if (isTRUE(success) && is.finite(max_runtime) && run_time_est > max_runtime) {
+    timeout_msg <- sprintf(
+      "Estimator exceeded elapsed time limit: %.3f seconds > %.3f seconds.",
+      run_time_est,
+      max_runtime
+    )
+    logs <- c(logs, paste0("[error] ", timeout_msg))
+    errors_vec <- c(errors_vec, timeout_msg)
+    success <- FALSE
+    res$att <- list(estimate = NA_real_)
+    res$qst <- NULL
   }
   if (isTRUE(success)) {
     cs_check_estimator_output(res, require_qst = est_desc$supports_qst, tau = tau)
@@ -229,7 +242,6 @@ cs_run_single <- function(
   }
   produced_estimand_targets <- names(typed_outputs)
   truth_available_targets <- cs_truth_available_targets(dgp)
-  run_time_est <- as.numeric(difftime(Sys.time(), t_est_start, units = "secs"))
 
   extracted <- list(
     att = typed_outputs$att$estimate %||% NA_real_,

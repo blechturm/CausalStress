@@ -174,7 +174,7 @@ test_that("schema 1-3 pins fail closed as resume targets", {
       )
     ),
     name = CausalStress:::cs_result_pin_name(dgp_id, estimator_id, n, seed, "1.6.0"),
-    type = "qs",
+    type = "rds",
     metadata = list(
       dgp_id = dgp_id,
       dgp_version = "1.6.0",

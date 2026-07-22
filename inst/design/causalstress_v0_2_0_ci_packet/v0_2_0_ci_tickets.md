@@ -53,7 +53,7 @@
   baseline, exclusions, or non-blocking mode must be explicit in the closeout and
   must not hide new lint regressions.
 - **Review gate:** Batch 1 coverage/lint review.
-- **Disposition:** implementation_complete_awaiting_review
+- **Disposition:** complete_after_review
 
 ### CS-1213 - Harden golden-value tests for CI substrates
 
@@ -70,7 +70,7 @@
   use documented tolerances or are explicitly gated to a declared reference
   substrate. CI confirms the tests pass on the declared matrix.
 - **Review gate:** Batch 1 CI tolerance review.
-- **Disposition:** implementation_complete_awaiting_review
+- **Disposition:** complete_after_review
 
 ## Batch 2 - CI Release Gate
 
@@ -91,4 +91,4 @@
   lint, substrate evidence, review routing, and final tag decision in
   `release_closeout.md`.
 - **Review gate:** Final CI release-gate review before public v0.2.0 tag.
-- **Disposition:** open
+- **Disposition:** implementation_complete_awaiting_final_review

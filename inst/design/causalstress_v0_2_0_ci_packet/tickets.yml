@@ -40,7 +40,7 @@ tickets:
     constitutional_check: "Article VII continuous enforcement"
     test_obligation: "CI produces coverage evidence and lint evidence; any baseline or exclusions are explicit and do not hide new regressions"
     review_gate: "Batch 1 coverage/lint review"
-    disposition: "implementation_complete_awaiting_review"
+    disposition: "complete_after_review"
 
   - id: "CS-1213"
     title: "Harden golden-value tests for CI substrates"
@@ -52,7 +52,7 @@ tickets:
     constitutional_check: "Article II same-substrate bitwise identity and cross-substrate tolerance-level reproducibility"
     test_obligation: "Exact assertions are limited to in-process schema-preservation identities; DGP/model references use documented tolerances or declared reference substrate gates"
     review_gate: "Batch 1 CI tolerance review"
-    disposition: "implementation_complete_awaiting_review"
+    disposition: "complete_after_review"
 
   - id: "CS-1214"
     title: "Run CI release gate and unblock v0.2.0 tag"
@@ -64,4 +64,4 @@ tickets:
     constitutional_check: "No known constitutional violation remains open except by amendment or explicit deferral"
     test_obligation: "Record local Windows and WSL evidence, branch/main/tag CI URLs/status, matrix results, R CMD check, tests, validation, coverage, lint, substrate evidence, review routing, and tag decision"
     review_gate: "Final CI release-gate review before public v0.2.0 tag"
-    disposition: "open"
+    disposition: "implementation_complete_awaiting_final_review"

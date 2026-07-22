@@ -55,6 +55,14 @@ inst/dgp_meta/*_cache/
 inst/dgp_meta/*_files/
 _experiments/
 
+# Generated local CI evidence (summarized in governed closeout records)
+ci-substrate.txt
+coverage-summary.txt
+coverage.rds
+lint-results.txt
+lint-results.rds
+check-wsl*/
+
 # Claude Code: ignore local/machine-specific artifacts by default,
 # but allow intentionally shareable project config to be committed
 .claude/*

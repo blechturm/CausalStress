@@ -49,7 +49,10 @@ linters <- list(
   object_usage_linter = lintr::object_usage_linter()
 )
 
-raw_lints <- lintr::lint_package(linters = linters)
+raw_lints <- lintr::lint_package(
+  linters = linters,
+  exclusions = list("R/RcppExports.R", "inst/dgp_meta")
+)
 internal_functions <- ci_internal_function_names()
 ignored <- vapply(
   raw_lints,

@@ -37,6 +37,10 @@ jobs:
           r-version: ${{ matrix.config.r }}
           use-public-rspm: true
 
+      - name: Install archived qs dependency
+        run: |
+          Rscript tools/ci-install-archived-qs.R
+
       - uses: r-lib/actions/setup-pandoc@v2
 
       - uses: r-lib/actions/setup-r-dependencies@v2

@@ -146,7 +146,7 @@ cs_consolidate <- function(staging_dir, board) {
         board = board,
         x = batch_obj,
         name = pin_name,
-        type = "qs",
+        type = "rds",
         metadata = list(
           type = "batch",
           batch_id = batch_id,

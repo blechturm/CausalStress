@@ -97,7 +97,7 @@ test_that("legacy (schema-missing) pins fail closed as schema-4 resume targets",
     board = board,
     x = legacy_obj,
     name = name,
-    type = "qs",
+    type = "rds",
     metadata = list(
       dgp_id = dgp_id,
       estimator_id = estimator_id,
@@ -170,7 +170,7 @@ test_that("schema-2 pins fail closed as schema-4 resume targets", {
     board = board,
     x = obj,
     name = CausalStress:::cs_result_pin_name_legacy(dgp_id, estimator_id, n, seed),
-    type = "qs",
+    type = "rds",
     metadata = list(
       dgp_id = dgp_id,
       estimator_id = estimator_id,
