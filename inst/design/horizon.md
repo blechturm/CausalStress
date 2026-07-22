@@ -14,6 +14,12 @@ an accepted RFC or a future spec packet.
 
 ### Estimand expansion (parked 2026-06-12; requires an RFC and Article I/IV amendment)
 
+**Status (2026-06-17):** ATE, the estimand-aware scoring join, and CATE were
+**promoted via RFC-1** (accepted 2026-06-16), ratified in Constitution 2.0.0, and
+are in the v0.2.0 Wave 1 (ATE) / Wave 2 (CATE) packet. The residual horizon
+content is the **quantile-axis population split** and the **registry
+generalization** — see the two entries immediately below this one.
+
 Candidate scope for a post-v0.1.10 "estimand registry" RFC:
 
 - **ATE as a declared secondary scalar estimand.** Truth is nearly free
@@ -38,18 +44,138 @@ Candidate scope for a post-v0.1.10 "estimand registry" RFC:
   RATE) scored as Type-I error under the sharp null, with CATE accuracy scored
   on non-null DGPs. See the RFC-1 estimand-registry trail and the Gatekeeper
   recalibration entry below.
-- **Explicitly rejected for now:** marginal/unconditional QTE (QST already
-  covers the distributional tier for the treated; document its QTT flavor
-  instead); distribution of treatment effects, i.e. quantiles of `Y1 - Y0`
-  (not identified without rank-invariance assumptions — incompatible with the
-  unambiguous-truth principle); LATE/IV, mediation, and survival estimands
-  (each needs new DGP families and identification machinery; a different
-  package era).
+- **Reopened (was "rejected for now"):** marginal/unconditional (population) QTE
+  was previously dismissed here on the grounds that "QST already covers the
+  distributional tier for the treated." That under-weighted the
+  population-vs-treated **cross-scoring hazard** and is now reopened — see the
+  "Quantile-axis population conditioning" entry below.
+- **Still rejected:** distribution of treatment effects, i.e. quantiles of
+  `Y1 - Y0` (not identified without rank-invariance assumptions — incompatible
+  with the unambiguous-truth principle); LATE/IV, mediation, and survival
+  estimands (each needs new DGP families and identification machinery; a
+  different package era) — all to be reweighed by the estimand-registry deep
+  research below, not silently carried as permanent exclusions.
 
 Constitutional note: Article I defines exactly two truth tiers and Article IV
 scopes the gatekeeper exclusively to ATT and QST, so any addition is a
 constitutional amendment fed by an accepted RFC synthesis, not a feature
 ticket.
+
+### Quantile-axis population conditioning: QTE (population) vs QST/QTT (treated) (parked 2026-06-17; requires an RFC + §1.7 amendment)
+
+The mean axis is split by conditioning population — **ATT** (treated, §1.3) and
+**ATE** (all, §1.5) are distinct registered targets, so no-cross-scoring keeps
+them apart structurally. The quantile axis is **not** yet split: the only
+registered quantile target is `qst`, which is treated-target
+(`target_population = "treated"`, `scoring_population_id = "treated"`).
+Population-target quantile estimators exist in the field and will arrive:
+
+- **DoubleML** QTE is population by default: `Q_{Y(1)}(τ) − Q_{Y(0)}(τ)` over all
+  units, not treated-target.
+- `unc_qte` ships both `qtt` (treated) and `qte` (population) in one package.
+- CFM `Counterfactual`, GenGC, Firpo `ci.qtet` are treated-target.
+
+**Hazard.** With only `qst` registered, a population-QTE output either (a) is
+mislabeled `qst` → silently cross-scored against treated-target QST truth (right
+family, wrong conditioning population — exactly the failure the typed system
+exists to prevent), or (b) uses an unregistered `qte` id → hard abort. The fix
+mirrors ATT/ATE: register **`qte` (population)** as a target distinct from
+`qst`/`qtt` (treated), each with its own truth (`cs_true_qst` over treated vs a
+`cs_true_qte` over all units). Confirmed 2026-06-17: the conditioning population
+is already carried in the **target descriptor** (`qst$target_population` /
+`scoring_population_id`), not just `meta` — so this is additive. But
+no-cross-scoring keys on `estimand_target_id`, so the **distinct id** is what
+makes the separation structural; the descriptor field alone does not.
+
+**Interim guardrail (no code change):** do **not** register any population-quantile
+estimator (DoubleML QTE, `unc_qte` qte mode, …) until the `qte` target exists.
+While every registered estimator is treated-target, the single `qst` target is
+honest. This is the line that decides whether the headline quantile comparison is
+honest the moment a population-quantile estimator joins. Folded into the registry
+generalization below; do not solve it as a one-off `qte` patch.
+
+### Estimand registry generalization: §1.7 list → governed schema (parked 2026-06-17; requires deep research, an RFC, and a §1.7 amendment)
+
+**Problem — amendment-per-estimand.** Constitution §1.7 enumerates a *closed* set
+("the estimands governed in v2.x are ATT, ATE, QST, CATE"). Every new estimand
+(QTE above, then GATE, LATE, distributional-CDF effects, …) therefore needs its
+own Article I amendment — a stream of small constitutional crises. §1.7 already
+calls the set "a governed, versioned vocabulary," so the intent is registry-like;
+the hardcoded list is what makes it closed in practice.
+
+**Direction (for the RFC, not decided here).** Convert §1.7 from a member list
+into a governed **schema + registry**, exactly as Article VII does for DGPs (the
+Constitution governs the rules; a registry holds the members; maintainers add
+members without amending). The Constitution would govern: the estimand **identity
+axes** (truth tier × target level × conditioning population × functional/metric),
+the **truth-definition obligation** (every governed estimand declares structural
+or distributional truth + no truth regeneration for real DGPs), no-cross-scoring
+and the non-comparable vocabulary (already present), and the **authority to
+register** a target (maintainer, mirroring §1.2). The founding definitions
+§1.3–1.6 stay; new members ride the schema as additive registry entries. After
+this, adding `qte`/`gate`/etc. is a registry bump, not an amendment.
+
+**Why deep research first.** Designing the schema and amending §1.7 *once* with
+the full estimand space in view avoids discovering QTE, then LATE, then
+distributional effects one painful amendment at a time. A read-only deep-research
+pass (runnable in parallel with Waves 1–2; touches no code) should enumerate the
+estimand space the field actually benchmarks, filtered by: well-defined
+synthetic-DGP truth, production by the SOTA estimators we target (DoubleML,
+EconML, grf, causalml, `unc_qte`, `Counterfactual`), each estimator's **default
+target population** (the cross-scoring trap), and compatibility with the
+unambiguous-truth principle (quantiles of `Y1 − Y0` stay excluded — not identified
+without rank invariance). Output: a prioritized taxonomy to **inform the schema** —
+but it is **not** adopted wholesale as the vocabulary; see the scoped position
+below (schema yes, catalog no).
+
+**Sequencing.** Research now (parallel); the RFC + single §1.7 amendment lands as
+its own program **after Wave 2**, so the registry mechanics are proven on ATE
+(Wave 1) and CATE (Wave 2) before they are generalized. Subsumes the quantile-axis
+entry above and the residual estimand-expansion items.
+
+**Scoped position after the deep-research pass (returned 2026-06-18).** The
+research over-answered and, taken literally, is a scope-creep trap. It conflated
+two separable things; the RFC keeps the first and rejects the second.
+
+- **Adopt the axes *schema* (the scope-creep *cure*, not cause).** A schema lets
+  the registry *express* an estimand without anyone *building* it. Identity =
+  `functional` (mean / quantile / distribution) × `contrast` (≈always difference) ×
+  `target_population` (all / treated / control / overlap / subgroup) ×
+  `conditioning_level` (population-scalar / curve-by-τ / unit) × `index_spec` ×
+  `truth_requirements`. **Trim the research's ~10-field schema hard:** drop
+  `treatment_regime`, `identification_regime`, and every IV / continuous /
+  survival / dynamic / mediation primitive — those are for the families we
+  *exclude*, so they don't belong in a binary-treatment, static, synthetic-DGP
+  instrument's schema until/unless we go there.
+- **Reject the "v1 vocabulary" build-list.** The research's "govern
+  apo/atc/ato/gate/ite/policy_value/policy_regret/late/lqte/adrf/… in v1" is
+  academic completeness, not product scope. Each needs DGP truth + scorer +
+  gatekeeper component + a producing estimator, or it is a dead registry row.
+  **v1 governed estimands stay exactly the shipped four: ATT, ATE, QST (treated
+  quantile), CATE.** Add members **lazily** — only when a real estimator *and* a
+  study consume one. Next genuine addition is `qte` (population) when a
+  population-quantile estimator (DoubleML) is registered: **one row**, per the
+  quantile-axis entry above — not a catalog.
+- **The one early behavioral rule worth lifting now:** every registered estimator
+  MUST declare its `(estimand, target_population)` explicitly, and no-cross-scoring
+  keys on the **full identity, never a bare name**. This is the cross-scoring trap
+  generalized — package defaults differ (`grf::average_treatment_effect` defaults
+  `target.sample="all"` = ATE; DoubleML QTE is population unless `score="LPQ"`;
+  `qte::unc_qte` has `qtt`/`qte` modes; `Counterfactual` defaults to a *composition*
+  effect, not a treatment effect; IV forests are complier-local ACLATE). Mislabel
+  any of these and the benchmark silently corrupts.
+- **Keep the exclusion *reasoning* as justification-not-to-build:** quantiles of
+  `Y1 − Y0` need rank invariance; mediation needs nested cross-world counterfactuals;
+  survival needs event-time POs + censoring (and hazard ratios are non-collapsible);
+  dynamic regimes need sequential POs. These stay out of v1 by design.
+- **RFC scope, therefore:** constitutionalize the trimmed schema + the
+  explicit-target-population rule, and **migrate the existing four estimands into
+  it** — *not* implement the estimand zoo. One-time design move, not an open-ended
+  build.
+- **Process:** the raw deep-research doc is **not** committed (consistent with the
+  prior-art-pass rule). Its `citeturn…` markers are ChatGPT artifacts that do not
+  resolve — when this feeds the RFC, re-verify the package-default-population claims
+  against the actual package docs, not the tokens.
 
 ### Gatekeeper recalibration (parked 2026-06-16; requires a dedicated RFC and Article IV amendment)
 
@@ -92,6 +218,116 @@ later.
 
 Governance note: §4.2 is constitutional, so recalibration is an Article IV
 amendment via the RFC cycle, not a feature ticket.
+
+### ACIC 2026 comparator, interoperability, and multi-arm horizon (parked 2026-07-21; no current implementation authority)
+
+**Evidence and decision record.** The focused prior-art audit
+`research/prior_art_acic_2026_benchmark_audit.md` finds that ACIC 2026 is the
+stronger scientific challenge today (9,000 distinct populations, five randomized
+arms, iCATE/sCATE/subCATE/PATE, best-treatment outputs, uncertainty and
+independent participation), while CausalStress is the stronger publicly visible
+reusable integrity substrate (typed targets, no-cross-scoring, versioned truth,
+airlock, fingerprints, persistence, and explicit non-comparability). This is a
+**complementarity result**, not an instruction to chase ACIC feature parity.
+The official site calls 2026 a return after a multiyear hiatus: the comparator
+landscape changed during CausalStress development, so update the forward claim
+without rewriting the project's origin story as an avoidable mistake.
+
+**Programme decision.** ACIC 2026 does **not** interrupt the current campaign,
+v0.2.0 closure, Wave 2 CATE, or RFC-3 families sequence. It changes the prior-art
+baseline and supplies requirements for later interoperability. Current Paper 3
+positioning becomes: *integrity-first laboratory for governed stress mechanisms
+and estimator failure boundaries, complementary to blinded challenges* — never
+“broader than ACIC 2026.”
+
+**Immediate research/coordination actions (no package code):**
+
+1. **Organizer inquiry.** Ask the ACIC 2026 organizers whether and when the
+   datasets, generator, truth, scorer, exact aggregation rules, checksums, and
+   version history can be released; request the applicable license and explicit
+   written permission for a CausalStress external adapter. Record the response as
+   provenance. The public repository had no detected generator/scorer/data or
+   license at the 2026-07-21 cutoff; do not infer reuse rights from visibility.
+2. **Related-work correction.** Cite ACIC 2026 wherever CausalStress breadth,
+   heterogeneous-effect benchmarking, multi-estimand comparison, or uncertainty
+   evaluation is discussed. Do not claim novelty for those ingredients alone.
+3. **Public/gated evidence split.** Treat public challenge claims separately from
+   any participant-only data or documentation. Unknown public scoring details
+   (failure denominators, tie handling, exact metric aggregation, Monte Carlo
+   uncertainty, containers/checksums) remain unknown until evidenced.
+4. **Estimand-schema input, not build list.** Carry the ACIC compatibility map
+   into the post-Wave-2 estimand-registry-generalization RFC. It informs identity
+   axes and no-cross-scoring; it does not populate speculative registry rows.
+
+**Core work that remains in the existing sequence:**
+
+5. **Wave 2 binary CATE first.** Implement the already-ratified held-out unit-keyed
+   CATE target, PEHE/RMSE plus robust companion, and heterogeneity-detection gate.
+   Do not smuggle multi-arm, GATE, PATE, or policy learning into the Wave 2 packet.
+6. **Preserve sample/population identity.** ACIC's sCATE/PATE split reinforces the
+   current rule: finite-sample and superpopulation truth are distinct identities
+   and may never be cross-scored. When target descriptors are generalized, the
+   scoring population must stay in the score key, not merely narrative metadata.
+7. **Inference metrics.** When interval-producing estimators are compared, plan
+   pointwise coverage/width, simultaneous or family-wise calibration where the
+   claim requires it, and Monte Carlo uncertainty. These are metric/inference
+   obligations, not new estimands.
+8. **Earn the Paper 3 differentiator.** Promote and scientifically validate at
+   least one parameterized family through RFC-3 and ship explicit
+   planned/attempted/succeeded/failed/timeout/missing denominators before claiming
+   continuous validity envelopes or survivorship-honest kill plots. This couples
+   to the runner-integrity migration below; neither design document alone counts
+   as implementation evidence.
+
+**Conditional external-ACIC integration path:**
+
+9. **Preferred form — official generator wrapper.** If a licensed generator is
+   released, wrap it externally and pin its commit/container digest, seed and
+   population identity, truth/scorer version, and golden checksums. Do not copy
+   upstream logic unless the license and scientific maintenance plan justify it.
+10. **Fallback — bring-your-own-data adapter.** If only gated static datasets can
+    be used, require user-supplied inputs, dataset IDs and checksums; keep truth on
+    a scorer-only channel; label the object a static external benchmark, not a
+    native reproducible DGP; emit `truth_unavailable` without lawful truth.
+11. **Reject slide reconstruction as reproduction.** A generator independently
+    reconstructed from public descriptions must be labelled `ACIC-inspired`; it
+    cannot claim ACIC 2026 identity or result reproduction.
+12. **Five promotion gates.** Any adapter/generator work requires: (a) written
+    rights, (b) version/checksum identity, (c) golden-output fidelity, (d) truth
+    separation, and (e) a named consuming study. Failure of any applicable gate
+    keeps the integration parked.
+
+**Estimand and treatment-domain scope:**
+
+- **Core now:** ATT, finite-sample ATE, treated QST/QTT, and the already-ratified
+  binary CATE. QST/QTT remains a genuine distributional differentiator absent
+  from the ACIC 2026 requested targets.
+- **Defer:** subgroup CATE/GATE (group inference is not automatically valid by
+  averaging predictions); PATE/superpopulation ATE (add only for a consuming
+  study); best-treatment/policy targets (eventually score tie-aware policy value
+  or regret, not accuracy alone); population QTE remains the likely next binary
+  target only when an actual producer and study arrive.
+- **Reject:** a wholesale estimand catalog; quantiles of individual
+  `Y(1) - Y(0)` without a governed coupling/rank-invariance assumption; calling
+  best-arm classification a complete policy-learning target.
+- **Multi-arm is a future major era.** Faithful support requires treatment-domain
+  and reference-arm metadata, arm-indexed propensity/potential-outcome/truth/
+  output shapes, contrast-indexed score identity, joint uncertainty, tie-aware
+  decisions, and corresponding airlock/gatekeeper/persistence changes. Four
+  silent one-vs-control loops lose dependence and multiplicity and do not count
+  as ACIC-compatible support. Open a multi-arm RFC only after Wave 2 and RFC-3,
+  and only for a named study; do not pre-generalize current code speculatively.
+
+**Adoption action.** Before CausalStress claims general infrastructure value,
+seek at least one independent reproducer, estimator adapter, or external study.
+Packaging, documentation, tests, and a bring-your-own-estimator path are part of
+the scientific contribution, but community use is evidence that the instrument
+escapes its originating dissertation.
+
+**Promotion rule.** This entry records evidence, scope, and gates only. No item
+authorizes implementation. External-adapter work requires its own RFC/spec after
+the rights and identity gates; multi-arm support requires a major-era RFC and any
+constitutional amendments identified by that process.
 
 ## Deferred Inference Work
 
@@ -181,6 +417,284 @@ parked here so the decisive campaign and Paper-2 work inherit them:
   documented, not for a theorem if hidden. Track in Paper 2.
 
 ## Deferred Tooling Work
+
+### `qs` retirement and stable artifact migration (promoted 2026-07-21 to the v0.2.1 roadmap; requires a reviewed spec packet)
+
+**Why this moved ahead of the tooling backlog.** CRAN removed `qs` on 2026-01-17
+because outstanding issues were not corrected, and the upstream project now
+labels it deprecated in favor of `qs2`:
+<https://cran.r-project.org/package=qs> and <https://github.com/qsbase/qs>.
+The successor is maintained, but its `.qs2` format is explicitly incompatible
+with legacy `.qs`: <https://github.com/qsbase/qs2>. CausalStress currently
+imports archived `qs` 0.27.3 for raw batch staging; consolidated board writes
+already use RDS. The blast radius is therefore narrower than a full evidence
+format redesign, but it will grow with every new campaign if left in place.
+
+**Decided format roles for the v0.2.1 specification:**
+
+- base-R RDS is the canonical R-object staging and retention format;
+- existing pin-board publication artifacts remain RDS;
+- existing `.qs` files remain immutable primary evidence;
+- a frozen legacy reader converts `.qs` to separately hashed RDS derivatives;
+- normalized Parquet plus canonical JSON remains the later cross-language
+  evidence-lake direction, not a direct serializer for arbitrary nested R batch
+  objects;
+- `qs2` is not a default dependency. A representative benchmark may justify it
+  as an optional operational codec, but dual-writing is rejected absent a
+  measured bottleneck.
+
+RDS is a stable, dependency-free **R-native** format, not a language-neutral
+archive. The separation is deliberate: v0.2.1 removes an immediate dependency
+risk without prematurely freezing the evidence-lake schema. The future lake
+should ingest normalized, validated derivatives rather than treating arbitrary
+R serialization as its public exchange contract.
+
+**Legacy migration contract to specify.** The converter runs outside normal
+CausalStress runtime in a frozen environment containing R, archived `qs` 0.27.3,
+and its dependency closure. For each source it inventories path/size/SHA-256,
+reads and validates the expected historical schema, writes RDS atomically,
+rereads it, checks structural equivalence and a governed logical digest, and
+emits a machine-readable receipt with source/target hashes, schema, environment,
+converter-code identity, timestamp, and validation outcome. It must be
+idempotent, resumable, fail closed, and incapable of deleting or overwriting its
+source. Preserve the archived package source and recovery environment alongside
+the conversion tooling.
+
+**Acceptance boundary.** The release is not complete until new runs require no
+`qs`, emit no `.qs`, resume/consolidate correctly from RDS, reject ambiguous or
+corrupt artifacts, and the golden legacy corpus converts reproducibly. It must
+also build the complete base-registry image under R 4.6.0 and pass the offline
+eight-estimator numeric/CI smoke. The 2026-07-21 OCI spike passed under R 4.5.2 but
+failed under R 4.6.0 because archived `stringfish` 0.17.0 uses a legacy R API;
+patching that deprecated dependency inside the image is explicitly not the
+solution. The abandoned `qcb-2026-07-a2` `.qs` artifacts are preserved
+byte-for-byte as partial
+commissioning evidence; any conversion creates separately receipted derivatives.
+The clean task-zero A2 rerun and WP-02 execution are blocked on the maintenance
+release, but CATE, families, broader runner-integrity migration, and evidence-lake
+implementation remain parked.
+
+**Relationship to the entries below.** The persistence boundary should expose
+format-neutral logical identity and explicit encoding metadata so it does not
+foreclose runner-integrity or evidence-lake work. It must not implement their
+catalog, reuse/admissibility model, cross-language protocol, or broader policy.
+
+### Runner-integrity migration from the QCB campaign capsule (parked 2026-07-21; requires an RFC; touches Articles II/III/V/VI and the planner/summary contracts)
+
+**Provenance.** The `qcb-2026-07-a2` campaign capsule
+(`thomasberger-phd-research/campaigns/`, capsule spec v0.1.1) had to build a set
+of integrity mechanisms *around* the CausalStress runner because the runner does
+not provide them. Each mechanism is now implemented, adversarially reviewed
+(clean-context Batch 1/2/3-4 reviews under
+`thomasberger-phd-research/reviews/programme/` and
+`campaigns/qcb-2026-07-a2/evidence/implementation/`), and field-proven on the
+full 4,800-task plan. Organizing principle for the migration: **the capsule owns
+policy (authorization, evidence classes, sealing, human gates); CausalStress
+owns mechanism (what it means to run one benchmark task with integrity).**
+Mechanisms proven generic migrate here; policy stays in the capsule. The
+motivating lesson is the Batch 3/4 BLOCKER F1: protections living in wrapper
+layers must be remembered by every caller; mechanisms native to the runner
+cannot be forgotten.
+
+**Candidate migrations (each cites the defect that earned it):**
+
+1. **Full post-airlock input fingerprinting.** The June 2026 QCB campaign's
+   `run_key` hashed `y`/`w`/`n`/`tau`/seed/estimator/interval-method but never
+   the covariate matrix, leaving cell identity resting on the versioned-DGP
+   contract alone. The capsule's canonical serialization
+   (`qcb-post-airlock-xdr-v1`: column names/order, row identity/order, storage
+   types, factor schema, NA/NaN representation, numeric serialization, UTF-8;
+   R-version-pinned serialization header) fingerprints the complete
+   estimator-visible frame per cell. Natural home: the airlock layer — the
+   component that sanitizes what estimators see should certify *what* they saw.
+   Article II/III material; interacts with `cs_fingerprint.R`.
+2. **Runtime input receipts in the Runner contract.** Per-task verification that
+   the materialized post-airlock frame matches the plan's expected input hash
+   *before* any estimator fits, with fail-closed mismatch handling. Currently
+   cloned into each estimator wrapper (Batch 2 review flagged the
+   clone-divergence risk); as a Runner obligation every estimator inherits it.
+   Article III.
+3. **Resume integrity.** `cs_run_campaign` currently skips staged/pinned batch
+   IDs by identity alone. The capsule's resume validation (schema check,
+   expected task count, task-fingerprint match, result/error reconciliation,
+   retained-artifact hash, rejection of ambiguous duplicates) is the missing
+   half of Article VI crash resilience: atomic persistence guarantees writes,
+   resume validation must guarantee *reads*. Article VI.
+4. **Plan-identity semantics.** Order-invariant task-*set* hash (sorted
+   `task_id`/fingerprint records) recorded separately from the order-binding
+   execution-*plan* hash (deterministic order + batch membership), so plan
+   identity is invariant to worker count and scheduling while execution order
+   remains auditable. Belongs with `cs-plan-campaign`/`cs-fingerprint`.
+5. **DGP-status honesty in the planner.** The June plans declared all twelve
+   panel DGPs `stable` while the installed registry marked ten `experimental` —
+   a planner-side metadata defect (verified: IDs/versions/data identical; only
+   status labels wrong). The capsule's repair: statuses are stamped from the
+   installed registry at plan time, declared≠installed fails closed, and
+   `dgp_status` is carried into task identity. This one is arguably a
+   defect-repair spec-packet ticket rather than constitutional work.
+6. **Failure-accounting vocabulary and survivorship-honest summaries.** Adopt
+   the capsule's terminal-status vocabulary (including
+   `not_attempted_due_to_abort` and `non_finite_output`) in the run/batch
+   contracts, and extend the public summaries (`cs-summary-qst.R` and
+   successors) to report planned/attempted/succeeded/failed/timeout/missing
+   denominators instead of silent `na.rm = TRUE` means — the survivorship gap
+   identified in the 2026-07-20 external review. Interacts with the typed
+   scoring layer's non-comparable vocabulary.
+
+**Explicitly NOT migrating (stays capsule-side):** campaign lifecycle,
+authorization records, sealing/deviation machinery, evidence classes and
+reproducibility statuses, source/environment closure (git snapshots, ACL
+staging, native-environment capture), retention topology, and any
+preregistration lookup. A benchmark library must not own a research programme's
+approval workflow.
+
+**Sequencing and governance.** Parked until WP-01/G1 closes in the programme
+repo **and the linked WP-02 calibration campaigns (tree-stability
+`qcb-2026-08-trees` and learning-curve `qcb-2026-08-lcurve`) complete** — per
+the programme decision of 2026-07-21, additional campaigns precede any
+CausalStress development resumption (the capsule campaigns correctly run on
+their reviewed wrapper-level protections meanwhile). Promotion route: one
+"runner integrity" RFC covering items 1–4 and 6 (Articles II/III/V/VI
+touchpoints), with item 5 routed as an ordinary defect ticket in the next spec
+packet. Natural slot: alongside or
+before the RFC-3 families program, since the G5 confirmation campaign — and the
+JSS software paper's integrity claims — should inherit these as native
+guarantees rather than harness add-ons. Per the promotion rule below, nothing
+in this entry authorizes implementation.
+
+### Evidence lake, declarative reuse, and cross-language hub protocol (parked 2026-07-21; requires a separate deep-design session and RFC)
+
+**Vision.** CausalStress should eventually maintain an immutable, queryable
+evidence base in which a campaign declares the complete scientific comparison it
+wants, resolves already-computed cells against verified retained evidence, and
+executes only cells that are genuinely missing and scientifically admissible.
+The campaign remains a complete requested design: reused, rescored, failed,
+incompatible, and newly executed cells are all explicit in its frozen evidence
+manifest. This is **declarative evidence resolution**, not a more permissive
+`skip_existing` cache.
+
+**Why this must constrain the architecture early.** The schema determines what
+"the same experiment" means. Retrofitting it after a large pathology atlas exists
+would require re-identifying old results and could make cross-language evidence
+impossible to compare. The lake design must therefore inform the runner-integrity
+RFC, persistence identities, CATE output retention, parameterized-family
+instances, and the external protocol before any of those surfaces are treated as
+finally frozen. It does **not** follow that the database or client libraries
+should be built now.
+
+**Minimum identity separation for the design session:**
+
+1. **Scientific-cell identity:** the conceptual question — governed DGP/version/
+   family parameters, target and scoring population, treatment contrast, sample
+   and evaluation design, estimator specification, and requested inference.
+2. **Dataset-draw identity:** exact estimator-visible data, unit/order/schema,
+   generation contract, seed, and both byte-level and logical-content digests.
+3. **Fit identity:** dataset draw plus estimator implementation/configuration,
+   fit RNG, source/environment identity, and declared transductive behavior.
+4. **Prediction/output identity:** fit plus evaluation draw, requested coordinates
+   (tau/unit/contrast), output schema, and inference payload.
+5. **Score identity:** output plus truth, metric definition/version, target
+   population, contrast, and scoring coordinates. New metrics should rescore
+   retained sufficient outputs rather than force refitting.
+6. **Attempt identity:** execution event, substrate, backend, worker/threads,
+   timestamps, logs, status, warnings, resources, and retry lineage. Attempts do
+   not overwrite scientific or artifact history.
+7. **Derivation and release identity:** parent artifacts, transformation code/
+   configuration, frozen query, and the exact artifact set supporting a table,
+   kill plot, pathology report, or atlas release.
+
+The design must distinguish **scientific equivalence** from **artifact
+equivalence** and from **campaign admissibility**. An exact old artifact may be
+computationally reusable but inadmissible for a confirmation campaign because it
+was exploratory, previously exposed, tuned against, outside the frozen comparator
+policy, or required to be a fresh held-out draw. The campaign capsule retains
+authority over evidence class, authorization, preregistration, sealing, and
+admissibility; CausalStress supplies identity, verification, resolution, and
+execution mechanisms.
+
+**Required resolution vocabulary (candidate, not yet frozen):**
+`exact_reusable`, `derivable_without_refit`,
+`scientifically_comparable_not_reusable`, `prior_failure_evidence`,
+`artifact_missing_or_corrupt`, `inadmissible_for_campaign`, and `new_cell`.
+Failures remain evidence. A resolver must never reuse successes while silently
+retrying failures until they disappear; retry policy and all attempts remain
+visible.
+
+**Storage direction to evaluate, not a technology decision:**
+
+- immutable content-addressed files or object storage for large evidence;
+- partitioned Parquet for tabular tasks, predictions, scores, failures, and
+  provenance;
+- an embedded/rebuildable analytical catalog (initial candidate: DuckDB);
+- pins retained as the publication/distribution layer for sealed campaigns,
+  reports, and atlas releases rather than necessarily one pin per task;
+- classed local, second-device, and off-machine retention inherited from the
+  campaign capsule.
+
+Workers continue writing immutable staging shards; a validating consolidator
+updates the catalog. Parallel workers must not mutate one shared database file.
+The catalog is an index and query surface, not the sole copy of scientific
+evidence.
+
+**Cross-language requirement from the beginning.** The deferred Hub & Spoke idea
+in `archive/CAUSAL_STRESS_PYTHON.md` remains directionally valuable but predates
+typed targets, fit/score separation, CATE, the capsule, and this evidence model.
+Its modernized principle is:
+
+> A conforming CausalStress hub — initially implemented in R — owns certified
+> generation, truth separation, scoring, and evidence registration. R, Python,
+> Julia, or other estimator spokes consume the same sanitized task protocol and
+> return the same typed output protocol. Scientific authority resides in the
+> governed protocol and conformance evidence, not permanently in an implementation
+> language.
+
+The first schema must therefore avoid R-only identity: canonical JSON manifests,
+Parquet/Arrow tables, explicit types/categorical/missingness/unit-order semantics,
+protocol versions, estimator ecosystem/package/source/environment fields, typed
+scalar/curve/unit/contrast outputs, and structured status/log/resource records.
+Store both file SHA-256 (byte integrity) and a governed logical-table digest
+(cross-writer equivalence); different Parquet writers can encode the same logical
+table into different bytes.
+
+**Activation and sequence:**
+
+1. **Now through WP-02:** parking only. WP-01 evidence closure and both WP-02
+   calibration campaigns run on the reviewed capsule/pins architecture. Measure
+   artifact counts/sizes, duplication, list/read/consolidation times, query needs,
+   minimum retained outputs for rescoring, and actual resume/reuse friction.
+2. **After WP-02 and programme G2:** run one bounded, separate deep-design session
+   (`EL-0`) before promoting the runner-integrity/persistence RFC and before Wave
+   2/RFC-3 exchange and evidence shapes are treated as frozen. Deliver a reviewed
+   schema, canonicalization/hash rules, lineage/reuse/admissibility model,
+   retention tiers, query use cases, migration plan, and explicit non-goals. No
+   database or SDK implementation is authorized by the session.
+3. **Protocol conformance before protocol freeze:** after typed CATE/family shapes
+   are specified, prove one tiny blind round trip: R hub exports one sanitized
+   task; a minimal Python process reads it and returns a trivial typed output; the
+   hub verifies, ingests, and scores it. This tests language neutrality without
+   building the Python product.
+4. **Minimum implementation (`EL-1`):** only the subset required by the next real
+   governed family/atlas campaign — immutable artifacts, catalog, exact evidence
+   resolution, frozen dependency manifest, and uniform collection of reused/new
+   cells. Complete before the first broad post-RFC-3 pathology-atlas campaign, not
+   before WP-01/WP-02 science.
+5. **Full product later:** Python client/estimator adapters, richer compatible-
+   evidence queries, remote/object-store backends, public atlas UI, and large-scale
+   compaction follow only after the R end-to-end path and at least one kill-plot
+   study demonstrate value. Community demand, not architectural completeness,
+   controls expansion.
+
+**Anti-infrastructure guard.** EL-0 is a design-and-review work package with a
+fixed timebox and no code. EL-1 must name the next consuming campaign and may not
+attempt a universal data lake. The research programme does not wait for a full
+atlas platform, Python SDK, remote service, or generalized policy engine before
+producing the first family-level scientific result.
+
+**Promotion rule.** Evidence-lake implementation touches Articles II/III/V/VI,
+the runner/airlock/fingerprint/persistence contracts, estimator interoperability,
+and campaign summaries. It requires an accepted RFC (coordinated with the runner-
+integrity RFC), then a ticketed packet. This entry records the design-session
+agenda and dependency order only.
 
 ### Spike: evaluate mirai (+ mori) as the parallel backend (parked 2026-06-12)
 

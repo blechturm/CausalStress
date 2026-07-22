@@ -91,7 +91,14 @@ Each of the four exists in isolation (Axes A–E). Their **union** is unoccupied
 These were **named in the queries but produced no surviving verified claim** — neither confirmed nor excluded. They are the residual risk to a novelty claim and should be checked manually before any formal related-work section:
 
 1. **Infrastructure not verified:** `aciccomp`/`aciccomp2016` (Dorie), **EconML** (Microsoft) benchmarks, **CausalML** (Uber) benchmarks, **DoWhy**/**Ananke** tooling, `causaldata`. Sources were not confirmed; verdicts on (a)–(e) are unknown.
-2. **ACIC 2017 / 2019 / 2022** competitions: only ACIC 2016 was confirmed (and does none of the three target features). Post-2016 designs are unverified.
+2. **ACIC 2017 / 2019 / 2022** competitions remain unverified. **ACIC 2026 is
+   no longer an open gap:** it was separately audited in
+   `prior_art_acic_2026_benchmark_audit.md`. Its five-arm, multi-level CATE/PATE,
+   treatment-choice, and uncertainty design materially raises the scientific-
+   breadth comparator. On the public evidence it still does not implement the
+   proposed continuous pathology dial + survivorship-enforced breakdown curve +
+   mean-versus-distributional heavy-tail contrast, so it narrows the framing but
+   does not occupy the Section 3 union.
 3. **Knaus, Lechner & Strittmatter (2021, *Econometrics Journal* 24(1):134), "Machine learning estimation of heterogeneous causal effects: Empirical Monte Carlo evidence"** [S22]: source located (arXiv:1810.13237; repo github.com/MCKnaus/CATEs) but **no claim survived verification** — does its EMCS sweep a continuous dial or report failures? Unresolved.
 4. **Mahajan, Mitliagkas, Neal & Syrgkanis, "Empirical Analysis of Model Selection for Heterogeneous Causal Effect Estimation"** [S23] (arXiv:2211.01939): source located, no surviving claim. Continuous severity? Survivorship? Unresolved.
 5. **rsimsum's** actual handling of failed/missing estimates is unsettled (the `na.rm` silent-drop claim was refuted 0-3).

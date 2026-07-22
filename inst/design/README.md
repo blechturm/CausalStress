@@ -1,7 +1,7 @@
 # CausalStress Design Governance Index
 
 **Status:** Active authority index
-**Last updated:** 2026-06-18
+**Last updated:** 2026-07-21
 **Current active packet:** `causalstress_v0_2_0_ci_packet`
 **Latest completed packet:** `causalstress_v0_2_0_spec_packet` (Wave 1 implementation closed; public v0.2.0 tag blocked until CI packet closes)
 **Accepted RFCs (authority level 4):** RFC-1 Estimand Registry — `rfc/20260616_estimand_registry_synthesis.md`, accepted 2026-06-16 and consumed by ratified Constitution v2.0.0.
@@ -59,6 +59,7 @@ active packet, the current authority wins.
 | `causalstress_v0_1_10_spec_packet/` | Final packet | v0.1.10 governance and defect-repair packet, closed on 2026-06-14. |
 | `rfc/` | RFC records | Accepted syntheses become binding in stated scope. |
 | `research/` | Research notes | Literature/prior-art assessments; informative only unless promoted via RFC or packet. |
+| `research/prior_art_acic_2026_benchmark_audit.md` | Research note | Focused ACIC 2026 prior-art, compatibility, estimand-scope, and incorporation audit; non-binding. |
 | `spikes/` | Exploratory notes | Informative only unless promoted. |
 | `archive/` | Historical records | Superseded docs, kept verbatim. |
 

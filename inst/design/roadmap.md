@@ -3,7 +3,7 @@
 **Status:** Active roadmap
 **Authority:** Planning document (authority level 5 per `README.md`); below the
 Constitution, `contracts.md`, active packets, and accepted RFC syntheses.
-**Last updated:** 2026-06-16
+**Last updated:** 2026-07-21
 
 ## Completed: v0.1.10
 
@@ -108,6 +108,62 @@ is corrected below.)
 - **Docs last**: documentation written against a moving API is wasted; it follows
   the freeze and the families it must describe; its pkgdown deploy extends the
   Phase 1 CI.
+
+------------------------------------------------------------------------
+
+## Mandatory post-A2 maintenance release: v0.2.1 — "Retire `qs`"
+
+**Trigger and boundary.** The upstream `qs` package was removed from CRAN on
+2026-01-17 and its maintainers now direct users to `qs2`; `.qs2` is not
+compatible with the existing `.qs` format. CausalStress still uses `.qs` for raw
+batch staging and installs archived `qs` 0.27.3 in CI, although consolidated pin
+artifacts already use RDS. This is therefore a package-level persistence and
+recoverability risk, not a campaign-wrapper defect.
+
+The `qcb-2026-07-a2` commissioning campaign was stopped after its GenGC leg and
+before CFM. Its retained CausalStress 0.1.10 `.qs` artifacts remain immutable
+partial commissioning evidence; they are not migrated in place and the campaign
+is not resumed or sealed as complete. After the current v0.2.0 CI/release gate
+closes, v0.2.1 becomes the next bounded maintenance release and a prerequisite
+for the clean task-zero A2 rerun and the two WP-02 calibration campaigns. This
+narrowly supersedes the earlier decision to park all CausalStress development
+behind WP-02; unrelated feature development remains parked.
+
+**Required v0.2.1 scope (specification and tickets still required):**
+
+1. Make base-R RDS the canonical staging and retained R-object format; keep pins
+   on RDS. Benchmark compression and I/O on representative artifacts, but use
+   `qs2` only as an optional backend if a material measured need justifies the
+   additional format and atomicity surface.
+2. Remove `qs` from runtime imports and remove archived-`qs` CI installation.
+   New campaigns must produce no `.qs` artifacts.
+3. Introduce one internal persistence boundary for atomic write, read, format
+   detection, validation, and checksum handling. Scientific/logical identity
+   must be distinguished from storage encoding and file-byte identity.
+4. Specify fail-closed resume behavior for partial, corrupt, duplicate, legacy,
+   and mixed-format batch artifacts.
+5. Provide a governed, idempotent legacy converter in a separately frozen
+   environment containing archived `qs` 0.27.3. Conversion is read-old/write-new:
+   preserve every source `.qs` byte, validate source and target objects, and emit
+   per-artifact receipts binding source/target hashes, schemas, R/package
+   versions, converter identity, and lineage.
+6. Test a representative legacy corpus, corruption and partial-write cases,
+   cross-version RDS reads, resume/consolidation behavior, and removal of the
+   archived dependency. Document both ordinary use and historical recovery.
+7. Build the complete base-registry OCI smoke image under R 4.6.0 and run all
+   eight shipped estimators offline, including numeric-sanity and representative
+   native/bootstrap CI checks. The 2026-07-21 spike showed that R 4.5.2 passes,
+   while R 4.6.0 is blocked specifically by the archived `stringfish`/`qs`
+   chain; this gate verifies that the migration removes the blocker rather than
+   hiding it in the image. Campaign-local dynamic arms are a separate campaign-
+   image acceptance obligation, not v0.2.1 package scope.
+
+**Explicit non-scope.** v0.2.1 does not implement CATE, parameterized DGP
+families, runner-integrity migration, Parquet/DuckDB evidence-lake machinery,
+Python spokes, or a general storage platform. RDS is the stable R-native bridge;
+the later evidence-lake RFC owns normalized language-neutral Parquet/JSON
+evidence. The legacy converter creates derivative artifacts and never rewrites,
+deletes, or upgrades the evidential status of original campaign evidence.
 
 ------------------------------------------------------------------------
 
