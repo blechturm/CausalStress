@@ -131,7 +131,7 @@
   `R CMD check`, acceptance-criteria audit, and clean worktree review are
   recorded with commands, substrate, commit SHA, and results.
 - **Review gate:** Independent final local-gate review; evidence feeds CS-1214.
-- **Disposition:** open
+- **Disposition:** complete_after_review
 
 ### CS-1226 - Publish the immutable v0.1.10 archival release
 
@@ -166,7 +166,7 @@
   routing, and final packet statuses.
 - **Review gate:** Maintainer final release decision after CS-1214, CS-1225, and
   CS-1226; close correction and CI packets as `FINAL` only after tag CI is green.
-- **Disposition:** blocked_by_CS-1214_CS-1225_CS-1226
+- **Disposition:** blocked_by_CS-1214_CS-1226
 
 ## Release-Gate Ticket Requirement
 

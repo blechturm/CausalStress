@@ -89,7 +89,7 @@ tickets:
     constitutional_check: "Refuse closeout while any constitutional violation remains open"
     test_obligation: "Fresh focused/full tests, strict validation, lint, coverage, substrate, Windows/WSL checks, acceptance audit, SHA, and commands are recorded"
     review_gate: "Independent final local-gate review feeding CS-1214"
-    disposition: open
+    disposition: "complete_after_review"
 
   - id: "CS-1226"
     title: "Publish the immutable v0.1.10 archival release"
@@ -112,4 +112,4 @@ tickets:
     constitutional_check: "No blocker remains; reviewed v0.2.0 tag target is immutable"
     test_obligation: "Green branch/main/tag CI URLs, version 0.2.0, Constitution 2.0.1, fresh local gate, tag target, ticket routing, and FINAL packet states are recorded"
     review_gate: "Maintainer final release decision after CS-1214, CS-1225, and CS-1226"
-    disposition: "blocked_by_CS-1214_CS-1225_CS-1226"
+    disposition: "blocked_by_CS-1214_CS-1226"

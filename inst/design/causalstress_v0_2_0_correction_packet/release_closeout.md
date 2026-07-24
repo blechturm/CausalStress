@@ -1,7 +1,8 @@
 # CausalStress v0.2.0 Release Corrections Closeout
 
 **Status:** ACTIVE
-**Closeout state:** Open; CS-1225--CS-1227 remain incomplete
+**Closeout state:** CS-1225 complete after independent review; CS-1226 and
+CS-1227 remain incomplete
 **Date opened:** 2026-07-24
 **Date closed:** TBD
 **Packet:** `causalstress_v0_2_0_correction_packet`
@@ -15,6 +16,7 @@
 | CS-1222 | Corrected schema-4 identity so QST curve rows share one `score_fingerprint` and carry unique deterministic `score_row_fingerprint` values. Runner metadata, pins, tidy/collector projections, science payloads, and result/batch audit surfaces preserve both levels. Independent Claude final review returned **APPROVE** with no actionable findings. |
 | CS-1223 | Replaced the stale v0.1.x README with the current v0.2.0 scientific boundary, 12-DGP/24-version and 8-estimator inventories, structured runner result, canonical score collection, honest Airlock and experimental-parallel claims, installation, and version-derived citation workflow. Corrected affected roxygen and regenerated README/help/namespace artifacts. Claude returned **APPROVE WITH NON-BLOCKING NOTES**, explicitly adjudicating the nine DGP-version exports as the correct synchronization of authoritative `@export` declarations. |
 | CS-1224 | Defined the packet lifecycle vocabulary, normalized both active packets, reclassified the closed Wave 1 packet only in the authority index, narrowed the v0.2.0 roadmap boundary, and routed persistence, real-data/feature-roster/extension risks, families/CATE planning, and the full documentation release. Claude returned **APPROVE WITH NON-BLOCKING NOTES** and confirmed the closed Wave 1 packet remains byte-identical. |
+| CS-1225 | Fresh post-correction Windows and WSL/Ubuntu gates passed on 2026-07-24: focused/full tests, strict validation, lint, coverage, substrate, and platform-local `R CMD check` evidence are recorded below. Claude's independent re-review returned **APPROVE WITH NON-BLOCKING NOTES**, confirmed the corrected host-context WSL evidence, closed the sole prior blocker, and found no executable rerun necessary. Ubuntu 20.04 remains useful early-warning evidence while remote Ubuntu CI remains mandatory. |
 
 ## Deferred
 
@@ -24,7 +26,6 @@
 | CATE execution and parameterized families | Both need a deeper scientific planning session; families are the more immediate scientific need, while a bounded parallel CATE track may clarify unit-level contracts. | v0.3.0 planning gate; version/scope not yet authorized |
 | Real-data DGPs, feature roster, and synthetic-extension naming | No real-data rows or public DGP-registration API exist. A runner-supplied feature roster must precede real-data support; synthetic naming relaxation may require a constitutional amendment. | `horizon.md`; future real-data/extension RFC |
 | Full documentation program | Per-DGP reports, pkgdown, canonical workflow, and user-defined estimator/DGP contract vignettes deserve a dedicated release after their target surfaces are settled. | Separately versioned documentation release |
-| `DESCRIPTION` release date | The current date predates the correction closeout; changing it before the release gate would immediately make it stale again. | CS-1225 final release-metadata audit |
 
 ## Rejected
 
@@ -41,18 +42,106 @@
 | Synthetic covariate validation | Focused contract/RNG tests, strict executable validation of all 24 registered versions, malformed-name rejection matrix, full package suite, and independent Claude review. | Pass |
 | QST record/row identity | Focused schema-4, pin, projection, science, audit, and historical-resume tests; full package suite; and independent Claude review. | Pass |
 | README and roxygen truthfulness | `README.Rmd` rendered with all evaluated examples; `devtools::document()` regenerated help/namespace artifacts; focused stale-claim searches passed; final-tree Windows `R CMD check` passed examples, documentation, and the full tests with 0 errors, 0 warnings, and one environment-only time-verification NOTE. Claude independently returned **APPROVE WITH NON-BLOCKING NOTES** and accepted the namespace sync. | Pass |
-| Focused tests | TBD | TBD |
-| Full test suite | TBD | TBD |
-| Registry validation | TBD | TBD |
-| Lint | TBD | TBD |
-| Coverage | TBD | TBD |
-| Reproducibility substrate | TBD | TBD |
-| R CMD check - Windows | TBD | TBD |
-| R CMD check - WSL/Ubuntu | TBD | TBD |
+| Focused tests | Fresh seven-file release selection on 2026-07-24; exact command and file list below. | Pass: 123 expectations, 0 failures. |
+| Full test suite | `testthat::test_local('.', reporter='summary', stop_on_failure=TRUE)` with `NOT_CRAN=true` on 2026-07-24. | Pass in 187.4 seconds with no failures; 50 governed experimental/optional-path warnings. |
+| Registry validation | `tools/ci-validation.R` on 2026-07-24. | Pass: `registry_strict_rows=24`, `validate_registry_rows=24`, `all_valid=TRUE`; 153 focused expectations passed. |
+| Lint | `tools/ci-lint.R` on 2026-07-24. | Pass/blocking: `lint_count=0`; 21 reviewed internal-helper false positives filtered. |
+| Coverage | `tools/ci-coverage.R` on 2026-07-24. | Pass/evidence-only: 81.64% over 3,135 measured entries. |
+| Reproducibility substrate | `tools/ci-substrate.R` on 2026-07-24; exact substrate below and in ignored artifact `ci-substrate.txt`. | Pass: governed RNG and all bitwise truth payload components confirmed. |
+| R CMD check - Windows | Fresh isolated build/check on 2026-07-24; exact command below. | Pass: 0 errors, 0 warnings, 1 environment-only NOTE (`unable to verify current time`). |
+| R CMD check - WSL/Ubuntu | Fresh full tests, strict validation, substrate probe, and `rcmdcheck::rcmdcheck()` on the configured default `Ubuntu` WSL 2 distribution on 2026-07-24; exact commands and substrate below. | Pass: full suite and 24/24 validation passed; `R CMD check` reported 0 errors, 0 warnings, and 0 notes. Remote Ubuntu branch/tag CI remains mandatory. |
 | v0.1.10 archival publication | TBD | TBD |
 | Branch/main/tag CI | Coordinated through CS-1214 and CS-1227 | TBD |
-| Audit and ticket routing | Authority index lifecycle definitions, active packet headers/YAML, roadmap, horizon, and both closeouts were reconciled. All CS-1224 deferrals have named destinations; Claude confirmed the closed Wave 1 packet is byte-identical. | Pass |
-| Known constitutional violations | TBD | TBD |
+| Audit and ticket routing | Authority index lifecycle definitions, active packet headers/YAML, roadmap, horizon, and both closeouts were reconciled. All CS-1224 deferrals have named destinations. The final v0.1.10 closeout records every finding in the still-open v0.1.9 audit as ticketed, fixed, rejected with rationale, or deferred to a named destination. | Pass |
+| Known constitutional violations | Audited Constitution v2.0.1, all active ticket dispositions, accepted RFC routing, release metadata, and both active closeouts on 2026-07-24. | Pass: none known open. Publication tickets remain procedural blockers, not constitutional violations. |
+
+## CS-1225 Fresh Local Gate Detail
+
+**Date:** 2026-07-24
+
+**Tested baseline:** `c05be176950603aa374e0202ca70f1e5d7443b1e`
+
+**Worktree scope during executable gates:** the Windows gates ran against the
+reviewed Batch 2 baseline plus the release-scoped `DESCRIPTION` date correction
+from 2026-06-17 to 2026-07-24. The WSL gates ran after the evidence-only closeout
+documents were added. Subsequent edits only corrected those evidence records.
+`git diff --check` passed. The final reviewed commit SHA and clean-tree check
+remain publication prerequisites; no implementation file changed during
+CS-1225.
+
+### Commands and Results
+
+| Gate | Exact command | Result |
+| --- | --- | --- |
+| Focused tests | `$env:NOT_CRAN='true'; & "C:\Program Files\R\R-4.5.2\bin\x64\Rscript.exe" -e "devtools::load_all('.', quiet=TRUE); files <- file.path('tests/testthat', c('test-dgp-contract.R','test-validate-dgp-registry.R','test-validate-dgp.R','test-v020-schema4-surfaces.R','test-consolidate-schema.R','test-pins-integration.R','test-v019-e2e.R')); for (f in files) { cat('\n===', f, '===\n'); testthat::test_file(f, reporter='summary', stop_on_failure=TRUE) }; cat('\nfocused_release_tests=PASS\n')"` | Pass: 123 expectations. |
+| Full tests | `$env:NOT_CRAN='true'; & "C:\Program Files\R\R-4.5.2\bin\x64\Rscript.exe" -e "res <- testthat::test_local('.', reporter='summary', stop_on_failure=TRUE); cat('\nfull_test_suite=PASS\n')"` | Pass in 187.4 seconds. |
+| Strict validation | `& "C:\Program Files\R\R-4.5.2\bin\x64\Rscript.exe" tools/ci-validation.R` | Pass: 24/24 registry rows valid; 153 focused expectations. |
+| Lint | `& "C:\Program Files\R\R-4.5.2\bin\x64\Rscript.exe" tools/ci-lint.R` | Pass: zero remaining lint. |
+| Coverage | `& "C:\Program Files\R\R-4.5.2\bin\x64\Rscript.exe" tools/ci-coverage.R` | Evidence: 81.64%, 3,135 entries. |
+| Substrate | `& "C:\Program Files\R\R-4.5.2\bin\x64\Rscript.exe" tools/ci-substrate.R` | Pass; substrate recorded below. |
+| Windows check | `$env:NOT_CRAN='true'; & "C:\Program Files\R\R-4.5.2\bin\x64\Rscript.exe" -e "res <- devtools::check(document = FALSE, build_args = '--no-build-vignettes', args = c('--no-manual', '--ignore-vignettes'), error_on = 'never'); print(res)"` | Pass in 338.6 seconds: 0 errors, 0 warnings, 1 environment-only clock NOTE. |
+| WSL discovery | `wsl.exe --status`; `wsl.exe --list --verbose`; `wsl.exe --list --quiet` in the host context | Default distribution `Ubuntu`, default version 2; installed distributions `Ubuntu`, `Ubuntu-24.04`, and `docker-desktop`. The configured default `Ubuntu` was used for the gate. |
+| WSL full tests | `wsl.exe --% -d Ubuntu --cd /mnt/c/Users/maxth/Documents/GitHub/CausalStress --exec env NOT_CRAN=true Rscript -e "testthat::test_local('.', reporter='summary', stop_on_failure=TRUE); cat('\nwsl_full_test_suite=PASS\n')"` | Pass in 199.8 seconds: no failures, 12 declared optional-package skips, and 44 governed experimental/optional-path warnings. |
+| WSL strict validation | `wsl.exe -d Ubuntu --cd /mnt/c/Users/maxth/Documents/GitHub/CausalStress --exec Rscript tools/ci-validation.R` | Pass: `registry_strict_rows=24`, `validate_registry_rows=24`, `all_valid=TRUE`; 153 focused expectations passed. |
+| WSL substrate | `wsl.exe -d Ubuntu --cd /mnt/c/Users/maxth/Documents/GitHub/CausalStress --exec Rscript tools/ci-substrate.R` | Pass; Linux substrate recorded below. |
+| WSL check | `wsl.exe --% -d Ubuntu --cd /mnt/c/Users/maxth/Documents/GitHub/CausalStress --exec env NOT_CRAN=true _R_CHECK_FORCE_SUGGESTS_=false Rscript -e "result <- rcmdcheck::rcmdcheck(path='.', args=c('--no-manual','--ignore-vignettes'), build_args='--no-build-vignettes', error_on='never'); print(result)"` | Pass in 105.3 seconds wall time: 0 errors, 0 warnings, 0 notes. `rcmdcheck` is the installed Linux wrapper for the same underlying `R CMD check`; the `devtools` convenience package is not installed. |
+| Worktree review | `git rev-parse HEAD`; `git status --short`; `git diff --check` | Baseline SHA recorded; diff was release-gate scoped and whitespace-clean. Independent re-review accepted the evidence-only commit boundary; the resulting commit SHA and clean-tree result are required before external action. |
+
+### Windows Reproducibility Substrate
+
+- R: `R version 4.5.2 (2025-10-31 ucrt)`.
+- Platform: `x86_64-w64-mingw32` on Windows 11 x64.
+- Library paths: `C:/Users/maxth/Documents/R/win-library/4.5`;
+  `C:/Users/maxth/AppData/Local/R/win-library/4.5`;
+  `C:/Program Files/R/R-4.5.2/library`.
+- Ambient RNG: `Mersenne-Twister / Inversion / Rejection`.
+- Governed generation RNG: `Mersenne-Twister / Inversion / Rounding`.
+- Thread-cap variables `OMP_NUM_THREADS`, `OPENBLAS_NUM_THREADS`,
+  `MKL_NUM_THREADS`, `BLAS_NUM_THREADS`, `VECLIB_MAXIMUM_THREADS`, and
+  `RCPP_PARALLEL_NUM_THREADS`: unset.
+- Observable numerical substrate: zlib 1.3.1, bzlib 1.0.8, xz 5.8.1,
+  libdeflate 1.24, PCRE 10.46, ICU 77.1, TRE 0.8.0; the R substrate probe did
+  not report a named external BLAS path on Windows.
+- Bitwise probe: `include_truth_bitwise=TRUE`; `df`, `true_att`, `true_qst`,
+  and `meta` all `TRUE`.
+
+### WSL/Ubuntu Reproducibility Substrate
+
+- Distribution: configured default `Ubuntu` under WSL 2, reporting Ubuntu
+  20.04 LTS. The separately installed `Ubuntu-24.04` distribution did not have
+  the package's hard R dependencies installed, so it was not used.
+- R: `R version 4.5.2 (2025-10-31)`.
+- Platform: `x86_64-pc-linux-gnu`.
+- Library paths: `/home/max/R/x86_64-pc-linux-gnu-library/4.5`;
+  `/usr/local/lib/R/site-library`; `/usr/lib/R/site-library`;
+  `/usr/lib/R/library`.
+- Ambient RNG: `Mersenne-Twister / Inversion / Rejection`.
+- Governed generation RNG: `Mersenne-Twister / Inversion / Rounding`.
+- BLAS: `/usr/lib/x86_64-linux-gnu/blas/libblas.so.3.9.0`.
+- Thread-cap variables `OMP_NUM_THREADS`, `OPENBLAS_NUM_THREADS`,
+  `MKL_NUM_THREADS`, `BLAS_NUM_THREADS`, `VECLIB_MAXIMUM_THREADS`, and
+  `RCPP_PARALLEL_NUM_THREADS`: unset.
+- Observable numerical substrate: zlib 1.2.11, bzlib 1.0.8, xz 5.2.4,
+  PCRE 10.34, ICU 66.1, TRE 0.8.0, glibc 2.31, readline 8.0.
+- Bitwise probe: `include_truth_bitwise=TRUE`; `df`, `true_att`, `true_qst`,
+  and `meta` all `TRUE`.
+
+### Acceptance Audit
+
+- `DESCRIPTION` reports package version 0.2.0 and release date 2026-07-24.
+- The ratified Constitution is v2.0.1; all correction implementation tickets
+  CS-1220--CS-1224 are `complete_after_review`.
+- `inst/design/README.md` correctly keeps the correction and CI packets active
+  until publication, and identifies the Wave 1 packet as final.
+- Every finding in the open v0.1.9 deep audit is routed by the final v0.1.10
+  closeout; all correction-packet deferrals have named destinations.
+- The immutable annotated `refs/tags/v0.1.10` object is
+  `3496e8f90ddddff1a86da4376113d82b5d7e7943` and peels to the governed commit
+  `d05164a856b3e19101b989021f20dabe0b2a00a8`. It was inspected only; CS-1226
+  still requires maintainer approval immediately before publication.
+- No known constitutional violation is open. Remaining blockers are archival
+  publication approval, remote branch/main/tag CI, CS-1214 final closeout, and
+  the final v0.2.0 release decision.
 
 ## Final Release Decision
 
