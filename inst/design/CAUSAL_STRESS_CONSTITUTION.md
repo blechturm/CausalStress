@@ -1,9 +1,9 @@
 # CAUSALSTRESS CONSTITUTION
 
-**Version:** 2.0.0\
+**Version:** 2.0.1\
 **Public name:** CausalStress Scientific Protocol\
-**Date:** 2026-06-16\
-**Status:** Ratified (Estimand Registry Protocol). Ratified by the maintainer on 2026-06-16 after accepted RFC-1 and constitutional review.
+**Date:** 2026-07-24\
+**Status:** Ratified (DGP Contract Terminology Patch). Ratified by the maintainer on 2026-07-24 after the accepted DGP contract terminology RFC and independent synthesis review.
 
 ------------------------------------------------------------------------
 
@@ -20,6 +20,8 @@ All contributors must treat this document as the supreme authority.\
 Any code proposal that violates it must be rejected.
 
 ### Amendment History
+
+-   **v2.0.1 (Ratified 2026-07-24):** Patch clarification of the DGP contract. Corrects Article III §3.2.A's synthetic-covariate notation from lowercase `x1...xk` to uppercase, consecutive, one-based `X1...Xk`, matching the immutable outputs of all 24 released package-managed synthetic DGP versions. The correction preserves the intended scientific meaning and changes no released DGP implementation, generated data, truth, RNG stream, fingerprint, estimator result, or campaign evidence. It also normalizes the human-facing term `Real DGP` to `real-data DGP` in the three live contract sites; the machine discriminator `type = "real"` is unchanged and real-data support remains deferred. Historical amendment and RFC records are preserved verbatim. The bump is *patch*.
 
 -   **v2.0.0 (Ratified 2026-06-16):** Introduces the typed **estimand registry** (ATT, ATE, QST, CATE) and amends Articles **I, II, III, IV, V, and VI** for internal consistency — the estimand registry and typed scoring (Art. I), held-out evaluation-sample identity (Art. II §2.2), the typed estimator output contract (Art. III §3.1), the per-estimand gatekeeper (Art. IV), and fit-artifact/score-record persistence granularity (Art. V §5.2, Art. VI) — per accepted RFC-1 (`inst/design/rfc/20260616_estimand_registry_synthesis.md`). Existing ATT/QST truth, the real-DGP external-truth clause (§1.3), QST oracle-size immutability (§1.4), and the existing ATT/QST gatekeeper enforcement (§4.2.4) are **preserved**. The bump is *major*. Implementation is staged (Wave 1: ATT/ATE typed scoring; Wave 2: CATE). **Constitutional-review corrections (2026-06-16):** the RATIFY-WITH-AMENDMENTS findings of `rfc/20260616_constitution_2_0_0_review.md` were applied (B1 persistence grain; B2 staged-implementation rule; B3 held-out eval identity; B4 oracle-immutability scope; M1 target-level enumeration; M2 ATE scoring population; M3 stale CI/gatekeeper clause; m1 tau-grid wording; m2 stale release-line wording). Ratified by the maintainer on 2026-06-16.
 
@@ -46,7 +48,7 @@ The Average Treatment Effect on the Treated (ATT) is defined strictly on the **n
 
 -   **Prohibition:** Truth must never be calculated as the sample mean of realized differences ($y_1 - y_0$) in heavy-tailed settings.
 
--   **Real Data:** For Real DGPs, Truth must be defined externally (e.g., Experimental Benchmark) and never regenerated. **This truth is considered the Stabilized Experimental Estimate and is permitted to include inherent sampling noise.**
+-   **Real Data:** For real-data DGPs, Truth must be defined externally (e.g., Experimental Benchmark) and never regenerated. **This truth is considered the Stabilized Experimental Estimate and is permitted to include inherent sampling noise.**
 
 ### Section 1.4: Distributional QST
 
@@ -87,7 +89,7 @@ Estimands are a governed, versioned vocabulary. Each is identified by a typed `e
 
 -   **Typed scoring (no cross-scoring):** an estimator's output for a target MUST be scored only against that target's truth. Scoring is the intersection `requested ∩ estimator-produced ∩ DGP-truth-available`; any unscoreable request is recorded as an explicit **non-comparable** result with a machine-readable reason, never silently cross-scored.
 
--   **Real DGPs:** estimands lacking externally-supplied truth are **non-comparable** (no truth is regenerated). This extends the §1.3 real-data principle; it does **not** create a new "external truth tier." A generalized external-truth tier for ATE/CATE is deferred to a future real-data RFC.
+-   **Real-data DGPs:** estimands lacking externally-supplied truth are **non-comparable** (no truth is regenerated). This extends the §1.3 real-data principle; it does **not** create a new "external truth tier." A generalized external-truth tier for ATE/CATE is deferred to a future real-data RFC.
 
 -   **Staged implementation:** a registered estimand whose typed scoring is not yet implemented in the active release wave is recorded as **non-comparable** with the machine-readable reason `target_not_implemented`. This is an explicit interim status, never a silent omission, and never permits cross-scoring against another target's truth. (v2.0.0 stages CATE to Wave 2; until then a CATE request resolves to `target_not_implemented`.)
 
@@ -157,7 +159,7 @@ Every estimator function must conform to: `function(df, tau, config) -> list(out
 
 **A. Synthetic DGPs (`type="synthetic"`)** MUST return:
 
--   `df`: Tibble including `y`, `w`, `p`, `y0`, `y1`, and covariates named `x1...xk`.
+-   `df`: Tibble including `y`, `w`, `p`, `y0`, `y1`, and one or more covariates named `X1`, ..., `Xk`, using uppercase `X` with consecutive one-based integer suffixes.
 
 -   `true_att`: Numeric scalar.
 
@@ -167,7 +169,7 @@ Every estimator function must conform to: `function(df, tau, config) -> list(out
 
 -   `meta$structural_te`: Numeric vector matching `nrow(df)`.
 
-**B. Real DGPs (`type="real"`)** MUST return:
+**B. Real-data DGPs (`type="real"`)** MUST return:
 
 -   `df`: Tibble including `y`, `w`, and covariates. **MUST NOT** include `y0`, `y1`.
 

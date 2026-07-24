@@ -1,8 +1,11 @@
 # CausalStress 0.2.0
 
 ## Wave 1 Typed Estimand Registry
-* Governance: Ratified Constitution v2.0.0 and activated the v0.2.0 Wave 1
-  packet for typed scoring, schema-4 identity, and staged CATE support.
+* Governance: Ratified Constitution v2.0.1, preserving the v2.0 estimand
+  registry while correcting the synthetic covariate contract to uppercase,
+  consecutive, one-based `X1...Xk` and adopting `real-data DGP` terminology;
+  activated the Wave 1 packet for typed scoring, schema-4 identity, and staged
+  CATE support.
 * Scoring: Added canonical ATT, ATE, QST, and CATE target descriptors, typed
   estimator outputs, a legacy `list(att, qst, meta)` shim, and the three-way
   requested/produced/truth scoring join.
