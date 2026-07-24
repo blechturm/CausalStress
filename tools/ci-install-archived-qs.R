@@ -1,7 +1,7 @@
 #!/usr/bin/env Rscript
 
 qs_version <- "0.27.3"
-stringfish_version <- "0.17.0"
+stringfish_version <- "0.18.0"
 repos <- "https://cloud.r-project.org"
 
 has_version <- function(pkg, version) {
