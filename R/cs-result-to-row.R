@@ -61,6 +61,9 @@ cs_result_to_row <- function(result) {
     fit_fingerprint = meta$fit_fingerprint %||% NA_character_,
     truth_version = meta$truth_version %||% NA_character_,
     score_fingerprints = list(meta$score_fingerprints %||% character(0)),
+    score_row_fingerprints = list(
+      meta$score_row_fingerprints %||% character(0)
+    ),
     task_fingerprint = meta$task_fingerprint %||% NA_character_,
     log            = meta$log %||% NA_character_,
     qst            = list(result$qst %||% NULL),

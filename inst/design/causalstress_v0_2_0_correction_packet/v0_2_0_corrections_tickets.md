@@ -42,7 +42,7 @@
   no-covariate probes fail with `causalstress_dgp_error`; RNG state is preserved.
 - **Review gate:** Focused constitutional-contract review and all-version
   validation pass.
-- **Disposition:** open
+- **Disposition:** complete_after_review
 
 ### CS-1222 - Correct QST score-record and row identity
 
@@ -54,7 +54,8 @@
   `score_fingerprint`, incorrectly making each QST point a separate score record.
 - **Files:** `R/cs-fingerprint.R`, `R/cs-contracts.R`, `R/cs-runner.R`,
   `R/cs-accessors.R`, `R/cs-result-to-row.R`, `R/cs-pins.R`, collectors and
-  audit/science surfaces as required, `inst/design/contracts.md`,
+  `R/cs-provenance.R`, audit/science surfaces as required,
+  `inst/design/contracts.md`,
   `tests/testthat/`
 - **Constitutional check:** One fit × target × metric is one score record; tau is
   a coordinate. Keep schema version 4 because it is not publicly released;
@@ -66,7 +67,7 @@
   governed curve/row assertions.
 - **Review gate:** Schema-4 identity and compatibility-surface review before
   release documentation is frozen.
-- **Disposition:** open
+- **Disposition:** complete_after_review
 
 ## Batch 2 - Release Surfaces and Governance
 

@@ -1,6 +1,10 @@
-#' Validate a DGP for schema, determinism, and sanity
+#' Validate a synthetic DGP for schema, determinism, and sanity
 #'
-#' @param dgp_fn Function to generate the DGP. Must accept `n` and `seed`.
+#' The generator must return the canonical synthetic-DGP contract, including
+#' uppercase, consecutive, one-based covariates named `X1`, ..., `Xk`.
+#' Structural contract violations abort with class `causalstress_dgp_error`.
+#'
+#' @param dgp_fn Synthetic DGP generator. Must accept `n` and `seed`.
 #' @param n Integer sample size for validation runs.
 #' @param seeds Integer vector of seeds to probe stability/sanity.
 #' @param verbose Logical; if TRUE, messages are emitted.
@@ -16,60 +20,37 @@ cs_validate_dgp <- function(dgp_fn, n = 1000, seeds = 1:50, verbose = TRUE) {
   on.exit(cs_rng_state_restore(rng_state), add = TRUE)
 
   stopifnot(is.function(dgp_fn))
-
-  checks <- c(schema = FALSE, determinism = FALSE)
-
-  run_once <- dgp_fn(n = n, seed = seeds[[1]])
-  df <- if (is.data.frame(run_once)) run_once else run_once$df
-
-  required_cols <- c("y", "w")
-  has_required <- all(required_cols %in% names(df))
-
-  # locate truth components
-  true_att_scalar <- if (!is.null(run_once$true_att)) run_once$true_att else {
-    if ("true_att" %in% names(df)) df$true_att else NA_real_
+  if (length(seeds) == 0L) {
+    rlang::abort(
+      "`seeds` must contain at least one seed.",
+      class = "causalstress_contract_error"
+    )
   }
-  true_y0 <- if ("true_y0" %in% names(df)) df$true_y0 else {
-    if ("y0" %in% names(df)) df$y0 else NULL
-  }
-  true_y1 <- if ("true_y1" %in% names(df)) df$true_y1 else {
-    if ("y1" %in% names(df)) df$y1 else NULL
-  }
-  has_potential_outcomes <- !is.null(true_y0) &&
-    !is.null(true_y1) &&
-    length(true_y0) == nrow(df) &&
-    length(true_y1) == nrow(df)
 
-  schema_ok <- is.data.frame(df) &&
-    has_required &&
-    is.numeric(df$y) &&
-    is.numeric(df$w) &&
-    !any(is.na(true_att_scalar)) &&
-    has_potential_outcomes &&
-    !any(is.na(true_y0)) &&
-    !any(is.na(true_y1))
-
-  checks["schema"] <- schema_ok
-
-  # determinism: same seed -> identical output
-  run_one <- dgp_fn(n = n, seed = 123)
-  run_two <- dgp_fn(n = n, seed = 123)
-  determ_ok <- identical(run_one, run_two)
-  checks["determinism"] <- determ_ok
-
-  # stability across seeds
+  # Validate every configured seed once while computing stability statistics.
   att_values <- numeric(length(seeds))
   naive_bias <- numeric(length(seeds))
   for (i in seq_along(seeds)) {
     sim <- dgp_fn(n = n, seed = seeds[[i]])
-    df_i <- if (is.data.frame(sim)) sim else sim$df
-    true_att_i <- if (!is.null(sim$true_att)) sim$true_att else {
-      if ("true_att" %in% names(df_i)) mean(df_i$true_att) else NA_real_
-    }
+    cs_check_dgp_synthetic(sim)
+    df_i <- sim$df
+    true_att_i <- sim$true_att
     att_values[[i]] <- true_att_i
     naive_est <- mean(df_i$y[df_i$w == 1]) - mean(df_i$y[df_i$w == 0])
     naive_bias[[i]] <- naive_est - true_att_i
   }
+
+  # Determinism: two independent runs at a fixed seed must be identical.
+  run_one <- dgp_fn(n = n, seed = 123)
+  run_two <- dgp_fn(n = n, seed = 123)
+  cs_check_dgp_synthetic(run_one)
+  cs_check_dgp_synthetic(run_two)
+
+  checks <- c(
+    schema = TRUE,
+    determinism = identical(run_one, run_two)
+  )
+
   cv_true_att <- stats::sd(att_values, na.rm = TRUE) / abs(mean(att_values, na.rm = TRUE))
   mean_naive_bias <- mean(naive_bias, na.rm = TRUE)
 

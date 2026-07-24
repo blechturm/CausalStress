@@ -28,7 +28,7 @@ tickets:
     constitutional_check: "Implement after CS-1220; no DGP, truth, RNG, version, or type=real change"
     test_obligation: "One shared predicate covers internal, all-version registry, and public validation; all 24 pass and malformed covariate names fail closed without RNG leakage"
     review_gate: "Focused constitutional-contract review and all-version validation"
-    disposition: open
+    disposition: "complete_after_review"
 
   - id: "CS-1222"
     title: "Correct QST score-record and row identity"
@@ -41,12 +41,13 @@ tickets:
       - "R/cs-accessors.R"
       - "R/cs-result-to-row.R"
       - "R/cs-pins.R"
+      - "R/cs-provenance.R"
       - "inst/design/contracts.md"
       - "tests/testthat"
     constitutional_check: "One fit x target x metric is one score record; tau is a row coordinate; schema remains unreleased version 4"
     test_obligation: "QST record fingerprints are shared, row fingerprints are unique/deterministic, scalar/status coordinates are canonical, and all projections preserve both levels"
     review_gate: "Schema-4 identity and compatibility-surface review"
-    disposition: open
+    disposition: "complete_after_review"
 
   - id: "CS-1223"
     title: "Repair release-blocking README and roxygen claims"

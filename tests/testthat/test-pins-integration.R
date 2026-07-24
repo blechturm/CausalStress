@@ -27,7 +27,29 @@ test_that("cs_run_seeds persists rich results to a pins board", {
 
   meta <- pins::pin_meta(board, pin_names[1])
   md <- if (!is.null(meta$metadata)) meta$metadata else meta$user
-  expect_true("git_hash" %in% names(md))
+  expect_true(all(c(
+    "git_hash", "fit_fingerprint", "score_fingerprints",
+    "score_row_fingerprints"
+  ) %in% names(md)))
+  expect_identical(md$score_fingerprints, res$meta$score_fingerprints)
+  expect_identical(md$score_row_fingerprints, res$meta$score_row_fingerprints)
+
+  audit <- cs_audit(board)
+  audit_row <- audit[audit$pin_name == pin_names[1], , drop = FALSE]
+  expect_equal(nrow(audit_row), 1L)
+  expect_identical(audit_row$fit_fingerprints[[1L]], res$meta$fit_fingerprint)
+  expect_identical(
+    audit_row$score_fingerprints[[1L]],
+    res$meta$score_fingerprints
+  )
+  expect_identical(
+    audit_row$score_row_fingerprints[[1L]],
+    res$meta$score_row_fingerprints
+  )
+  expect_identical(
+    audit_row$scores[[1L]]$score_row_fingerprint,
+    res$scores$score_row_fingerprint
+  )
 })
 
 test_that("Stage & Gather workflow", {

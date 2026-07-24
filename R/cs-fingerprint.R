@@ -179,8 +179,7 @@ cs_truth_version_id <- function(dgp_id, dgp_version, truth_payload = NULL) {
 
 cs_build_score_fingerprint <- function(fit_fingerprint, estimand_target_id,
                                        metric_id, truth_version,
-                                       scoring_population_id,
-                                       tau_id = NA_character_) {
+                                       scoring_population_id) {
   digest::digest(
     list(
       fingerprint_version = 4L,
@@ -189,8 +188,36 @@ cs_build_score_fingerprint <- function(fit_fingerprint, estimand_target_id,
       estimand_target_id = as.character(estimand_target_id),
       metric_id = as.character(metric_id),
       truth_version = as.character(truth_version),
-      scoring_population_id = as.character(scoring_population_id),
-      tau_id = as.character(tau_id %||% NA_character_)
+      scoring_population_id = as.character(scoring_population_id)
+    ),
+    algo = "sha256"
+  )
+}
+
+cs_score_row_coordinate <- function(estimand_target_id,
+                                    tau_id = NA_character_,
+                                    score_status = "scored") {
+  if (identical(estimand_target_id, "qst") &&
+      !is.na(tau_id) &&
+      nzchar(tau_id)) {
+    return(tau_id)
+  }
+
+  if (estimand_target_id %in% c("att", "ate") &&
+      identical(score_status, "scored")) {
+    return("scalar")
+  }
+
+  "record_status"
+}
+
+cs_build_score_row_fingerprint <- function(score_fingerprint, row_coordinate) {
+  digest::digest(
+    list(
+      fingerprint_version = 4L,
+      artifact_type = "score_row",
+      score_fingerprint = as.character(score_fingerprint),
+      row_coordinate = as.character(row_coordinate)
     ),
     algo = "sha256"
   )

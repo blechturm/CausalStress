@@ -65,7 +65,8 @@ cs_science_payload <- function(x) {
       config_fingerprint_schema = meta$config_fingerprint_schema %||% NA_integer_,
       fit_fingerprint = meta$fit_fingerprint %||% NA_character_,
       truth_version = meta$truth_version %||% NA_character_,
-      score_fingerprints = meta$score_fingerprints %||% character(0)
+      score_fingerprints = meta$score_fingerprints %||% character(0),
+      score_row_fingerprints = meta$score_row_fingerprints %||% character(0)
     )
   )
 }
@@ -125,6 +126,9 @@ cs_meta_flatten <- function(x) {
     fit_fingerprint = meta$fit_fingerprint %||% NA_character_,
     truth_version = meta$truth_version %||% NA_character_,
     score_fingerprints = list(meta$score_fingerprints %||% character(0)),
+    score_row_fingerprints = list(
+      meta$score_row_fingerprints %||% character(0)
+    ),
     task_fingerprint = meta$task_fingerprint %||% NA_character_,
     max_runtime = prov$max_runtime %||% NA_real_,
     experimental_parallel = prov$experimental_parallel %||% FALSE,

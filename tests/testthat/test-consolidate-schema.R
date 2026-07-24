@@ -60,6 +60,8 @@ test_that("cs_result_to_row propagates batch schema fields", {
     "estimator_version",
     "config_fingerprint",
     "config_fingerprint_schema",
+    "score_fingerprints",
+    "score_row_fingerprints",
     "task_fingerprint"
   ) %in% names(row)))
   expect_equal(row$config_fingerprint_schema[[1]], 4L)

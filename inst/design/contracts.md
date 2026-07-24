@@ -14,8 +14,10 @@ Normative source: Constitution Articles II, III, and VII.
 
 Synthetic DGPs must return a list containing at least:
 
-- `df`: data frame with observed outcome `y`, treatment `w`, covariates, and
-  internal truth columns before the runner airlock.
+- `df`: data frame with observed outcome `y`, treatment `w`, internal truth
+  columns before the runner airlock, and one or more synthetic covariates named
+  exactly `X1`, ..., `Xk` using uppercase `X` with consecutive one-based integer
+  suffixes.
 - `true_att`: scalar truth for ATT where applicable.
 - `true_qst`: truth table with canonical `tau` and `value` columns for truth
   tables.
@@ -101,7 +103,8 @@ one row per scalar score or QST point coordinate and includes:
 
 - run identity: `dgp_id`, `dgp_version`, `estimator_id`, `estimator_version`,
   `n`, and `seed`.
-- artifact identity: `fit_fingerprint`, `score_fingerprint`, and
+- artifact identity: `fit_fingerprint`, curve/scalar-level
+  `score_fingerprint`, physical-row `score_row_fingerprint`, and
   `schema_version`.
 - target identity: `estimand_target_id`, target descriptor fields, and
   `metric_id`.
@@ -152,6 +155,17 @@ Schema 4 separates:
 - fit artifact identity: data/model/config identity for one model fit.
 - score record identity: fit identity plus scored estimand target, metric, truth
   version, and `scoring_population_id`.
+- score row identity: score-record identity plus a canonical row coordinate.
+  QST point rows use `tau_id`, scored ATT/ATE scalar rows use `scalar`, and
+  target-level non-comparable/error rows without a point coordinate use
+  `record_status`. `tau_index` controls ordering and is not identity-bearing.
+
+All rows for one QST curve share a `score_fingerprint` and have distinct
+`score_row_fingerprint` values. `meta$score_fingerprints` is the stable unique
+set of score-record identities in first-occurrence order, while
+`meta$score_row_fingerprints` contains one identity per score-surface row.
+Pins, typed collectors, row projections, and science/audit accessors preserve
+both levels.
 
 `scoring_population_id` is populated in Wave 1 score records. ATT/QST/ATE use
 their declared Wave 1 population ids. Schema 4 reserves nullable Wave 2 CATE
@@ -200,7 +214,15 @@ Release validation must cover three surfaces:
 2. Version-aware executable validation: every registered `(dgp_id, version)`
    generator is executed and checked, not first-match-per-id.
 3. Public DGP certification: `cs_validate_dgp()` rejects structurally invalid
-   synthetic DGPs, including missing potential outcomes.
+   synthetic DGPs, including missing potential outcomes and non-canonical
+   covariate names.
+
+All three surfaces use the same internal covariate-name predicate. For the
+synthetic generation frame, the authoritative operational non-covariate fields
+are `y`, `w`, `p`, `y0`, `y1`, and `structural_te`; every remaining column must
+form exactly `X1...Xk`, with `k >= 1`. Contract failures abort with class
+`causalstress_dgp_error`, and validation restores the caller's RNG state even
+when validation fails.
 
 ## Thread Contract
 

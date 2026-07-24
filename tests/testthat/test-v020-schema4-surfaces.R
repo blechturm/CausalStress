@@ -13,9 +13,23 @@ test_that("schema-4 run results carry fit and score identities", {
   expect_equal(length(unique(res$scores$fit_fingerprint)), 1L)
   expect_equal(unique(res$scores$fit_fingerprint), res$meta$fit_fingerprint)
   expect_equal(unique(res$scores$truth_version), res$meta$truth_version)
-  expect_equal(length(res$meta$score_fingerprints), nrow(res$scores))
-  expect_equal(sort(res$meta$score_fingerprints), sort(res$scores$score_fingerprint))
+  expect_identical(
+    res$meta$score_fingerprints,
+    unique(res$scores$score_fingerprint)
+  )
+  expect_equal(
+    length(res$meta$score_fingerprints),
+    length(unique(res$scores$score_fingerprint))
+  )
   expect_equal(length(unique(res$scores$score_fingerprint)), nrow(res$scores))
+  expect_identical(
+    res$meta$score_row_fingerprints,
+    res$scores$score_row_fingerprint
+  )
+  expect_equal(
+    length(unique(res$scores$score_row_fingerprint)),
+    nrow(res$scores)
+  )
   expect_false(any(is.na(res$scores$scoring_population_id)))
 
   wave2_fields <- c(
@@ -43,7 +57,45 @@ test_that("one fit can produce multiple score records without overwrite", {
   expect_equal(nrow(res$scores), 2L)
   expect_equal(length(unique(res$scores$fit_fingerprint)), 1L)
   expect_equal(length(unique(res$scores$score_fingerprint)), 2L)
+  expect_equal(length(unique(res$scores$score_row_fingerprint)), 2L)
   expect_equal(sort(res$scores$estimand_target_id), c("ate", "att"))
+})
+
+test_that("score row identity uses canonical coordinates and excludes tau ordering", {
+  rows <- dplyr::bind_rows(
+    CausalStress:::cs_make_score_row("att", estimate = 1, truth = 1, error = 0, abs_error = 0),
+    CausalStress:::cs_make_score_row(
+      "qst", estimate = 2, truth = 2, error = 0, abs_error = 0,
+      tau = 0.25, tau_id = cs_tau_id(0.25), tau_index = 1L
+    ),
+    CausalStress:::cs_make_score_row(
+      "cate", status = "non_comparable", reason = "target_not_implemented"
+    )
+  )
+  identified <- CausalStress:::cs_attach_score_identity(rows, "fit", "truth")
+  coordinates <- c("scalar", cs_tau_id(0.25), "record_status")
+  expected <- vapply(
+    seq_len(nrow(identified)),
+    function(i) {
+      CausalStress:::cs_build_score_row_fingerprint(
+        identified$score_fingerprint[[i]],
+        coordinates[[i]]
+      )
+    },
+    character(1)
+  )
+
+  expect_identical(identified$score_row_fingerprint, expected)
+  expect_equal(length(unique(identified$score_row_fingerprint)), nrow(identified))
+
+  reordered <- rows
+  reordered$tau_index[[2L]] <- 99L
+  reordered <- CausalStress:::cs_attach_score_identity(reordered, "fit", "truth")
+  expect_identical(reordered$score_fingerprint, identified$score_fingerprint)
+  expect_identical(
+    reordered$score_row_fingerprint,
+    identified$score_row_fingerprint
+  )
 })
 
 test_that("typed collection returns long scored, non-comparable, and error rows", {
@@ -72,6 +124,14 @@ test_that("typed collection returns long scored, non-comparable, and error rows"
   }
 
   scored <- cs_run_single(
+    dgp_id = "synth_baseline",
+    estimator_id = qst_est_id,
+    n = 50,
+    seed = 103,
+    tau = c(0.25, 0.5, 0.75),
+    config = list(estimand_targets = c("att", "qst", "ate"))
+  )
+  scored_repeat <- cs_run_single(
     dgp_id = "synth_baseline",
     estimator_id = qst_est_id,
     n = 50,
@@ -110,7 +170,7 @@ test_that("typed collection returns long scored, non-comparable, and error rows"
   expect_s3_class(scores, "tbl_df")
   expect_true(all(c(
     "estimand_target_id", "score_status", "non_comparable_reason",
-    "fit_fingerprint", "score_fingerprint", "truth_version",
+    "fit_fingerprint", "score_fingerprint", "score_row_fingerprint", "truth_version",
     "scoring_population_id", "tau", "tau_index"
   ) %in% names(scores)))
   expect_true(any(scores$score_status == "scored"))
@@ -120,6 +180,24 @@ test_that("typed collection returns long scored, non-comparable, and error rows"
   qst_rows <- scores[scores$estimand_target_id == "qst" & scores$score_status == "scored", ]
   expect_equal(nrow(qst_rows), 3L)
   expect_equal(qst_rows$tau_index, 1:3)
+  expect_equal(length(unique(qst_rows$score_fingerprint)), 1L)
+  expect_equal(length(unique(qst_rows$score_row_fingerprint)), 3L)
+  expect_identical(
+    scored$meta$score_fingerprints,
+    unique(scored$scores$score_fingerprint)
+  )
+  expect_identical(
+    scored$meta$score_row_fingerprints,
+    scored$scores$score_row_fingerprint
+  )
+  expect_identical(
+    scored_repeat$scores$score_fingerprint,
+    scored$scores$score_fingerprint
+  )
+  expect_identical(
+    scored_repeat$scores$score_row_fingerprint,
+    scored$scores$score_row_fingerprint
+  )
 
   ate_missing <- scores[
     scores$estimator_id == qst_est_id & scores$estimand_target_id == "ate",
@@ -139,6 +217,7 @@ test_that("science payload and meta flatten preserve typed score identity", {
 
   payload <- cs_science_payload(res)
   flat <- cs_meta_flatten(res)
+  row <- CausalStress:::cs_result_to_row(res)
 
   expect_s3_class(payload$scores, "tbl_df")
   expect_true(all(c("estimand_target_id", "score_status", "non_comparable_reason") %in% names(payload$scores)))
@@ -147,6 +226,10 @@ test_that("science payload and meta flatten preserve typed score identity", {
   expect_equal(flat$fit_fingerprint, res$meta$fit_fingerprint)
   expect_equal(flat$truth_version, res$meta$truth_version)
   expect_equal(flat$score_fingerprints[[1]], res$meta$score_fingerprints)
+  expect_equal(payload$meta$score_row_fingerprints, res$meta$score_row_fingerprints)
+  expect_equal(flat$score_row_fingerprints[[1]], res$meta$score_row_fingerprints)
+  expect_equal(row$score_fingerprints[[1]], res$meta$score_fingerprints)
+  expect_equal(row$score_row_fingerprints[[1]], res$meta$score_row_fingerprints)
 })
 
 test_that("schema 1-3 pins fail closed as resume targets", {

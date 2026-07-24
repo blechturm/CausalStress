@@ -4,9 +4,9 @@
 #' returns a tidy tibble of provenance fields.
 #'
 #' @param board A pins board containing results pins.
-#' @return A tibble with columns `pin_name`, `dgp_id`, `estimator_id`,
-#'   `estimator_version`, `n`, `seed`, `git_hash`, `timestamp`, `oracle`,
-#'   and `session_info` (list column where available).
+#' @return A tibble with pin/run provenance plus list columns for the canonical
+#'   typed `scores`, `fit_fingerprints`, `score_fingerprints`, and
+#'   `score_row_fingerprints` where available.
 #' @export
 cs_audit <- function(board) {
   pin_list_obj <- pins::pin_list(board)
@@ -32,7 +32,11 @@ cs_audit <- function(board) {
       git_hash = character(),
       timestamp = as.POSIXct(character()),
       oracle = logical(),
-      session_info = list()
+      session_info = list(),
+      fit_fingerprints = list(),
+      score_fingerprints = list(),
+      score_row_fingerprints = list(),
+      scores = list()
     ))
   }
 
@@ -71,6 +75,30 @@ cs_audit <- function(board) {
     )
     if (is.numeric(ts_val)) ts_val <- as.POSIXct(ts_val, origin = "1970-01-01")
 
+    results <- if (inherits(pin_obj, "try-error")) {
+      list()
+    } else if (!is.null(pin_obj$results) && is.list(pin_obj$results)) {
+      pin_obj$results
+    } else {
+      list(pin_obj)
+    }
+    result_meta <- lapply(results, function(result) result$meta %||% list())
+    fit_fingerprints <- unique(unlist(lapply(
+      result_meta,
+      function(result_meta) result_meta$fit_fingerprint %||% character(0)
+    ), use.names = FALSE))
+    score_fingerprints <- unique(unlist(lapply(
+      result_meta,
+      function(result_meta) result_meta$score_fingerprints %||% character(0)
+    ), use.names = FALSE))
+    score_row_fingerprints <- unlist(lapply(
+      result_meta,
+      function(result_meta) result_meta$score_row_fingerprints %||% character(0)
+    ), use.names = FALSE)
+    scores <- dplyr::bind_rows(lapply(results, function(result) {
+      tibble::as_tibble(result$scores %||% tibble::tibble())
+    }))
+
     if (identical(pin_type, "batch")) {
       return(tibble::tibble(
         pin_name  = name,
@@ -79,7 +107,11 @@ cs_audit <- function(board) {
         n_tasks   = meta$metadata$n_tasks %||% meta$user$n_tasks %||% NA_integer_,
         node      = meta$metadata$node_name %||% meta$user$node_name %||% "unknown",
         timestamp = ts_val,
-        git_hash  = meta$metadata$git_hash %||% meta$user$git_hash %||% NA_character_
+        git_hash  = meta$metadata$git_hash %||% meta$user$git_hash %||% NA_character_,
+        fit_fingerprints = list(fit_fingerprints),
+        score_fingerprints = list(score_fingerprints),
+        score_row_fingerprints = list(score_row_fingerprints),
+        scores = list(scores)
       ))
     }
 
@@ -95,7 +127,11 @@ cs_audit <- function(board) {
       git_hash          = pin_meta$git_hash %||% meta$metadata$git_hash %||% meta$user$git_hash %||% NA_character_,
       timestamp         = ts_val,
       oracle            = pin_meta$oracle %||% meta$metadata$oracle %||% meta$user$oracle %||% NA,
-      session_info      = list(pin_meta$session_info %||% meta$metadata$session_info %||% meta$user$session_info %||% NULL)
+      session_info      = list(pin_meta$session_info %||% meta$metadata$session_info %||% meta$user$session_info %||% NULL),
+      fit_fingerprints = list(fit_fingerprints),
+      score_fingerprints = list(score_fingerprints),
+      score_row_fingerprints = list(score_row_fingerprints),
+      scores = list(scores)
     )
   })
 

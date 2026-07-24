@@ -99,6 +99,9 @@ cs_pin_write <- function(board, result) {
         fit_fingerprint = meta$fit_fingerprint %||% NA_character_,
         truth_version = meta$truth_version %||% NA_character_,
         score_fingerprints = list(meta$score_fingerprints %||% character(0)),
+        score_row_fingerprints = list(
+          meta$score_row_fingerprints %||% character(0)
+        ),
         git_hash     = git_hash,
         session_info = list(utils::sessionInfo()),
         timestamp    = ts_num

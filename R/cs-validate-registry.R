@@ -146,7 +146,15 @@ cs_validate_dgp_registry <- function(strict = FALSE) {
     if (strict) {
       force(expr)
     } else {
-      try(expr, silent = TRUE)
+      tryCatch(
+        force(expr),
+        error = function(e) {
+          cli::cli_warn(
+            "DGP executable validation failed: {conditionMessage(e)}.",
+            class = "causalstress_dgp_warning"
+          )
+        }
+      )
       NULL
     }
   }
@@ -160,16 +168,7 @@ cs_validate_dgp_registry <- function(strict = FALSE) {
     if (identical(reg$type[i], "synthetic")) {
       check_fun({
         g <- reg$generator[[i]](n = 5, seed = 1L)
-        needed <- c("df", "true_att", "true_qst", "meta")
-        miss <- setdiff(needed, names(g))
-        if (length(miss) > 0) {
-          cli::cli_warn("Generator {reg$dgp_id[i]} output missing: {toString(miss)}.")
-        } else {
-          req_cols <- c("y0", "y1", "p", "structural_te")
-          if (!all(req_cols %in% names(g$df))) {
-            cli::cli_warn("Generator {reg$dgp_id[i]} df missing columns: {toString(setdiff(req_cols, names(g$df)))}.")
-          }
-        }
+        cs_check_dgp_synthetic(g)
       })
     }
   }

@@ -358,6 +358,7 @@ cs_make_score_row <- function(target_id, estimate = NA_real_, truth = NA_real_,
     non_comparable_reason = reason,
     fit_fingerprint = NA_character_,
     score_fingerprint = NA_character_,
+    score_row_fingerprint = NA_character_,
     truth_version = NA_character_,
     seed_eval = NA_integer_,
     n_eval = NA_integer_,
@@ -505,13 +506,62 @@ cs_attach_score_identity <- function(scores, fit_fingerprint, truth_version) {
         estimand_target_id = scores$estimand_target_id[[i]],
         metric_id = scores$metric_id[[i]],
         truth_version = truth_version,
-        scoring_population_id = scores$scoring_population_id[[i]],
-        tau_id = scores$tau_id[[i]] %||% NA_character_
+        scoring_population_id = scores$scoring_population_id[[i]]
+      )
+    },
+    character(1)
+  )
+  scores$score_row_fingerprint <- vapply(
+    seq_len(nrow(scores)),
+    function(i) {
+      row_coordinate <- cs_score_row_coordinate(
+        estimand_target_id = scores$estimand_target_id[[i]],
+        tau_id = scores$tau_id[[i]] %||% NA_character_,
+        score_status = scores$score_status[[i]]
+      )
+      cs_build_score_row_fingerprint(
+        score_fingerprint = scores$score_fingerprint[[i]],
+        row_coordinate = row_coordinate
       )
     },
     character(1)
   )
   scores
+}
+
+# Authoritative operational non-covariate fields for the synthetic generation
+# frame (Constitution Art. III Section 3.2.A). Every other df column must form
+# the canonical covariate set X1...Xk.
+.cs_dgp_non_covariates <- c("y", "w", "p", "y0", "y1", "structural_te")
+
+#' @noRd
+cs_check_dgp_covariates <- function(df) {
+  covariates <- names(df)[!names(df) %in% .cs_dgp_non_covariates]
+  syntactically_valid <- length(covariates) > 0L &&
+    all(grepl("^X[1-9][0-9]*$", covariates))
+
+  suffixes <- if (syntactically_valid) {
+    suppressWarnings(as.integer(sub("^X", "", covariates)))
+  } else {
+    integer(0L)
+  }
+  consecutively_numbered <- syntactically_valid &&
+    !anyNA(suffixes) &&
+    identical(sort(suffixes), seq_along(covariates))
+
+  if (!consecutively_numbered) {
+    found <- if (length(covariates) == 0L) "<none>" else toString(covariates)
+    rlang::abort(
+      message = paste0(
+        "Synthetic DGP covariates must be named `X1`, ..., `Xk` using ",
+        "uppercase ",
+        "`X` with consecutive one-based integer suffixes; found: ", found, "."
+      ),
+      class = "causalstress_dgp_error"
+    )
+  }
+
+  invisible(covariates)
 }
 
 #' @noRd
@@ -574,6 +624,8 @@ cs_check_dgp_synthetic <- function(dgp) {
       )
     }
   }
+
+  cs_check_dgp_covariates(df)
 
   # treatment indicator well-formed
   w_vals <- df$w

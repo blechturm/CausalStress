@@ -31,4 +31,10 @@ test_that("v0.1.9 plan -> batch -> consolidate -> tidy works", {
   audit <- cs_audit(board)
   expect_equal(nrow(audit), 2L)
   expect_true("n_tasks" %in% names(audit))
+  expect_true(all(c(
+    "fit_fingerprints", "score_fingerprints", "score_row_fingerprints", "scores"
+  ) %in% names(audit)))
+  expect_true(all(vapply(audit$scores, function(scores) {
+    all(c("score_fingerprint", "score_row_fingerprint") %in% names(scores))
+  }, logical(1))))
 })
