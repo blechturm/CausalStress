@@ -8,12 +8,15 @@
   CATE support.
 * Scoring: Added canonical ATT, ATE, QST, and CATE target descriptors, typed
   estimator outputs, a legacy `list(att, qst, meta)` shim, and the three-way
-  requested/produced/truth scoring join.
+  requested/produced/truth scoring join. ATT, ATE, and QST are executable;
+  CATE is registered but deliberately staged as not implemented.
 * ATE: Added finite-sample synthetic ATE scoring from runner-owned structural
   truth, with ordinary estimator airlock protections and a typed oracle benchmark
   producer.
-* Persistence: Introduced schema-4 fit and score fingerprints so one fit can
-  produce multiple score records, while schema 1-3 resume attempts fail closed.
+* Persistence: Introduced schema-4 fit, score-record, and score-row
+  fingerprints so one fit can produce multiple score records and one QST score
+  record can contain multiple coordinate rows, while schema 1-3 resume attempts
+  fail closed.
 * Surfaces: Added the canonical long-form typed score collection surface and
   preserved ATT/QST helpers as compatibility projections.
 * Staging: Registered CATE as a governed target while Wave 1 deterministically
@@ -22,7 +25,8 @@
 * Gatekeeping: Preserved ATT/QST policy and added only an uncalibrated,
   non-consequential ATE gate slot.
 * Release hygiene: Fixed GenGC wrapper formulas for the v0.2.0 additive-formula
-  parser and routed CI golden-value tolerance guidance into the horizon.
+  parser, corrected README/roxygen claims and current registry inventories, and
+  routed CI golden-value tolerance guidance into the horizon.
 
 # CausalStress 0.1.10
 

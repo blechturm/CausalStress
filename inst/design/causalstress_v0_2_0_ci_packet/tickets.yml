@@ -1,6 +1,6 @@
 version: "0.2.0"
 packet: "causalstress_v0_2_0_ci_packet"
-status: active
+status: ACTIVE
 tickets:
   - id: "CS-1210"
     title: "Add release CI playbook and GitHub Actions R CMD check matrix"

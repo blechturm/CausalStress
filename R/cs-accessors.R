@@ -5,7 +5,7 @@
 #' logs, warnings).
 #'
 #' @param x A result list as returned by [cs_run_single()] or read from pins.
-#' @return A list with elements `att`, `qst`, and `meta`.
+#' @return A list with elements `att`, `qst`, `scores`, and `meta`.
 #' @export
 cs_science_payload <- function(x) {
   if (!is.list(x)) {

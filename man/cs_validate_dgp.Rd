@@ -2,12 +2,12 @@
 % Please edit documentation in R/cs-validate-dgp.R
 \name{cs_validate_dgp}
 \alias{cs_validate_dgp}
-\title{Validate a DGP for schema, determinism, and sanity}
+\title{Validate a synthetic DGP for schema, determinism, and sanity}
 \usage{
 cs_validate_dgp(dgp_fn, n = 1000, seeds = 1:50, verbose = TRUE)
 }
 \arguments{
-\item{dgp_fn}{Function to generate the DGP. Must accept \code{n} and \code{seed}.}
+\item{dgp_fn}{Synthetic DGP generator. Must accept \code{n} and \code{seed}.}
 
 \item{n}{Integer sample size for validation runs.}
 
@@ -25,5 +25,7 @@ A list with elements:
 }
 }
 \description{
-Validate a DGP for schema, determinism, and sanity
+The generator must return the canonical synthetic-DGP contract, including
+uppercase, consecutive, one-based covariates named \code{X1}, ..., \code{Xk}.
+Structural contract violations abort with class \code{causalstress_dgp_error}.
 }

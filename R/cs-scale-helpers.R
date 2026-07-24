@@ -16,7 +16,7 @@ cs_require_staging_for_parallel_persistence <- function(parallel, board, staging
 cs_require_experimental_parallel <- function(parallel, experimental_parallel) {
   if (isTRUE(parallel) && !isTRUE(experimental_parallel)) {
     rlang::abort(
-      message = "`parallel = TRUE` requires `experimental_parallel = TRUE` (v0.1.x experimental parallel mode).",
+      message = "`parallel = TRUE` requires `experimental_parallel = TRUE` (experimental parallel mode).",
       class   = "causalstress_experimental_parallel_error"
     )
   }

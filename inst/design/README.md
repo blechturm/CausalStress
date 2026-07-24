@@ -1,17 +1,35 @@
 # CausalStress Design Governance Index
 
-**Status:** Active authority index
+**Status:** ACTIVE authority index
 **Last updated:** 2026-07-24
 **Current active packets:** `causalstress_v0_2_0_correction_packet` (release corrections) and `causalstress_v0_2_0_ci_packet` (CI/tag gate)
-**Latest completed packet:** `causalstress_v0_2_0_spec_packet` (Wave 1 implementation closed; public v0.2.0 tag blocked until CI packet closes)
-**Accepted RFCs (authority level 4):** RFC-1 Estimand Registry — `rfc/20260616_estimand_registry_synthesis.md`, accepted 2026-06-16 and consumed by ratified Constitution v2.0.0. DGP contract terminology clarifications — `rfc/20260722_covariate_naming_synthesis.md` (seed `rfc/20260722_covariate_naming_seed.md`, response `rfc/20260722_covariate_naming_response.md`, independent review `rfc/20260722_covariate_naming_synthesis_review.md`), accepted 2026-07-24 and consumed by ratified Constitution v2.0.1; the covariate-name validator remains a v0.2.0 release blocker.
+**Latest final packet:** `causalstress_v0_2_0_spec_packet` (Wave 1 implementation final; public v0.2.0 tag blocked until the active correction and CI packets close)
+**Accepted RFCs (authority level 4):** RFC-1 Estimand Registry — `rfc/20260616_estimand_registry_synthesis.md`, accepted 2026-06-16 and consumed by ratified Constitution v2.0.0. DGP contract terminology clarifications — `rfc/20260722_covariate_naming_synthesis.md` (seed `rfc/20260722_covariate_naming_seed.md`, response `rfc/20260722_covariate_naming_response.md`, independent review `rfc/20260722_covariate_naming_synthesis_review.md`), accepted 2026-07-24 and consumed by ratified Constitution v2.0.1 and correction ticket CS-1221.
 **Open RFCs (non-binding):** none.
 **Constitution:** **v2.0.1 ratified 2026-07-24** (`CausalStress Scientific Protocol`) — see `CAUSAL_STRESS_CONSTITUTION.md` Amendment History, `rfc/20260722_covariate_naming_synthesis.md`, and `rfc/20260722_covariate_naming_synthesis_review.md`.
-**Active release boundary:** v0.2.0 ships Constitution v2.0.1, typed ATT/ATE/QST scoring, corrected schema-4 identities, and CI enforcement. CATE, parameterized families, persistence retirement, and the full documentation site are later work requiring separate planning/packets. See `roadmap.md` and `horizon.md`.
+**Active release boundary:** v0.2.0 ships Constitution v2.0.1, typed ATT/ATE/QST scoring, corrected schema-4 identities, and CI enforcement. CATE execution, parameterized families, real-data DGP support, a public DGP-extension API, an authoritative feature roster, persistence retirement, and the full documentation release are later work requiring separate planning/packets. See `roadmap.md` and `horizon.md`.
 
 This file is the entry point for design and governance work in `inst/design/`.
 Every design-document add, move, retirement, or authority change must update this
 index in the same change.
+
+## Packet Lifecycle
+
+Packet lifecycle uses only the following states:
+
+| State | Meaning |
+| --- | --- |
+| `DRAFT` | Proposed authority. Implementation is not authorized. |
+| `ACTIVE` | Current implementation or release-gate authority for its stated scope. Distinct active packets may coexist when their scopes do not conflict. |
+| `FINAL` | Accepted work and closeout evidence are complete. The packet is a historical authority record and is not reopened for later releases. |
+| `SUPERSEDED` | Replaced by a named successor. Retained only to explain lineage. |
+| `ARCHIVED` | Removed from active authority and retained as historical context only. |
+
+Ticket dispositions such as `open`, `implementation_complete_awaiting_review`,
+and `complete_after_review` are not packet lifecycle states. Historical final
+packets are preserved verbatim even if an internal header uses an older word such
+as `ACTIVE` or `CLOSED`; the classification in this index controls current
+authority.
 
 ## Authority Order
 
@@ -55,10 +73,10 @@ active packet, the current authority wins.
 | `release_ci_playbook.md` | Process | CI-backed release sequencing, local WSL gate, and tag-handling playbook. |
 | `templates/` | Process | Canonical packet and closeout templates. |
 | `audit/` | Audit input | Findings must be routed before release. |
-| `causalstress_v0_2_0_ci_packet/` | Active packet | v0.2.0 CI and release-gate infrastructure packet. |
-| `causalstress_v0_2_0_correction_packet/` | Active packet | Release-blocking constitutional, validation, QST-identity, minimal-documentation, and final-publication corrections for v0.2.0. |
-| `causalstress_v0_2_0_spec_packet/` | Final packet | v0.2.0 Wave 1 typed-scoring implementation packet, closed before public tag pending CI. |
-| `causalstress_v0_1_10_spec_packet/` | Final packet | v0.1.10 governance and defect-repair packet, closed on 2026-06-14. |
+| `causalstress_v0_2_0_ci_packet/` | `ACTIVE` packet | v0.2.0 CI and release-gate infrastructure packet. |
+| `causalstress_v0_2_0_correction_packet/` | `ACTIVE` packet | Release-blocking constitutional, validation, QST-identity, minimal-documentation, and final-publication corrections for v0.2.0. |
+| `causalstress_v0_2_0_spec_packet/` | `FINAL` packet | v0.2.0 Wave 1 typed-scoring implementation packet, closed before public tag pending CI. |
+| `causalstress_v0_1_10_spec_packet/` | `FINAL` packet | v0.1.10 governance and defect-repair packet, closed on 2026-06-14. |
 | `rfc/` | RFC records | Accepted syntheses become binding in stated scope. |
 | `research/` | Research notes | Literature/prior-art assessments; informative only unless promoted via RFC or packet. |
 | `research/prior_art_acic_2026_benchmark_audit.md` | Research note | Focused ACIC 2026 prior-art, compatibility, estimand-scope, and incorporation audit; non-binding. |

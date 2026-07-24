@@ -2,7 +2,7 @@
 % Please edit documentation in R/est-tmle.R
 \name{est_tmle_att}
 \alias{est_tmle_att}
-\title{TMLE estimator (ATE target)}
+\title{TMLE ATT estimator}
 \usage{
 est_tmle_att(df, config = list(), tau = cs_tau_oracle, ...)
 }
@@ -27,8 +27,6 @@ For this estimator, \code{ci_method = "default"} maps to \code{"native"}.}
 A list compatible with \code{cs_check_estimator_output()}.
 }
 \description{
-Soft-dependency wrapper around \code{tmle::tmle}. Note: the tmle package targets
-the ATE; when used in CausalStress (ATT benchmarking), the result may be
-biased under treatment effect heterogeneity. This wrapper records the
-estimand target in the metadata and adds a warning.
+Soft-dependency wrapper around \code{tmle::tmle}. The CausalStress estimator
+contract is ATT, so this wrapper extracts \code{fit$estimates$ATT}.
 }

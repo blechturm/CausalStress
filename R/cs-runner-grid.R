@@ -20,8 +20,9 @@
 #' @param staging_dir Optional staging directory for crash recovery.
 #' @param show_progress Logical; whether to display per-seed progress messages.
 #' 
-#' @return A tibble with one row per (dgp_id, estimator_id, seed) run, including
-#'   all columns from cs_run_single(), and bindable into cs_summarise_runs().
+#' @return A tibble with one flattened analysis row per
+#'   `(dgp_id, estimator_id, seed)` run, including `qst` and `scores` list
+#'   columns, suitable for [cs_summarise_runs()].
 #' @export
 cs_run_grid <- function(dgp_ids,
                         estimator_ids,

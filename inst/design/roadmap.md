@@ -3,7 +3,7 @@
 **Status:** Active roadmap
 **Authority:** Planning document (authority level 5 per `README.md`); below the
 Constitution, `contracts.md`, active packets, and accepted RFC syntheses.
-**Last updated:** 2026-07-21
+**Last updated:** 2026-07-24
 
 ## Completed: v0.1.10
 
@@ -13,101 +13,31 @@ templates) plus the v0.1.9 audit Rev 2 repair cycle. Packet
 
 ------------------------------------------------------------------------
 
-## Current Program: v0.2.0 — "Converge & Freeze"
+## Current Program: close v0.2.0
 
-**Theme.** v0.2.0 lands the public-API break — the typed **estimand registry**
-(ratified Constitution v2.0.0 / accepted RFC-1) — **once**, in Wave 1, behind a
-legacy compatibility shim, then **converges and freezes** the presentation surface
-on top of it. Everything after the freeze is **additive**: CATE, new DGP families,
-documentation.
+v0.2.0 is a narrow public-release closure, not the complete multi-wave program
+described by earlier roadmap revisions.
 
-**Guiding principle — the break is owned by RFC-1; the freeze comes after, not
-before.** The single largest API change (the estimator output contract
-`list(outputs, meta)`) is decided by RFC-1 and implemented in **Wave 1** with a
-legacy `list(att, qst, meta)` shim, so existing estimators keep running. The
-UX-convergence work (**RFC-2a**) is the *presentation / collector* surface that
-displays typed scores — it cannot converge or freeze until that machinery exists,
-so it **follows** Wave 1 (RFC-1 §1.13, §4). That is what "break once" means here:
-RFC-2a stabilizes what Wave 1 produced; it is not a second break. (Earlier drafts
-of this roadmap put RFC-2 before Wave 1 — that contradicted the accepted RFC-1 and
-is corrected below.)
+**Implemented release surface:** Constitution v2.0.1; typed ATT, finite-sample
+ATE, and QST scoring; canonical long-form score collection; schema-4 fit,
+score-record, and score-row identities; legacy ATT/QST projections; and CI/release
+enforcement. CATE remains a registered descriptor with deterministic
+`target_not_implemented` behavior. It is not an implemented v0.2.0 capability.
 
-### Phase order
+**Remaining release work:** correct only release-blocking README/roxygen and
+governance drift, rerun the local release gate, publish the immutable v0.1.10
+archive, and obtain green branch/main/tag CI evidence. The correction and CI
+packets named in `README.md` own this work.
 
-0. **[DONE] Constitution v2.0.0 ratified (2026-06-16).** Typed estimand registry
-   (ATT, ATE, QST, CATE), typed estimator output contract, per-estimand
-   gatekeeper, fit-artifact/score-record persistence grain. The legal foundation;
-   RFC-1 consumed.
+**Explicitly deferred from v0.2.0:** CATE execution, parameterized families,
+real-data DGP support, a public DGP-extension API, an authoritative feature
+roster, persistence retirement, the pkgdown site, and comprehensive vignettes.
+No item in that list may be inferred from the v0.2.0 target descriptors or
+historical Wave 2 language.
 
-1. **CI / continuous-enforcement infrastructure.** GitHub Actions guarding every
-   subsequent phase. Depends on nothing — the existing test suite and `R CMD check`
-   run today — so it starts **now, concurrent with Wave 1 design**, before the
-   breaking implementation lands. Constitutionally motivated: Article VII §7.8
-   ("compliance MUST be enforced continuously by automated tests") and Article II
-   §2.2 (the CI OS/R matrix is the declared substrate for cross-substrate
-   reproducibility evidence). Scope:
-   - `R CMD check` via `r-lib/actions` on a matrix (ubuntu release + devel,
-     windows, macOS), `NOT_CRAN=true` for the full test suite.
-   - Test coverage (covr) and a lint job (lintr).
-   - A reproducibility-substrate job that records the substrate per Art. II §2.2.
-   - The pkgdown build/deploy job is added later with the documentation cycle
-     (Phase 6). **Green CI becomes a v0.2.0 release-gate requirement.**
-
-2. **Wave 1 implementation packet — the API break.** The one coordinated breaking
-   change, behind the legacy shim: typed scoring for **ATT/ATE**, the
-   `outputs`/`meta` estimator output shape (the RFC-1 contract), the fit/score
-   split, **schema-4** migration (`fit_fingerprint` / `score_fingerprint`, with the
-   score-record layer reserving the Wave 2 eval-identity fields so Wave 2 stays
-   additive), the typed **collection/tidy/science** output reshaping, and the
-   scorer-only truth channel for ATE (`mean(structural_te)` read off the truth
-   side, never exposed to estimators). Consumes RFC-1; updates `contracts.md`.
-   CATE staged out via `target_not_implemented`. Lands under green CI from Phase 1.
-   Spec drafted in `causalstress_v0_2_0_spec_packet/`; activates after its review
-   amendments are folded in and the ticketing-blocking open decisions are closed.
-
-3. **RFC-2a — scalar/typed-scoring UX freeze + API-stability policy.** Converges
-   and freezes the presentation / collector / runner UX for the now-shipped typed
-   scalar surface (RFC-1 §1.13). May freeze **after** Wave 1; the CATE UX portion
-   stays experimental until Wave 2. Carries the stability contract — deprecation,
-   semver commitment, and the pre-CRAN change budget — that makes "keep it
-   constant" enforceable rather than aspirational.
-
-4. **Wave 2 implementation packet — CATE.** Additive on the frozen scalar surface:
-   held-out evaluation sample (eval seed/size/`unit_id` per Art. II §2.2), the
-   covariates+`unit_id` predict airlock, PEHE plus a robust companion metric, and
-   the heterogeneity-**detection** gatekeeper component (not per-unit ≈0). No API
-   break.
-
-5. **RFC-2b (CATE UX freeze) + RFC-3 (families).** **RFC-2b** freezes the
-   per-unit / CATE presentation surface once Wave 2 has fixed its shape. **RFC-3**
-   reconciles `CAUSAL_STRESS_FAMILIES_SPEC_v3_2_final.md` into the governed
-   registry: stress-dial-indexed families with frozen oracle truth under Article
-   VII immutability — the infrastructure behind continuous breakdown / "kill-plot"
-   studies. Families are additive DGPs on the stable contract; their *design* may
-   begin in parallel earlier since it does not touch the estimator/runner API, but
-   they land after the surface freezes.
-
-6. **Documentation cycle.** Vignettes, per-DGP scientific documentation, DGP
-   registry docs, and the pkgdown site (deployed via a CI job extending Phase 1).
-   Sequenced last because docs rot if written before the API freezes — but staged:
-   the API-reference portion may start the moment the scalar surface freezes
-   (post-Wave 1 / RFC-2a) and run concurrently with Wave 2 and RFC-3; the final
-   pkgdown/vignette polish covers the families and is a **release-gate requirement**
-   for v0.2.0 so it is not skipped.
-
-### Why this order (dependencies)
-
-- **CI first**: it depends on nothing and protects every later phase, so it lands
-  before the breaking implementation rather than after the damage.
-- **Wave 1 before RFC-2a**, not the reverse: the API break is owned by RFC-1 and
-  lands in Wave 1 behind a legacy shim; RFC-2a *freezes the presentation surface*,
-  which can only converge after typed scoring exists (RFC-1 §1.13, §4). Putting the
-  UX RFC first would freeze a UI for machinery that does not yet exist.
-- **Wave 1 → Wave 2; RFC-2a → RFC-2b**: CATE and its UX freeze are additive and
-  only safe to build on the proven scalar infrastructure.
-- **Docs last**: documentation written against a moving API is wasted; it follows
-  the freeze and the families it must describe; its pkgdown deploy extends the
-  Phase 1 CI.
+The closed `causalstress_v0_2_0_spec_packet/` remains the historical Wave 1
+record. Its internal status headers are not reopened or rewritten; current
+packet lifecycle is declared by the governance index.
 
 ------------------------------------------------------------------------
 
@@ -164,6 +94,29 @@ Python spokes, or a general storage platform. RDS is the stable R-native bridge;
 the later evidence-lake RFC owns normalized language-neutral Parquet/JSON
 evidence. The legacy converter creates derivative artifacts and never rewrites,
 deletes, or upgrades the evidential status of original campaign evidence.
+
+------------------------------------------------------------------------
+
+## Planning gate for v0.3.0 and later science
+
+Do not assume that CATE is automatically the next scientific release. Before a
+v0.3.0 packet is drafted, hold a focused planning session that compares:
+
+1. **Parameterized DGP families**, which are currently the more immediate
+   scientific need because they support continuous breakdown curves and
+   kill-plot studies; and
+2. **CATE execution**, which would exercise held-out unit-level outputs and
+   resolve remaining target/persistence ambiguities alongside ATT/ATE/QST.
+
+The planning session may choose families first or a deliberately bounded
+parallel program. It must name consuming studies, dependencies, identity and
+truth requirements, and independent review gates. This roadmap does not decide
+that sequence in advance.
+
+A separate documentation release, with its version assigned during planning,
+owns the pkgdown site, a report for every DGP, a canonical-workflow vignette,
+and contract vignettes for user-defined estimators and DGPs. Until a public DGP
+extension contract is designed, documentation must not advertise one.
 
 ------------------------------------------------------------------------
 

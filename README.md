@@ -1,431 +1,236 @@
 
-<!-- README.md is generated from README.Rmd. Please edit that file -->
+<!-- README.md is generated from README.Rmd. Please edit that file. -->
 
 # CausalStress
 
-> **⚠️ Early Access (v0.1.x)**  
-> CausalStress is currently in **Alpha**.  
-> The **architecture is stable and fully tested**, but the **DGP and
-> Estimator libraries are not validated yet** in this release.  
-> We encourage experimentation, but **do not use for production
-> research** until v0.2.0.
+> **CausalStress v0.2.0 scientific status** CausalStress has a tested
+> execution and evidence contract, but most bundled DGPs have not
+> completed scientific validation. Use it for development and governed
+> benchmarking, not as evidence that an estimator is scientifically
+> valid across the bundled scenarios.
 
-## ⚠️ Important Disclaimer (DGP Library Status: Experimental)
+CausalStress is an R framework for benchmarking causal-inference
+estimators against governed synthetic data-generating processes (DGPs).
+It separates estimator-visible data from runner-owned truth, records
+version and provenance metadata, and exposes typed score records for
+analysis.
 
-CausalStress v0.1.x ships with an expanded *DGP zoo*, but **these DGPs
-have not yet undergone full human validation**. All implementations
-currently pass the Constitutional test suite (Airlock, truth separation,
-determinism, reproducible contracts), but they have **not yet been
-manually reviewed for scientific interpretation, historical correctness,
-or citation-accurate replication**.
+## Current scientific scope
 
-Accordingly:
+Version 0.2.0 implements scoring for:
 
-- **Do not write papers or draw scientific conclusions based on the
-  current DGP zoo.**
-- The only DGPs considered *validated* in v0.1.x are:
-  - `synth_baseline`
-  - `synth_heavytail`
-- All other DGPs are **experimental** and may change in minor ways
-  during the validation process (vignettes, plots, theoretical
-  motivations, and source citations will be added in upcoming versions).
+- **ATT**: average treatment effect on the treated;
+- **ATE**: finite-sample average treatment effect;
+- **QST**: quantile shift for the treated.
 
-A full DGP validation wave is planned for **v0.3.x**, after the entire
-suite is complete and stable.
+**CATE is registered but not implemented.** A CATE-only task fails
+closed; when CATE is included in a mixed request, it is represented by a
+`target_not_implemented` status row. This keeps the intended target
+explicit without claiming a working CATE benchmark.
 
-------------------------------------------------------------------------
+All bundled DGPs are **synthetic**. Real-data DGP support is planned,
+but no real-data DGP or public DGP-registration API exists in v0.2.0.
 
-## Note on LLM-Assisted Code Generation
+The registry contains 12 DGP IDs and 24 immutable versioned entries. The
+current default stable versions are `synth_baseline` and
+`synth_heavytail`; the other ten DGP IDs are experimental and produce a
+governance warning when selected.
 
-CausalStress is developed at high velocity, and part of that
-productivity comes from using LLMs **as drafting assistants** mainly for
-generating boilerplate R code, templates, and scaffolding for DGPs and
-internal helpers.
+| DGP ID                            | Current status |
+|-----------------------------------|----------------|
+| `synth_baseline`                  | stable         |
+| `synth_heavytail`                 | stable         |
+| `synth_placebo_tau0`              | experimental   |
+| `synth_qte1`                      | experimental   |
+| `synth_nonlinear_heteroskedastic` | experimental   |
+| `synth_overlap_stressed`          | experimental   |
+| `synth_tilt_mild`                 | experimental   |
+| `synth_placebo_nonlinear`         | experimental   |
+| `synth_placebo_heavytail`         | experimental   |
+| `synth_placebo_tilted`            | experimental   |
+| `synth_placebo_kangschafer`       | experimental   |
+| `synth_hd_sparse_plm`             | experimental   |
 
-Two clarifications are important:
+Passing the package contract and validation suite establishes
+deterministic execution, schema conformance, and truth separation. It
+does not replace human review of a DGP’s scientific interpretation,
+historical fidelity, or citations.
 
-1.  **LLMs do not define or validate the scientific content.**  
-    All generated code is rewritten, integrated, and then constrained by
-    the CausalStress *Constitution*: deterministic RNG, strict truth
-    separation, Airlock enforcement, reproducibility guarantees,
-    versioned registries, and a comprehensive test suite.  
-    The **framework**, not the LLM, is the source of correctness.
+## What the framework enforces
 
-2.  **LLM-generated code is never accepted without human oversight.**  
-    Until every DGP is manually validated, all LLM-assisted DGPs remain
-    **experimental**. A dedicated vignette will accompany each one,
-    providing plots, structural formulas, references, and a motivation
-    for what the DGP is meant to stress-test.
+- **Truth separation.** Synthetic DGPs return observed data and
+  runner-owned structural/distributional truth through separate contract
+  fields.
+- **Airlock sanitation.** Estimators invoked through the runner do not
+  receive `y0`, `y1`, `p`, or `structural_te` unless an explicitly
+  governed oracle grant permits a named truth column. Code that bypasses
+  the runner is outside this guarantee.
+- **Deterministic task RNG.** Each task is seeded at the runner boundary
+  under the governed RNG contract.
+- **Versioned identity.** Results carry DGP/estimator versions, fit
+  identity, score-record identity, score-row identity, truth version,
+  and configuration identity.
+- **Persistence and resume.** Serial runs can be written to a `pins`
+  board. Parallel persistence uses worker staging followed by controlled
+  consolidation.
 
-Using modern tooling accelerates development, but the **governance,
-scientific responsibility, and quality control remain human-driven**.
-Once validation is complete, the “experimental” label will be removed.
+The governing rules and operational contracts live under
+[`inst/design/`](inst/design/README.md).
 
-For now, **no published research should rely on unvalidated DGPs.**
+## Installation
 
-# What is CausalStress?
-
-**CausalStress** is a **scientific instrument** for benchmarking causal
-inference estimators.  
-It enforces strict *Constitutional Guarantees* to ensure:
-
-- reproducibility
-- comparability
-- fairness
-- version safety
-- crash resilience
-
-even as estimators and DGPs grow increasingly complex.
-
-------------------------------------------------------------------------
-
-# Why This Exists
-
-Causal inference simulations today are often fragile:
-
-- **Truth Drift:** The “true effect” depends on the seed or sample
-  instead of the structural model.  
-- **Data Leakage:** Estimators accidentally see `y0`, `y1`, or true
-  `p`.  
-- **Silent Failure:** One crash = three days lost.  
-- **Version Drift:** Results from last month can’t be reproduced because
-  code changed silently.
-
-These are **not** coding problems… They are **governance problems**.
-
-CausalStress solves them by introducing a **Constitution**: a simple set
-of rules that enforce scientific hygiene.
-
-Not a manifesto.  
-Not philosophy.  
-Just **guardrails** for reliable science.
-
-------------------------------------------------------------------------
-
-# The Constitutional Guarantees
-
-### **1. Two-Tier Truth (Article I)**
-
-True effects are computed using a massive Oracle sample ($N=10^6$),
-independent of the simulation sample.
-
-### **2. The Airlock (Article III)**
-
-Forbidden columns are physically removed before any estimator sees the
-data:
-
-    y0, y1, p, structural_te
-
-Leakage is prevented for estimators that respect the CausalStress
-interface: forbidden columns (`y0`, `y1`, `p`, `structural_te`) are
-stripped before data reach the estimator. Bypassing this requires
-*deliberate* violation of the framework’s conventions.
-
-### **3. Atomic Persistence (Article VI)**
-
-Each seed is immediately saved to a `pins` board.  
-If your cluster dies on seed 999/1000 you’re safe.
-
-### **4. Provenance & Time Travel (Article II)**
-
-Every result includes:
-
-- Git hash  
-- Timestamp  
-- Full R Session Info
-
-So you can always reproduce or load old runs.
-
-### Architecture
-
-``` mermaid
-flowchart LR
-    %% Style Definitions
-    classDef input fill:#D1E8E2,stroke:#333,stroke-width:1px;
-    classDef safe fill:#FFD1D1,stroke:#333,stroke-width:1px;
-    classDef store fill:#FFE4B5,stroke:#333,stroke-width:1px;
-    classDef view fill:#E6E6FA,stroke:#333,stroke-width:1px;
-
-    subgraph Registries ["1. Registries"]
-        direction TB
-        DGP["DGP<br/>(Formula + Truth)"]:::input
-        Est["Estimator<br/>(Function)"]:::input
-    end
-
-    subgraph Runner ["2. Constitutional Runner"]
-        direction TB
-        Gen((Generate))
-        Airlock{{"🔒 AIRLOCK<br/>(Strip y0, y1, p)"}}:::safe
-        Boot((Bootstrap))
-        
-        Gen --> Airlock
-        Airlock --> Boot
-    end
-
-    subgraph Output ["3. Output"]
-        Pins[("💾 Persistence<br/>(Pins Board)")]:::store
-        Tidy["📄 cs_tidy()<br/>(Analysis Table)"]:::view
-    end
-
-    %% Connections
-    DGP --> Gen
-    Est --> Boot
-    Boot --> Pins
-    Boot --> Tidy
-```
-
-------------------------------------------------------------------------
-
-# Installation
+CausalStress is currently installed from GitHub:
 
 ``` r
 # install.packages("pak")
 pak::pak("blechturm/CausalStress")
 ```
 
-------------------------------------------------------------------------
+## Canonical workflow
 
-# The Workflow
-
-**Run → Persist → Audit → Tidy**
-
-We benchmark two estimators (`lm_att`, `ipw_att`) on two DGPs:
-
-- `synth_baseline`  
-- `synth_heavytail`
-
-More are coming soon, including **theory-backed stress DGPs** and
-**famous datasets** (IHDP, Lalonde, Kang–Schafer, ACIC-style
-generators).
-
-------------------------------------------------------------------------
-
-## 1. Run a Campaign
+`cs_run_single()` returns a structured result list. The typed `scores`
+table is the canonical scoring surface; `att` and `qst` remain
+compatibility projections.
 
 ``` r
 library(CausalStress)
 library(dplyr)
+
+single <- cs_run_single(
+  dgp_id = "synth_baseline",
+  estimator_id = "lm_att",
+  n = 500,
+  seed = 1
+)
+
+names(single)
+#> [1] "outputs"    "scores"     "att"        "qst"        "boot_draws"
+#> [6] "meta"       "provenance"
+
+cs_collect_scores(single) |>
+  select(estimand_target_id, metric_id, estimate, truth, error) |>
+  knitr::kable(digits = 3)
+```
+
+| estimand_target_id | metric_id   | estimate | truth |  error |
+|:-------------------|:------------|---------:|------:|-------:|
+| att                | point_error |    1.037 | 1.139 | -0.102 |
+
+For repeated benchmarking, run a grid, optionally persist each serial
+result, then summarize or audit it:
+
+``` r
 library(pins)
 
 board <- pins::board_temp()
 
 runs <- cs_run_grid(
-  dgp_ids       = c("synth_baseline", "synth_heavytail"),
+  dgp_ids = c("synth_baseline", "synth_heavytail"),
   estimator_ids = c("lm_att", "ipw_att"),
-  n             = 500,
-  seeds         = 1:5,
-  bootstrap     = TRUE,
-  B             = 100,
-  board         = board,
-  skip_existing = TRUE
+  n = 500,
+  seeds = 1:3,
+  board = board,
+  show_progress = FALSE
+)
+
+cs_summarise_runs(runs) |>
+  select(dgp_id, estimator_id, n_runs, mean_error, mean_abs_error) |>
+  knitr::kable(digits = 3)
+```
+
+| dgp_id          | estimator_id | n_runs | mean_error | mean_abs_error |
+|:----------------|:-------------|-------:|-----------:|---------------:|
+| synth_baseline  | ipw_att      |      3 |     -0.069 |          0.092 |
+| synth_baseline  | lm_att       |      3 |      0.002 |          0.072 |
+| synth_heavytail | ipw_att      |      3 |     -0.681 |          0.681 |
+| synth_heavytail | lm_att       |      3 |     -0.552 |          0.552 |
+
+``` r
+
+cs_audit(board) |>
+  select(dgp_id, estimator_id, seed, estimator_version) |>
+  head() |>
+  knitr::kable()
+```
+
+| dgp_id         | estimator_id | seed | estimator_version |
+|:---------------|:-------------|-----:|:------------------|
+| synth_baseline | ipw_att      |    1 | 0.2.0             |
+| synth_baseline | ipw_att      |    2 | 0.2.0             |
+| synth_baseline | ipw_att      |    3 | 0.2.0             |
+| synth_baseline | lm_att       |    1 | 0.2.0             |
+| synth_baseline | lm_att       |    2 | 0.2.0             |
+| synth_baseline | lm_att       |    3 | 0.2.0             |
+
+For new analysis code, prefer:
+
+``` r
+scores <- cs_collect_scores(runs)
+```
+
+`cs_collect_att()` and `cs_collect_qst()` are retained as compatibility
+projections for existing ATT/QST workflows.
+
+## Estimators
+
+The package registry contains eight estimators. The three core
+estimators need only the package’s hard dependencies; the remaining
+estimators require their listed optional packages.
+
+| Estimator ID | Target output | Dependency         |
+|--------------|---------------|--------------------|
+| `oracle_att` | ATT, ATE      | core               |
+| `lm_att`     | ATT           | core               |
+| `ipw_att`    | ATT           | core               |
+| `gengc`      | ATT, QST      | GenGC              |
+| `gengc_dr`   | ATT, QST      | GenGC              |
+| `grf_dr_att` | ATT           | grf                |
+| `bart_att`   | ATT           | bartCause          |
+| `tmle_att`   | ATT           | tmle, SuperLearner |
+
+User-defined estimators can be added with `cs_register_estimator()`. See
+`?cs_register_estimator` for the current contract. A fuller
+estimator-contract vignette is deferred to the dedicated documentation
+release.
+
+## Experimental parallel execution
+
+Parallel execution exists, but remains explicitly experimental. It
+requires both `parallel = TRUE` and `experimental_parallel = TRUE`,
+emits a warning, and records the backend/thread-cap provenance. When a
+`board` is supplied, a `staging_dir` is mandatory so workers do not
+write directly to pins.
+
+``` r
+future::plan(future::multisession, workers = 2)
+
+parallel_runs <- cs_run_grid(
+  dgp_ids = "synth_baseline",
+  estimator_ids = "lm_att",
+  n = 500,
+  seeds = 1:20,
+  board = board,
+  parallel = TRUE,
+  experimental_parallel = TRUE,
+  staging_dir = tempfile("causalstress-staging-")
 )
 ```
 
-------------------------------------------------------------------------
+The explicit opt-in is a readiness boundary, not a production-safety
+claim.
 
-## 2. Tidy the Results
+## Documentation scope
 
-``` r
-runs_tidy <- runs %>%
-  cs_tidy()
+This README and the generated function reference describe the v0.2.0
+release surface. A separate documentation release will add the pkgdown
+site, reports for every DGP, a canonical-workflow vignette, and contract
+vignettes for user-defined estimators and DGPs. The future DGP vignette
+does not imply that a public DGP-registration API already exists.
 
-runs_tidy %>%
-  select(dgp_id, estimator_id, seed, est_att, att_ci_width, att_covered) %>%
-  head(6)
-#> # A tibble: 6 × 6
-#>   dgp_id          estimator_id  seed est_att att_ci_width att_covered
-#>   <chr>           <chr>        <int>   <dbl>        <dbl> <lgl>      
-#> 1 synth_baseline  lm_att           1   1.04         0.238 TRUE       
-#> 2 synth_baseline  lm_att           2   1.12         0.228 TRUE       
-#> 3 synth_baseline  lm_att           3   1.26         0.245 TRUE       
-#> 4 synth_baseline  lm_att           4   1.11         0.242 TRUE       
-#> 5 synth_baseline  lm_att           5   1.18         0.214 TRUE       
-#> 6 synth_heavytail lm_att           1   0.106        2.47  FALSE
-```
+## Citation
 
-------------------------------------------------------------------------
-
-## 3. Scorecard Summary
+To obtain the citation for the installed package version:
 
 ``` r
-
-runs_tidy %>%
-cs_summarise_runs() %>% 
-  select(dgp_id, estimator_id, RMSE = mean_error, Coverage = mean_att_covered)
-#> # A tibble: 4 × 4
-#>   dgp_id          estimator_id    RMSE Coverage
-#>   <chr>           <chr>          <dbl>    <dbl>
-#> 1 synth_baseline  ipw_att      -0.0116      0.8
-#> 2 synth_baseline  lm_att        0.0178      1  
-#> 3 synth_heavytail ipw_att       1.95        0.6
-#> 4 synth_heavytail lm_att        2.17        0.4
+citation("CausalStress")
 ```
-
-------------------------------------------------------------------------
-
-## 4. Audit and Time Travel
-
-``` r
-
-board %>%
-  cs_audit() %>%
-  select(dgp_id, estimator_id, seed, git_hash, timestamp) %>%
-  head(5)
-#> # A tibble: 5 × 5
-#>   dgp_id         estimator_id  seed git_hash                 timestamp          
-#>   <chr>          <chr>        <int> <chr>                    <dttm>             
-#> 1 synth_baseline ipw_att          1 a0c3d96977275fa4343be74… 2025-11-30 23:09:32
-#> 2 synth_baseline ipw_att          2 a0c3d96977275fa4343be74… 2025-11-30 23:09:33
-#> 3 synth_baseline ipw_att          3 a0c3d96977275fa4343be74… 2025-11-30 23:09:33
-#> 4 synth_baseline ipw_att          4 a0c3d96977275fa4343be74… 2025-11-30 23:09:34
-#> 5 synth_baseline ipw_att          5 a0c3d96977275fa4343be74… 2025-11-30 23:09:35
-```
-
-You can retrieve any run from any git commit, ever.
-
-------------------------------------------------------------------------
-
-# Extensibility: Registries & Plugins
-
-CausalStress maintains two central registries:
-
-### DGP Registry
-
-``` r
-CausalStress:::cs_dgp_registry()
-#> # A tibble: 12 × 9
-#>    dgp_id                   type  generator version description status rationale
-#>    <chr>                    <chr> <list>    <chr>   <chr>       <chr>  <chr>    
-#>  1 synth_baseline           synt… <fn>      1.3.0   Baseline l… stable Validate…
-#>  2 synth_heavytail          synt… <fn>      1.3.0   Same linea… stable Validate…
-#>  3 synth_placebo_tau0       synt… <fn>      1.3.0   Sharp-null… exper… Pending …
-#>  4 synth_qte1               synt… <fn>      1.3.0   Sign-flip … exper… Pending …
-#>  5 synth_nonlinear_heteros… synt… <fn>      1.3.0   Nonlinear … exper… Pending …
-#>  6 synth_overlap_stressed   synt… <fn>      1.3.0   Overlap-st… exper… Pending …
-#>  7 synth_tilt_mild          synt… <fn>      1.3.0   Mildly til… exper… Pending …
-#>  8 synth_placebo_nonlinear  synt… <fn>      1.3.0   Placebo no… exper… Pending …
-#>  9 synth_placebo_heavytail  synt… <fn>      1.3.0   Placebo he… exper… Pending …
-#> 10 synth_placebo_tilted     synt… <fn>      1.3.0   Placebo ti… exper… Pending …
-#> 11 synth_placebo_kangschaf… synt… <fn>      1.4.0   Kang-Schaf… exper… Pending …
-#> 12 synth_hd_sparse_plm      synt… <fn>      1.4.0   High-dim s… exper… Pending …
-#> # ℹ 2 more variables: date_status_changed <chr>, design_spec <chr>
-```
-
-### Estimator Registry
-
-``` r
-CausalStress:::cs_estimator_registry()
-#> # A tibble: 3 × 9
-#>   estimator_id type   generator oracle supports_qst version description   source
-#>   <chr>        <chr>  <list>    <lgl>  <lgl>        <chr>   <chr>         <chr> 
-#> 1 oracle_att   oracle <fn>      TRUE   FALSE        0.1.2   Oracle ATT u… core  
-#> 2 lm_att       gcomp  <fn>      FALSE  FALSE        0.1.2   Linear outco… core  
-#> 3 ipw_att      ipw    <fn>      FALSE  FALSE        0.1.2   Inverse-prob… core  
-#> # ℹ 1 more variable: requires_pkgs <list>
-```
-
-DGPs and Estimators can be added via:
-
-- `cs_register_dgp()`  
-- `cs_register_estimator()`
-
-The Airlock guarantees that custom estimators receive **only legal
-inputs**.
-
-### Upcoming DGP Library (v0.2–v0.3)
-
-We will add **theory-backed stress tests**:
-
-- heteroskedastic confounding  
-- heavy-tail outcomes  
-- missingness mechanisms  
-- weak instruments  
-- near-violations of ignorability  
-- overlap collapse scenarios
-
-And later:
-
-- Lalonde  
-- IHDP  
-- Kang & Schafer  
-- ACIC generators  
-- DoubleML benchmark datasets
-
-------------------------------------------------------------------------
-
-# Python Support (v0.4.0)
-
-Many SOTA estimators are Python-only (EconML, DoWhy, DragonNet).  
-We support them with a **Hub & Spoke** model:
-
-### R = Hub
-
-- Generates data  
-- Enforces truth & airlock  
-- Stores provenance  
-- Persists results atomically
-
-### Python = Spoke
-
-- Receives Parquet  
-- Trains estimator  
-- Returns predictions in a strict schema
-
-This ensures **fairness, reproducibility, and no leakage** across
-languages.
-
-------------------------------------------------------------------------
-
-# Parallelization (Constitutional Requirement)
-
-Parallel execution is explicitly part of the Constitution (Article V:
-*Computational Safety*).
-
-**Why not in the MVP?**  
-Parallelism touches:
-
-- RNG determinism  
-- Progress bars  
-- Atomic writes  
-- Resume logic  
-- Future cluster safety
-
-Now that all foundations are stable, parallelization is coming in
-**v0.2.0**.
-
-Planned API:
-
-``` r
-library(future)
-plan(multisession)
-
-with_progress({
-  cs_run_grid(..., parallel = TRUE)
-})
-```
-
-Thanks to atomic seeds, this is **race-free, deterministic, and
-resume-safe**.
-
-------------------------------------------------------------------------
-
-# Vignettes
-
-See:
-
-``` r
-
-vignette("from-run-to-history", package = "CausalStress")
-```
-
-------------------------------------------------------------------------
-
-# Citation
-
-If you use CausalStress, please cite:
-
-> Thomasberger, M. (2025). *CausalStress: A rigorous benchmarking
-> framework built on a Constitutional architecture..* R package version
-> 0.1.x.
-
-\`\`\`

@@ -1,6 +1,6 @@
 version: "0.2.0"
 packet: "causalstress_v0_2_0_correction_packet"
-status: active
+status: ACTIVE
 tickets:
   - id: "CS-1220"
     title: "Ratify and apply Constitution v2.0.1"
@@ -62,7 +62,7 @@ tickets:
     constitutional_check: "No overclaim about scientific status, real-data support, estimands, airlock security, or parallelism"
     test_obligation: "README renders, roxygen regenerates, stale/nonexistent claims are absent, examples parse/run, and R CMD check has no documentation errors or warnings"
     review_gate: "Release-facing truthfulness review"
-    disposition: open
+    disposition: "complete_after_review"
 
   - id: "CS-1224"
     title: "Normalize release governance and route deferrals"
@@ -77,7 +77,7 @@ tickets:
     constitutional_check: "Do not edit the closed Wave 1 v0.2.0 spec or claim deferred implementation"
     test_obligation: "Packet states and v0.2.0 boundary are unambiguous; CATE, families, real-data, feature roster, persistence, and full docs are routed"
     review_gate: "Governance consistency review"
-    disposition: open
+    disposition: "complete_after_review"
 
   - id: "CS-1225"
     title: "Run the post-correction local release gate"
@@ -89,7 +89,7 @@ tickets:
     constitutional_check: "Refuse closeout while any constitutional violation remains open"
     test_obligation: "Fresh focused/full tests, strict validation, lint, coverage, substrate, Windows/WSL checks, acceptance audit, SHA, and commands are recorded"
     review_gate: "Independent final local-gate review feeding CS-1214"
-    disposition: "blocked_by_CS-1221_CS-1222_CS-1223_CS-1224"
+    disposition: open
 
   - id: "CS-1226"
     title: "Publish the immutable v0.1.10 archival release"

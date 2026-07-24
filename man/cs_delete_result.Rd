@@ -21,6 +21,9 @@ cs_delete_result(board, dgp_id, estimator_id, n, seed, version = NULL)
 result pin is deleted; when omitted, legacy and versioned pins matching the
 tuple are deleted.}
 }
+\value{
+Logical scalar indicating whether any pin was deleted.
+}
 \description{
 Delete a single result pin
 }

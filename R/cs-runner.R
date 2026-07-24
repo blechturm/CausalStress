@@ -18,14 +18,15 @@
 #' @param config List of estimator configuration options. Common fields include
 #'   `ci_method`, `n_boot`, and estimator-specific hyperparameters. See
 #'   [cs_ci_methods] for CI semantics.
-#' @param board Optional pins board. If provided, results can be persisted by
-#'   higher-level runners.
+#' @param board Optional pins board. If provided, the completed structured
+#'   result is persisted before it is returned.
 #' @param max_runtime Numeric scalar; maximum allowed runtime (seconds) for the
 #'   estimator call. Defaults to `Inf`.
 #' @param ... Additional arguments forwarded to the estimator generator.
 #'
-#' @return A tibble with one row containing point estimates, optional CI
-#'   columns, provenance metadata, and any captured warnings/errors.
+#' @return A structured result list with `outputs`, canonical typed `scores`,
+#'   compatibility projections `att` and `qst`, optional `boot_draws`, and
+#'   separate `meta` and `provenance` components.
 #' @export
 cs_run_single <- function(
   dgp_id,
@@ -523,8 +524,9 @@ cs_run_single <- function(
 #' Run a DGP x estimator combination over multiple seeds
 #'
 #' This function repeatedly calls [cs_run_single()] for a given DGP and
-#' estimator, using a vector of seeds. It returns a tibble with one row
-#' per seed and the same columns as [cs_run_single()].
+#' estimator, using a vector of seeds. It flattens each structured result into
+#' one analysis row while retaining QST and canonical score tables in list
+#' columns.
 #'
 #' @param dgp_id Character scalar, identifier of the DGP (e.g., "synth_baseline").
 #' @param estimator_id Character scalar, identifier of the estimator (e.g., "oracle_att").
@@ -554,10 +556,9 @@ cs_run_single <- function(
 #' @param experimental_parallel Logical; must be `TRUE` to enable parallel mode.
 #' @param staging_dir Optional staging directory for crash recovery.
 #'
-#' @return A tibble with one row per seed and at least the columns returned
-#'   by [cs_run_single()], including `dgp_id`, `estimator_id`, `n`, `seed`,
-#'   `oracle`, `supports_qst`, `true_att`, `est_att`, `att_error`,
-#'   `att_abs_error`.
+#' @return A tibble with one row per seed. Scalar identifiers and ATT metrics
+#'   are flattened; QST and canonical typed score records are retained in the
+#'   `qst` and `scores` list columns.
 #'
 #' @export
 cs_run_seeds <- function(

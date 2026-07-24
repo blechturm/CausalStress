@@ -2,8 +2,34 @@
 
 **Status:** Non-binding parking lot
 
-Items here are deliberately outside the active v0.1.10 scope unless promoted by
-an accepted RFC or a future spec packet.
+Items here are deliberately outside the v0.2.0 public-release boundary unless
+promoted by an accepted RFC or a future spec packet.
+
+## Routed v0.2.0 Deferrals (2026-07-24)
+
+- **Future synthetic-extension names.** User-defined synthetic DGPs remain bound
+  to uppercase, consecutive `X1...Xk` covariates under Constitution v2.0.1. A
+  public extension API that permits semantic feature names would require
+  explicit constitutional reconsideration, likely a major amendment, and is not
+  authorized by the v0.2.0 correction packet.
+- **Feature roster and real-data DGPs.** Real-data DGP support is planned but not
+  implemented. The future real-data RFC must define a runner-supplied
+  authoritative feature roster before semantic real-data covariates are exposed
+  to estimators. New code must not generalize `grep("^X")` or an exclusion list
+  into a real-data contract; those are current synthetic implementation details.
+  The machine discriminator remains `type = "real"`, with no registered rows.
+- **Parameterized families and CATE.** Both remain candidates for the post-v0.2.1
+  science program. Parameterized families are the more immediate scientific need;
+  CATE could proceed in a bounded parallel track to exercise unit-level contracts.
+  A dedicated v0.3.0 planning session must decide the sequence and dependencies.
+- **Full documentation release.** A separately versioned release will own the
+  pkgdown site, reports for all DGPs, the canonical-workflow vignette, and
+  user-defined estimator/DGP contract vignettes. v0.2.0 repairs only its README
+  and generated function reference.
+- **Persistence retirement.** Base-R RDS migration and the internal persistence
+  boundary are routed to v0.2.1. That boundary must stay encoding-neutral at its
+  logical-identity edge so later family, CATE, and evidence-lake designs are not
+  coupled to RDS bytes.
 
 ## Deferred Scientific Work
 
@@ -14,11 +40,12 @@ an accepted RFC or a future spec packet.
 
 ### Estimand expansion (parked 2026-06-12; requires an RFC and Article I/IV amendment)
 
-**Status (2026-06-17):** ATE, the estimand-aware scoring join, and CATE were
-**promoted via RFC-1** (accepted 2026-06-16), ratified in Constitution 2.0.0, and
-are in the v0.2.0 Wave 1 (ATE) / Wave 2 (CATE) packet. The residual horizon
-content is the **quantile-axis population split** and the **registry
-generalization** — see the two entries immediately below this one.
+**Status (updated 2026-07-24):** ATE, the estimand-aware scoring join, and the
+CATE descriptor were promoted via RFC-1 and ratified in Constitution 2.0.0. ATE
+is implemented in v0.2.0; CATE execution is explicitly deferred and must not be
+presented as v0.2.0 or automatic v0.3.0 scope. The residual horizon content is
+the CATE implementation decision, **quantile-axis population split**, and
+**registry generalization** — see the entries below.
 
 Candidate scope for a post-v0.1.10 "estimand registry" RFC:
 
@@ -128,10 +155,11 @@ without rank invariance). Output: a prioritized taxonomy to **inform the schema*
 but it is **not** adopted wholesale as the vocabulary; see the scoped position
 below (schema yes, catalog no).
 
-**Sequencing.** Research now (parallel); the RFC + single §1.7 amendment lands as
-its own program **after Wave 2**, so the registry mechanics are proven on ATE
-(Wave 1) and CATE (Wave 2) before they are generalized. Subsumes the quantile-axis
-entry above and the residual estimand-expansion items.
+**Sequencing.** The RFC + single §1.7 amendment remains a separate future
+program. The v0.3.0 planning session must place it relative to CATE and families;
+if CATE is selected first, its unit-level mechanics should inform the
+generalization. This entry does not authorize a fixed Wave 2 sequence. It
+subsumes the quantile-axis entry above and the residual estimand-expansion items.
 
 **Scoped position after the deep-research pass (returned 2026-06-18).** The
 research over-answered and, taken literally, is a scope-creep trap. It conflated
@@ -233,12 +261,12 @@ The official site calls 2026 a return after a multiyear hiatus: the comparator
 landscape changed during CausalStress development, so update the forward claim
 without rewriting the project's origin story as an avoidable mistake.
 
-**Programme decision.** ACIC 2026 does **not** interrupt the current campaign,
-v0.2.0 closure, Wave 2 CATE, or RFC-3 families sequence. It changes the prior-art
-baseline and supplies requirements for later interoperability. Current Paper 3
-positioning becomes: *integrity-first laboratory for governed stress mechanisms
-and estimator failure boundaries, complementary to blinded challenges* — never
-“broader than ACIC 2026.”
+**Programme decision.** ACIC 2026 does **not** interrupt the current campaign or
+v0.2.0 closure, and it does not decide the order of CATE and RFC-3 families. It
+changes the prior-art baseline and supplies requirements for later
+interoperability. Current Paper 3 positioning becomes: *integrity-first
+laboratory for governed stress mechanisms and estimator failure boundaries,
+complementary to blinded challenges* — never “broader than ACIC 2026.”
 
 **Immediate research/coordination actions (no package code):**
 
@@ -256,14 +284,16 @@ and estimator failure boundaries, complementary to blinded challenges* — never
    (failure denominators, tie handling, exact metric aggregation, Monte Carlo
    uncertainty, containers/checksums) remain unknown until evidenced.
 4. **Estimand-schema input, not build list.** Carry the ACIC compatibility map
-   into the post-Wave-2 estimand-registry-generalization RFC. It informs identity
+   into the future estimand-registry-generalization RFC. It informs identity
    axes and no-cross-scoring; it does not populate speculative registry rows.
 
-**Core work that remains in the existing sequence:**
+**Core work that remains, subject to the v0.3.0 planning gate:**
 
-5. **Wave 2 binary CATE first.** Implement the already-ratified held-out unit-keyed
-   CATE target, PEHE/RMSE plus robust companion, and heterogeneity-detection gate.
-   Do not smuggle multi-arm, GATE, PATE, or policy learning into the Wave 2 packet.
+5. **Binary CATE candidate.** If selected, implement only the already-ratified
+   held-out unit-keyed CATE target, PEHE/RMSE plus robust companion, and
+   heterogeneity-detection gate. Do not smuggle multi-arm, GATE, PATE, or policy
+   learning into that packet. Parameterized families may be selected first or
+   developed in a deliberately bounded parallel track.
 6. **Preserve sample/population identity.** ACIC's sCATE/PATE split reinforces the
    current rule: finite-sample and superpopulation truth are distinct identities
    and may never be cross-scored. When target descriptors are generalized, the
@@ -299,9 +329,10 @@ and estimator failure boundaries, complementary to blinded challenges* — never
 
 **Estimand and treatment-domain scope:**
 
-- **Core now:** ATT, finite-sample ATE, treated QST/QTT, and the already-ratified
-  binary CATE. QST/QTT remains a genuine distributional differentiator absent
-  from the ACIC 2026 requested targets.
+- **Core now:** implemented ATT, finite-sample ATE, and treated QST/QTT, plus the
+  already-ratified but unimplemented binary CATE descriptor. QST/QTT remains a
+  genuine distributional differentiator absent from the ACIC 2026 requested
+  targets.
 - **Defer:** subgroup CATE/GATE (group inference is not automatically valid by
   averaging predictions); PATE/superpopulation ATE (add only for a consuming
   study); best-treatment/policy targets (eventually score tie-aware policy value
@@ -315,8 +346,9 @@ and estimator failure boundaries, complementary to blinded challenges* — never
   output shapes, contrast-indexed score identity, joint uncertainty, tie-aware
   decisions, and corresponding airlock/gatekeeper/persistence changes. Four
   silent one-vs-control loops lose dependence and multiplicity and do not count
-  as ACIC-compatible support. Open a multi-arm RFC only after Wave 2 and RFC-3,
-  and only for a named study; do not pre-generalize current code speculatively.
+  as ACIC-compatible support. Open a multi-arm RFC only after both CATE and the
+  relevant family work have settled, and only for a named study; do not
+  pre-generalize current code speculatively.
 
 **Adoption action.** Before CausalStress claims general infrastructure value,
 seek at least one independent reproducer, estimator adapter, or external study.
@@ -750,12 +782,12 @@ are an `rfc_cycle.md` trigger.
   be explicitly limited to a declared reference substrate. This routes the
   v0.2.0 Batch 3 review note on ATT/QST golden regressions into the CI work.
 - Coverage measurement and coverage-regression reporting.
-- Migrate DGP documentation into a pkgdown site structure.
-- Write user-facing vignettes for DGP families, estimator contracts, runner
-  workflows, and audit/reproducibility practices.
+- Build a pkgdown site containing a governed report for every DGP.
+- Write user-facing vignettes for the canonical workflow and user-defined
+  estimator and DGP contracts, plus audit/reproducibility practices.
 - Python spoke / interoperability layer.
 - Expanded documentation architecture and articles.
-- CRAN release hardening beyond the v0.1.10 release gate.
+- CRAN release hardening beyond the v0.2.0 release gate.
 
 ## Promotion Rule
 

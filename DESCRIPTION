@@ -1,5 +1,5 @@
 Package: CausalStress
-Title: CausalStress: A Rigorous Benchmarking Framework Built on a
+Title: A Rigorous Benchmarking Framework Built on a
         Constitutional Architecture
 Version: 0.2.0
 Date: 2026-06-17
@@ -9,7 +9,8 @@ Description: A rigorous framework for benchmarking causal inference
         estimators under controlled conditions. It implements a
         "Constitutional" architecture that enforces strict data
         separation ("Airlocks") between estimators and ground truth,
-        ensuring no data leakage. The package features atomic
+        preventing registered estimators from receiving runner-owned
+        truth columns. The package features atomic
         persistence for crash resilience, provenance tracking via Git
         hashes, and a standardized interface for comparing estimators
         across diverse synthetic data-generating processes.

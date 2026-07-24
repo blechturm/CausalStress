@@ -17,6 +17,8 @@ est_gengc(df, tau = cs_tau_oracle, config = list())
 \item \code{seed}: required when bootstrap CIs are requested.
 \item \code{n_boot}: number of bootstrap draws (default: 200).
 \item \code{n_draws}, \code{num_trees}, \code{num_threads}: GenGC tuning parameters.
+\item \code{method}: GenGC engine; one of "qrf" (default) or "qr".
+\item \code{screen}: logical; whether to enable GenGC screening (default: FALSE).
 }
 For this estimator, \code{ci_method = "default"} maps to \code{"bootstrap"}.}
 }

@@ -1,13 +1,17 @@
 # CausalStress v0.2.0 CI Packet Closeout
 
-**Status:** LOCAL GATE COMPLETE; AWAITING FINAL CI REVIEW
+**Status:** ACTIVE
+**Gate state:** June 2026 local rehearsal recorded; fresh post-correction gate
+and remote branch/main/tag CI remain pending
 **Date opened:** 2026-06-18
 **Packet:** `causalstress_v0_2_0_ci_packet`
 
-This closeout records the CI packet evidence for the public v0.2.0 tag. Local
-Windows and WSL/Ubuntu rehearsals are complete. Branch, main/default-branch, and
-tag-triggered GitHub Actions evidence remain pending until this final review is
-accepted, the CI changes are committed/pushed, and the public tag is created.
+This closeout records CI-packet evidence for the public v0.2.0 tag. The Windows
+and WSL/Ubuntu results below are the 2026-06-18 pre-correction rehearsal. They
+remain useful implementation evidence, but they no longer close the current tag
+gate: correction ticket CS-1225 requires a fresh post-correction local gate.
+Branch, main/default-branch, and tag-triggered GitHub Actions evidence also
+remain pending.
 
 ## Shipped
 
@@ -15,9 +19,17 @@ accepted, the CI changes are committed/pushed, and the public tag is created.
 | --- | --- |
 | CS-1210--CS-1211 | CI foundation committed in `b5e0d71`; Batch 0 review verified the release CI playbook, check matrix, test/validation/substrate jobs, README indexing, WSL rehearsal obligation, and packet activation. |
 | CS-1212--CS-1213 | Coverage/lint and golden-tolerance hardening committed in `da21dcc`; Batch 1 review found no blocking defects after local lint execution and verified coverage evidence, strict lint gating, and cross-substrate-safe golden tolerances. |
-| CS-1214 | Local release gate implemented in the current working tree: dependency bootstrap, workflow hardening, pin compatibility, timeout portability, local Windows/WSL evidence, and this closeout. Final tag remains blocked pending review plus remote branch/main/tag CI evidence. |
 
-## Release Gate Evidence
+## Implemented Awaiting Review
+
+| Ticket | Evidence |
+| --- | --- |
+| CS-1214 | The June local release-gate implementation added dependency bootstrap, workflow hardening, pin compatibility, timeout portability, Windows/WSL evidence, and this closeout. Its ticket remains `implementation_complete_awaiting_final_review`, and correction ticket CS-1225 requires fresh post-correction evidence before that review can close. |
+
+## Prior Local Gate Evidence (2026-06-18)
+
+This table is historical rehearsal evidence and must not be read as a current
+tag authorization.
 
 | Gate | Evidence | Result |
 | --- | --- | --- |
@@ -59,13 +71,15 @@ accepted, the CI changes are committed/pushed, and the public tag is created.
 
 ## Tag Decision
 
-The local release gate is ready for final review. The public v0.2.0 tag is not
-yet unblocked. Unblock only after:
+The public v0.2.0 tag remains blocked. Unblock only after:
 
-1. This final CI release-gate review is accepted with no blocking findings.
-2. The CI packet changes are committed and pushed.
-3. Branch CI is green on `v0.2.0`.
-4. Main/default-branch CI is green if the release is merged before tagging.
-5. The tag-triggered `v0.2.0` CI run is green.
+1. Correction tickets CS-1223 and CS-1224 are independently accepted.
+2. CS-1225 records a fresh post-correction local gate on the required
+   substrates and CS-1214 receives its final review.
+3. The reviewed correction and CI changes are committed and pushed.
+4. Branch CI is green on `v0.2.0`.
+5. Main/default-branch CI is green if the release is merged before tagging.
+6. The tag-triggered `v0.2.0` CI run is green.
 
-Until then, v0.2.0 remains locally release-gate-ready but not publicly released.
+Until then, the June local results are rehearsal evidence and v0.2.0 is not
+publicly released.

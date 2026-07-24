@@ -88,7 +88,7 @@
   reports no documentation errors or warnings.
 - **Review gate:** Release-facing truthfulness review. Full pkgdown/vignette work
   is explicitly deferred.
-- **Disposition:** open
+- **Disposition:** complete_after_review
 
 ### CS-1224 - Normalize release governance and route deferrals
 
@@ -109,7 +109,7 @@
   parameterized families, CATE planning, and the full documentation release are
   routed to horizon/roadmap with no v0.2.0 release claim.
 - **Review gate:** Governance consistency review before local release gate.
-- **Disposition:** open
+- **Disposition:** complete_after_review
 
 ## Batch 3 - Release Gate and Publication
 
@@ -131,7 +131,7 @@
   `R CMD check`, acceptance-criteria audit, and clean worktree review are
   recorded with commands, substrate, commit SHA, and results.
 - **Review gate:** Independent final local-gate review; evidence feeds CS-1214.
-- **Disposition:** blocked_by_CS-1221_CS-1222_CS-1223_CS-1224
+- **Disposition:** open
 
 ### CS-1226 - Publish the immutable v0.1.10 archival release
 

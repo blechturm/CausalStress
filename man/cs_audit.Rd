@@ -10,9 +10,9 @@ cs_audit(board)
 \item{board}{A pins board containing results pins.}
 }
 \value{
-A tibble with columns \code{pin_name}, \code{dgp_id}, \code{estimator_id},
-\code{estimator_version}, \code{n}, \code{seed}, \code{git_hash}, \code{timestamp}, \code{oracle},
-and \code{session_info} (list column where available).
+A tibble with pin/run provenance plus list columns for the canonical
+typed \code{scores}, \code{fit_fingerprints}, \code{score_fingerprints}, and
+\code{score_row_fingerprints} where available.
 }
 \description{
 Reads metadata from pins created by \code{cs_run_single()} (via persistence) and

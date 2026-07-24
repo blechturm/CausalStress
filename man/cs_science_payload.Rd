@@ -10,7 +10,7 @@ cs_science_payload(x)
 \item{x}{A result list as returned by \code{\link[=cs_run_single]{cs_run_single()}} or read from pins.}
 }
 \value{
-A list with elements \code{att}, \code{qst}, and \code{meta}.
+A list with elements \code{att}, \code{qst}, \code{scores}, and \code{meta}.
 }
 \description{
 Returns a canonicalized object suitable for bitwise identity checks. This

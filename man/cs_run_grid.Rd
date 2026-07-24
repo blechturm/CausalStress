@@ -64,8 +64,9 @@ cs_run_grid(
 \item{show_progress}{Logical; whether to display per-seed progress messages.}
 }
 \value{
-A tibble with one row per (dgp_id, estimator_id, seed) run, including
-all columns from cs_run_single(), and bindable into cs_summarise_runs().
+A tibble with one flattened analysis row per
+\verb{(dgp_id, estimator_id, seed)} run, including \code{qst} and \code{scores} list
+columns, suitable for \code{\link[=cs_summarise_runs]{cs_summarise_runs()}}.
 }
 \description{
 Run a DGP × estimator grid over multiple seeds

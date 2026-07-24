@@ -51,8 +51,8 @@ Only used if \code{config$n_boot} is missing.}
 \code{ci_method}, \code{n_boot}, and estimator-specific hyperparameters. See
 \link{cs_ci_methods} for CI semantics.}
 
-\item{board}{Optional pins board. If provided, results can be persisted by
-higher-level runners.}
+\item{board}{Optional pins board. If provided, the completed structured
+result is persisted before it is returned.}
 
 \item{max_runtime}{Numeric scalar; maximum allowed runtime (seconds) for the
 estimator call. Defaults to \code{Inf}.}
@@ -60,8 +60,9 @@ estimator call. Defaults to \code{Inf}.}
 \item{...}{Additional arguments forwarded to the estimator generator.}
 }
 \value{
-A tibble with one row containing point estimates, optional CI
-columns, provenance metadata, and any captured warnings/errors.
+A structured result list with \code{outputs}, canonical typed \code{scores},
+compatibility projections \code{att} and \code{qst}, optional \code{boot_draws}, and
+separate \code{meta} and \code{provenance} components.
 }
 \description{
 Run a single DGP/estimator combination for one seed

@@ -30,7 +30,7 @@ arguments \verb{(df, config = list(), tau = cs_tau_oracle, ...)}.}
 \item{oracle}{Logical, whether this is an oracle estimator.}
 
 \item{oracle_columns}{Character vector of truth columns this estimator is
-eligible to receive through the runner airlock. Allowed values in v0.1.10
+eligible to receive through the runner airlock. Allowed values in v0.2.0
 are \code{"p"} and \code{"structural_te"}.}
 
 \item{oracle_default_columns}{Character vector of eligible truth columns the

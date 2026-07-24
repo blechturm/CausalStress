@@ -74,13 +74,13 @@ per-seed runs (use with care; pre-flight still warns once).}
 \item{staging_dir}{Optional staging directory for crash recovery.}
 }
 \value{
-A tibble with one row per seed and at least the columns returned
-by \code{\link[=cs_run_single]{cs_run_single()}}, including \code{dgp_id}, \code{estimator_id}, \code{n}, \code{seed},
-\code{oracle}, \code{supports_qst}, \code{true_att}, \code{est_att}, \code{att_error},
-\code{att_abs_error}.
+A tibble with one row per seed. Scalar identifiers and ATT metrics
+are flattened; QST and canonical typed score records are retained in the
+\code{qst} and \code{scores} list columns.
 }
 \description{
 This function repeatedly calls \code{\link[=cs_run_single]{cs_run_single()}} for a given DGP and
-estimator, using a vector of seeds. It returns a tibble with one row
-per seed and the same columns as \code{\link[=cs_run_single]{cs_run_single()}}.
+estimator, using a vector of seeds. It flattens each structured result into
+one analysis row while retaining QST and canonical score tables in list
+columns.
 }
