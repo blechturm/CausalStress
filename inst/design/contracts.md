@@ -193,6 +193,20 @@ Batch artifacts must include:
 Workers must write staged artifacts only. Consolidation into pins is a controller
 responsibility.
 
+New individual-result staging, campaign-batch staging, and oracle caches use
+base-R RDS serialization version 3. The single internal persistence boundary
+writes a temporary file in the destination directory, validates a non-empty
+completed write, and publishes it atomically without overwriting an existing
+artifact. A pre-existing destination is accepted only after its caller-specific
+structure and logical identity validate. Storage bytes are not a scientific,
+configuration, task, score, or oracle identity.
+
+Active staging directories fail closed if they contain legacy `.qs` artifacts;
+the error names the files and directs the user to preserve them and rerun in a
+clean directory. CausalStress does not read, convert, delete, or overwrite those
+files. Legacy `.qs` oracle caches are likewise left untouched and ignored; the
+governed deterministic oracle path computes a separate `.rds` cache entry.
+
 ## RNG Contract
 
 Normative source: Constitution Article II.

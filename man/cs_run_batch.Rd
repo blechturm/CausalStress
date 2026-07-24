@@ -30,7 +30,7 @@ cs_run_batch(
 \item{parallel_warning_emitted}{Logical provenance flag from the parent runner.}
 }
 \value{
-The path to the staged \code{.qs} file (invisible).
+The path to the staged RDS file (invisible).
 }
 \description{
 Executes all tasks for a given batch id and writes a batch artifact to the

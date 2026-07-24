@@ -7,7 +7,7 @@
 cs_consolidate(staging_dir, board)
 }
 \arguments{
-\item{staging_dir}{Directory containing staged \code{.qs} batch artifacts.}
+\item{staging_dir}{Directory containing staged RDS batch artifacts.}
 
 \item{board}{A pins board where batch pins should be written.}
 }

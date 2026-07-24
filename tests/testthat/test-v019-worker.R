@@ -18,10 +18,10 @@ test_that("cs_run_batch writes staged artifact with results and errors", {
 
   path <- cs_run_batch(batch_id = 1L, plan = plan, staging_dir = staging_dir)
 
-  files <- list.files(staging_dir, pattern = "\\.qs$", full.names = TRUE)
+  files <- list.files(staging_dir, pattern = "\\.rds$", full.names = TRUE)
   expect_true(length(files) == 1L)
 
-  obj <- qs::qread(files[[1L]])
+  obj <- readRDS(files[[1L]])
   expect_true(is.list(obj))
   expect_true(is.list(obj$results))
   expect_true(is.data.frame(obj$errors))
@@ -65,8 +65,8 @@ test_that("cs_run_batch preserves escaping task errors", {
 
   cs_run_batch(batch_id = 1L, plan = plan, staging_dir = staging_dir)
 
-  files <- list.files(staging_dir, pattern = "\\.qs$", full.names = TRUE)
-  obj <- qs::qread(files[[1L]])
+  files <- list.files(staging_dir, pattern = "\\.rds$", full.names = TRUE)
+  obj <- readRDS(files[[1L]])
 
   expect_equal(length(obj$results), 0L)
   expect_equal(nrow(obj$errors), 1L)
@@ -115,8 +115,8 @@ test_that("cs_run_batch forwards strategy tau from task_config", {
 
   cs_run_batch(batch_id = 1L, plan = plan, staging_dir = staging_dir)
 
-  files <- list.files(staging_dir, pattern = "\\.qs$", full.names = TRUE)
-  obj <- qs::qread(files[[1L]])
+  files <- list.files(staging_dir, pattern = "\\.rds$", full.names = TRUE)
+  obj <- readRDS(files[[1L]])
   expect_equal(obj$results[[1L]]$qst$tau, c(0.25, 0.75))
 })
 
@@ -156,8 +156,8 @@ test_that("cs_run_batch records parallel provenance and restores thread env", {
 
   expect_equal(Sys.getenv("OMP_NUM_THREADS", unset = NA_character_), "7")
 
-  files <- list.files(staging_dir, pattern = "\\.qs$", full.names = TRUE)
-  obj <- qs::qread(files[[1L]])
+  files <- list.files(staging_dir, pattern = "\\.rds$", full.names = TRUE)
+  obj <- readRDS(files[[1L]])
   expect_true(isTRUE(obj$meta$experimental_parallel))
   expect_true(isTRUE(obj$meta$parallel_warning_emitted))
   expect_equal(obj$meta$parallel_backend, "sequential")

@@ -17,6 +17,9 @@
   fingerprints so one fit can produce multiple score records and one QST score
   record can contain multiple coordinate rows, while schema 1-3 resume attempts
   fail closed.
+* Runtime persistence: Replaced the archived `qs` dependency with atomic base-R
+  RDS staging and oracle caches, added strict current-artifact identity checks,
+  and made legacy `.qs` staging fail closed without reading or modifying it.
 * Surfaces: Added the canonical long-form typed score collection surface and
   preserved ATT/QST helpers as compatibility projections.
 * Staging: Registered CATE as a governed target while Wave 1 deterministically

@@ -38,7 +38,6 @@ test_that("parallel persistence requires staging_dir (seeds + campaign)", {
 
 test_that("parallel + staging_dir uses stage-and-gather persistence", {
   skip_if_not_installed("pins")
-  skip_if_not_installed("qs")
 
   old_plan <- future::plan()
   on.exit(future::plan(old_plan), add = TRUE)

@@ -1,16 +1,20 @@
 # CausalStress v0.2.0 CI Packet Closeout
 
 **Status:** ACTIVE
-**Gate state:** Fresh post-correction Windows and WSL/Ubuntu gates independently
-accepted; remote branch/main/tag CI remain pending
+**Gate state:** Pre-CS-1228 Windows and WSL/Ubuntu gates independently accepted;
+branch CI failed on the archived `qs` runtime under R 4.6; CS-1228 implementation
+is complete after independent review with fresh final-tree gates pending; main/tag CI
+remain pending
 **Date opened:** 2026-06-18
 **Packet:** `causalstress_v0_2_0_ci_packet`
 
 This closeout records CI-packet evidence for the public v0.2.0 tag. The results
 under **Prior Local Gate Evidence** are the 2026-06-18 pre-correction rehearsal.
 They remain useful implementation evidence, but the fresh CS-1225 Windows and
-WSL/Ubuntu results below are the current local-gate evidence. Branch,
-main/default-branch, and tag-triggered GitHub Actions evidence remain pending.
+WSL/Ubuntu results below cover only the pre-CS-1228 tree. Two later branch-CI
+attempts exposed an R 4.6 runtime-installation blocker before package-owned
+checks began. Main/default-branch and tag-triggered GitHub Actions evidence
+remain pending.
 
 ## Shipped
 
@@ -23,7 +27,7 @@ main/default-branch, and tag-triggered GitHub Actions evidence remain pending.
 
 | Ticket | Evidence |
 | --- | --- |
-| CS-1214 | The June local release-gate implementation added dependency bootstrap, workflow hardening, pin compatibility, timeout portability, and Windows/WSL rehearsal evidence. CS-1225 now supplies fresh post-correction Windows and configured-default `Ubuntu` WSL gates at baseline `c05be176950603aa374e0202ca70f1e5d7443b1e`. Claude's independent re-review returned **APPROVE WITH NON-BLOCKING NOTES** and accepted this as CS-1214's local-gate input. CS-1214 remains open for mandatory remote branch/main/tag CI. |
+| CS-1214 | The June local release-gate implementation added dependency bootstrap, workflow hardening, pin compatibility, timeout portability, and Windows/WSL rehearsal evidence. CS-1225 supplies accepted local evidence for baseline `c05be176950603aa374e0202ca70f1e5d7443b1e`. Later branch CI proved the archived dependency bootstrap is not R 4.6-compatible. CS-1228's replacement implementation is complete after independent review; fresh final-tree evidence remains required before mandatory remote branch/main/tag CI can close. |
 
 ## Fresh Post-Correction Local Gate (2026-07-24)
 
@@ -50,6 +54,26 @@ acceptance audit, and worktree scope are recorded in the correction packet's
 | R CMD check - WSL/Ubuntu | Pass through installed `rcmdcheck`: 0 errors, 0 warnings, 0 notes in 105.3 seconds wall time. The exact self-contained commands and full substrate are recorded in the correction closeout. Remote Ubuntu CI remains release-blocking. |
 | Worktree/acceptance audit | `git diff --check` passed; only release-gate metadata/evidence changed. Package version 0.2.0, Constitution v2.0.1, ticket/audit routing, README planning state, and absence of known constitutional violations were confirmed. Final commit SHA/clean-tree evidence remains required before tagging. |
 
+## Branch CI Attempts (2026-07-24)
+
+| Commit | Result | Adjudication |
+| --- | --- | --- |
+| `13bd7a2652b415878d8de77602398ef600e173f0` | Coverage/lint, R CMD check, and test/validation/substrate workflows all failed before package-owned checks. Archived `stringfish` 0.17.0 used R API removed in R 4.6. | Valid dependency-bootstrap failure, not flaky test evidence. A narrow transitive-pin trial was permitted to isolate the blocker. |
+| `56376a6ee8c45d14c4d3303d8bcaf45ced6d6290` | `stringfish` 0.18.0 compiled, then all three workflows failed because archived `qs` 0.27.3 itself uses removed R internals. | Decisive runtime-installation blocker. Further pinning cannot repair `qs`; routed to correction ticket CS-1228 for minimal RDS retirement. |
+
+Run evidence: first-attempt
+[coverage/lint](https://github.com/blechturm/CausalStress/actions/runs/30101823789),
+[R CMD check](https://github.com/blechturm/CausalStress/actions/runs/30101823795), and
+[test/validation/substrate](https://github.com/blechturm/CausalStress/actions/runs/30101823807);
+pin-trial
+[coverage/lint](https://github.com/blechturm/CausalStress/actions/runs/30102494120),
+[R CMD check](https://github.com/blechturm/CausalStress/actions/runs/30102494130), and
+[test/validation/substrate](https://github.com/blechturm/CausalStress/actions/runs/30102494153).
+
+Neither attempt supplies package test/check evidence. The accepted CS-1225
+local run remains historical evidence for its tested tree, but a new executable
+persistence change requires a fresh local and remote gate.
+
 ## Prior Local Gate Evidence (2026-06-18)
 
 This table is historical rehearsal evidence and must not be read as a current
@@ -72,7 +96,7 @@ tag authorization.
 | Lint - WSL/Ubuntu | `wsl.exe --cd /mnt/c/Users/maxth/Documents/GitHub/CausalStress --exec Rscript tools/ci-lint.R` on 2026-06-18. | Pass/blocking: `lint_count=0`; `ignored_internal_helper_false_positives=0`. |
 | Substrate - Windows | `& "C:\Program Files\R\R-4.5.2\bin\x64\Rscript.exe" tools/ci-substrate.R` on 2026-06-18. | Pass: R 4.5.2 ucrt, platform `x86_64-w64-mingw32`, ambient RNG `Mersenne-Twister / Inversion / Rejection`, governed RNG `Mersenne-Twister / Inversion / Rounding`, `include_truth_bitwise=TRUE`, `df=TRUE`, `true_att=TRUE`, `true_qst=TRUE`, `meta=TRUE`. |
 | Substrate - WSL/Ubuntu | `wsl.exe --cd /mnt/c/Users/maxth/Documents/GitHub/CausalStress --exec Rscript tools/ci-substrate.R` on 2026-06-18. | Pass: R 4.5.2, platform `x86_64-pc-linux-gnu`, BLAS `/usr/lib/x86_64-linux-gnu/blas/libblas.so.3.9.0`, ambient RNG `Mersenne-Twister / Inversion / Rejection`, governed RNG `Mersenne-Twister / Inversion / Rounding`, `include_truth_bitwise=TRUE`, all bitwise components TRUE. |
-| Branch CI | Not yet available. Must be recorded after this review is accepted and the CI packet commit is pushed to `v0.2.0`. | Pending. |
+| Branch CI | Not yet available on 2026-06-18. Superseded by the failed 2026-07-24 attempts recorded above. | Historical pending state. |
 | Main/default-branch CI | Not yet available. Must be recorded after merge to the default branch, if the release process merges before tagging. | Pending. |
 | Tag-triggered CI | Not yet available. The public `v0.2.0` tag must not be treated as released until the tag-triggered CI run is green. | Pending. |
 
@@ -100,12 +124,15 @@ The public v0.2.0 tag remains blocked. Unblock only after:
 
 1. Correction tickets CS-1223 and CS-1224 are independently accepted. **Done.**
 2. CS-1225 records a fresh post-correction local gate and CS-1214 receives its
-   final review. **Windows and WSL/Ubuntu local evidence independently accepted;
-   CS-1214 remains open for remote CI.**
-3. The reviewed correction and CI changes are committed and pushed.
-4. Branch CI is green on `v0.2.0`.
-5. Main/default-branch CI is green if the release is merged before tagging.
-6. The tag-triggered `v0.2.0` CI run is green.
+   final review. **The pre-CS-1228 Windows and WSL/Ubuntu evidence was
+   independently accepted; CS-1214 remains open.**
+3. CS-1228's amended specification is independently accepted. **Done.** Its
+   minimal RDS migration is implemented and independently accepted. **Done;
+   fresh final-tree local gates remain pending.**
+4. The reviewed correction and CI changes are committed and pushed.
+5. Branch CI is green on `v0.2.0`, including R release and R-devel installation.
+6. Main/default-branch CI is green if the release is merged before tagging.
+7. The tag-triggered `v0.2.0` CI run is green.
 
 Until then, the June local results are rehearsal evidence and v0.2.0 is not
 publicly released.

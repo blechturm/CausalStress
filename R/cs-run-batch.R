@@ -12,7 +12,7 @@
 #' @param parallel_backend Character backend label recorded in batch metadata.
 #' @param parallel_warning_emitted Logical provenance flag from the parent runner.
 #'
-#' @return The path to the staged `.qs` file (invisible).
+#' @return The path to the staged RDS file (invisible).
 #' @export
 cs_run_batch <- function(batch_id,
                          plan,
@@ -220,10 +220,19 @@ cs_run_batch <- function(batch_id,
     "_",
     sample.int(1000000L, 1L)
   )
-  tmp_path <- file.path(staging_dir, paste0("batch_", batch_id, "_", uuid, ".tmp"))
-  final_path <- file.path(staging_dir, paste0("batch_", batch_id, "_", uuid, ".qs"))
+  final_path <- file.path(staging_dir, paste0("batch_", batch_id, "_", uuid, ".rds"))
 
-  qs::qsave(batch_obj, tmp_path)
-  file.rename(tmp_path, final_path)
-  invisible(final_path)
+  cs_write_rds_atomic(
+    batch_obj,
+    final_path,
+    validate = function(candidate, candidate_path) {
+      cs_validate_batch_artifact(
+        candidate,
+        candidate_path,
+        expected_batch_id = batch_id,
+        expected_task_fingerprints = tasks$task_fingerprint
+      )
+    },
+    error_class = "causalstress_batch_artifact_error"
+  )
 }

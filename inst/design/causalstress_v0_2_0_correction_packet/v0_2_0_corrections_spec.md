@@ -5,12 +5,14 @@
 **Date opened:** 2026-07-24
 **Authority:** Active while named in `inst/design/README.md`
 **Package version:** remains `0.2.0`
+**Emergency persistence amendment:** accepted after independent review on
+2026-07-24; CS-1228 implementation is complete after independent review
 
 ## Objective
 
 Finish the public v0.2.0 release by resolving the narrow constitutional,
-schema-4 identity, release-documentation, and governance blockers discovered
-after the Wave 1 implementation closeout.
+schema-4 identity, release-documentation, governance, and runtime-installation
+blockers discovered after the Wave 1 implementation closeout.
 
 This packet does **not** amend or reopen
 `causalstress_v0_2_0_spec_packet/v0_2_0_spec.md`. That closed specification
@@ -30,6 +32,9 @@ findings as a separate correction authority.
 - Standardize active/final packet status handling without rewriting the closed
   Wave 1 specification.
 - Publish the existing immutable v0.1.10 tag as an archival pre-CI release.
+- Retire the archived `qs` runtime dependency and use base-R RDS for staging and
+  oracle caches after clean R 4.6 branch CI proved that `qs` 0.27.3 itself no
+  longer compiles against current R headers.
 - Rerun the local release gate after corrections and feed the new evidence into
   the existing CI/tag gate (`CS-1214`).
 - Complete branch, main, and tag CI before declaring v0.2.0 public.
@@ -40,7 +45,9 @@ findings as a separate correction authority.
 - No implementation of real-data DGPs.
 - No CATE Wave 2 implementation, parameterized DGP families, or gatekeeper
   recalibration.
-- No `.qs` retirement or persistence redesign; that remains v0.2.1.
+- No general persistence framework, configurable codec, `qs2` dependency,
+  dual-write path, or in-package legacy `.qs` converter.
+- No mutation, deletion, or automatic migration of existing `.qs` artifacts.
 - No pkgdown site, DGP-report suite, or full vignette cycle.
 - No public user-defined DGP registration API.
 - No broad public-API cleanup beyond correcting false release-facing claims.
@@ -115,6 +122,53 @@ contract exists yet. Any local pre-release schema-4 artifacts are disposable and
 must be regenerated; they are not resume-compatible after this correction.
 Schemas 1-3 remain historical and unchanged.
 
+### Emergency `qs` retirement and RDS persistence
+
+The first remote branch-CI attempt failed while compiling archived
+`stringfish` 0.17.0 against R 4.6. A narrow trial pin to `stringfish` 0.18.0
+removed that first failure but exposed the decisive blocker: archived `qs`
+0.27.3 itself calls R internals removed from the R 4.6 headers. All three
+workflows failed before package-owned checks could begin. Constraining the
+package to an obsolete R toolchain or continuing to adjust transitive pins
+would hide an installation defect rather than close the release gate.
+
+The minimum v0.2.0 correction is therefore:
+
+- base-R RDS is the only runtime encoding for individual-result staging,
+  campaign-batch staging, and oracle caches; pin-board artifacts remain RDS;
+- `qs` is removed from `DESCRIPTION`, package code, tests, and CI bootstrap;
+  new package operations create no `.qs` files;
+- one small internal, non-pluggable persistence boundary owns same-directory
+  temporary writes, `saveRDS(..., version = 3)`, successful-close/size checks,
+  atomic rename, cleanup of failed temporary files, `readRDS()`, and classed
+  I/O errors. It exists to apply Article VI consistently across the repeated
+  staging and cache call sites, not to create a codec interface;
+- file discovery and resume use `.rds` consistently and never infer logical,
+  score, configuration, task, or oracle identity from serialized bytes;
+- writers never overwrite an existing destination. A pre-existing current RDS
+  artifact, including one that wins a concurrent rename race, counts as success
+  only after caller-specific structure and expected identity are validated;
+  otherwise the operation fails with its classed boundary error;
+- an active staging directory containing any legacy `.qs` result or batch file
+  fails closed with a classed error that names the incompatible path and tells
+  the user to preserve it and rerun in a clean directory. It is never silently
+  skipped, read, converted, deleted, or overwritten;
+- legacy `.qs` oracle-cache entries are immutable but non-evidential caches:
+  they are ignored and a new validated `.rds` cache entry is computed without
+  modifying the old file; and
+- corrupt, partial, or structurally invalid current `.rds` artifacts retain the
+  governed fail-closed behavior for their boundary. They must not be counted as
+  completed work or silently admitted to consolidation.
+
+This is an encoding correction, not a schema or scientific-contract change.
+Schema 4, batch schema `v1.0.0`, DGP/truth/RNG behavior, score identities,
+fingerprints, pin names, and public function signatures remain unchanged.
+Existing pre-release `.qs` campaign evidence may be archived or rerun by its
+owner; conversion tooling belongs outside CausalStress and is not required for
+v0.2.0. A tiny-file `qs2` benchmark may still be retained as non-blocking
+research evidence, but cannot add a dependency or alter the RDS decision
+without a separately reviewed specification.
+
 ### Minimum release-facing documentation
 
 Before v0.2.0, update `README.Rmd`, render `README.md`, correct inaccurate
@@ -143,6 +197,11 @@ substrate evidence, and `R CMD check`. Record fresh evidence in this packet's
 closeout and update the active CI packet where the earlier evidence is
 superseded.
 
+The accepted CS-1225 local evidence remains valid historical evidence for the
+tree it tested, but cannot authorize a tag after the executable persistence
+change. CS-1228 must record a fresh final-tree local gate and green R release and
+R-devel remote installation/check evidence before CS-1214 or CS-1227 can close.
+
 The existing annotated `v0.1.10` tag is immutable and points to commit
 `d05164a856b3e19101b989021f20dabe0b2a00a8`. Publish that exact tag object as an
 archival pre-CI release; never move or recreate it. Its release note must state
@@ -159,9 +218,14 @@ the required remote evidence is recorded.
   maintainer ratification action before enforcing uppercase names.
 - Article II and VII: changes no released DGP implementation and adds continuous
   validation of the corrected synthetic contract.
-- Article V §5.2 and Article VI: restores the governed QST score-record grain and
-  preserves unique row identity for atomic/tabular handling.
+- Article V §5.2 and Article VI: restores the governed QST score-record grain,
+  preserves unique row identity for atomic/tabular handling, and keeps staging
+  writes atomic and crash-resilient while removing an unmaintained serializer.
 - Historical DGP versions, truth tables, and RNG guarantees remain unchanged.
+- No constitutional amendment or RFC is required for the persistence correction:
+  the Constitution governs atomicity and scientific identity but does not freeze
+  the private serialization codec. This active spec can choose RDS within those
+  constraints.
 
 ## Acceptance Criteria
 
@@ -183,6 +247,23 @@ the required remote evidence is recorded.
 - README and generated manual pages make no known false claims about version,
   targets, DGP type, public registration APIs, parallelism, collection, or return
   shapes.
+- `qs` is absent from runtime dependencies, package/test code, and CI bootstrap;
+  a clean install reaches package-owned checks on the required R release/devel
+  matrix without archived `qs` or `stringfish` installation.
+- New individual-result, batch, and oracle-cache artifacts use `.rds`; all
+  repeated writers use the same atomic RDS boundary and all readers report
+  classed, context-rich failures.
+- Focused tests cover successful stage/gather, batch resume/consolidation,
+  interrupted or corrupt writes, structural validation, duplicate/completed
+  batches, valid and invalid pre-existing destinations, legacy-only and mixed
+  `.qs` staging directories, and legacy oracle cache coexistence without
+  mutating the old file.
+- Legacy staging fails closed with rerun guidance; legacy oracle caches are
+  ignored and recomputed; no in-package converter, deletion, or implicit
+  migration path exists.
+- Persistence encoding does not change schema numbers, public signatures,
+  logical fingerprints, task reconciliation, pin names, or DGP/truth/RNG and
+  scoring results.
 - The closed Wave 1 specification is byte-for-byte untouched by this packet.
 - Active packet documents/YAML use the standardized status vocabulary and close
   as `FINAL`/`final` only after their work is complete.
@@ -204,10 +285,14 @@ the required remote evidence is recorded.
 | Release audit: README/roxygen materially stale | ticketed | CS-1223 |
 | Governance audit: packet statuses and release boundary drift | ticketed | CS-1224 |
 | Local v0.1.10 tag absent from public release history | ticketed | CS-1226 |
+| Branch CI at `13bd7a2`: archived `stringfish` 0.17.0 does not compile on R 4.6 | investigated; narrow pin trial | CS-1228 |
+| Branch CI at `56376a6`: `stringfish` 0.18.0 compiles, but archived `qs` 0.27.3 itself uses removed R internals | release blocker; minimal RDS retirement pulled into v0.2.0 | CS-1228 |
 | CI packet: remote branch/main/tag evidence pending | coordinated, not duplicated | CS-1214, CS-1227 |
 
 ## Open Decisions
 
 None. The maintainer decisions consumed by this packet are recorded in the
-accepted RFC and the release-planning discussion. New scientific or public-API
-questions must be deferred rather than expanded into v0.2.0.
+accepted RFC and release-planning discussions, including the decision to pull
+only the minimum RDS migration into v0.2.0 and leave legacy conversion outside
+the package. New scientific, public-API, generalized-persistence, or optional-
+codec questions must be deferred rather than expanded into v0.2.0.

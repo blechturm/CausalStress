@@ -133,6 +133,40 @@
 - **Review gate:** Independent final local-gate review; evidence feeds CS-1214.
 - **Disposition:** complete_after_review
 
+### CS-1228 - Retire archived `qs` from the v0.2.0 runtime
+
+- **Batch:** 3
+- **Source:** failed R 4.6 branch CI at commits `13bd7a2` and `56376a6`;
+  maintainer decision to pull the minimum RDS migration into v0.2.0
+- **Motivation:** Updating archived `stringfish` removed the first compile
+  failure but proved that archived `qs` 0.27.3 itself uses R internals removed
+  in R 4.6. The release cannot honestly claim its supported R range or pass the
+  required devel matrix while retaining that runtime dependency.
+- **Files:** `DESCRIPTION`, `R/cs-staging.R`, `R/cs-run-batch.R`,
+  `R/cs-campaign-runner.R`, `R/cs-consolidate.R`, `R/cs-oracle-truth.R`,
+  affected roxygen/man and `inst/design/contracts.md`, `tests/testthat/`,
+  `.github/workflows/`, removal of `tools/ci-install-archived-qs.R`, `NEWS.md`,
+  and active release closeouts
+- **Constitutional check:** Preserve Article VI same-directory atomic
+  temp-write/rename behavior and classed boundary failures. Change only private
+  storage encoding: no DGP, truth, RNG, score/config/task/oracle identity,
+  schema number, pin name, or public-signature change. Do not read, mutate,
+  delete, or convert existing `.qs` evidence.
+- **Test obligation:** RDS is the sole runtime codec for individual-result,
+  batch, and oracle-cache artifacts; the shared non-pluggable boundary is used
+  by repeated call sites; no runtime/CI `qs` remains; successful stage/gather,
+  resume/consolidation, duplicates, corrupt/partial/invalid artifacts, and
+  valid/invalid pre-existing destinations plus legacy-only/mixed staging are
+  tested. Existing destinations are never overwritten and only validate as
+  complete when caller-specific structure and identity match. Legacy staging
+  fails closed with rerun guidance; legacy oracle caches coexist unchanged while
+  `.rds` is recomputed.
+  Fresh Windows and WSL gates plus green R release/devel remote install/check
+  evidence are recorded after the executable change.
+- **Review gate:** Independent review of this specification before
+  implementation, then focused persistence/atomicity and final-gate review.
+- **Disposition:** complete_after_review
+
 ### CS-1226 - Publish the immutable v0.1.10 archival release
 
 - **Batch:** 3
@@ -164,12 +198,12 @@
   and tag-triggered v0.2.0 CI URLs/status; confirm package version 0.2.0,
   Constitution v2.0.1, fresh local gate, immutable tag target, complete ticket
   routing, and final packet statuses.
-- **Review gate:** Maintainer final release decision after CS-1214, CS-1225, and
-  CS-1226; close correction and CI packets as `FINAL` only after tag CI is green.
-- **Disposition:** blocked_by_CS-1214_CS-1226
+- **Review gate:** Maintainer final release decision after CS-1214, CS-1226, and
+  CS-1228; close correction and CI packets as `FINAL` only after tag CI is green.
+- **Disposition:** blocked_by_CS-1214_CS-1226_CS-1228
 
 ## Release-Gate Ticket Requirement
 
-CS-1225 and CS-1227 consume `inst/design/release_gate.md` and
+CS-1225, CS-1228, and CS-1227 consume `inst/design/release_gate.md` and
 `inst/design/release_ci_playbook.md`. All gate evidence must be recorded in
 `release_closeout.md`; a local pass alone cannot authorize the public tag.

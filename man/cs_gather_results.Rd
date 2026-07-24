@@ -15,7 +15,7 @@ cs_gather_results(board, staging_dir)
 Invisibly, the number of results gathered.
 }
 \description{
-Reads all staged files (\code{.qs} format) from a directory (produced by workers
+Reads all staged RDS files from a directory (produced by workers
 using \code{cs_stage_result}) and writes them to the central board. This
 implements the "Reduce" step of the "Map-Reduce" parallel pattern.
 }

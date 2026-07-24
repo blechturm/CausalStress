@@ -46,7 +46,6 @@ Imports:
     furrr,
     future,
     tibble,
-    qs,
     pins,
     methods,
     yaml,

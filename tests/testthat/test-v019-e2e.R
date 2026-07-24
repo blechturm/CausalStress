@@ -11,13 +11,13 @@ test_that("v0.1.9 plan -> batch -> consolidate -> tidy works", {
     strategy_map = list(defaults = list(n = 100, ci_method = "none"))
   )
 
-  staging_dir <- file.path(tempdir(), "cs_v019_staging")
+  staging_dir <- tempfile("cs_v019_staging_")
   dir.create(staging_dir, recursive = TRUE, showWarnings = FALSE)
 
   cs_run_batch(plan$batch_id[[1]], plan, staging_dir)
   cs_run_batch(plan$batch_id[[2]], plan, staging_dir)
 
-  board <- pins::board_temp()
+  board <- pins::board_folder(file.path(staging_dir, "board"))
   n_ok <- cs_consolidate(staging_dir, board)
   expect_equal(n_ok, 2L)
 

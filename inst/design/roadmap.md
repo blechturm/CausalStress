@@ -24,16 +24,16 @@ score-record, and score-row identities; legacy ATT/QST projections; and CI/relea
 enforcement. CATE remains a registered descriptor with deterministic
 `target_not_implemented` behavior. It is not an implemented v0.2.0 capability.
 
-**Remaining release work:** correct only release-blocking README/roxygen and
-governance drift, rerun the local release gate, publish the immutable v0.1.10
-archive, and obtain green branch/main/tag CI evidence. The correction and CI
-packets named in `README.md` own this work.
+**Remaining release work:** independently review the completed emergency RDS
+persistence correction in CS-1228, rerun the final-tree local gate, publish the
+immutable v0.1.10 archive, and obtain green branch/main/tag CI evidence. The
+correction and CI packets named in `README.md` own this work.
 
 **Explicitly deferred from v0.2.0:** CATE execution, parameterized families,
 real-data DGP support, a public DGP-extension API, an authoritative feature
-roster, persistence retirement, the pkgdown site, and comprehensive vignettes.
-No item in that list may be inferred from the v0.2.0 target descriptors or
-historical Wave 2 language.
+roster, legacy `.qs` conversion, generalized/configurable persistence, the
+pkgdown site, and comprehensive vignettes. No item in that list may be inferred
+from the v0.2.0 target descriptors or historical Wave 2 language.
 
 The closed `causalstress_v0_2_0_spec_packet/` remains the historical Wave 1
 record. Its internal status headers are not reopened or rewritten; current
@@ -41,59 +41,38 @@ packet lifecycle is declared by the governance index.
 
 ------------------------------------------------------------------------
 
-## Mandatory post-A2 maintenance release: v0.2.1 — "Retire `qs`"
+## Emergency v0.2.0 correction — "Retire `qs`"
 
-**Trigger and boundary.** The upstream `qs` package was removed from CRAN on
-2026-01-17 and its maintainers now direct users to `qs2`; `.qs2` is not
-compatible with the existing `.qs` format. CausalStress still uses `.qs` for raw
-batch staging and installs archived `qs` 0.27.3 in CI, although consolidated pin
-artifacts already use RDS. This is therefore a package-level persistence and
-recoverability risk, not a campaign-wrapper defect.
+**Trigger and boundary.** The work previously planned as v0.2.1 became a v0.2.0
+release blocker when clean branch CI on R 4.6 proved that archived `qs` 0.27.3
+itself no longer compiles against current R headers. The first failed commit
+`13bd7a2` exposed archived `stringfish` 0.17.0; the narrow `56376a6` trial made
+`stringfish` compile and exposed the underlying `qs` failure. Transitive pinning
+cannot make the current runtime dependency support the required matrix.
 
-The `qcb-2026-07-a2` commissioning campaign was stopped after its GenGC leg and
-before CFM. Its retained CausalStress 0.1.10 `.qs` artifacts remain immutable
-partial commissioning evidence; they are not migrated in place and the campaign
-is not resumed or sealed as complete. After the current v0.2.0 CI/release gate
-closes, v0.2.1 becomes the next bounded maintenance release and a prerequisite
-for the clean task-zero A2 rerun and the two WP-02 calibration campaigns. This
-narrowly supersedes the earlier decision to park all CausalStress development
-behind WP-02; unrelated feature development remains parked.
+CS-1228 in the active correction packet now owns only the minimum safe removal:
 
-**Required v0.2.1 scope (specification and tickets still required):**
+1. Make base-R RDS the sole runtime format for individual-result staging,
+   campaign-batch staging, and oracle caches; keep pin artifacts on RDS.
+2. Remove `qs` from runtime imports, tests, and CI bootstrap. New package
+   operations produce no `.qs` files.
+3. Use one small internal, non-pluggable persistence boundary for repeated
+   atomic write/read behavior. Storage bytes do not define scientific or logical
+   identity.
+4. Fail closed when legacy `.qs` staging appears in an active staging directory.
+   Preserve it and instruct the user to rerun in a clean directory. Ignore
+   immutable legacy oracle caches and compute a separate `.rds` entry.
+5. Test atomicity, corrupt/partial/invalid artifacts, resume, consolidation,
+   duplicates, and legacy/mixed staging; then rerun fresh local and R
+   release/devel remote gates.
 
-1. Make base-R RDS the canonical staging and retained R-object format; keep pins
-   on RDS. Benchmark compression and I/O on representative artifacts, but use
-   `qs2` only as an optional backend if a material measured need justifies the
-   additional format and atomicity surface.
-2. Remove `qs` from runtime imports and remove archived-`qs` CI installation.
-   New campaigns must produce no `.qs` artifacts.
-3. Introduce one internal persistence boundary for atomic write, read, format
-   detection, validation, and checksum handling. Scientific/logical identity
-   must be distinguished from storage encoding and file-byte identity.
-4. Specify fail-closed resume behavior for partial, corrupt, duplicate, legacy,
-   and mixed-format batch artifacts.
-5. Provide a governed, idempotent legacy converter in a separately frozen
-   environment containing archived `qs` 0.27.3. Conversion is read-old/write-new:
-   preserve every source `.qs` byte, validate source and target objects, and emit
-   per-artifact receipts binding source/target hashes, schemas, R/package
-   versions, converter identity, and lineage.
-6. Test a representative legacy corpus, corruption and partial-write cases,
-   cross-version RDS reads, resume/consolidation behavior, and removal of the
-   archived dependency. Document both ordinary use and historical recovery.
-7. Build the complete base-registry OCI smoke image under R 4.6.0 and run all
-   eight shipped estimators offline, including numeric-sanity and representative
-   native/bootstrap CI checks. The 2026-07-21 spike showed that R 4.5.2 passes,
-   while R 4.6.0 is blocked specifically by the archived `stringfish`/`qs`
-   chain; this gate verifies that the migration removes the blocker rather than
-   hiding it in the image. Campaign-local dynamic arms are a separate campaign-
-   image acceptance obligation, not v0.2.1 package scope.
-
-**Explicit non-scope.** v0.2.1 does not implement CATE, parameterized DGP
-families, runner-integrity migration, Parquet/DuckDB evidence-lake machinery,
-Python spokes, or a general storage platform. RDS is the stable R-native bridge;
-the later evidence-lake RFC owns normalized language-neutral Parquet/JSON
-evidence. The legacy converter creates derivative artifacts and never rewrites,
-deletes, or upgrades the evidential status of original campaign evidence.
+**Explicit non-scope.** v0.2.0 does not add `qs2`, a codec plug-in layer,
+dual-writing, a general storage platform, or a legacy converter. Existing
+pre-release `.qs` artifacts are not read, mutated, deleted, or migrated by the
+package. The maintainer is the current package consumer and has accepted a clean
+rerun while that cost is still small. Any future recovery utility runs outside
+CausalStress under separate authority. Parquet/JSON evidence-lake work, an OCI
+campaign image, CATE, and parameterized families remain separately planned.
 
 ------------------------------------------------------------------------
 

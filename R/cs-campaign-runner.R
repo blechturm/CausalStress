@@ -27,9 +27,33 @@ cs_run_campaign_plan <- function(plan,
     stop("plan must be a tibble from cs_plan_campaign().")
   }
 
-  staging_files <- list.files(staging_dir, pattern = "^batch_[0-9]+.*\\.qs$", full.names = FALSE)
-  staged_ids <- unique(as.integer(gsub("^batch_([0-9]+).*", "\\1", staging_files)))
-  staged_ids <- staged_ids[!is.na(staged_ids)]
+  staged <- cs_staged_batch_index(staging_dir)
+  for (i in seq_along(staged$paths)) {
+    path <- staged$paths[[i]]
+    batch_id <- staged$ids[[i]]
+    plan_index <- which(as.integer(plan$batch_id) == batch_id)
+    if (length(plan_index) != 1L) {
+      rlang::abort(
+        glue::glue("Staged batch is not present exactly once in the campaign plan: {path}"),
+        class = "causalstress_batch_artifact_error"
+      )
+    }
+    tasks <- plan$tasks[[plan_index]]
+    if (!"task_fingerprint" %in% names(tasks)) {
+      rlang::abort(
+        "Campaign plan tasks are missing `task_fingerprint`.",
+        class = "causalstress_batch_artifact_error"
+      )
+    }
+    batch_obj <- cs_read_rds(path, error_class = "causalstress_batch_artifact_error")
+    cs_validate_batch_artifact(
+      batch_obj,
+      path,
+      expected_batch_id = batch_id,
+      expected_task_fingerprints = tasks$task_fingerprint
+    )
+  }
+  staged_ids <- staged$ids
 
   board_ids <- integer(0)
   if (!is.null(board)) {

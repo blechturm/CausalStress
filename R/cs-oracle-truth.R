@@ -30,27 +30,53 @@ cs_oracle_algorithm_fingerprint <- function(descriptor) {
 cs_oracle_cache_file <- function(cache_dir, dgp_id, version, oracle_algorithm_fingerprint) {
   file.path(
     cache_dir,
-    paste0("truth_", dgp_id, "_", version, "_oracle_", oracle_algorithm_fingerprint, ".qs")
+    paste0("truth_", dgp_id, "_", version, "_oracle_", oracle_algorithm_fingerprint, ".rds")
   )
 }
 
-cs_oracle_cache_write <- function(payload, cache_file) {
-  dir.create(dirname(cache_file), recursive = TRUE, showWarnings = FALSE)
-  tmp <- tempfile(pattern = paste0(basename(cache_file), "."), tmpdir = dirname(cache_file), fileext = ".tmp")
-  qs::qsave(payload, tmp)
-  if (!file.exists(tmp) || is.na(file.info(tmp)$size) || file.info(tmp)$size <= 0L) {
-    if (file.exists(tmp)) unlink(tmp)
-    rlang::abort("Oracle cache temp write failed.", class = "causalstress_oracle_error")
-  }
-  ok <- file.rename(tmp, cache_file)
-  if (!isTRUE(ok)) {
-    if (file.exists(tmp)) unlink(tmp)
+cs_validate_oracle_cache_payload <- function(payload,
+                                             cache_file,
+                                             expected_fingerprint,
+                                             expected_descriptor) {
+  if (!is.list(payload) || !is.list(expected_descriptor)) {
     rlang::abort(
-      glue::glue("Failed to atomically write oracle cache file: {cache_file}"),
+      glue::glue("Oracle RDS cache has invalid structure or identity: {cache_file}"),
       class = "causalstress_oracle_error"
     )
   }
-  invisible(cache_file)
+  valid_truth <- is.data.frame(payload$truth) &&
+    all(c("tau_id", "tau", "value") %in% names(payload$truth)) &&
+    identical(as.character(payload$truth$tau_id), expected_descriptor$tau_id) &&
+    is.numeric(payload$truth$tau) &&
+    is.numeric(payload$truth$value) &&
+    nrow(payload$truth) == length(expected_descriptor$tau_id)
+  if (!identical(payload$oracle_algorithm_fingerprint, expected_fingerprint) ||
+      !identical(payload$oracle_algorithm_descriptor, expected_descriptor) ||
+      !isTRUE(valid_truth)) {
+    rlang::abort(
+      glue::glue("Oracle RDS cache has invalid structure or identity: {cache_file}"),
+      class = "causalstress_oracle_error"
+    )
+  }
+  invisible(payload)
+}
+
+cs_oracle_cache_write <- function(payload, cache_file) {
+  expected_fingerprint <- payload$oracle_algorithm_fingerprint
+  expected_descriptor <- payload$oracle_algorithm_descriptor
+  cs_write_rds_atomic(
+    payload,
+    cache_file,
+    validate = function(candidate, candidate_path) {
+      cs_validate_oracle_cache_payload(
+        candidate,
+        candidate_path,
+        expected_fingerprint,
+        expected_descriptor
+      )
+    },
+    error_class = "causalstress_oracle_error"
+  )
 }
 
 cs_get_oracle_qst <- function(dgp_id,
@@ -81,14 +107,14 @@ cs_get_oracle_qst <- function(dgp_id,
   cache_file <- cs_oracle_cache_file(cache_dir, dgp_id, version, oracle_fp)
 
   if (file.exists(cache_file)) {
-    payload <- tryCatch(qs::qread(cache_file), error = function(e) NULL)
-    if (is.list(payload) &&
-        identical(payload$oracle_algorithm_fingerprint, oracle_fp) &&
-        identical(payload$oracle_algorithm_descriptor, oracle_descriptor) &&
-        is.data.frame(payload$truth)) {
-      return(payload$truth)
-    }
-    unlink(cache_file)
+    payload <- cs_read_rds(cache_file, error_class = "causalstress_oracle_error")
+    cs_validate_oracle_cache_payload(
+      payload,
+      cache_file,
+      oracle_fp,
+      oracle_descriptor
+    )
+    return(payload$truth)
   }
 
   # recursion guard

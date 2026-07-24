@@ -54,11 +54,10 @@ test_that("cs_run_seeds persists rich results to a pins board", {
 
 test_that("Stage & Gather workflow", {
   skip_if_not_installed("pins")
-  skip_if_not_installed("qs")
 
-  board <- pins::board_temp()
-  staging_dir <- file.path(tempdir(), "cs_stage_demo")
+  staging_dir <- tempfile("cs_stage_demo_")
   dir.create(staging_dir, showWarnings = FALSE, recursive = TRUE)
+  board <- pins::board_folder(file.path(staging_dir, "board"))
 
   res <- cs_run_single(
     dgp_id       = "synth_baseline",
@@ -71,6 +70,8 @@ test_that("Stage & Gather workflow", {
 
   path <- CausalStress:::cs_stage_result(res, staging_dir)
   expect_true(file.exists(path))
+  expect_match(path, "\\.rds$")
+  expect_identical(readRDS(path), res)
 
   gathered <- CausalStress:::cs_gather_results(board, staging_dir)
   expect_equal(gathered, 1L)

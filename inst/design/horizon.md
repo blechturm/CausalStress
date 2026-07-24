@@ -18,7 +18,7 @@ promoted by an accepted RFC or a future spec packet.
   to estimators. New code must not generalize `grep("^X")` or an exclusion list
   into a real-data contract; those are current synthetic implementation details.
   The machine discriminator remains `type = "real"`, with no registered rows.
-- **Parameterized families and CATE.** Both remain candidates for the post-v0.2.1
+- **Parameterized families and CATE.** Both remain candidates for the post-v0.2.0
   science program. Parameterized families are the more immediate scientific need;
   CATE could proceed in a bounded parallel track to exercise unit-level contracts.
   A dedicated v0.3.0 planning session must decide the sequence and dependencies.
@@ -26,10 +26,11 @@ promoted by an accepted RFC or a future spec packet.
   pkgdown site, reports for all DGPs, the canonical-workflow vignette, and
   user-defined estimator/DGP contract vignettes. v0.2.0 repairs only its README
   and generated function reference.
-- **Persistence retirement.** Base-R RDS migration and the internal persistence
-  boundary are routed to v0.2.1. That boundary must stay encoding-neutral at its
-  logical-identity edge so later family, CATE, and evidence-lake designs are not
-  coupled to RDS bytes.
+- **Persistence boundary follow-ons.** The minimum base-R RDS migration is now a
+  v0.2.0 release blocker under CS-1228. Legacy conversion, optional codecs, and
+  generalized persistence remain outside that ticket. The internal boundary
+  must stay encoding-neutral at its logical-identity edge so later family,
+  CATE, and evidence-lake designs are not coupled to RDS bytes.
 
 ## Deferred Scientific Work
 
@@ -450,66 +451,33 @@ parked here so the decisive campaign and Paper-2 work inherit them:
 
 ## Deferred Tooling Work
 
-### `qs` retirement and stable artifact migration (promoted 2026-07-21 to the v0.2.1 roadmap; requires a reviewed spec packet)
+### Legacy `.qs` recovery after runtime retirement
 
-**Why this moved ahead of the tooling backlog.** CRAN removed `qs` on 2026-01-17
-because outstanding issues were not corrected, and the upstream project now
-labels it deprecated in favor of `qs2`:
-<https://cran.r-project.org/package=qs> and <https://github.com/qsbase/qs>.
-The successor is maintained, but its `.qs2` format is explicitly incompatible
-with legacy `.qs`: <https://github.com/qsbase/qs2>. CausalStress currently
-imports archived `qs` 0.27.3 for raw batch staging; consolidated board writes
-already use RDS. The blast radius is therefore narrower than a full evidence
-format redesign, but it will grow with every new campaign if left in place.
+**Promoted portion.** Removal of the archived `qs` runtime dependency, base-R
+RDS staging/cache writes, strict legacy-staging refusal, and fresh R 4.6 CI are
+no longer horizon work. They are the narrow v0.2.0 release blocker specified by
+CS-1228 after branch CI proved that `qs` 0.27.3 itself cannot compile against
+the current R headers.
 
-**Decided format roles for the v0.2.1 specification:**
+**Still deferred.** CausalStress will not ship a converter, codec plug-in layer,
+`qs2` dependency, dual-writing, or general storage platform in v0.2.0. The
+maintainer is willing to rerun the small current pre-release corpus. If a future
+evidence corpus makes recovery necessary, a separately governed utility may run
+outside the package in a frozen archived-`qs` environment, preserve each source
+byte-for-byte, write validated derivatives, and emit lineage receipts. That is
+a future need, not a current commitment.
 
-- base-R RDS is the canonical R-object staging and retention format;
-- existing pin-board publication artifacts remain RDS;
-- existing `.qs` files remain immutable primary evidence;
-- a frozen legacy reader converts `.qs` to separately hashed RDS derivatives;
-- normalized Parquet plus canonical JSON remains the later cross-language
-  evidence-lake direction, not a direct serializer for arbitrary nested R batch
-  objects;
-- `qs2` is not a default dependency. A representative benchmark may justify it
-  as an optional operational codec, but dual-writing is rejected absent a
-  measured bottleneck.
+RDS remains an R-native runtime bridge, not a language-neutral archive.
+Normalized Parquet plus canonical JSON remains the later cross-language
+evidence-lake direction. The optional tiny-file `qs2` benchmark is non-blocking
+research only and cannot change the RDS default without a reviewed spec. The
+complete campaign OCI image and any campaign-local dynamic arms remain campaign
+acceptance work, not CS-1228 scope.
 
-RDS is a stable, dependency-free **R-native** format, not a language-neutral
-archive. The separation is deliberate: v0.2.1 removes an immediate dependency
-risk without prematurely freezing the evidence-lake schema. The future lake
-should ingest normalized, validated derivatives rather than treating arbitrary
-R serialization as its public exchange contract.
-
-**Legacy migration contract to specify.** The converter runs outside normal
-CausalStress runtime in a frozen environment containing R, archived `qs` 0.27.3,
-and its dependency closure. For each source it inventories path/size/SHA-256,
-reads and validates the expected historical schema, writes RDS atomically,
-rereads it, checks structural equivalence and a governed logical digest, and
-emits a machine-readable receipt with source/target hashes, schema, environment,
-converter-code identity, timestamp, and validation outcome. It must be
-idempotent, resumable, fail closed, and incapable of deleting or overwriting its
-source. Preserve the archived package source and recovery environment alongside
-the conversion tooling.
-
-**Acceptance boundary.** The release is not complete until new runs require no
-`qs`, emit no `.qs`, resume/consolidate correctly from RDS, reject ambiguous or
-corrupt artifacts, and the golden legacy corpus converts reproducibly. It must
-also build the complete base-registry image under R 4.6.0 and pass the offline
-eight-estimator numeric/CI smoke. The 2026-07-21 OCI spike passed under R 4.5.2 but
-failed under R 4.6.0 because archived `stringfish` 0.17.0 uses a legacy R API;
-patching that deprecated dependency inside the image is explicitly not the
-solution. The abandoned `qcb-2026-07-a2` `.qs` artifacts are preserved
-byte-for-byte as partial
-commissioning evidence; any conversion creates separately receipted derivatives.
-The clean task-zero A2 rerun and WP-02 execution are blocked on the maintenance
-release, but CATE, families, broader runner-integrity migration, and evidence-lake
-implementation remain parked.
-
-**Relationship to the entries below.** The persistence boundary should expose
-format-neutral logical identity and explicit encoding metadata so it does not
-foreclose runner-integrity or evidence-lake work. It must not implement their
-catalog, reuse/admissibility model, cross-language protocol, or broader policy.
+**Relationship to the entries below.** The v0.2.0 persistence boundary should
+keep logical identity independent of RDS bytes so it does not foreclose
+runner-integrity or evidence-lake work. It must not implement their catalog,
+reuse/admissibility model, cross-language protocol, or broader policy.
 
 ### Runner-integrity migration from the QCB campaign capsule (parked 2026-07-21; requires an RFC; touches Articles II/III/V/VI and the planner/summary contracts)
 
