@@ -74,7 +74,7 @@ active packet, the current authority wins.
 | `templates/` | Process | Canonical packet and closeout templates. |
 | `audit/` | Audit input | Findings must be routed before release. |
 | `causalstress_v0_2_0_ci_packet/` | `ACTIVE` packet | v0.2.0 CI and release-gate infrastructure packet. |
-| `causalstress_v0_2_0_correction_packet/` | `ACTIVE` packet | Release-blocking constitutional, validation, QST-identity, minimal-documentation, emergency RDS-persistence, and final-publication corrections for v0.2.0. CS-1228 is complete after independent review; fresh final gates remain pending. |
+| `causalstress_v0_2_0_correction_packet/` | `ACTIVE` packet | Release-blocking constitutional, validation, QST-identity, minimal-documentation, emergency RDS-persistence, and final-publication corrections for v0.2.0. CS-1228 is complete after independent review and its committed-tree Windows/WSL gates pass; remote gates remain pending. |
 | `causalstress_v0_2_0_spec_packet/` | `FINAL` packet | v0.2.0 Wave 1 typed-scoring implementation packet, closed before public tag pending CI. |
 | `causalstress_v0_1_10_spec_packet/` | `FINAL` packet | v0.1.10 governance and defect-repair packet, closed on 2026-06-14. |
 | `rfc/` | RFC records | Accepted syntheses become binding in stated scope. |
