@@ -148,6 +148,146 @@ honest. This is the line that decides whether the headline quantile comparison i
 honest the moment a population-quantile estimator joins. Folded into the registry
 generalization below; do not solve it as a one-off `qte` patch.
 
+### Policy-estimand axis and RIF/UQPE stress testing: a fourth consumer for parametrized families (parked 2026-07-26; routes through the estimand-registry RFC and the families packet)
+
+**Context for a fresh agent.** The applied world's most-used "quantile effect"
+tool — RIF/unconditional quantile regression (Firpo–Fortin–Lemieux 2009) — does
+not estimate the QTE or the QST/QTT. For a binary treatment `W` with treated
+share `p`, the saturated dummy-only RIF coefficient has the local
+share-derivative geometry commonly called the **UQPE**:
+
+```text
+UQPE(tau) = dq_tau(p)/dp = [F_{Y|W=0}(q_tau) - F_{Y|W=1}(q_tau)] / f_Y(q_tau)
+```
+
+— the derivative of the **pooled** marginal quantile with respect to the
+**treated share**, built from **observational** conditionals. Ordinary
+covariate-adjusted RIF regressions add projection and density-estimation layers,
+so their fitted coefficient, this observational mixture-share derivative, and a
+causal distributional policy effect must not be treated as synonyms. The
+mixture-share derivative is a distinct **contrast/intervention type**: not
+treated-target (`qst`/`qtt`), not population-target (the reopened `qte`), but a
+**composition derivative**. It differs from QTT through stacked wedges
+(vertical-CDF-gap-over-density geometry vs horizontal quantile gaps; derivative
+per unit share vs discrete per-person switch; pooled vs treated population;
+selection built into the observational conditionals), and the wedges close only
+for infinitesimal effects on linear functionals — the **mean** is the degenerate
+case where the derivative equals the discrete gap exactly, which is why the
+"coefficient = effect" intuition formed there and silently breaks on quantiles.
+The mismatch generalizes: **every marginal functional ν** (quantile, variance,
+Gini, tail share) spawns the triple {population effect, treated effect,
+share-derivative}, so this entry is an instance of the registry-generalization
+question below, not a one-off.
+
+**Prior-art status (provisional 2026-07-26 reconnaissance; reverify before a
+specification):**
+the divergence *theory* is fully crowded — FFL 2009 state the share-derivative
+reading themselves (p. 954; FFL 2007 NBER t0339 Corollary 3 for the dummy
+case); Rothe (2012, *Econometrica*) calls FFL's binary parameter "substantially
+different" from the unconditional share effect and shows the discrete case is
+only set-identified; Martínez-Iriarte & Sun (2024, *J. Econometrics*) give an
+Apparent/Bias decomposition and prove RIF/UQR can be **inconsistent even under
+exogenous treatment**. Borgen, Haupt & Wiborg (2026, *European Sociological
+Review*) already provide truth-anchored simulations under both randomized
+assignment and observed confounding. **Residual open cell:** systematic overlap
+and heavy-tail stress, continuous breakdown surfaces, same-τ sign disagreement
+against known truth, and a deployable diagnostic/gate beyond the existing
+UQR-versus-QTE simulations. Full working bibliography,
+must-cite list, and residual uncertainties:
+[`phd-KB/syntheses/rif-uqpe-vs-qtt-prior-art.md`](../../../phd-KB/syntheses/rif-uqpe-vs-qtt-prior-art.md).
+Audience evidence (RIF ≈ 4k-citation applied user base vs ≈ 12 named-QTT works;
+documented misinterpretation literature):
+[`phd-KB/syntheses/qte-estimand-empirical-usage.md`](../../../phd-KB/syntheses/qte-estimand-empirical-usage.md).
+
+**First oracle evidence (2026-07-26, exploratory, inside the accepted A2 R 4.6
+image, no estimators):** UQPE overstates QTT by 14–27% through the body of
+`synth_baseline` and flips to ~50% understatement at τ = 0.99; at the
+`synth_qte1` median the three objects triple-diverge (QTE ≈ 0.005, QTT = 0.646,
+UQPE = 0.736); and a kernel-density denominator produced a **10× artifact in
+the exploratory calculation** on `synth_heavytail` before a kernel-free method
+replaced it. A candidate oracle is therefore the **mixture-quantile central
+finite difference** (pure ECDF inversion of
+`p·F_{Y|W=1} + (1−p)·F_{Y|W=0}` at `p ± δ`; script preserved in the prior-art
+KB note). It is not yet governed truth: the RFC must specify population versus
+finite-Monte-Carlo semantics, δ sensitivity/convergence, Monte Carlo
+uncertainty, and algorithm/version identity. The same 1/f_Y(q_τ)
+fragility afflicts real RIF software and density-scaled Wald quantile inference
+generally; CDF-band inversion (the GenGC DR-QST design) is the density-free
+alternative — a cross-cutting inference-design contrast worth making explicit
+in any study.
+
+**Candidate package mechanisms (all RFC-gated, none authorized):**
+
+1. **Register a policy-estimand target** (working id `uqpe_share`) with its own
+   governed mixture-derivative truth algorithm and a distinct
+   `estimand_target_id`, so no-cross-scoring keeps it
+   structurally apart from `qst`/`qtt`/`qte` — the exact mechanism that
+   separates ATT/ATE and motivates the quantile-axis split above. Article I
+   note: UQPE truth is a functional of the *observational* joint (selection
+   included), oracle-computable from any DGP without identification
+   assumptions. The RFC should first try to express it within the existing
+   distributional truth tier rather than inventing a third tier, and should add
+   a `contrast_type` or `intervention_spec` identity axis so a potential-outcome
+   contrast cannot be confused with a mixture-share derivative.
+2. **RIF-OLS / RIF-logit as registered estimator arms** declaring
+   `estimand_target = uqpe_share`, enabling **two-layer scoring**: (a)
+   own-estimand validity — does RIF even estimate its own UQPE well, given the
+   linear-projection and density-estimation layers; (b) misreading damage —
+   divergence from `qst`/`qte` truths reported only through an explicit,
+   labeled mismatch analysis, never silent cross-scoring.
+3. **Parametrized-families requirements — and the full consumer matrix
+   (updated 2026-07-26).** The families packet has **four estimand-axis
+   consumers**, not two: (i) **ATT** kill-plots (the original motivation; its
+   unique demands — moment-regime dial endpoints and `diagnostic_only`
+   planning — are recorded in the moment-regime entry above); (ii) the
+   **QST/QTE** validity-envelope phase diagram (thesis flagship); (iii)
+   **CATE**, whose execution stays deferred but whose stress axis is a
+   *surface*, uniquely demanding heterogeneity-structure dials (amplitude,
+   modifier sparsity, τ(X) smoothness) plus sharp-null endpoints for the
+   heterogeneity-detection Type-I test (see the estimand-expansion entry);
+   and (iv) **UQPE/policy** (this entry). Each consumer surfaces requirements
+   the others would not — the families spec intake must collect all four
+   demand sets before freezing dial vocabulary. Only the DGP side (registry
+   entries, versioning, truth machinery) amortizes across all four; estimator
+   compute does not, and the consumer count reorders no gates ("families
+   before CATE" stands). This entry's consumer imposes design requirements
+   the others would not surface:
+   - a **treatment-prevalence dial** named `treatment_prevalence` or
+     `treated_share`, not `p` (which already denotes unit-level propensity in
+     CausalStress). The design must distinguish configured prevalence, realized
+     finite-sample share, and the local perturbation `δ`; changing a propensity
+     intercept across family members is not automatically the same intervention
+     as reweighting fixed observational conditionals;
+   - **scorer-only oracle access to observational conditionals plus a
+     share-shift computation**, so functional-triple truths {population,
+     treated, share-derivative} can be governed without entering estimator
+     inputs or weakening the Airlock;
+   - the tail-index, selection/overlap, and heterogeneity/reranking dials
+     (shared with the first consumer) plus per-dial-point DGP identity and
+     versioning (already the families packet's core question).
+4. **Why families matter here specifically:** twelve discrete DGPs yield a
+   mismatch *table*; continuous dials yield **breakdown curves** — UQPE/QTT
+   distortion as a surface in (tail index × τ), (selection × τ), (share × τ) —
+   and a diagnostic threshold can only be **calibrated** on a curve, not on
+   twelve points. Same argument as the estimator kill-plot flagship, second
+   audience.
+
+**Hazard and interim guardrail (no code change):** do **not** register any
+RIF/UQR estimator until the policy target exists — a RIF arm labeled `qst`
+would be silently cross-scored against treated-target truth, the exact defect
+class the typed system exists to prevent. Consistent with this, the R QTE
+shootout preregistration
+([`thomasberger-phd-research/campaigns/specifications/qte-shootout/PREREGISTRATION.md`](../../../thomasberger-phd-research/campaigns/specifications/qte-shootout/PREREGISTRATION.md))
+excludes RIF from its fair core as a category error rather than a competitor.
+
+**Activation gate:** authorizes nothing. Sequenced behind WP-01/G1 and WP-02
+seals and the families planning gate; the estimand-target addition routes
+through the estimand-registry RFC below (do not solve as a one-off), and the
+programme-side study is parked as candidate WP-05 in
+[`thomasberger-phd-research/META_RESEARCH_MEMORY.md`](../../../thomasberger-phd-research/META_RESEARCH_MEMORY.md)
+§2A. Before any spec freeze, re-verify the prior-art must-cite list — the
+Martínez-Iriarte/Sun and Borgen lines are active.
+
 ### Estimand registry generalization: §1.7 list → governed schema (parked 2026-06-17; requires deep research, an RFC, and a §1.7 amendment)
 
 **Problem — amendment-per-estimand.** Constitution §1.7 enumerates a *closed* set
