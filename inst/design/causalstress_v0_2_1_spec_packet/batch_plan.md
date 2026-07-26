@@ -1,6 +1,6 @@
 # CausalStress v0.2.1 Batch Plan
 
-**Status:** ACTIVE — Batch 0 complete after independent review; Batch 1 unauthorized
+**Status:** ACTIVE — Batch 1 complete after independent review; Batch 2 unauthorized
 **Packet:** `causalstress_v0_2_1_spec_packet`
 **Authority commit:** `0b20f12`
 **Accepted:** 2026-07-26
@@ -58,6 +58,7 @@ are not authorized in any batch.
 
 ## Batch 1 — Independently Deferrable Bounded Maintenance
 
+- **State:** complete after independent review.
 - **Purpose:** Remove only the five low-risk concepts approved by the simplicity
   audit while keeping identities, vocabularies, public behavior, and defensive
   boundaries fixed.

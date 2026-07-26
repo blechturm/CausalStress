@@ -9,11 +9,6 @@ cs_chk_scalar_numeric <- function(x, arg) {
 }
 
 #' @noRd
-cs_estimand_target_ids <- function() {
-  c("att", "ate", "qst", "cate")
-}
-
-#' @noRd
 cs_estimand_targets <- function() {
   list(
     att = list(
@@ -67,7 +62,7 @@ cs_compact_estimand_target_id <- function(target) {
     )
   }
   target <- tolower(target)
-  if (!target %in% cs_estimand_target_ids()) {
+  if (!target %in% names(cs_estimand_targets())) {
     rlang::abort(
       glue::glue("Unknown estimand target id: {target}."),
       class = "causalstress_estimand_target_error"
@@ -96,19 +91,6 @@ cs_normalize_estimand_target_ids <- function(targets) {
 }
 
 #' @noRd
-cs_non_comparable_reasons <- function() {
-  c(
-    "estimator_not_produced",
-    "truth_unavailable",
-    "metric_invalid_for_regime",
-    "ci_unavailable",
-    "gate_unimplemented",
-    "not_requested",
-    "target_not_implemented"
-  )
-}
-
-#' @noRd
 cs_check_non_comparable_reason <- function(reason) {
   if (!is.character(reason) || length(reason) != 1L || is.na(reason) || !nzchar(reason)) {
     rlang::abort(
@@ -116,7 +98,15 @@ cs_check_non_comparable_reason <- function(reason) {
       class = "causalstress_non_comparable_reason_error"
     )
   }
-  if (!reason %in% cs_non_comparable_reasons()) {
+  if (!reason %in% c(
+    "estimator_not_produced",
+    "truth_unavailable",
+    "metric_invalid_for_regime",
+    "ci_unavailable",
+    "gate_unimplemented",
+    "not_requested",
+    "target_not_implemented"
+  )) {
     rlang::abort(
       glue::glue("Unknown non-comparable reason: {reason}."),
       class = "causalstress_non_comparable_reason_error"

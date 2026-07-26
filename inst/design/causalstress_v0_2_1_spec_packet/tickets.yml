@@ -38,7 +38,7 @@ tickets:
     constitutional_check: "Article V schema-4 identity and Article VI fail-closed resume; legacy readers/discovery retained"
     test_obligation: "Use an unmistakable non-hash sentinel; prove schemas 1-3 reject before comparison with exact classes; freeze representative schema-4 fingerprints; stop on identity drift"
     review_gate: "Batch 1 bounded-maintenance review; independently deferrable with no partial diff"
-    disposition: open
+    disposition: complete_after_review
 
   - id: "CS-1233"
     title: "Remove the obsolete thread setter"
@@ -50,7 +50,7 @@ tickets:
     constitutional_check: "Articles V and VI thread caps and worker isolation; caller environment restored"
     test_obligation: "Confirm no supported or maintainer-declared private use; remove cs_enforce_threads; preserve scoped caps and restoration on success/error"
     review_gate: "Batch 1 bounded-maintenance review; independently deferrable with no partial diff"
-    disposition: open
+    disposition: complete_after_review
 
   - id: "CS-1234"
     title: "Remove the unused estimator-result adapter"
@@ -63,7 +63,7 @@ tickets:
     constitutional_check: "Article III estimator output and Airlock contracts"
     test_obligation: "Move unique fixtures to canonical normalization tests; preserve typed and legacy list(att,qst,meta) shapes; remove adapter without replacement alias"
     review_gate: "Batch 1 bounded-maintenance review; independently deferrable with no partial diff"
-    disposition: open
+    disposition: complete_after_review
 
   - id: "CS-1235"
     title: "Collapse the duplicated cs_run_grid() tau branch"
@@ -76,7 +76,7 @@ tickets:
     constitutional_check: "Articles I and V public target behavior and identities unchanged"
     test_obligation: "Characterize omitted, NULL, default, and custom tau; collapse only if equivalent; preserve validation, warnings, order, score coordinates, and fingerprints"
     review_gate: "Batch 1 bounded-maintenance review; independently deferrable with no partial diff"
-    disposition: open
+    disposition: complete_after_review
 
   - id: "CS-1236"
     title: "Make governed vocabularies single-source"
@@ -88,7 +88,7 @@ tickets:
     constitutional_check: "Every exact governed target ID, descriptor, non-comparable reason, class, and public message is preserved"
     test_obligation: "Descriptor names source target IDs and equal embedded IDs; reasons stay adjacent without a framework; stop on vocabulary drift"
     review_gate: "Batch 1 bounded-maintenance review; independently deferrable with no partial diff"
-    disposition: open
+    disposition: complete_after_review
 
   - id: "CS-1237"
     title: "Establish the pinned Quarto/pkgdown build substrate"

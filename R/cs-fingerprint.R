@@ -223,45 +223,6 @@ cs_build_score_row_fingerprint <- function(score_fingerprint, row_coordinate) {
   )
 }
 
-cs_build_config_fingerprint_schema2 <- function(dgp_id, estimator_id, n, seed,
-                                                bootstrap, B, oracle, estimator_version,
-                                                config = list(), tau = cs_tau_oracle,
-                                                max_runtime = Inf) {
-  config_clean <- config
-  if (is.list(config_clean) && "seed" %in% names(config_clean)) {
-    config_clean$seed <- NULL
-  }
-  ci_intent <- "default"
-  if (isTRUE(bootstrap) && as.integer(B) > 0L) {
-    ci_intent <- "bootstrap"
-  } else if (is.list(config) && "ci_method" %in% names(config) && !is.null(config$ci_method)) {
-    ci_intent <- as.character(config$ci_method[[1L]])
-  }
-  if (is.list(config_clean) && "ci_method" %in% names(config_clean)) {
-    config_clean$ci_method <- NULL
-  }
-  config_norm <- cs_normalize_for_fingerprint(config_clean, path = "config")
-
-  digest::digest(
-    list(
-      config_fingerprint_schema = 2L,
-      dgp_id = dgp_id,
-      estimator_id = estimator_id,
-      n = as.integer(n),
-      seed = as.integer(seed),
-      bootstrap = as.logical(bootstrap),
-      B = as.integer(B),
-      oracle = as.logical(oracle),
-      estimator_version = as.character(estimator_version),
-      max_runtime = as.numeric(max_runtime),
-      ci_intent = ci_intent,
-      config = config_norm,
-      tau_id = cs_tau_id(tau)
-    ),
-    algo = "sha256"
-  )
-}
-
 cs_build_task_fingerprint <- function(dgp_id, dgp_version, estimator_id,
                                       estimator_version, n, seed, config = list(),
                                       tau = cs_tau_oracle, bootstrap = FALSE, B = 0L) {
@@ -277,46 +238,6 @@ cs_build_task_fingerprint <- function(dgp_id, dgp_version, estimator_id,
       tau_id = cs_tau_id(tau),
       ci_intent = cs_ci_intent(config = config, bootstrap = bootstrap, B = B),
       config = cs_fingerprint_config_payload(config)
-    ),
-    algo = "sha256"
-  )
-}
-
-# Legacy fingerprint for v0.1.7 pins (schema missing).
-# This must remain stable to keep v0.1.7 artifacts resumable in v0.1.8.
-cs_build_config_fingerprint_legacy <- function(dgp_id, estimator_id, n, seed,
-                                               bootstrap, B, oracle, estimator_version,
-                                               config = list(), tau = cs_tau_oracle) {
-  config_clean <- config
-  if (is.list(config_clean) && "seed" %in% names(config_clean)) {
-    config_clean$seed <- NULL
-  }
-
-  ci_intent <- "default"
-  if (isTRUE(bootstrap) && as.integer(B) > 0L) {
-    ci_intent <- "bootstrap"
-  } else if (is.list(config) && "ci_method" %in% names(config) && !is.null(config$ci_method)) {
-    ci_intent <- as.character(config$ci_method[[1L]])
-  }
-  if (is.list(config_clean) && "ci_method" %in% names(config_clean)) {
-    config_clean$ci_method <- NULL
-  }
-
-  config_norm <- cs_normalize_for_fingerprint(config_clean, path = "config")
-
-  digest::digest(
-    list(
-      dgp_id = dgp_id,
-      estimator_id = estimator_id,
-      n = as.integer(n),
-      seed = as.integer(seed),
-      bootstrap = as.logical(bootstrap),
-      B = as.integer(B),
-      oracle = as.logical(oracle),
-      estimator_version = as.character(estimator_version),
-      ci_intent = ci_intent,
-      config = config_norm,
-      tau_id = cs_tau_id(tau)
     ),
     algo = "sha256"
   )

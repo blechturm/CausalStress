@@ -123,7 +123,7 @@ authorize Batch 1.
   prove none moves. Any schema-4 lock failure stops the batch for investigation.
 - **Review gate:** Batch 1 bounded-maintenance review; this ticket may be
   explicitly deferred to v0.2.2 only with no partial diff.
-- **Disposition:** open
+- **Disposition:** complete_after_review
 
 ### CS-1233 — Remove the obsolete thread setter
 
@@ -140,7 +140,7 @@ authorize Batch 1.
   caller environment is restored on success and error.
 - **Review gate:** Batch 1 bounded-maintenance review; independently deferrable
   to v0.2.2 with reviewed rationale and no partial diff.
-- **Disposition:** open
+- **Disposition:** complete_after_review
 
 ### CS-1234 — Remove the unused estimator-result adapter
 
@@ -159,7 +159,7 @@ authorize Batch 1.
   replacement alias or new helper layer.
 - **Review gate:** Batch 1 bounded-maintenance review; independently deferrable
   to v0.2.2 with reviewed rationale and no partial diff.
-- **Disposition:** open
+- **Disposition:** complete_after_review
 
 ### CS-1235 — Collapse the duplicated `cs_run_grid()` tau branch
 
@@ -178,7 +178,7 @@ authorize Batch 1.
   equivalence fails, stop and retain the branch for separate design review.
 - **Review gate:** Batch 1 bounded-maintenance review; independently deferrable
   to v0.2.2 with reviewed rationale and no partial diff.
-- **Disposition:** open
+- **Disposition:** complete_after_review
 
 ### CS-1236 — Make governed vocabularies single-source
 
@@ -200,7 +200,65 @@ authorize Batch 1.
   framework. Any ID/reason/invariant drift stops the batch for investigation.
 - **Review gate:** Batch 1 bounded-maintenance review; independently deferrable
   to v0.2.2 with reviewed rationale and no partial diff.
-- **Disposition:** open
+- **Disposition:** complete_after_review
+
+## Batch 1 Implementation Evidence
+
+- **CS-1232:** Removed the schema-2 and schema-missing fingerprint writers from
+  production. Historical fixtures now use
+  `NOT-A-HASH-SCHEMA-REJECTED-BEFORE-COMPARISON`; schema-missing and schemas
+  1–3 all retain the exact `causalstress_schema_migration_error` class and
+  governed message before fingerprint comparison. Two representative schema-4
+  hashes are hard-locked and passed before and after the edit. Legacy pin
+  discovery and schema rejection remain in production.
+- **CS-1233:** Removed the unused, process-mutating `cs_enforce_threads()`.
+  `cs_thread_caps_env()` and `cs_with_envvar()` remain the only scoped cap
+  boundary; focused tests prove all four caps apply and that initially set and
+  unset caller values are restored after both success and error.
+- **CS-1234:** Removed `cs_extract_estimator_result()` and its adapter-only test
+  file. The list-ATT/value-QST, tabular-ATT/estimate-QST, missing-output, and
+  typed-output cases now exercise `cs_normalize_estimator_outputs()` directly.
+  No replacement alias or helper was introduced.
+- **CS-1235:** Characterization first proved omitted, explicit `NULL`, and
+  explicit `cs_tau_oracle` behavior identical. `cs_run_grid()` now resolves one
+  `effective_tau` and makes one `cs_run_seeds()` call. The public `tau = NULL`
+  default, sorted seed order, custom tau coordinates, result surfaces, and
+  configuration, fit, truth, score-record, and score-row identities remain
+  locked.
+- **CS-1236:** Descriptor names are now the only source used to validate the
+  four estimand IDs. The separate target-ID and non-comparable-reason getters
+  are gone; the seven reasons remain as an adjacent validator literal. Tests
+  lock the complete descriptor structures, name/embedded-ID invariant, every
+  reason, and the exact invalid-target/reason classes and messages.
+- **Use search:** No removed helper or vocabulary getter remains in `R/`,
+  tests, `NAMESPACE`, `DESCRIPTION`, developer tools, or CI. No unpublished
+  maintainer `:::` use was declared. No export or runtime dependency changed.
+- **Scope:** Five production files changed by 32 insertions and 170 deletions
+  (net -138 lines). The changes are limited to the five authorized findings;
+  no DGP, oracle, RNG, persistence, runner-path unification, campaign API, or
+  documentation-platform work was included.
+- **Pre/post characterization:** The focused fingerprint, thread-cap, grid-tau,
+  normalization, and governed-vocabulary suite passed on the pre-edit and
+  post-edit trees.
+- **Affected suite:** Nineteen fingerprint, resume, parallel, staging, runner,
+  Airlock, collection, schema-4, and typed-scoring test files passed.
+- **Full suite:** Passed in 233.1 seconds. The 56 warnings are existing
+  experimental-DGP, optional-estimator CI fallback, and governed RNG-warning
+  cases; none originates in Batch 1.
+- **Registry and lint:** Strict/executable registry validation passed 24/24
+  rows plus 153 focused expectations. Repository lint passed with
+  `lint_count=0` and 34 recognized internal-helper false positives ignored by
+  the governed lint script. `git diff --check` is clean.
+- **Final-tree chronology:** After the full suite, validation, and governed lint
+  completed, the fingerprint test received only a local readability edit that
+  reuses its schema list and shortens its title. Its 20 expectations passed
+  again on the final tree; no production or governance behavior changed.
+
+Independent review returned **APPROVE** with no blocker, major, or note. The
+reviewer independently reproduced both frozen schema-4 hashes, the complete F7
+vocabulary, zero references to all six removed symbols, and 121 passing focused
+expectations. CS-1232 through CS-1236 are `complete_after_review`. This
+acceptance does not authorize Batch 2.
 
 ## Batch 2 — Quarto Platform and Source Migration
 
