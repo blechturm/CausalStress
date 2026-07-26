@@ -48,7 +48,7 @@ jobs:
 
       - name: Install package for worker processes
         run: |
-          R CMD INSTALL .
+          Rscript -e "quit(status = system2(file.path(R.home('bin'), 'R'), c('CMD', 'INSTALL', '.')))"
 
       - name: Run full test suite
         run: |
