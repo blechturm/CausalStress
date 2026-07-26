@@ -262,7 +262,7 @@ knitr::kable(summary_tbl, digits = 3, caption = "Empirical validation (n=1000, s
 ## 11. Changelog
 
 - v1.3.0 dossier: Updated to emphasize conceptual blindness trap; removed TMLE narrative; added lm_att + oracle_att validation table.
-- v1.6.0: Implemented Common Random Numbers (CRN) for Oracle generation. Eliminates Monte Carlo noise in QST truth benchmarks.
+- v1.6.0: Implemented Common Random Numbers (CRN) for Oracle generation. This reduces Monte Carlo variance of the QST contrast; it does not eliminate empirical-quantile sampling uncertainty.
 
 ## Appendix: Implementation
 

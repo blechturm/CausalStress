@@ -114,6 +114,24 @@ tickets:
     review_gate: "Independent specification review before implementation, then focused persistence/atomicity and final-gate review"
     disposition: "complete_after_review"
 
+  - id: "CS-1229"
+    title: "Document heavytail estimand boundary and moment-regime metric limits"
+    batch: 2
+    source: {type: "audit/maintainer-adjudication", id: "pass2-scientific-review"}
+    files:
+      - "inst/dgp_meta/synth_heavytail.Rmd"
+      - "R/cs-summary.R"
+      - "man/cs_summarise_runs.Rd"
+      - "README.Rmd"
+      - "README.md"
+      - "inst/dgp_meta/*.Rmd (six v1.6.0 CRN dossiers: baseline/heavytail/nonlinear_heteroskedastic/overlap_stressed/qte1/tilt_mild)"
+      - "R/dgp-synth-heavytail.R"
+      - "inst/design/horizon.md"
+    constitutional_check: "Documentation only; no DGP logic/truth/RNG/scoring change; keep synth_heavytail stable (NO demotion); no constitutional amendment; the R comment edit is bitwise-identical output (Art VII 7.2.d)"
+    test_obligation: "Exact wording per inst/design/audit/pass2/maintainer-adjudication.md 6. Heavytail dossier distinguishes the conventional mean potential-outcome ATT (nonexistent under Cauchy) from the governed structural signal anchor and states 'not an ATT shootout; use QST'. cs_summarise_runs roxygen warns mean/SD/RMSE summaries require finite moments. README states synth_heavytail is an estimand-boundary DGP, not an ATT-ranking scenario. No 'eliminates Monte Carlo noise' wording remains in any dossier or R comment (replaced by 'reduces MC variance; does not eliminate empirical-quantile sampling uncertainty'). README renders; devtools::document regenerates man. Atomic point_error score rows are NOT suppressed."
+    review_gate: "Release-facing documentation-truthfulness review (as CS-1223)"
+    disposition: "complete_after_review"
+
   - id: "CS-1226"
     title: "Publish the immutable v0.1.10 archival release"
     batch: 3
@@ -134,5 +152,5 @@ tickets:
       - "inst/design/causalstress_v0_2_0_ci_packet/release_closeout.md"
     constitutional_check: "No blocker remains; reviewed v0.2.0 tag target is immutable"
     test_obligation: "Green branch/main/tag CI URLs, version 0.2.0, Constitution 2.0.1, fresh local gate, tag target, ticket routing, and FINAL packet states are recorded"
-    review_gate: "Maintainer final release decision after CS-1214, CS-1226, and CS-1228"
-    disposition: "blocked_by_CS-1214_CS-1226_CS-1228"
+    review_gate: "Maintainer final release decision after CS-1214, CS-1226, CS-1228, and CS-1229"
+    disposition: "blocked_by_CS-1214_CS-1226_CS-1228_CS-1229"

@@ -111,6 +111,35 @@
 - **Review gate:** Governance consistency review before local release gate.
 - **Disposition:** complete_after_review
 
+### CS-1229 - Document heavytail estimand boundary and moment-regime metric limits
+
+- **Batch:** 2
+- **Source:** pass-2 scientific-design review maintainer adjudication
+  (`inst/design/audit/pass2/maintainer-adjudication.md`)
+- **Motivation:** `synth_heavytail` is an intentional estimand-boundary DGP whose
+  Cauchy-mixture outcomes have no finite mean, so a conventional mean-based ATT
+  (bias/RMSE/coverage/ranking) is not valid there; the package documents the
+  governed structural signal anchor and QST but does not yet say so, and six v1.6.0
+  dossiers plus an R comment falsely claim CRN "eliminates Monte Carlo noise."
+- **Files:** `inst/dgp_meta/synth_heavytail.Rmd`; `R/cs-summary.R` +
+  `man/cs_summarise_runs.Rd`; `README.Rmd`/`README.md`; the six v1.6.0 CRN dossiers
+  (baseline, heavytail, nonlinear_heteroskedastic, overlap_stressed, qte1,
+  tilt_mild); `R/dgp-synth-heavytail.R` (comment-only); `inst/design/horizon.md`.
+- **Constitutional check:** Documentation only — no DGP logic, truth, RNG, or
+  scoring change; **keep `synth_heavytail` stable (no demotion)**; no constitutional
+  amendment; the R comment edit is bitwise-identical output (Art VII §7.2.d).
+- **Test obligation:** exact wording per `maintainer-adjudication.md` §6 — the
+  heavytail dossier distinguishes the conventional mean potential-outcome ATT
+  (nonexistent under Cauchy) from the governed signal anchor and states "not an ATT
+  shootout; use QST"; `cs_summarise_runs` roxygen warns mean/SD/RMSE summaries
+  require finite moments; README states `synth_heavytail` is an estimand-boundary
+  DGP, not an ATT-ranking scenario; no "eliminates Monte Carlo noise" wording
+  remains (→ "reduces MC variance; does not eliminate empirical-quantile sampling
+  uncertainty"); README renders; `devtools::document()` regenerates man; atomic
+  `point_error` score rows are NOT suppressed.
+- **Review gate:** Release-facing documentation-truthfulness review (as CS-1223).
+- **Disposition:** complete_after_review
+
 ## Batch 3 - Release Gate and Publication
 
 ### CS-1225 - Run the post-correction local release gate
@@ -198,9 +227,10 @@
   and tag-triggered v0.2.0 CI URLs/status; confirm package version 0.2.0,
   Constitution v2.0.1, fresh local gate, immutable tag target, complete ticket
   routing, and final packet statuses.
-- **Review gate:** Maintainer final release decision after CS-1214, CS-1226, and
-  CS-1228; close correction and CI packets as `FINAL` only after tag CI is green.
-- **Disposition:** blocked_by_CS-1214_CS-1226_CS-1228
+- **Review gate:** Maintainer final release decision after CS-1214, CS-1226,
+  CS-1228, and CS-1229; close correction and CI packets as `FINAL` only after tag
+  CI is green.
+- **Disposition:** blocked_by_CS-1214_CS-1226_CS-1228_CS-1229
 
 ## Release-Gate Ticket Requirement
 

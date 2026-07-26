@@ -3,8 +3,9 @@
 **Status:** ACTIVE
 **Closeout state:** CS-1225 complete after independent review; emergency
 CS-1228 implementation is complete after independent review and its committed-tree
-Windows/WSL gates pass; remote gates remain pending; CS-1226 and CS-1227 remain
-incomplete
+Windows/WSL gates pass; CS-1229 documentation is complete after independent
+review; fresh CS-1229-inclusive release gates and remote gates remain pending;
+CS-1226 and CS-1227 remain incomplete
 **Date opened:** 2026-07-24
 **Date closed:** TBD
 **Packet:** `causalstress_v0_2_0_correction_packet`
@@ -19,6 +20,7 @@ incomplete
 | CS-1223 | Replaced the stale v0.1.x README with the current v0.2.0 scientific boundary, 12-DGP/24-version and 8-estimator inventories, structured runner result, canonical score collection, honest Airlock and experimental-parallel claims, installation, and version-derived citation workflow. Corrected affected roxygen and regenerated README/help/namespace artifacts. Claude returned **APPROVE WITH NON-BLOCKING NOTES**, explicitly adjudicating the nine DGP-version exports as the correct synchronization of authoritative `@export` declarations. |
 | CS-1224 | Defined the packet lifecycle vocabulary, normalized both active packets, reclassified the closed Wave 1 packet only in the authority index, narrowed the v0.2.0 roadmap boundary, and routed persistence, real-data/feature-roster/extension risks, families/CATE planning, and the full documentation release. Claude returned **APPROVE WITH NON-BLOCKING NOTES** and confirmed the closed Wave 1 packet remains byte-identical. |
 | CS-1225 | Fresh post-correction Windows and WSL/Ubuntu gates passed on 2026-07-24: focused/full tests, strict validation, lint, coverage, substrate, and platform-local `R CMD check` evidence are recorded below. Claude's independent re-review returned **APPROVE WITH NON-BLOCKING NOTES**, confirmed the corrected host-context WSL evidence, closed the sole prior blocker, and found no executable rerun necessary. Ubuntu 20.04 remains useful early-warning evidence while remote Ubuntu CI remains mandatory. |
+| CS-1229 | Applied the accepted scientific-review adjudication without changing DGP status, generator logic, truth, RNG, scoring, or atomic score rows. The README and heavytail dossier now distinguish the governed finite-sample structural signal anchor from the nonexistent conventional superpopulation mean potential-outcome ATT; prohibit ATT shootout interpretation while preserving breakdown evidence; and direct valid distributional comparison to QST. `cs_summarise_runs()` documents its moment assumptions; the dossier validation uses finite-replicate structural-anchor diagnostics; six dossier changelogs and the heavytail CRN comment now say CRN reduces rather than eliminates Monte Carlo uncertainty; `horizon.md` records the three regimes and future `diagnostic_only` aggregation design. Claude's independent review returned **APPROVE WITH NON-BLOCKING NOTES**, with only the disclosed sandbox render override and benign generated-Rd terminator normalization noted. |
 
 ## Open Release Blocker
 
@@ -51,6 +53,7 @@ incomplete
 | QST record/row identity | Focused schema-4, pin, projection, science, audit, and historical-resume tests; full package suite; and independent Claude review. | Pass |
 | Emergency RDS implementation | Focused result/batch/oracle persistence tests; valid/invalid destination, corrupt/partial, duplicate, resume-plan identity, legacy-only/mixed staging, and immutable legacy-oracle-cache coverage; full package suite; strict 24/24 registry validation with 153 focused expectations; lint count zero; dependency/code/CI searches found no archived `qs` execution path. Independent implementation re-review returned **APPROVE** with no remaining findings. Commit `9c16cd2` then passed fresh Windows and WSL full tests, validation, substrate probes, and package checks; Windows coverage and lint also passed. | Pass after independent review and committed-tree local gates. Remote branch/main/tag CI remains required. |
 | README and roxygen truthfulness | `README.Rmd` rendered with all evaluated examples; `devtools::document()` regenerated help/namespace artifacts; focused stale-claim searches passed; final-tree Windows `R CMD check` passed examples, documentation, and the full tests with 0 errors, 0 warnings, and one environment-only time-verification NOTE. Claude independently returned **APPROVE WITH NON-BLOCKING NOTES** and accepted the namespace sync. | Pass |
+| Heavytail estimand-boundary documentation | CS-1229 applies the accepted pass-2 maintainer adjudication to the README, heavytail dossier, summary reference, CRN wording, and families horizon without changing executable behavior or suppressing atomic point-error evidence. The focused documentation gate below passed, and Claude independently returned **APPROVE WITH NON-BLOCKING NOTES** with no blocker, major, or minor findings. | Pass after independent review. Fresh CS-1229-inclusive release gates remain required before tagging. |
 | Focused tests | Fresh seven-file release selection on 2026-07-24; exact command and file list below. | Pass: 123 expectations, 0 failures. |
 | Full test suite | `testthat::test_local('.', reporter='summary', stop_on_failure=TRUE)` with `NOT_CRAN=true` on 2026-07-24. | Pass in 187.4 seconds with no failures; 50 governed experimental/optional-path warnings. |
 | Registry validation | `tools/ci-validation.R` on 2026-07-24. | Pass: `registry_strict_rows=24`, `validate_registry_rows=24`, `all_valid=TRUE`; 153 focused expectations passed. |
@@ -64,6 +67,30 @@ incomplete
 | Main/tag CI | Coordinated through CS-1214 and CS-1227 after fresh branch CI passes. | TBD |
 | Audit and ticket routing | Authority index lifecycle definitions, active packet headers/YAML, roadmap, horizon, and both closeouts were reconciled. All CS-1224 deferrals have named destinations. The final v0.1.10 closeout records every finding in the still-open v0.1.9 audit as ticketed, fixed, rejected with rationale, or deferred to a named destination. | Pass |
 | Known constitutional violations | Audited Constitution v2.0.1, all active ticket dispositions, accepted RFC routing, release metadata, and both active closeouts on 2026-07-24. | Pass: none known open. Publication tickets remain procedural blockers, not constitutional violations. |
+
+## CS-1229 Focused Documentation Gate
+
+**Date:** 2026-07-26
+
+**Implementation baseline:** `9c16cd2d6a8915aef808bb3c865b8224778fa227`
+
+**Review state:** Claude independently returned **APPROVE WITH NON-BLOCKING
+NOTES**. No blocker, major, or minor finding remains; CS-1229 is
+`complete_after_review`. The pre-existing CS-1228 release evidence was committed
+separately to preserve ticket provenance.
+
+| Gate | Result |
+| --- | --- |
+| README source/output | `README.Rmd` rendered all nine chunks and regenerated `README.md`. Because the managed sandbox forbids `pins::board_temp()` from statting `C:/Users/maxth`, the render used a validation-only namespace override to an equivalent repository-local `pins::board_folder()`; the README source and displayed public call remain `pins::board_temp()`. Claude accepted this as a non-blocking transparency note. All temporary render/cache/board directories were removed afterward. |
+| Generated reference | `devtools::document()` completed and regenerated `man/cs_summarise_runs.Rd`; `NAMESPACE` did not change. Claude confirmed the Rd matches the roxygen source and accepted the terminator normalization as benign. |
+| Focused tests | `devtools::test(filter='summary|dgp-heavytail', stop_on_failure=TRUE)` passed 36 expectations with 0 failures, 0 warnings, and 0 skips. |
+| Atomic-score preservation | A live `cs_run_single(dgp_id='synth_heavytail', estimator_id='lm_att', n=200, seed=1)` probe returned exactly one ATT `point_error` row with `score_status='scored'`, no non-comparability reason, and finite error. Claude independently reproduced the result. |
+| Registry status | `cs_get_dgp('synth_heavytail')` still reports `status='stable'`; Claude independently reproduced the result. |
+| Governance data | `yaml::read_yaml()` parsed `tickets.yml`; CS-1229 appears once with disposition `complete_after_review`. Markdown/YAML blockers include CS-1229 consistently. |
+| Truthfulness scans | No stale claim that CRN eliminates Monte Carlo noise/variance remains under `R/`, `inst/dgp_meta/`, README sources/output, or `man/`. The README no longer demonstrates mean-error ranking on `synth_heavytail`. Claude independently reproduced the scan. |
+| Executable scope | The only production-R diffs are the `cs_summarise_runs()` roxygen section and a two-line heavytail CRN comment correction. No generator, truth, RNG, scoring, or aggregation statement changed. |
+| Independent review | **APPROVE WITH NON-BLOCKING NOTES**. The two notes concern only the disclosed sandbox render substitution and benign generated-Rd terminator normalization; neither requires correction. |
+| Worktree hygiene | `git diff --check` passes after normalizing the generated Rd terminator. No push, tag, or publication was performed. |
 
 ## CS-1228 Fresh Final-Tree Local Gate Detail
 
@@ -196,10 +223,13 @@ CS-1225.
 ### Acceptance Audit
 
 - `DESCRIPTION` reports package version 0.2.0 and release date 2026-07-24.
-- The ratified Constitution is v2.0.1; all correction implementation tickets
-  CS-1220--CS-1224 are `complete_after_review`.
+- The ratified Constitution is v2.0.1; correction implementation tickets
+  CS-1220--CS-1224, CS-1228, and CS-1229 are `complete_after_review`.
 - CS-1228 is `complete_after_review`; its committed tree passed the fresh local
   Windows and WSL gates. Remote branch/main/tag evidence remains outstanding.
+- CS-1229 is `complete_after_review`; its documentation-focused implementation
+  gate and independent review passed. Fresh CS-1229-inclusive release gates
+  remain outstanding before remote publication sequencing.
 - `inst/design/README.md` correctly keeps the correction and CI packets active
   until publication, and identifies the Wave 1 packet as final.
 - Every finding in the open v0.1.9 deep audit is routed by the final v0.1.10
@@ -208,9 +238,10 @@ CS-1225.
   `3496e8f90ddddff1a86da4376113d82b5d7e7943` and peels to the governed commit
   `d05164a856b3e19101b989021f20dabe0b2a00a8`. It was inspected only; CS-1226
   still requires maintainer approval immediately before publication.
-- No known constitutional violation is open. Remaining blockers are archival
-  publication approval; remote branch/main/tag CI; CS-1214 final closeout; and
-  the final v0.2.0 release decision.
+- No known constitutional violation is open. Remaining blockers are fresh
+  CS-1229-inclusive release gates; archival publication approval; remote
+  branch/main/tag CI; CS-1214 final closeout; and the final v0.2.0 release
+  decision.
 
 ## Final Release Decision
 

@@ -1,13 +1,13 @@
 # CausalStress Design Governance Index
 
 **Status:** ACTIVE authority index
-**Last updated:** 2026-07-24
+**Last updated:** 2026-07-26
 **Current active packets:** `causalstress_v0_2_0_correction_packet` (release corrections) and `causalstress_v0_2_0_ci_packet` (CI/tag gate)
 **Latest final packet:** `causalstress_v0_2_0_spec_packet` (Wave 1 implementation final; public v0.2.0 tag blocked until the active correction and CI packets close)
 **Accepted RFCs (authority level 4):** RFC-1 Estimand Registry — `rfc/20260616_estimand_registry_synthesis.md`, accepted 2026-06-16 and consumed by ratified Constitution v2.0.0. DGP contract terminology clarifications — `rfc/20260722_covariate_naming_synthesis.md` (seed `rfc/20260722_covariate_naming_seed.md`, response `rfc/20260722_covariate_naming_response.md`, independent review `rfc/20260722_covariate_naming_synthesis_review.md`), accepted 2026-07-24 and consumed by ratified Constitution v2.0.1 and correction ticket CS-1221.
 **Open RFCs (non-binding):** none.
 **Constitution:** **v2.0.1 ratified 2026-07-24** (`CausalStress Scientific Protocol`) — see `CAUSAL_STRESS_CONSTITUTION.md` Amendment History, `rfc/20260722_covariate_naming_synthesis.md`, and `rfc/20260722_covariate_naming_synthesis_review.md`.
-**Active release boundary:** v0.2.0 ships Constitution v2.0.1, typed ATT/ATE/QST scoring, corrected schema-4 identities, CI enforcement, and the emergency replacement of archived `qs` runtime persistence with base-R RDS under correction ticket CS-1228. CATE execution, parameterized families, real-data DGP support, a public DGP-extension API, an authoritative feature roster, legacy `.qs` conversion, generalized persistence, and the full documentation release are later or external work requiring separate planning/packets. See `roadmap.md` and `horizon.md`.
+**Active release boundary:** v0.2.0 ships Constitution v2.0.1, typed ATT/ATE/QST scoring, corrected schema-4 identities, CI enforcement, the emergency replacement of archived `qs` runtime persistence with base-R RDS under correction ticket CS-1228, and the release-facing heavytail estimand-boundary clarification under CS-1229. CATE execution, parameterized families, real-data DGP support, a public DGP-extension API, an authoritative feature roster, legacy `.qs` conversion, generalized persistence, and the full documentation release are later or external work requiring separate planning/packets. See `roadmap.md` and `horizon.md`.
 
 This file is the entry point for design and governance work in `inst/design/`.
 Every design-document add, move, retirement, or authority change must update this
@@ -74,7 +74,7 @@ active packet, the current authority wins.
 | `templates/` | Process | Canonical packet and closeout templates. |
 | `audit/` | Audit input | Findings must be routed before release. |
 | `causalstress_v0_2_0_ci_packet/` | `ACTIVE` packet | v0.2.0 CI and release-gate infrastructure packet. |
-| `causalstress_v0_2_0_correction_packet/` | `ACTIVE` packet | Release-blocking constitutional, validation, QST-identity, minimal-documentation, emergency RDS-persistence, and final-publication corrections for v0.2.0. CS-1228 is complete after independent review and its committed-tree Windows/WSL gates pass; remote gates remain pending. |
+| `causalstress_v0_2_0_correction_packet/` | `ACTIVE` packet | Release-blocking constitutional, validation, QST-identity, minimal-documentation, emergency RDS-persistence, scientific-interpretation, and final-publication corrections for v0.2.0. CS-1228 and CS-1229 are complete after independent review; committed-tree Windows/WSL gates cover CS-1228, while fresh CS-1229-inclusive release gates and remote CI remain pending. |
 | `causalstress_v0_2_0_spec_packet/` | `FINAL` packet | v0.2.0 Wave 1 typed-scoring implementation packet, closed before public tag pending CI. |
 | `causalstress_v0_1_10_spec_packet/` | `FINAL` packet | v0.1.10 governance and defect-repair packet, closed on 2026-06-14. |
 | `rfc/` | RFC records | Accepted syntheses become binding in stated scope. |

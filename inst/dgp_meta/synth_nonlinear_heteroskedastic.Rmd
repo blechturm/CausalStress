@@ -221,7 +221,7 @@ Under the v1.6.0 cubic/exponential regime (with overlap restored), OLS (`lm_att`
 
 - v1.4.0: Parameter hardening (Deprecated v1.3.0).
 - v1.5.0: Relaxed propensity coefficients to 0.5. v1.4.0 deprecated due to unintended overlap violation.
-- v1.6.0: Implemented Common Random Numbers (CRN) for Oracle generation. Eliminates Monte Carlo noise in QST truth benchmarks.
+- v1.6.0: Implemented Common Random Numbers (CRN) for Oracle generation. This reduces Monte Carlo variance of the QST contrast; it does not eliminate empirical-quantile sampling uncertainty.
 
 ## Appendix: Implementation
 

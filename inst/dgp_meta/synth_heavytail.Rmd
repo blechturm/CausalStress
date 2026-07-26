@@ -102,19 +102,26 @@ knitr::kable(meta_df, format = "html", col.names = NULL, escape = FALSE) %>%
 
 This DGP is identical to the baseline linear design except for the outcome noise,
 which is a Gaussian/Cauchy mixture. The Cauchy component makes the population mean
-of observed outcomes undefined, so any estimator that minimizes squared error is
-theoretically ill-posed and will suffer variance explosion.
+of observed outcomes undefined. Consequently, a conventional superpopulation mean
+potential-outcome ATT does not exist, and estimators that rely on L2 loss or outcome
+means do not converge to such an estimand.
 
-This motivates robust estimators (e.g., median/quantile targets) that remain
-well-defined under heavy tails.
+CausalStress deliberately keeps running ATT estimators because their breakdown is
+the evidence this boundary DGP is designed to produce. The package's `true_att`
+is a governed finite-sample structural signal anchor, not a conventional
+superpopulation mean potential-outcome ATT. It must not be used for an ATT
+estimator shootout. QST is the well-defined distributional comparison target in
+this regime.
 
 ## 3. Identification Assumptions (Explicit)
 
 - Unconfoundedness holds by construction (treatment is assigned by a known
   propensity score).
 - Overlap is moderate (`p(X)` bounded away from 0 and 1 for most of the mass).
-- Structural ATT is defined as the mean of the signal `tau(X)` on treated units
-  (Constitution Article I), independent of realized noise.
+- The governed structural signal anchor is the finite-sample mean of `tau(X_i)`
+  over the run's treated units (Constitution Article I), independent of realized
+  noise. Because the population outcome means do not exist, this is not a
+  conventional superpopulation mean potential-outcome ATT.
 
 ## 4. Mathematical Specification
 
@@ -154,9 +161,10 @@ Y_1 = \mu_0(X) + \tau(X) + \varepsilon_1
 
 ## 5. Oracle Truth Definition
 
-- **ATT (Structural):** \(\mathbb{E}[\tau(X) \mid W=1]\), computed from the
-  deterministic signal \(\tau(X)\). This is well-defined even when \(\mathbb{E}[Y]\)
-  is not.
+- **Finite-sample structural signal anchor (`true_att`):**
+  \(N_{treated}^{-1}\sum_{i:W_i=1}\tau(X_i)\), computed from the deterministic
+  signal \(\tau(X)\). This governed diagnostic anchor is finite even though the
+  conventional superpopulation mean potential-outcome ATT is not.
 - **QST (Distributional):** computed on the canonical tau grid via oracle Monte Carlo
   as specified in `cs_get_oracle_qst()`.
 
@@ -210,8 +218,11 @@ if (patchwork_available) {
 ## 7. Empirical Validation
 
 We run light validation with `n = 1000` and `seeds = 1:20`. The goal is to show
-variance explosion for OLS under L2 loss. We do **not** run heavier robust
-estimators here to keep doc builds fast.
+extreme sensitivity of OLS under L2 loss, not to rank ATT estimators. We report
+finite-replicate diagnostics relative to the structural signal anchor, centered
+on medians and a quantile; the sample maximum is descriptive only. These are not
+conventional ATT bias or RMSE. We do **not** run heavier robust estimators here
+to keep doc builds fast.
 
 ```{r empirical, cache=FALSE}
 run_fast <- function(est_id) {
@@ -234,23 +245,36 @@ summary_tbl <- dplyr::bind_rows(res_lm, res_oracle) %>%
   cs_tidy() %>%
   dplyr::group_by(estimator_id) %>%
   dplyr::summarise(
-    mean_bias = mean(att_error, na.rm = TRUE),
-    rmse      = sqrt(mean(att_error^2, na.rm = TRUE)),
+    n_runs = dplyr::n(),
+    median_anchor_deviation = stats::median(att_error, na.rm = TRUE),
+    median_abs_anchor_deviation = stats::median(abs(att_error), na.rm = TRUE),
+    p90_abs_anchor_deviation = stats::quantile(abs(att_error), 0.90, names = FALSE, na.rm = TRUE),
+    max_abs_anchor_deviation = max(abs(att_error), na.rm = TRUE),
     .groups   = "drop"
   )
 
-knitr::kable(summary_tbl, digits = 3, caption = "Empirical validation (n=1000, seeds=1:20)")
+knitr::kable(
+  summary_tbl,
+  digits = 3,
+  caption = "Finite-replicate diagnostics against the structural signal anchor (n=1000, seeds=1:20)"
+)
 ```
 
-**Interpretation:** OLS fails not because it is biased in the limit, but because
-its variance is infinite under a Cauchy mixture. The RMSE will fluctuate wildly
-across seeds (typical values ~8.0 in quick runs). The oracle estimator remains
-stable, confirming the truth layer.
+**Interpretation:** OLS exhibits non-convergence and extreme seed sensitivity
+under the Cauchy mixture. Mean bias, RMSE, conventional coverage, and winner
+rankings are not defined here. The structural oracle reproduces the governed
+signal anchor; this confirms scorer consistency, not existence of a conventional
+mean ATT.
 
 ## 8. Failure Mode Summary
 
-- **L2-based estimators (OLS/IPW with mean targets):** variance explosion; unstable RMSE.
-- **Robust estimators (median/quantile targets):** well-defined under heavy tails.
+- **L2/mean-based ATT estimators:** run them to diagnose non-convergence and
+  extreme sensitivity; do not rank them or report conventional bias/RMSE/coverage.
+- **Structural `true_att`:** a governed finite-sample signal anchor for
+  diagnostics, not a conventional superpopulation mean potential-outcome ATT in
+  this no-mean regime.
+- **QST/quantile targets:** well-defined under the Cauchy mixture and the valid
+  distributional comparison surface.
 
 ## 9. Implementation Reference
 
@@ -261,15 +285,16 @@ stable, confirming the truth layer.
 ## 10. Validation Checklist
 
 - [x] Mixture noise matches spec (0.8 * Normal + 0.2 * Cauchy).
-- [x] Structural ATT defined on `tau(X)` (signal-only).
+- [x] Finite-sample structural signal anchor defined on `tau(X)` and
+  distinguished from a conventional superpopulation mean potential-outcome ATT.
 - [x] Visual diagnostics show extreme tails.
-- [x] OLS variance explosion demonstrated.
-- [x] Oracle estimator stable across seeds.
+- [x] OLS non-convergence and extreme sensitivity reproduced.
+- [x] Structural oracle reproduces the governed signal anchor.
 
 ## 11. Changelog
 
 - v1.3.0 (2026-01-06): Initial dossier for heavy-tail stress DGP.
-- v1.6.0: Implemented Common Random Numbers (CRN) for Oracle generation. Eliminates Monte Carlo noise in QST truth benchmarks. Also enforces regime consistency (Normal/Cauchy) for counterfactuals during Oracle evaluation.
+- v1.6.0: Implemented Common Random Numbers (CRN) for Oracle generation. This reduces Monte Carlo variance of the QST contrast; it does not eliminate empirical-quantile sampling uncertainty. Also enforces regime consistency (Normal/Cauchy) for counterfactuals during Oracle evaluation.
 
 ## Appendix: Implementation
 

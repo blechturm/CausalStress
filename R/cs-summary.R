@@ -19,6 +19,17 @@
 #'   If multiple (dgp_id, estimator_id, n) combinations are present, the
 #'   function summarises within each group and returns one row per group.
 #'
+#' @section Moment-regime limitation:
+#' These columns are direct summaries of the supplied finite set of runs; this
+#' function does not establish that their population analogues exist.
+#' `mean_error` and `mean_abs_error` require the corresponding first moments,
+#' and `sd_error` requires a finite second moment. `max_abs_error` is specific
+#' to the supplied replicate set and is not a stable tail-performance metric.
+#' On infinite-variance or no-mean DGPs such as `synth_heavytail`, do not use
+#' these columns for bias, RMSE, conventional Monte Carlo standard errors, or
+#' estimator rankings. Inspect robust summaries of the per-run deviations and
+#' use QST for valid distributional comparisons instead.
+#'
 #' @export
 cs_summarise_runs <- function(runs) {
   if (!is.data.frame(runs)) {

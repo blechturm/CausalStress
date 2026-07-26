@@ -39,6 +39,32 @@ promoted by an accepted RFC or a future spec packet.
 - Additional estimators after ATT/QST contract repairs.
 - Registry-spec version bump for known stale narrative entries.
 
+### Moment-regime interpretation for Paper 3 families (parked 2026-07-26)
+
+The accepted pass-2 scientific-review adjudication keeps `synth_heavytail`
+stable as an intentional estimand-boundary DGP. Its no-mean Cauchy mixture is
+the pathology Paper 3 is meant to expose: conventional superpopulation mean
+potential-outcome ATT interpretation stops, while the governed finite-sample
+structural signal anchor remains available for breakdown diagnostics and QST
+remains well-defined.
+
+| Moment regime | Valid interpretation |
+| --- | --- |
+| Finite variance | ATT comparison, bias, variance, and RMSE are valid. |
+| Finite mean, infinite variance | ATT exists; RMSE and standard Monte Carlo standard errors fail; robust summaries are required. |
+| No finite mean | Conventional ATT shootouts stop; structural-anchor diagnostics and QST remain reportable. |
+
+The families specification must preserve execution and atomic point-error
+evidence across all three regimes. Beyond the mean-existence boundary, planning
+status is `diagnostic_only`, not `ineligible`: invalid comparison must not mean
+skipped execution. Moment-regime metadata governs aggregation, where invalid
+mean/RMSE/SEM/ranking summaries are marked interpretation-limited and robust
+median/quantile summaries are provided. `metric_invalid_for_regime` applies to
+the invalid aggregate metric, not to the ATT target or its atomic score rows.
+Future QST reporting should also expose the governed oracle's finite Monte Carlo
+uncertainty. This entry records the accepted design constraint but authorizes no
+families implementation before the v0.3.0 planning gate and its own packet.
+
 ### Estimand expansion (parked 2026-06-12; requires an RFC and Article I/IV amendment)
 
 **Status (updated 2026-07-24):** ATE, the estimand-aware scoring join, and the

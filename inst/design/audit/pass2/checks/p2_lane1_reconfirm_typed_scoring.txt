@@ -1,0 +1,75 @@
+== Part A/B/C: oracle_att on synth_baseline (stable), targets att+ate+qst+cate ==
+[PASS] seed 101: ATT row present and scored
+[PASS] seed 101: ATE row present and scored
+[PASS] seed 101: oracle ATT error == 0 (got 0.000e+00)
+[PASS] seed 101: oracle ATE error == 0 (got 0.000e+00)
+[PASS] seed 101: scored ATT truth bitwise == independent treated-mean (1.104065)
+[PASS] seed 101: scored ATE truth bitwise == independent full-sample mean (0.987406)
+[PASS] seed 101: ATT truth != ATE truth (finite-sample gap = +0.11666) — no cross-assignment possible silently
+[PASS] seed 101: ATT row does not carry ATE truth and vice versa
+[PASS] seed 101: QST (not produced by oracle_att) -> non_comparable/estimator_not_produced
+[PASS] seed 101: CATE (mixed request) -> non_comparable/target_not_implemented
+[PASS] seed 101: non_comparable rows carry NA value fields (never a cross-scored value)
+[PASS] seed 101: no scored rows exist for unproduced/unimplemented targets
+[PASS] seed 102: ATT row present and scored
+[PASS] seed 102: ATE row present and scored
+[PASS] seed 102: oracle ATT error == 0 (got 0.000e+00)
+[PASS] seed 102: oracle ATE error == 0 (got 0.000e+00)
+[PASS] seed 102: scored ATT truth bitwise == independent treated-mean (1.127619)
+[PASS] seed 102: scored ATE truth bitwise == independent full-sample mean (1.009251)
+[PASS] seed 102: ATT truth != ATE truth (finite-sample gap = +0.11837) — no cross-assignment possible silently
+[PASS] seed 102: ATT row does not carry ATE truth and vice versa
+[PASS] seed 102: QST (not produced by oracle_att) -> non_comparable/estimator_not_produced
+[PASS] seed 102: CATE (mixed request) -> non_comparable/target_not_implemented
+[PASS] seed 102: non_comparable rows carry NA value fields (never a cross-scored value)
+[PASS] seed 102: no scored rows exist for unproduced/unimplemented targets
+[PASS] seed 103: ATT row present and scored
+[PASS] seed 103: ATE row present and scored
+[PASS] seed 103: oracle ATT error == 0 (got 0.000e+00)
+[PASS] seed 103: oracle ATE error == 0 (got 0.000e+00)
+[PASS] seed 103: scored ATT truth bitwise == independent treated-mean (1.099473)
+[PASS] seed 103: scored ATE truth bitwise == independent full-sample mean (1.005227)
+[PASS] seed 103: ATT truth != ATE truth (finite-sample gap = +0.09425) — no cross-assignment possible silently
+[PASS] seed 103: ATT row does not carry ATE truth and vice versa
+[PASS] seed 103: QST (not produced by oracle_att) -> non_comparable/estimator_not_produced
+[PASS] seed 103: CATE (mixed request) -> non_comparable/target_not_implemented
+[PASS] seed 103: non_comparable rows carry NA value fields (never a cross-scored value)
+[PASS] seed 103: no scored rows exist for unproduced/unimplemented targets
+[PASS] seed 104: ATT row present and scored
+[PASS] seed 104: ATE row present and scored
+[PASS] seed 104: oracle ATT error == 0 (got 0.000e+00)
+[PASS] seed 104: oracle ATE error == 0 (got 0.000e+00)
+[PASS] seed 104: scored ATT truth bitwise == independent treated-mean (1.135391)
+[PASS] seed 104: scored ATE truth bitwise == independent full-sample mean (1.020183)
+[PASS] seed 104: ATT truth != ATE truth (finite-sample gap = +0.11521) — no cross-assignment possible silently
+[PASS] seed 104: ATT row does not carry ATE truth and vice versa
+[PASS] seed 104: QST (not produced by oracle_att) -> non_comparable/estimator_not_produced
+[PASS] seed 104: CATE (mixed request) -> non_comparable/target_not_implemented
+[PASS] seed 104: non_comparable rows carry NA value fields (never a cross-scored value)
+[PASS] seed 104: no scored rows exist for unproduced/unimplemented targets
+[PASS] seed 105: ATT row present and scored
+[PASS] seed 105: ATE row present and scored
+[PASS] seed 105: oracle ATT error == 0 (got 0.000e+00)
+[PASS] seed 105: oracle ATE error == 0 (got 0.000e+00)
+[PASS] seed 105: scored ATT truth bitwise == independent treated-mean (1.116195)
+[PASS] seed 105: scored ATE truth bitwise == independent full-sample mean (1.002349)
+[PASS] seed 105: ATT truth != ATE truth (finite-sample gap = +0.11385) — no cross-assignment possible silently
+[PASS] seed 105: ATT row does not carry ATE truth and vice versa
+[PASS] seed 105: QST (not produced by oracle_att) -> non_comparable/estimator_not_produced
+[PASS] seed 105: CATE (mixed request) -> non_comparable/target_not_implemented
+[PASS] seed 105: non_comparable rows carry NA value fields (never a cross-scored value)
+[PASS] seed 105: no scored rows exist for unproduced/unimplemented targets
+
+== Part C2: lm_att requesting att+ate (produces att only) ==
+[PASS] lm_att ATT scored against ATT truth (err = +0.0200)
+[PASS] lm_att ATE request -> non_comparable/estimator_not_produced (ATT output NOT cross-scored as ATE)
+[PASS] lm_att ATE non_comparable row has NA estimate/truth/error
+[PASS] scoring_population_id: att='treated', ate='full_generated_run_sample' (declared populations recorded)
+
+== Part C3: CATE-only task hard-rejects before estimator execution ==
+[PASS] CATE-only request aborts with class causalstress_target_not_implemented_error (causalstress_target_not_implemented_error)
+
+== Part D: airlock shadow (default grant set is empty) ==
+[PASS] airlocked frame drops y0/y1/p/structural_te (kept: y,w,X1,X2,X3,X4,X5)
+
+== RESULT: ALL PASS (0 failures) ==

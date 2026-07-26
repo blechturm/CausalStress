@@ -1,0 +1,57 @@
+################ p2_lane2_dgp_intent ################
+
+== S1: 12-DGP signature (fresh seed=20260726, n=5000) ==
+synth_baseline                   sdlogit= 0.709 fr<.01=0.000 fr>.99=0.000 ESSc=0.627 tATT=  1.119 nbias=   0.238 sd(y1-y0-tau)=0.713
+synth_heavytail                  sdlogit= 0.709 fr<.01=0.000 fr>.99=0.000 ESSc=0.627 tATT=  1.119 nbias=   0.937 sd(y1-y0-tau)=28.600
+synth_qte1                       sdlogit= 0.709 fr<.01=0.000 fr>.99=0.000 ESSc=0.627 tATT=  0.200 nbias=   0.244 sd(y1-y0-tau)=0.977
+synth_nonlinear_heteroskedastic  sdlogit= 0.709 fr<.01=0.000 fr>.99=0.000 ESSc=0.627 tATT=  1.000 nbias=   0.799 sd(y1-y0-tau)=1.905
+synth_overlap_stressed           sdlogit=12.194 fr<.01=0.361 fr>.99=0.363 ESSc=0.002 tATT=  1.285 nbias=   1.648 sd(y1-y0-tau)=0.713
+synth_tilt_mild                  sdlogit= 0.596 fr<.01=0.000 fr>.99=0.000 ESSc=0.714 tATT=  1.105 nbias=   0.252 sd(y1-y0-tau)=0.713
+synth_hd_sparse_plm              sdlogit= 0.952 fr<.01=0.000 fr>.99=0.000 ESSc=0.440 tATT=  1.000 nbias=   3.859 sd(y1-y0-tau)=0.000
+synth_placebo_tau0               sdlogit= 0.709 fr<.01=0.000 fr>.99=0.000 ESSc=0.627 tATT=  0.000 nbias=   0.246 sd(y1-y0-tau)=0.000
+synth_placebo_nonlinear          sdlogit= 0.709 fr<.01=0.000 fr>.99=0.000 ESSc=0.627 tATT=  0.000 nbias=   0.272 sd(y1-y0-tau)=0.000
+synth_placebo_heavytail          sdlogit= 0.709 fr<.01=0.000 fr>.99=0.000 ESSc=0.627 tATT=  0.000 nbias=  -0.623 sd(y1-y0-tau)=0.000
+synth_placebo_tilted             sdlogit= 0.988 fr<.01=0.000 fr>.99=0.000 ESSc=0.390 tATT=  0.000 nbias=   0.819 sd(y1-y0-tau)=0.000
+synth_placebo_kangschafer        sdlogit= 1.153 fr<.01=0.000 fr>.99=0.000 ESSc=0.376 tATT=  0.000 nbias= -21.624 sd(y1-y0-tau)=0.000
+
+== S2: heavytail mean-of-outcomes non-convergence (40 seeds) ==
+   across-seed sd of naive mean-ATT should SHRINK ~1/sqrt(n) for baseline,
+   but stay large/erratic for heavytail (Cauchy => no finite mean).
+  n=  1000  baseline sd(naiveATT)= 0.1051 [range   0.485]   heavytail sd(naiveATT)=    9.129 [range     44.74]
+  n=  5000  baseline sd(naiveATT)= 0.0352 [range   0.160]   heavytail sd(naiveATT)=    1.878 [range     12.40]
+  n= 20000  baseline sd(naiveATT)= 0.0241 [range   0.102]   heavytail sd(naiveATT)=    9.620 [range     53.17]
+  heavytail: true_att(structural,signal-only)=1.1188  finite=TRUE
+  heavytail: QST quantiles exist (any NA in true_qst$value)=FALSE  eps excess_kurt=17782.9 max|eps|=15733.0
+
+== S3: hd_sparse constant +1 shift == declared design (5 seeds) ==
+  seed=1  sd(y1-y0-tau)=0.0000  identical(y1, y0+1)=TRUE  true_att=1.000
+  seed=2  sd(y1-y0-tau)=0.0000  identical(y1, y0+1)=TRUE  true_att=1.000
+  seed=3  sd(y1-y0-tau)=0.0000  identical(y1, y0+1)=TRUE  true_att=1.000
+  seed=4  sd(y1-y0-tau)=0.0000  identical(y1, y0+1)=TRUE  true_att=1.000
+  seed=5  sd(y1-y0-tau)=0.0000  identical(y1, y0+1)=TRUE  true_att=1.000
+
+== S4: tilt_mild vs baseline over 30 seeds (item e) ==
+  baseline : sd(logit p)=0.709  ESSc=0.636  |naive bias|=0.228
+  tilt_mild: sd(logit p)=0.597  ESSc=0.722  |naive bias|=0.287
+  => tilt_mild positivity milder than baseline: TRUE (sidecar mild<moderate)
+  => tilt_mild |naive bias| >= baseline: TRUE (covariate-shift/confounding axis)
+
+== S5: nonlinear_heteroskedastic axis coupling over 10 seeds (item e) ==
+  mean cor(sigma(X), p)=-0.658   mean cor(mu0(X), logit p)=0.366
+  (nonzero both => heteroskedasticity + outcome curvature + selection all via X2:
+   intended combined stressor, but single-axis attribution is not separable.)
+
+== S6: Registry 1.4.0 documented vs realized (sidecars/code authoritative) ==
+  overlap_stressed  sd(logit p)=12.38  (Reg 3.0X1+3.0X2 -> ~4.24; code 9.0 -> ~12.7)
+  placebo_tilted    sd(logit p)=1.00  (Reg 1.0X1+1.2X2 -> ~1.56; code 0.6/0.8 -> ~1.0)
+  hd_sparse_plm     #covariates=100  (Reg p=50; code p=100)
+  nonlinear_het     has X5=FALSE  (Reg & code both R^4; mu0 Reg=sin+0.5X2^2, code=0.5X1^3+1.5X2^2)
+
+== S7: placebo sharp-null integrity (3 seeds) ==
+  synth_placebo_tau0           sharp-null holds all seeds = TRUE
+  synth_placebo_nonlinear      sharp-null holds all seeds = TRUE
+  synth_placebo_heavytail      sharp-null holds all seeds = TRUE
+  synth_placebo_tilted         sharp-null holds all seeds = TRUE
+  synth_placebo_kangschafer    sharp-null holds all seeds = TRUE
+
+Done. seeds fixed; oracle cache in tempdir.

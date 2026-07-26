@@ -30,3 +30,15 @@ This helper takes the output of \code{\link[=cs_run_seeds]{cs_run_seeds()}} (or 
 same columns) and computes Monte Carlo summary statistics for the ATT
 error. The input is expected to contain one row per seed.
 }
+\section{Moment-regime limitation}{
+
+These columns are direct summaries of the supplied finite set of runs; this
+function does not establish that their population analogues exist.
+\code{mean_error} and \code{mean_abs_error} require the corresponding first moments,
+and \code{sd_error} requires a finite second moment. \code{max_abs_error} is specific
+to the supplied replicate set and is not a stable tail-performance metric.
+On infinite-variance or no-mean DGPs such as \code{synth_heavytail}, do not use
+these columns for bias, RMSE, conventional Monte Carlo standard errors, or
+estimator rankings. Inspect robust summaries of the per-run deviations and
+use QST for valid distributional comparisons instead.
+}

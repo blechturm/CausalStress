@@ -1,0 +1,40 @@
+Running batch: synth_baseline x est_flaky
+=============== SCOPE 4: SURVIVORSHIP / FAILURE DENOMINATORS ===============
+planned seeds: 8
+per-seed success flags (from the flattened grid tibble):
+  seed success att_error att_ci_width
+1    1    TRUE   -0.1393           NA
+2    2   FALSE        NA           NA
+3    3    TRUE   -0.1510           NA
+4    4   FALSE        NA           NA
+5    5    TRUE   -0.1133           NA
+6    6   FALSE        NA           NA
+7    7    TRUE   -0.0420           NA
+8    8   FALSE        NA           NA
+attempted=8  success=TRUE=4  failed=4
+
+--- cs_summarise_runs on a grid CONTAINING failures ---
+summary columns:  dgp_id, estimator_id, n, oracle, supports_qst, n_runs, mean_true_att, mean_est_att, mean_error, sd_error, mean_abs_error, max_abs_error, mean_att_covered, mean_att_ci_width
+          dgp_id estimator_id   n oracle supports_qst n_runs mean_true_att
+1 synth_baseline    est_flaky 300  FALSE        FALSE      8      1.108898
+  mean_est_att mean_error sd_error mean_abs_error max_abs_error
+1           NA         NA       NA             NA            NA
+  mean_att_covered mean_att_ci_width
+1               NA                NA
+
+--- Denominator honesty interrogation ---
+n_runs reported by summary:                 8
+actual successful runs:                     4
+Does the summary expose a success/failure count column?  FALSE
+mean_error value: NA   (NA => a single failed seed NA-poisons the mean; no na.rm on error cols)
+mean_abs_error value: NA
+mean_att_covered value: NA   (uses na.rm=TRUE -> averages survivors)
+mean_att_ci_width value: NA   (uses na.rm=TRUE -> averages survivors)
+
+--- Contrast: cs_summarise_runs on the SURVIVORS-ONLY subset ---
+survivors-only: n_runs=4  mean_error=-0.1114  mean_abs_error=0.1114
+Observation: the full-grid summary and the survivors-only summary both report
+a single n_runs with no failed-seed denominator; the reader cannot tell from
+cs_summarise_runs alone that 4/8 seeds failed.
+
+Done.

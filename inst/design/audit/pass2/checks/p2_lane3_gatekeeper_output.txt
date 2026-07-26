@@ -1,0 +1,32 @@
+=============== SCOPE 5: GATEKEEPER (Article IV) ===============
+
+--- (i) conservative estimator (lm_att + bootstrap CIs) on placebo ---
+Running batch: synth_placebo_tau0 x lm_att
+Warning messages:
+1: Using experimental DGP: synth_placebo_tau0 v1.3.0
+2: No stable version for synth_placebo_tau0; using latest experimental.
+3: Using experimental DGP: synth_placebo_tau0 v1.3.0
+4: No stable version for synth_placebo_tau0; using latest experimental.
+ATT verdict:
+  estimator_id n_verified coverage_rate status
+1       lm_att         12             1   PASS
+
+--- (ii) CI-less estimator (lm_att, ci_method='none') on placebo ---
+Running batch: synth_placebo_tau0 x lm_att
+Warning messages:
+1: Using experimental DGP: synth_placebo_tau0 v1.3.0
+2: No stable version for synth_placebo_tau0; using latest experimental.
+3: Using experimental DGP: synth_placebo_tau0 v1.3.0
+4: No stable version for synth_placebo_tau0; using latest experimental.
+att_covered all NA in CI-less runs?  TRUE
+ATT verdict:
+  estimator_id n_verified coverage_rate     status
+1       lm_att          0            NA UNVERIFIED
+
+--- assertions ---
+conservative estimator PASSES ATT gate:            TRUE (coverage=1.000)
+CI-less estimator -> UNVERIFIED (not PASS/crash):   TRUE
+CI-less n_verified == 0 (the l.40-54 gate fired):   TRUE
+QST 10/10-rule branch present in cs-gatekeeper.R:   TRUE
+
+Done.

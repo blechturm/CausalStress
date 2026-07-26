@@ -1,0 +1,47 @@
+=============== SCOPE 1: METRIC-REGIME ENFORCEMENT ===============
+Reason vocabulary includes 'metric_invalid_for_regime'?  TRUE
+
+---------------- DGP: synth_baseline ----------------
+regime-related warnings emitted during scoring:  <NONE>
+cs_summarise_runs: n_runs=20  mean_error=0.0035  sd_error=0.0349  max_abs_error=0.0674
+empirical RMSE(att_error) = 0.0342
+summariser columns:  dgp_id, estimator_id, n, oracle, supports_qst, n_runs, mean_true_att, mean_est_att, mean_error, sd_error, mean_abs_error, max_abs_error, mean_att_covered, mean_att_ci_width
+summariser carries any regime / moment / metric-validity column?  FALSE
+score_status tally (att rows):
+
+scored   <NA>
+    20      0
+non_comparable_reason tally (att rows):
+
+<NA>
+  20
+count of rows with reason == 'metric_invalid_for_regime':  0
+provenance$dgp_noise_family (descriptive only, NOT a scoring gate):  gaussian
+
+---------------- DGP: synth_heavytail ----------------
+regime-related warnings emitted during scoring:  <NONE>
+cs_summarise_runs: n_runs=20  mean_error=0.7759  sd_error=3.2122  max_abs_error=13.9985
+empirical RMSE(att_error) = 3.2256
+summariser columns:  dgp_id, estimator_id, n, oracle, supports_qst, n_runs, mean_true_att, mean_est_att, mean_error, sd_error, mean_abs_error, max_abs_error, mean_att_covered, mean_att_ci_width
+summariser carries any regime / moment / metric-validity column?  FALSE
+score_status tally (att rows):
+
+scored   <NA>
+    20      0
+non_comparable_reason tally (att rows):
+
+<NA>
+  20
+count of rows with reason == 'metric_invalid_for_regime':  0
+provenance$dgp_noise_family (descriptive only, NOT a scoring gate):  heavy
+
+=============== SCOPE 3: AGGREGATE-UNCERTAINTY COLUMN INVENTORY ===============
+cs_summarise_runs output columns:
+   dgp_id, estimator_id, n, oracle, supports_qst, n_runs, mean_true_att, mean_est_att, mean_error, sd_error, mean_abs_error, max_abs_error, mean_att_covered, mean_att_ci_width
+dispersion column present (sd_error)?            TRUE
+standard-error-of-the-mean column present?       FALSE
+confidence-interval-of-the-mean columns?         FALSE
+rank-stability / cross-seed-stability column?    FALSE
+Note: SEM would be sd_error/sqrt(n_runs) = 0.0159 but is NOT reported by the summariser.
+
+Done.

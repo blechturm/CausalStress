@@ -36,6 +36,14 @@ current default stable versions are `synth_baseline` and
 `synth_heavytail`; the other ten DGP IDs are experimental and produce a
 governance warning when selected.
 
+**Heavy-tail boundary.** `synth_heavytail` is intentionally a
+no-finite-mean regime. Its `true_att` is the governed finite-sample
+structural signal anchor `mean(tau_i : W_i = 1)`, not a conventional
+superpopulation mean potential-outcome ATT, which does not exist under
+its Cauchy-mixture noise. Run ATT estimators there to diagnose
+breakdown, but do not use their mean error, RMSE, coverage, or ranking
+for an ATT shootout. Use QST for valid distributional comparisons.
+
 | DGP ID                            | Current status |
 |-----------------------------------|----------------|
 | `synth_baseline`                  | stable         |
@@ -125,7 +133,7 @@ library(pins)
 board <- pins::board_temp()
 
 runs <- cs_run_grid(
-  dgp_ids = c("synth_baseline", "synth_heavytail"),
+  dgp_ids = "synth_baseline",
   estimator_ids = c("lm_att", "ipw_att"),
   n = 500,
   seeds = 1:3,
@@ -138,12 +146,10 @@ cs_summarise_runs(runs) |>
   knitr::kable(digits = 3)
 ```
 
-| dgp_id          | estimator_id | n_runs | mean_error | mean_abs_error |
-|:----------------|:-------------|-------:|-----------:|---------------:|
-| synth_baseline  | ipw_att      |      3 |     -0.069 |          0.092 |
-| synth_baseline  | lm_att       |      3 |      0.002 |          0.072 |
-| synth_heavytail | ipw_att      |      3 |     -0.681 |          0.681 |
-| synth_heavytail | lm_att       |      3 |     -0.552 |          0.552 |
+| dgp_id         | estimator_id | n_runs | mean_error | mean_abs_error |
+|:---------------|:-------------|-------:|-----------:|---------------:|
+| synth_baseline | ipw_att      |      3 |     -0.069 |          0.092 |
+| synth_baseline | lm_att       |      3 |      0.002 |          0.072 |
 
 ``` r
 

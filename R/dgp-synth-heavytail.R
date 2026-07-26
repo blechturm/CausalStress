@@ -141,7 +141,8 @@ dgp_synth_heavytail_v160 <- function(n, seed = NULL, include_truth = TRUE, oracl
   )
 
   if (isTRUE(oracle_only)) {
-    # CRN: Lock error term to eliminate MC variance and regime mismatch
+    # CRN reduces QST-contrast MC variance but leaves empirical-quantile
+    # sampling uncertainty; sharing also prevents marginal regime mismatch.
     eps1 <- eps0
   } else {
     mix_ind1 <- stats::rbinom(n, size = 1, prob = 0.8)
