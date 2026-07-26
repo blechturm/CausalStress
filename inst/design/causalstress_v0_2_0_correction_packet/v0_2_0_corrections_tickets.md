@@ -1,6 +1,6 @@
 # CausalStress v0.2.0 Release Correction Tickets
 
-**Status:** ACTIVE
+**Status:** FINAL
 **Packet:** `causalstress_v0_2_0_correction_packet`
 
 ## Batch 0 - Constitutional Application
@@ -230,7 +230,7 @@
 - **Review gate:** Maintainer final release decision after CS-1214, CS-1226,
   CS-1228, and CS-1229; close correction and CI packets as `FINAL` only after tag
   CI is green.
-- **Disposition:** blocked_by_CS-1214
+- **Disposition:** complete_after_review
 
 ## Release-Gate Ticket Requirement
 

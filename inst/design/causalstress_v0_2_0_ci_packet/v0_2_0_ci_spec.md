@@ -1,9 +1,9 @@
 # CausalStress v0.2.0 CI Packet Spec
 
-**Status:** ACTIVE
+**Status:** FINAL
 **Packet:** `causalstress_v0_2_0_ci_packet`
 **Date opened:** 2026-06-18
-**Authority:** Active while named in `inst/design/README.md`
+**Authority:** Historical final authority for the v0.2.0 CI release gate
 **Package version:** remains `0.2.0`; this packet gates the public v0.2.0 tag and does not authorize a semantic package-version bump.
 
 ## Objective

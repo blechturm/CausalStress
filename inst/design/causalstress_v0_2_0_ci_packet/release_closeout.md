@@ -1,10 +1,11 @@
 # CausalStress v0.2.0 CI Packet Closeout
 
-**Status:** ACTIVE
-**Gate state:** CS-1228 and CS-1229 are complete after independent review;
-the CS-1229-inclusive committed tree at `badeac1` passes the fresh Windows and
-WSL/Ubuntu local gate; remote branch/main/tag CI remains pending
+**Status:** FINAL
+**Gate state:** CS-1228 and CS-1229 are complete after independent review; the
+reviewed release tree passed fresh Windows/WSL gates and green branch,
+pull-request, main, and tag CI; v0.2.0 is publicly released.
 **Date opened:** 2026-06-18
+**Date closed:** 2026-07-26
 **Packet:** `causalstress_v0_2_0_ci_packet`
 
 This closeout records CI-packet evidence for the public v0.2.0 tag. The results
@@ -12,9 +13,9 @@ under **Prior Local Gate Evidence** are the 2026-06-18 pre-correction rehearsal.
 They remain useful implementation evidence, but the CS-1225 Windows and
 WSL/Ubuntu results cover only the pre-CS-1228 tree. Two later branch-CI attempts
 exposed an R 4.6 runtime-installation blocker before package-owned checks began.
-CS-1228 and the later CS-1229 documentation correction now have fresh
-committed-tree local evidence below. Remote branch, main/default-branch, and
-tag-triggered GitHub Actions evidence remains pending.
+CS-1228 and the later CS-1229 documentation correction have fresh committed-tree
+local evidence below. The final branch, main/default-branch, and tag-triggered
+GitHub Actions evidence is recorded in **Final Remote Release Evidence**.
 
 ## Shipped
 
@@ -23,11 +24,74 @@ tag-triggered GitHub Actions evidence remains pending.
 | CS-1210--CS-1211 | CI foundation committed in `b5e0d71`; Batch 0 review verified the release CI playbook, check matrix, test/validation/substrate jobs, README indexing, WSL rehearsal obligation, and packet activation. |
 | CS-1212--CS-1213 | Coverage/lint and golden-tolerance hardening committed in `da21dcc`; Batch 1 review found no blocking defects after local lint execution and verified coverage evidence, strict lint gating, and cross-substrate-safe golden tolerances. |
 
-## Implemented Awaiting Review
+## Final Release Gate
 
 | Ticket | Evidence |
 | --- | --- |
-| CS-1214 | The June local release-gate implementation added dependency bootstrap, workflow hardening, pin compatibility, timeout portability, and Windows/WSL rehearsal evidence. CS-1225 supplies accepted historical local evidence for baseline `c05be176950603aa374e0202ca70f1e5d7443b1e`. Later branch CI proved the archived dependency bootstrap is not R 4.6-compatible. CS-1228 replaced that runtime; CS-1229 corrected the release-facing heavytail interpretation. Both are independently accepted, and the CS-1229-inclusive commit `badeac1` passes the fresh Windows/WSL gate. Mandatory remote branch/main/tag CI remains open. |
+| CS-1214 | The June local release-gate implementation added dependency bootstrap, workflow hardening, pin compatibility, timeout portability, and Windows/WSL rehearsal evidence. Later branch CI proved the archived dependency bootstrap was not R 4.6-compatible; CS-1228 replaced that runtime and CS-1229 corrected the release-facing heavytail interpretation. Both were independently accepted. The final tree passed fresh local Windows/WSL gates, branch and PR CI on `b09f43a`, main CI on merge commit `99386037`, and distinct tag CI before publication. CS-1214 is complete after final review. |
+
+## Final Remote Release Evidence (2026-07-26)
+
+| Boundary | Exact ref | Workflow evidence | Result |
+| --- | --- | --- | --- |
+| Initial post-correction push | `f1065a7ff0a036e827077c9d991cfcb4dea25d34` | [test/validation/substrate](https://github.com/blechturm/CausalStress/actions/runs/30200766273) exposed a Windows PowerShell bare-`R` alias failure; [coverage/lint](https://github.com/blechturm/CausalStress/actions/runs/30200766262) exposed missing installed-namespace context under lintr 3.4.0; [R CMD check](https://github.com/blechturm/CausalStress/actions/runs/30200766260) passed. | Valid portability failures; merge blocked and fixes scoped to the owning workflows. |
+| Intermediate CI-fix push | `5386efc421abc50616ba8c4f893c2b0abe553e06` | [test/validation/substrate](https://github.com/blechturm/CausalStress/actions/runs/30201023917) and [R CMD check](https://github.com/blechturm/CausalStress/actions/runs/30201023963) passed, proving the Windows install correction; [coverage/lint](https://github.com/blechturm/CausalStress/actions/runs/30201023911) still failed because the lint job did not install the package namespace. | Valid remaining lint-setup failure; merge stayed blocked and `b09f43a` applied the owning-workflow fix. |
+| Corrected branch push | `b09f43ab8641ab32fb66b6d2ba6d65f95c9ef6a7` | [coverage/lint](https://github.com/blechturm/CausalStress/actions/runs/30201155892), [R CMD check](https://github.com/blechturm/CausalStress/actions/runs/30201155901), [test/validation/substrate](https://github.com/blechturm/CausalStress/actions/runs/30201155889) | All success, including Windows release and Ubuntu R-devel. |
+| Pull request | [PR #7](https://github.com/blechturm/CausalStress/pull/7), head `b09f43a` | [coverage/lint](https://github.com/blechturm/CausalStress/actions/runs/30201430598), [R CMD check](https://github.com/blechturm/CausalStress/actions/runs/30201430579), [test/validation/substrate](https://github.com/blechturm/CausalStress/actions/runs/30201430601) | All success; merged to main at `99386037c2005e51efda6a56609ae46b8449f84a`. |
+| Main/default branch | `99386037c2005e51efda6a56609ae46b8449f84a` | [coverage/lint](https://github.com/blechturm/CausalStress/actions/runs/30201746918), [R CMD check](https://github.com/blechturm/CausalStress/actions/runs/30201746917), [test/validation/substrate](https://github.com/blechturm/CausalStress/actions/runs/30201746949) | All success before tag creation. |
+| Annotated tag | Tag object `02ee13e073adf08edb13bcf04a0f7c2fbb8a959e`, peeling to `99386037c2005e51efda6a56609ae46b8449f84a` | [coverage/lint](https://github.com/blechturm/CausalStress/actions/runs/30202156173), [R CMD check](https://github.com/blechturm/CausalStress/actions/runs/30202156159), [test/validation/substrate](https://github.com/blechturm/CausalStress/actions/runs/30202156199) | All distinct tag-triggered runs succeeded before publication; tag was not moved. |
+| Tag evidence payloads | Downloaded artifacts from the tag workflows report `coverage_percent=73.38` over 3,212 entries and `lint_count=0` with 3 filtered internal-helper false positives. Windows, macOS, and Ubuntu release substrate artifacts report R 4.6.1, the governed RNG lock, `include_truth_bitwise=TRUE`, and all `df`/`true_att`/`true_qst`/`meta` components `TRUE`. | Pass; tag R CMD check reported 0 errors, 0 warnings, and 0 notes on Ubuntu release, Ubuntu devel, Windows release, and macOS release. |
+| GitHub Release | `v0.2.0` | `https://github.com/blechturm/CausalStress/releases/tag/v0.2.0` | Public, non-draft, non-prerelease, and current latest release; published 2026-07-26 at 12:36:29 UTC. |
+
+### Corrective Local Commands and Reruns
+
+The workflow command was exercised on Windows with an isolated first library
+and the existing dependency library second:
+
+```powershell
+$ciFixLib = "C:\Users\maxth\Documents\GitHub\CausalStress\.ci-install-smoke"
+$dependencyLib = "C:\Users\maxth\AppData\Local\R\win-library\4.5"
+$env:R_LIBS = "$ciFixLib;$dependencyLib"
+$env:R_LIBS_USER = $ciFixLib
+$env:R_PROFILE_USER = "$ciFixLib\no-user-profile"
+& "C:\Program Files\R\R-4.5.2\bin\x64\Rscript.exe" -e "quit(status = system2(file.path(R.home('bin'), 'R'), c('CMD', 'INSTALL', '.')))"
+& "C:\Program Files\R\R-4.5.2\bin\x64\Rscript.exe" -e "library(CausalStress); stopifnot(as.character(packageVersion('CausalStress')) == '0.2.0')"
+```
+
+It installed and loaded CausalStress 0.2.0 successfully. Initial smoke-harness
+attempts could not create `C:\tmp` under the managed sandbox and then could not
+read the maintainer dependency library until the command was run with the
+approved read boundary. Those failures occurred before a faithful install
+environment existed; the child command returned nonzero as required.
+
+The WSL/Ubuntu rehearsal used the direct package tools available on the
+configured distribution:
+
+```powershell
+wsl.exe -d Ubuntu --cd /mnt/c/Users/maxth/Documents/GitHub/CausalStress Rscript -e "quit(status = system2(file.path(R.home('bin'), 'R'), c('CMD', 'INSTALL', '.')))"
+wsl.exe -d Ubuntu --cd /mnt/c/Users/maxth/Documents/GitHub/CausalStress Rscript -e "testthat::test_local('.', reporter = 'summary', stop_on_failure = TRUE)"
+wsl.exe -d Ubuntu --cd /mnt/c/Users/maxth/Documents/GitHub/CausalStress Rscript tools/ci-validation.R
+wsl.exe -d Ubuntu --cd /mnt/c/Users/maxth/Documents/GitHub/CausalStress env _R_CHECK_FORCE_SUGGESTS_=false Rscript -e "rcmdcheck::rcmdcheck(args = c('--no-manual', '--ignore-vignettes'), build_args = '--no-build-vignettes', error_on = 'warning', check_dir = tempfile('cs-ci-fix-check-'))"
+```
+
+The literal `devtools::test()` wrapper could not start because the optional
+`devtools` metapackage was unavailable; `testthat`, `pkgload`, and `rcmdcheck`
+were present and supplied the direct equivalents. An ad hoc validation
+one-liner was invalidated by PowerShell expanding `$valid`; the authoritative
+`tools/ci-validation.R` command passed. The first check wrapper omitted
+`_R_CHECK_FORCE_SUGGESTS_=false` and stopped before package checks on the six
+declared optional packages; the exact-environment rerun above passed 0/0/0.
+These were harness/configuration corrections, not package or scientific
+failures, and none was used to waive a required gate.
+
+The two final workflow corrections were deliberately narrow. Commit `5386efc`
+invokes the R executable through `Rscript` and propagates the child status,
+avoiding PowerShell's `R` alias. Commit `b09f43a` installs CausalStress before
+package-mode linting so lintr 3.4.0 can load the namespace's imports and declared
+globals. No package R, scientific, truth, RNG, scoring, or persistence behavior
+changed. A corrected local rehearsal passed the exact Windows/Ubuntu install,
+the Ubuntu full suite (208.5 seconds), 24/24 registry validation plus 153 focused
+expectations, and Ubuntu `R CMD check` with 0 errors, 0 warnings, and 0 notes.
 
 ## CS-1229-Inclusive Committed-Tree Local Gate (2026-07-26)
 
@@ -49,7 +113,7 @@ records and testing the exact committed package.
 | Strict validation - WSL/Ubuntu | Pass: 24/24 registry rows valid and 153 focused expectations passed. |
 | Substrate - WSL/Ubuntu | Pass: Ubuntu 20.04 LTS, R 4.5.2, `x86_64-pc-linux-gnu`, governed RNG locked, all truth payload components bitwise-identical, and thread-cap variables unset. |
 | R CMD check - WSL/Ubuntu | Pass through installed `rcmdcheck`: 0 errors, 0 warnings, 0 notes; check duration 1m 32.1s. |
-| WSL lint/coverage | Not rerun because CS-1229 changed documentation and an R comment only. Windows scripts passed; remote coverage/lint CI remains mandatory. |
+| WSL lint/coverage | Not rerun because CS-1229 changed documentation and an R comment only. Windows scripts passed; the then-mandatory remote coverage/lint gate later passed. |
 
 ## CS-1228 Committed-Tree Local Gate (2026-07-24)
 
@@ -71,7 +135,7 @@ so every result below covers commit
 | Strict validation - WSL/Ubuntu | Pass: 24/24 registry rows valid and 153 focused expectations passed. |
 | Substrate - WSL/Ubuntu | Pass: Ubuntu 20.04 LTS, R 4.5.2, `x86_64-pc-linux-gnu`, BLAS `/usr/lib/x86_64-linux-gnu/blas/libblas.so.3.9.0`, governed RNG locked, all truth payload components bitwise-identical, and thread-cap variables unset. |
 | R CMD check - WSL/Ubuntu | Pass through installed `rcmdcheck`: 0 errors, 0 warnings, 0 notes; check duration 1m 31.2s. |
-| WSL lint/coverage | Not rerun because CS-1228 did not change lint or coverage behavior. Windows scripts passed; remote coverage/lint CI remains mandatory. |
+| WSL lint/coverage | Not rerun because CS-1228 did not change lint or coverage behavior. Windows scripts passed; the then-mandatory remote coverage/lint gate later passed. |
 
 ## Pre-CS-1228 Fresh Post-Correction Local Gate (2026-07-24)
 
@@ -116,8 +180,8 @@ pin-trial
 
 Neither attempt supplies package test/check evidence. The accepted CS-1225
 run remains historical evidence for its tested tree. The later CS-1228 and
-CS-1229 committed-tree local gates are green; a fresh remote gate remains
-mandatory.
+CS-1229 committed-tree local gates are green; the fresh remote gate recorded
+above also passed.
 
 ## Prior Local Gate Evidence (2026-06-18)
 
@@ -126,7 +190,7 @@ tag authorization.
 
 | Gate | Evidence | Result |
 | --- | --- | --- |
-| CI workflows | `.github/workflows/R-CMD-check.yaml`, `.github/workflows/test-validation-substrate.yaml`, and `.github/workflows/coverage-lint.yaml`. The workflows install archived `qs`, run hard-dependency checks, full tests, validation, substrate evidence, coverage, and lint. | Pass locally; remote CI pending. |
+| CI workflows | `.github/workflows/R-CMD-check.yaml`, `.github/workflows/test-validation-substrate.yaml`, and `.github/workflows/coverage-lint.yaml`. At the June rehearsal they still installed archived `qs`; later corrections replaced that path with RDS before the final remote sequence. | Historical local pass; final remote CI passed as recorded above. |
 | Archived dependency bootstrap | `tools/ci-install-archived-qs.R` installs archived `qs 0.27.3` when absent and pins `stringfish 0.17.0` only on clean installs. Smoke checks on 2026-06-18: Windows reported `qs=0.27.3`, `stringfish=0.19.0` with no install attempt; WSL reported `qs=0.27.3`, `stringfish=0.17.0`. | Pass. |
 | Pin-board compatibility | `pins 1.4.2` makes `type = "qs"` defunct and Windows `pins 1.4.1` does not support `type = "qs2"`. Pin-board writes were migrated to `type = "rds"` while raw staging/oracle `.qs` files remain unchanged. Focused pin/schema tests and full Windows/WSL tests passed after the change. | Pass. |
 | R CMD check - Windows | `$env:NOT_CRAN='true'; & "C:\Program Files\R\R-4.5.2\bin\x64\Rscript.exe" -e "devtools::check(document = FALSE, build_args = '--no-build-vignettes', args = c('--no-manual', '--ignore-vignettes'), error_on = 'never')"` on 2026-06-18. | Pass: 0 errors, 0 warnings, 1 environment NOTE: `unable to verify current time`. |
@@ -142,8 +206,8 @@ tag authorization.
 | Substrate - Windows | `& "C:\Program Files\R\R-4.5.2\bin\x64\Rscript.exe" tools/ci-substrate.R` on 2026-06-18. | Pass: R 4.5.2 ucrt, platform `x86_64-w64-mingw32`, ambient RNG `Mersenne-Twister / Inversion / Rejection`, governed RNG `Mersenne-Twister / Inversion / Rounding`, `include_truth_bitwise=TRUE`, `df=TRUE`, `true_att=TRUE`, `true_qst=TRUE`, `meta=TRUE`. |
 | Substrate - WSL/Ubuntu | `wsl.exe --cd /mnt/c/Users/maxth/Documents/GitHub/CausalStress --exec Rscript tools/ci-substrate.R` on 2026-06-18. | Pass: R 4.5.2, platform `x86_64-pc-linux-gnu`, BLAS `/usr/lib/x86_64-linux-gnu/blas/libblas.so.3.9.0`, ambient RNG `Mersenne-Twister / Inversion / Rejection`, governed RNG `Mersenne-Twister / Inversion / Rounding`, `include_truth_bitwise=TRUE`, all bitwise components TRUE. |
 | Branch CI | Not yet available on 2026-06-18. Superseded by the failed 2026-07-24 attempts recorded above. | Historical pending state. |
-| Main/default-branch CI | Not yet available. Must be recorded after merge to the default branch, if the release process merges before tagging. | Pending. |
-| Tag-triggered CI | Not yet available. The public `v0.2.0` tag must not be treated as released until the tag-triggered CI run is green. | Pending. |
+| Main/default-branch CI | Not yet available in the June rehearsal. Superseded by the green final main evidence recorded above. | Historical pending state; final gate passed. |
+| Tag-triggered CI | Not yet available in the June rehearsal. Superseded by the green final tag evidence recorded above. | Historical pending state; final gate passed. |
 
 ## CI Semantics
 
@@ -165,24 +229,26 @@ tag authorization.
 
 ## Tag Decision
 
-The public v0.2.0 tag remains blocked. Unblock only after:
+The maintainer authorized the playbook-ordered release sequence. Every
+prerequisite completed:
 
 1. The immutable v0.1.10 archival/pre-CI release is publicly recorded without
    moving its tag. **Done:** `https://github.com/blechturm/CausalStress/releases/tag/v0.1.10`.
 2. Correction tickets CS-1223 and CS-1224 are independently accepted. **Done.**
 3. CS-1225 records a fresh post-correction local gate and CS-1214 receives its
-   final review. **The latest CS-1229-inclusive Windows and WSL/Ubuntu local gate
-   passes; CS-1214 remains open for remote evidence and final review.**
+   final review. **Done; the final remote evidence above closes CS-1214.**
 4. CS-1228's amended specification is independently accepted. **Done.** Its
    minimal RDS migration is implemented, independently accepted, committed, and
    passes fresh final-tree Windows/WSL gates. **Done.**
 5. CS-1229 is independently accepted, committed, and passes a fresh
    CS-1229-inclusive Windows/WSL gate. **Done at `badeac1`.**
-6. The reviewed correction and CI changes are committed and pushed. **Committed
-   locally; push pending.**
+6. The reviewed correction and CI changes are committed and pushed. **Done.**
 7. Branch CI is green on `v0.2.0`, including R release and R-devel installation.
-8. Main/default-branch CI is green if the release is merged before tagging.
-9. The tag-triggered `v0.2.0` CI run is green.
+   **Done at `b09f43a`.**
+8. Main/default-branch CI is green after PR #7 merged. **Done at `99386037`.**
+9. The tag-triggered `v0.2.0` CI run is green. **Done.**
+10. The GitHub Release is created only after tag CI. **Done:**
+    `https://github.com/blechturm/CausalStress/releases/tag/v0.2.0`.
 
-Until then, the June local results are rehearsal evidence and v0.2.0 is not
-publicly released.
+The CI packet is `FINAL`. The annotated tag remains fixed at the reviewed main
+merge commit, and no known release blocker remains open.

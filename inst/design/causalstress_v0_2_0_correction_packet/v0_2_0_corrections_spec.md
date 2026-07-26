@@ -1,9 +1,9 @@
 # CausalStress v0.2.0 Release Corrections Spec
 
-**Status:** ACTIVE
+**Status:** FINAL
 **Packet:** `causalstress_v0_2_0_correction_packet`
 **Date opened:** 2026-07-24
-**Authority:** Active while named in `inst/design/README.md`
+**Authority:** Historical final authority for the v0.2.0 release corrections
 **Package version:** remains `0.2.0`
 **Emergency persistence amendment:** accepted after independent review on
 2026-07-24; CS-1228 implementation is complete after independent review
@@ -287,7 +287,7 @@ the required remote evidence is recorded.
 | Local v0.1.10 tag absent from public release history | ticketed | CS-1226 |
 | Branch CI at `13bd7a2`: archived `stringfish` 0.17.0 does not compile on R 4.6 | investigated; narrow pin trial | CS-1228 |
 | Branch CI at `56376a6`: `stringfish` 0.18.0 compiles, but archived `qs` 0.27.3 itself uses removed R internals | release blocker; minimal RDS retirement pulled into v0.2.0 | CS-1228 |
-| CI packet: remote branch/main/tag evidence pending | coordinated, not duplicated | CS-1214, CS-1227 |
+| CI packet: remote branch/main/tag evidence was pending | coordinated and completed in the final closeouts | CS-1214, CS-1227 |
 
 ## Open Decisions
 

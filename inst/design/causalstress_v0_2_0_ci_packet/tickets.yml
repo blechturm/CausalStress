@@ -1,6 +1,6 @@
 version: "0.2.0"
 packet: "causalstress_v0_2_0_ci_packet"
-status: ACTIVE
+status: final
 tickets:
   - id: "CS-1210"
     title: "Add release CI playbook and GitHub Actions R CMD check matrix"
@@ -64,4 +64,4 @@ tickets:
     constitutional_check: "No known constitutional violation remains open except by amendment or explicit deferral"
     test_obligation: "Record local Windows and WSL evidence, branch/main/tag CI URLs/status, matrix results, R CMD check, tests, validation, coverage, lint, substrate evidence, review routing, and tag decision"
     review_gate: "Final CI release-gate review before public v0.2.0 tag"
-    disposition: "implementation_complete_awaiting_final_review"
+    disposition: "complete_after_review"

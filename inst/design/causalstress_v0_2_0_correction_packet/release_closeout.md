@@ -1,13 +1,11 @@
 # CausalStress v0.2.0 Release Corrections Closeout
 
-**Status:** ACTIVE
-**Closeout state:** CS-1225 complete after independent review; emergency
-CS-1228 implementation is complete after independent review and its committed-tree
-Windows/WSL gates pass; CS-1229 documentation is complete after independent
-review and its committed-tree Windows/WSL gates pass; remote gates remain
-pending; CS-1226 is complete and CS-1227 remains incomplete
+**Status:** FINAL
+**Closeout state:** All correction tickets are complete. The reviewed release
+tree passed fresh local Windows/WSL gates and green branch, pull-request, main,
+and tag CI; the immutable v0.2.0 tag and public GitHub Release were published.
 **Date opened:** 2026-07-24
-**Date closed:** TBD
+**Date closed:** 2026-07-26
 **Packet:** `causalstress_v0_2_0_correction_packet`
 
 ## Shipped
@@ -19,15 +17,16 @@ pending; CS-1226 is complete and CS-1227 remains incomplete
 | CS-1222 | Corrected schema-4 identity so QST curve rows share one `score_fingerprint` and carry unique deterministic `score_row_fingerprint` values. Runner metadata, pins, tidy/collector projections, science payloads, and result/batch audit surfaces preserve both levels. Independent Claude final review returned **APPROVE** with no actionable findings. |
 | CS-1223 | Replaced the stale v0.1.x README with the current v0.2.0 scientific boundary, 12-DGP/24-version and 8-estimator inventories, structured runner result, canonical score collection, honest Airlock and experimental-parallel claims, installation, and version-derived citation workflow. Corrected affected roxygen and regenerated README/help/namespace artifacts. Claude returned **APPROVE WITH NON-BLOCKING NOTES**, explicitly adjudicating the nine DGP-version exports as the correct synchronization of authoritative `@export` declarations. |
 | CS-1224 | Defined the packet lifecycle vocabulary, normalized both active packets, reclassified the closed Wave 1 packet only in the authority index, narrowed the v0.2.0 roadmap boundary, and routed persistence, real-data/feature-roster/extension risks, families/CATE planning, and the full documentation release. Claude returned **APPROVE WITH NON-BLOCKING NOTES** and confirmed the closed Wave 1 packet remains byte-identical. |
-| CS-1225 | Fresh post-correction Windows and WSL/Ubuntu gates passed on 2026-07-24: focused/full tests, strict validation, lint, coverage, substrate, and platform-local `R CMD check` evidence are recorded below. Claude's independent re-review returned **APPROVE WITH NON-BLOCKING NOTES**, confirmed the corrected host-context WSL evidence, closed the sole prior blocker, and found no executable rerun necessary. Ubuntu 20.04 remains useful early-warning evidence while remote Ubuntu CI remains mandatory. |
+| CS-1225 | Fresh post-correction Windows and WSL/Ubuntu gates passed on 2026-07-24: focused/full tests, strict validation, lint, coverage, substrate, and platform-local `R CMD check` evidence are recorded below. Claude's independent re-review returned **APPROVE WITH NON-BLOCKING NOTES**, confirmed the corrected host-context WSL evidence, closed the sole prior blocker, and found no executable rerun necessary. Ubuntu 20.04 remains useful early-warning evidence; the then-mandatory remote Ubuntu CI later passed in the final sequence below. |
 | CS-1229 | Applied the accepted scientific-review adjudication without changing DGP status, generator logic, truth, RNG, scoring, or atomic score rows. The README and heavytail dossier now distinguish the governed finite-sample structural signal anchor from the nonexistent conventional superpopulation mean potential-outcome ATT; prohibit ATT shootout interpretation while preserving breakdown evidence; and direct valid distributional comparison to QST. `cs_summarise_runs()` documents its moment assumptions; the dossier validation uses finite-replicate structural-anchor diagnostics; six dossier changelogs and the heavytail CRN comment now say CRN reduces rather than eliminates Monte Carlo uncertainty; `horizon.md` records the three regimes and future `diagnostic_only` aggregation design. Claude's independent review returned **APPROVE WITH NON-BLOCKING NOTES**, with only the disclosed sandbox render override and benign generated-Rd terminator normalization noted. |
 | CS-1226 | Maintainer authorization was given immediately before publication. The pre-existing annotated tag object `3496e8f90ddddff1a86da4376113d82b5d7e7943`, peeling to governed commit `d05164a856b3e19101b989021f20dabe0b2a00a8`, was verified unchanged on the remote. A non-latest archival/pre-CI GitHub Release was published without moving or recreating the tag. |
 
-## Open Release Blocker
+## Final Correction Completion
 
-| Ticket | Evidence | Required resolution |
+| Ticket | Evidence | Final resolution |
 | --- | --- | --- |
-| CS-1228 | Branch CI at `13bd7a2` failed before package-owned checks because archived `stringfish` 0.17.0 does not compile on R 4.6. The narrow `56376a6` trial made `stringfish` compile but all three workflows then failed because archived `qs` 0.27.3 itself calls R internals removed from the R 4.6 headers. Claude's independent specification review returned **APPROVE WITH NON-BLOCKING NOTES** and authorized implementation. The completed implementation removes `qs`, uses one atomic RDS boundary, validates staged identities, refuses legacy staging, and never opens legacy oracle caches. The first implementation review returned **REQUEST CHANGES** for one stale test-only `skip_if_not_installed("qs")` guard; that guard was removed and the focused plus affected persistence suites passed without `qs`. Claude's independent re-review returned **APPROVE**, closed the finding, and found no remaining executable `qs` path. Commit `9c16cd2d6a8915aef808bb3c865b8224778fa227` then passed the fresh Windows and WSL/Ubuntu gates recorded below. | Obtain green remote branch CI including R release and R-devel, then complete the separately governed main/tag sequence. |
+| CS-1228 | Branch CI at `13bd7a2` failed before package-owned checks because archived `stringfish` 0.17.0 does not compile on R 4.6. The narrow `56376a6` trial made `stringfish` compile but all three workflows then failed because archived `qs` 0.27.3 itself calls R internals removed from the R 4.6 headers. Claude's independent specification review returned **APPROVE WITH NON-BLOCKING NOTES** and authorized implementation. The completed implementation removes `qs`, uses one atomic RDS boundary, validates staged identities, refuses legacy staging, and never opens legacy oracle caches. The first implementation review returned **REQUEST CHANGES** for one stale test-only `skip_if_not_installed("qs")` guard; that guard was removed and the focused plus affected persistence suites passed without `qs`. Claude's independent re-review returned **APPROVE**, closed the finding, and found no remaining executable `qs` path. Commit `9c16cd2d6a8915aef808bb3c865b8224778fa227` then passed the fresh Windows and WSL/Ubuntu gates recorded below. | Green R release and R-devel branch, PR, main, and tag CI on the RDS tree close the remote obligation. |
+| CS-1227 | PR #7 merged the green release branch to main at `99386037c2005e51efda6a56609ae46b8449f84a`. Main and tag CI passed; annotated tag object `02ee13e073adf08edb13bcf04a0f7c2fbb8a959e` peels to that merge commit; the public release is `https://github.com/blechturm/CausalStress/releases/tag/v0.2.0`. | Complete after the maintainer-authorized, playbook-ordered publication recorded below. |
 
 ## Deferred
 
@@ -52,9 +51,9 @@ pending; CS-1226 is complete and CS-1227 remains incomplete
 | Constitution v2.0.1 ratification/application | Accepted synthesis applied verbatim; independent Claude review returned **APPROVE** on 2026-07-24. Local checks confirmed `git diff --check`, `*.md`/`*.yml` `eol=lf` attributes, exact amendment/live-clause text, unchanged v2.0.0 history and `type="real"` count, no implementation-path changes, and successful `yaml::read_yaml()` parsing of the then-current eight correction tickets. | Pass |
 | Synthetic covariate validation | Focused contract/RNG tests, strict executable validation of all 24 registered versions, malformed-name rejection matrix, full package suite, and independent Claude review. | Pass |
 | QST record/row identity | Focused schema-4, pin, projection, science, audit, and historical-resume tests; full package suite; and independent Claude review. | Pass |
-| Emergency RDS implementation | Focused result/batch/oracle persistence tests; valid/invalid destination, corrupt/partial, duplicate, resume-plan identity, legacy-only/mixed staging, and immutable legacy-oracle-cache coverage; full package suite; strict 24/24 registry validation with 153 focused expectations; lint count zero; dependency/code/CI searches found no archived `qs` execution path. Independent implementation re-review returned **APPROVE** with no remaining findings. Commit `9c16cd2` then passed fresh Windows and WSL full tests, validation, substrate probes, and package checks; Windows coverage and lint also passed. | Pass after independent review and committed-tree local gates. Remote branch/main/tag CI remains required. |
+| Emergency RDS implementation | Focused result/batch/oracle persistence tests; valid/invalid destination, corrupt/partial, duplicate, resume-plan identity, legacy-only/mixed staging, and immutable legacy-oracle-cache coverage; full package suite; strict 24/24 registry validation with 153 focused expectations; lint count zero; dependency/code/CI searches found no archived `qs` execution path. Independent implementation re-review returned **APPROVE** with no remaining findings. Commit `9c16cd2` then passed fresh Windows and WSL full tests, validation, substrate probes, and package checks; Windows coverage and lint also passed. | Pass after independent review, committed-tree local gates, and final green branch/main/tag CI. |
 | README and roxygen truthfulness | `README.Rmd` rendered with all evaluated examples; `devtools::document()` regenerated help/namespace artifacts; focused stale-claim searches passed; final-tree Windows `R CMD check` passed examples, documentation, and the full tests with 0 errors, 0 warnings, and one environment-only time-verification NOTE. Claude independently returned **APPROVE WITH NON-BLOCKING NOTES** and accepted the namespace sync. | Pass |
-| Heavytail estimand-boundary documentation | CS-1229 applies the accepted pass-2 maintainer adjudication to the README, heavytail dossier, summary reference, CRN wording, and families horizon without changing executable behavior or suppressing atomic point-error evidence. The focused documentation gate passed, Claude independently returned **APPROVE WITH NON-BLOCKING NOTES** with no blocker, major, or minor findings, and commit `badeac1` passed the fresh Windows/WSL local gate recorded below. | Pass after independent review and committed-tree local gates. Remote branch/main/tag CI remains required. |
+| Heavytail estimand-boundary documentation | CS-1229 applies the accepted pass-2 maintainer adjudication to the README, heavytail dossier, summary reference, CRN wording, and families horizon without changing executable behavior or suppressing atomic point-error evidence. The focused documentation gate passed, Claude independently returned **APPROVE WITH NON-BLOCKING NOTES** with no blocker, major, or minor findings, and commit `badeac1` passed the fresh Windows/WSL local gate recorded below. | Pass after independent review, committed-tree local gates, and final green branch/main/tag CI. |
 | Focused tests | Fresh seven-file release selection on 2026-07-24; exact command and file list below. | Pass: 123 expectations, 0 failures. |
 | Full test suite | `testthat::test_local('.', reporter='summary', stop_on_failure=TRUE)` with `NOT_CRAN=true` on 2026-07-24. | Pass in 187.4 seconds with no failures; 50 governed experimental/optional-path warnings. |
 | Registry validation | `tools/ci-validation.R` on 2026-07-24. | Pass: `registry_strict_rows=24`, `validate_registry_rows=24`, `all_valid=TRUE`; 153 focused expectations passed. |
@@ -62,12 +61,28 @@ pending; CS-1226 is complete and CS-1227 remains incomplete
 | Coverage | `tools/ci-coverage.R` on 2026-07-24. | Pass/evidence-only: 81.64% over 3,135 measured entries. |
 | Reproducibility substrate | `tools/ci-substrate.R` on 2026-07-24; exact substrate below and in ignored artifact `ci-substrate.txt`. | Pass: governed RNG and all bitwise truth payload components confirmed. |
 | R CMD check - Windows | Fresh isolated build/check on 2026-07-24; exact command below. | Pass: 0 errors, 0 warnings, 1 environment-only NOTE (`unable to verify current time`). |
-| R CMD check - WSL/Ubuntu | Fresh full tests, strict validation, substrate probe, and `rcmdcheck::rcmdcheck()` on the configured default `Ubuntu` WSL 2 distribution on 2026-07-24; exact commands and substrate below. | Pass: full suite and 24/24 validation passed; `R CMD check` reported 0 errors, 0 warnings, and 0 notes. Remote Ubuntu branch/tag CI remains mandatory. |
+| R CMD check - WSL/Ubuntu | Fresh full tests, strict validation, substrate probe, and `rcmdcheck::rcmdcheck()` on the configured default `Ubuntu` WSL 2 distribution on 2026-07-24; exact commands and substrate below. | Pass: full suite and 24/24 validation passed; `R CMD check` reported 0 errors, 0 warnings, and 0 notes. The then-mandatory remote Ubuntu branch/tag gates later passed. |
 | v0.1.10 archival publication | Existing remote tag object `3496e8f90ddddff1a86da4376113d82b5d7e7943` peels to `d05164a856b3e19101b989021f20dabe0b2a00a8`; public archival/pre-CI release: `https://github.com/blechturm/CausalStress/releases/tag/v0.1.10`, published 2026-07-26 after maintainer authorization. | Pass: immutable tag preserved; release is public, non-draft, non-prerelease, and not marked latest. |
-| Branch CI | All three workflows failed at `13bd7a2` in archived `stringfish` bootstrap and again at `56376a6` in archived `qs` compilation on R 4.6. | Fail: routed to CS-1228; package-owned gates did not begin. |
-| Main/tag CI | Coordinated through CS-1214 and CS-1227 after fresh branch CI passes. | TBD |
-| Audit and ticket routing | Authority index lifecycle definitions, active packet headers/YAML, roadmap, horizon, and both closeouts were reconciled. All CS-1224 deferrals have named destinations. The final v0.1.10 closeout records every finding in the still-open v0.1.9 audit as ticketed, fixed, rejected with rationale, or deferred to a named destination. | Pass |
-| Known constitutional violations | Audited Constitution v2.0.1, all active ticket dispositions, accepted RFC routing, release metadata, and both active closeouts on 2026-07-24. | Pass: none known open. Publication tickets remain procedural blockers, not constitutional violations. |
+| Branch CI | Earlier failures at `13bd7a2` and `56376a6` were routed to CS-1228. Final release-branch push CI passed on `b09f43ab8641ab32fb66b6d2ba6d65f95c9ef6a7`: [coverage/lint](https://github.com/blechturm/CausalStress/actions/runs/30201155892), [R CMD check](https://github.com/blechturm/CausalStress/actions/runs/30201155901), and [test/validation/substrate](https://github.com/blechturm/CausalStress/actions/runs/30201155889). | Pass |
+| Main/tag CI | Main CI passed on merge commit `99386037c2005e51efda6a56609ae46b8449f84a`: [coverage/lint](https://github.com/blechturm/CausalStress/actions/runs/30201746918), [R CMD check](https://github.com/blechturm/CausalStress/actions/runs/30201746917), and [test/validation/substrate](https://github.com/blechturm/CausalStress/actions/runs/30201746949). The distinct tag-triggered runs also passed: [coverage/lint](https://github.com/blechturm/CausalStress/actions/runs/30202156173), [R CMD check](https://github.com/blechturm/CausalStress/actions/runs/30202156159), and [test/validation/substrate](https://github.com/blechturm/CausalStress/actions/runs/30202156199). | Pass |
+| Audit and ticket routing | Authority index lifecycle definitions, packet headers/YAML, roadmap, horizon, and both closeouts were reconciled. All CS-1224 deferrals have named destinations. The final v0.1.10 closeout records every finding in the still-open v0.1.9 audit as ticketed, fixed, rejected with rationale, or deferred to a named destination. | Pass |
+| Known constitutional violations | Audited Constitution v2.0.1, all ticket dispositions, accepted RFC routing, release metadata, and both closeouts. | Pass: none known open. |
+
+## Final Remote Release Evidence (2026-07-26)
+
+| Boundary | Evidence | Result |
+| --- | --- | --- |
+| First post-correction branch push | At `f1065a7ff0a036e827077c9d991cfcb4dea25d34`, [test/validation/substrate](https://github.com/blechturm/CausalStress/actions/runs/30200766273) failed in the Windows install step because PowerShell resolved bare `R` to its `Invoke-History` alias. [Coverage/lint](https://github.com/blechturm/CausalStress/actions/runs/30200766262) failed because lintr 3.4.0 needed the installed CausalStress namespace to resolve declared globals and imports. [R CMD check](https://github.com/blechturm/CausalStress/actions/runs/30200766260) passed. | Valid CI portability failures; merge and tag remained blocked. |
+| Narrow corrections | Commit `5386efc421abc50616ba8c4f893c2b0abe553e06` invokes the exact R binary through `Rscript` and propagates its exit status. Commit `b09f43ab8641ab32fb66b6d2ba6d65f95c9ef6a7` installs CausalStress before package-mode linting. No package R, scientific, truth, RNG, scoring, or persistence behavior changed. | Smallest owning workflow fixes; no test weakening or dependency pin. |
+| Intermediate CI-fix push | At `5386efc421abc50616ba8c4f893c2b0abe553e06`, [test/validation/substrate](https://github.com/blechturm/CausalStress/actions/runs/30201023917) and [R CMD check](https://github.com/blechturm/CausalStress/actions/runs/30201023963) passed; [coverage/lint](https://github.com/blechturm/CausalStress/actions/runs/30201023911) retained only the already-diagnosed missing-namespace lint failure. | Windows fix verified; merge and tag remained blocked until the lint setup correction. |
+| Corrected local rehearsal | The exact Windows install command installed and loaded CausalStress 0.2.0 in an isolated library. On WSL/Ubuntu, the corrected install passed; the full suite passed in 208.5 seconds with 12 declared optional skips and 50 governed warnings; `tools/ci-validation.R` passed 24/24 rows plus 153 expectations; `rcmdcheck` passed with 0 errors, 0 warnings, and 0 notes. | Pass |
+| Final branch push | Exact SHA `b09f43ab8641ab32fb66b6d2ba6d65f95c9ef6a7`: [coverage/lint](https://github.com/blechturm/CausalStress/actions/runs/30201155892), [R CMD check](https://github.com/blechturm/CausalStress/actions/runs/30201155901), [test/validation/substrate](https://github.com/blechturm/CausalStress/actions/runs/30201155889). | All success |
+| Pull request | [PR #7](https://github.com/blechturm/CausalStress/pull/7) targeted main and was mergeable. Exact-SHA PR checks passed: [coverage/lint](https://github.com/blechturm/CausalStress/actions/runs/30201430598), [R CMD check](https://github.com/blechturm/CausalStress/actions/runs/30201430579), [test/validation/substrate](https://github.com/blechturm/CausalStress/actions/runs/30201430601). | Merged 2026-07-26 at `99386037c2005e51efda6a56609ae46b8449f84a`. |
+| Main | Exact merge SHA `99386037c2005e51efda6a56609ae46b8449f84a`: [coverage/lint](https://github.com/blechturm/CausalStress/actions/runs/30201746918), [R CMD check](https://github.com/blechturm/CausalStress/actions/runs/30201746917), [test/validation/substrate](https://github.com/blechturm/CausalStress/actions/runs/30201746949). | All success before tagging |
+| Annotated tag | Remote tag object `02ee13e073adf08edb13bcf04a0f7c2fbb8a959e` peels to `99386037c2005e51efda6a56609ae46b8449f84a`. The tag was created only after main CI passed and was never moved. | Verified |
+| Tag CI | Distinct tag-triggered runs: [coverage/lint](https://github.com/blechturm/CausalStress/actions/runs/30202156173), [R CMD check](https://github.com/blechturm/CausalStress/actions/runs/30202156159), [test/validation/substrate](https://github.com/blechturm/CausalStress/actions/runs/30202156199). | All success before release publication |
+| Tag evidence payloads | Artifacts report 73.38% coverage over 3,212 entries; lint count zero with 3 filtered internal-helper false positives; R 4.6.1 substrate evidence on Windows, macOS, and Ubuntu with governed RNG and all truth components bitwise-identical; and 0 errors, 0 warnings, 0 notes in all four tag R CMD check jobs, including Ubuntu R-devel. | Pass |
+| GitHub Release | `https://github.com/blechturm/CausalStress/releases/tag/v0.2.0`, published 2026-07-26 at 12:36:29 UTC after tag CI passed. | Public, non-draft, non-prerelease, and current latest release |
 
 ## CS-1229 Focused Documentation Gate
 
@@ -116,7 +131,7 @@ repository worktree was clean before evidence recording.
 | WSL strict validation | `wsl.exe -d Ubuntu --cd /mnt/c/tmp/CausalStress-badeac1-gate --exec Rscript tools/ci-validation.R` | Pass: 24/24 registry rows valid and 153 focused expectations passed. |
 | WSL substrate | `wsl.exe -d Ubuntu --cd /mnt/c/tmp/CausalStress-badeac1-gate --exec Rscript tools/ci-substrate.R` | Pass: Ubuntu 20.04 LTS, R 4.5.2, `x86_64-pc-linux-gnu`, BLAS `/usr/lib/x86_64-linux-gnu/blas/libblas.so.3.9.0`, governed RNG locked, all truth payload components bitwise-identical, and thread-cap variables unset. |
 | WSL package check | `rcmdcheck::rcmdcheck(path='.', args=c('--no-manual','--ignore-vignettes'), build_args='--no-build-vignettes', error_on='warning')` with `NOT_CRAN=true` and `_R_CHECK_FORCE_SUGGESTS_=false` | Pass: 0 errors, 0 warnings, 0 notes; check duration 1m 32.1s and wall time 94.6 seconds. Six unavailable suggested estimator/documentation packages were informational. |
-| WSL lint/coverage | Not rerun. | CS-1229 changed documentation and an R comment only. The committed-tree Windows lint/coverage scripts passed; remote coverage/lint CI remains mandatory. |
+| WSL lint/coverage | Not rerun. | CS-1229 changed documentation and an R comment only. The committed-tree Windows lint/coverage scripts passed; the then-mandatory remote coverage/lint gate later passed. |
 
 ## CS-1228 Fresh Final-Tree Local Gate Detail
 
@@ -142,7 +157,7 @@ records were edited afterward.
 | WSL strict validation | `wsl.exe -d Ubuntu --cd /mnt/c/Users/maxth/Documents/GitHub/CausalStress --exec Rscript tools/ci-validation.R` | Pass: 24/24 registry rows valid and 153 focused expectations passed. |
 | WSL substrate | `wsl.exe -d Ubuntu --cd /mnt/c/Users/maxth/Documents/GitHub/CausalStress --exec Rscript tools/ci-substrate.R` | Pass; exact substrate recorded below. |
 | WSL package check | `wsl.exe --% -d Ubuntu --cd /mnt/c/Users/maxth/Documents/GitHub/CausalStress --exec env NOT_CRAN=true _R_CHECK_FORCE_SUGGESTS_=false Rscript -e "started <- Sys.time(); result <- rcmdcheck::rcmdcheck(path='.', args=c('--no-manual','--ignore-vignettes'), build_args='--no-build-vignettes', error_on='warning'); print(result); cat('wsl_check_elapsed_seconds=', round(as.numeric(difftime(Sys.time(), started, units='secs')), 1), '\n', sep='')"` | Pass: 0 errors, 0 warnings, 0 notes; check duration 1m 31.2s and wall time 126.3 seconds. The six unavailable suggested estimator/documentation packages were informational because `_R_CHECK_FORCE_SUGGESTS_=false`. |
-| WSL lint/coverage | Not rerun. | CS-1228 removed an installation bootstrap but did not change lint rules, coverage instrumentation, or thresholds. The governed Windows lint/coverage scripts passed; remote coverage/lint CI remains mandatory. |
+| WSL lint/coverage | Not rerun. | CS-1228 removed an installation bootstrap but did not change lint rules, coverage instrumentation, or thresholds. The governed Windows lint/coverage scripts passed; the then-mandatory remote coverage/lint gate later passed. |
 
 ### CS-1228 Windows Reproducibility Substrate
 
@@ -252,12 +267,12 @@ CS-1225.
 - The ratified Constitution is v2.0.1; correction implementation tickets
   CS-1220--CS-1224, CS-1228, and CS-1229 are `complete_after_review`.
 - CS-1228 is `complete_after_review`; its committed tree passed the fresh local
-  Windows and WSL gates. Remote branch/main/tag evidence remains outstanding.
+  Windows/WSL gates and final branch, main, and tag CI.
 - CS-1229 is `complete_after_review`; its documentation-focused implementation
   gate, independent review, and committed-tree Windows/WSL release gates passed.
-  Remote branch/main/tag evidence remains outstanding.
-- `inst/design/README.md` correctly keeps the correction and CI packets active
-  until publication, and identifies the Wave 1 packet as final.
+  Final branch, main, and tag CI passed.
+- `inst/design/README.md` identifies the correction, CI, and Wave 1 packets as
+  final after publication.
 - Every finding in the open v0.1.9 deep audit is routed by the final v0.1.10
   closeout; all correction-packet deferrals have named destinations.
 - The immutable annotated `refs/tags/v0.1.10` object is
@@ -266,12 +281,13 @@ CS-1225.
   authorization, the archival/pre-CI GitHub Release was published at
   `https://github.com/blechturm/CausalStress/releases/tag/v0.1.10` without
   moving or recreating the tag; CS-1226 is complete.
-- No known constitutional violation is open. Remaining blockers are remote
-  branch/main/tag CI, CS-1214 final closeout, and the final v0.2.0 release
-  decision.
+- No known constitutional violation or release blocker is open. CS-1214 and
+  CS-1227 are complete after the successful remote sequence.
 
 ## Final Release Decision
 
-The public v0.2.0 tag remains blocked until every ticket in this packet and the
-existing CI packet is complete, or explicitly deferred/rejected with a
-maintainer-approved rationale that does not violate the Constitution.
+The maintainer authorized the release sequence. Branch CI passed, PR #7 merged
+to main, main CI passed, the annotated v0.2.0 tag was created at the reviewed
+merge commit, tag CI passed, and the public GitHub Release was published. The
+correction packet is `FINAL`; no known constitutional violation or release
+blocker remains open.

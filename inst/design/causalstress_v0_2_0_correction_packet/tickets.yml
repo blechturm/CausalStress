@@ -1,6 +1,6 @@
 version: "0.2.0"
 packet: "causalstress_v0_2_0_correction_packet"
-status: ACTIVE
+status: final
 tickets:
   - id: "CS-1220"
     title: "Ratify and apply Constitution v2.0.1"
@@ -153,4 +153,4 @@ tickets:
     constitutional_check: "No blocker remains; reviewed v0.2.0 tag target is immutable"
     test_obligation: "Green branch/main/tag CI URLs, version 0.2.0, Constitution 2.0.1, fresh local gate, tag target, ticket routing, and FINAL packet states are recorded"
     review_gate: "Maintainer final release decision after CS-1214, CS-1226, CS-1228, and CS-1229"
-    disposition: "blocked_by_CS-1214"
+    disposition: "complete_after_review"

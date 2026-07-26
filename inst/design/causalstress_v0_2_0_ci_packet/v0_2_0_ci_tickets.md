@@ -1,6 +1,6 @@
 # CausalStress v0.2.0 CI Packet Tickets
 
-**Status:** ACTIVE
+**Status:** FINAL
 **Packet:** `causalstress_v0_2_0_ci_packet`
 
 ## Batch 0 - CI Foundation
@@ -91,4 +91,4 @@
   lint, substrate evidence, review routing, and final tag decision in
   `release_closeout.md`.
 - **Review gate:** Final CI release-gate review before public v0.2.0 tag.
-- **Disposition:** implementation_complete_awaiting_final_review
+- **Disposition:** complete_after_review
