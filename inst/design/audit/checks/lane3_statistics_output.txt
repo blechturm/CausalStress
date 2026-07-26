@@ -1,0 +1,29 @@
+================ (A) SURVIVORSHIP / FAILURE DENOMINATORS ================
+attempted seeds: 8 | success=TRUE: 0 | success=FALSE or error: 8
+cs_summarise_runs output columns (does it expose n_runs / failure denominators?):
+summarise error: `runs` must be a data.frame or tibble.
+
+================ (B) GATEKEEPER vs CAUTION ================
+gatekeeper-related exported/internal fns: cs_plot_placebo, cs_summarise_gatekeeper, dgp_synth_placebo_heavytail, dgp_synth_placebo_heavytail_v130, dgp_synth_placebo_kangschafer, dgp_synth_placebo_kangschafer_v140, dgp_synth_placebo_nonlinear, dgp_synth_placebo_nonlinear_v130, dgp_synth_placebo_tau0, dgp_synth_placebo_tau0_v130, dgp_synth_placebo_tilted, dgp_synth_placebo_tilted_v130, dgp_synth_placebo_tilted_v140
+conservative estimator: fraction of runs covering 0 = 1.00 (Art IV threshold >=0.90)
+CI-less estimator: mean(covers0, na.rm=TRUE)=  NaN ; mean(covers0)=   NA (NaN/NA hazard check)
+  -> if a summariser used mean(covers,na.rm=TRUE) it would read NaN->NA and
+     could mislabel a CI-less estimator; Art IV Sec 4.2.3 requires 'Unverified'.
+
+================ (C) RANKING STABILITY ================
+mean|ATT error| — seed set A (1:15):
+  synth_baseline lm_att  synth_baseline ipw_att  synth_heavytail lm_att
+                 0.0431                  0.0690                  0.6356
+synth_heavytail ipw_att
+                 0.6014
+mean|ATT error| — seed set B (101:115):
+  synth_baseline lm_att  synth_baseline ipw_att  synth_heavytail lm_att
+                 0.0648                  0.0818                  1.9302
+synth_heavytail ipw_att
+                 2.1601
+Spearman rank corr A vs B: 0.8000
+per-DGP lm_att vs ipw_att ordering consistent across A/B:
+  synth_baseline   A:lm<ipw B:lm<ipw ordering_stable=TRUE
+  synth_heavytail  A:ipw<lm B:lm<ipw ordering_stable=FALSE
+
+Done.

@@ -1,0 +1,18 @@
+=========================================================
+SECTION A: registry resolution + per-DGP overlap/noise stats
+n = 5000  seed = 20260724  (registry-resolved default versions)
+=========================================================
+
+synth_baseline                    v1.6.0  status=stable
+  p: min=0.0581 q01=0.1552 med=0.4962 q99=0.8457 max=0.9431 | frac(p<.01)=0.0000 frac(p>.99)=0.0000
+  sd(logit p)=0.7153 treated_share=0.5010 ESS_ctrl=1441.8 (ratio=0.5779) true_att=1.0936
+  naive DiM=1.2218  naive bias=0.1282
+
+Error in `cs_check_dgp_synthetic()` at CausalStress/R/dgp-synth-heavytail.R:191:3:
+! `true_qst` must be a tibble with columns `tau` and `value`.
+Backtrace:
+    ▆
+ 1. └─CausalStress (local) gen(n = N, seed = SEED, include_truth = FALSE)
+ 2.   └─CausalStress:::cs_check_dgp_synthetic(out) at CausalStress/R/dgp-synth-heavytail.R:191:3
+ 3.     └─rlang::abort(...) at CausalStress/R/cs-contracts.R:645:5
+Execution halted

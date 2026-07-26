@@ -1,0 +1,77 @@
+== SECTION A: overlap / selection strength / naive bias (n=5000 seed=20260724) ==
+synth_baseline                   v1.6.0 stable      | p[min,med,max]=0.0581,0.4962,0.9431 frac(p<.01)=0.0000 frac(p>.99)=0.0000
+   sd(logit p)=0.7153 treated_sh=0.5010 ESS_ctrl/n_ctrl=0.5779 true_att=1.0936 naive_bias=0.1282
+synth_heavytail                  v1.6.0 stable      | p[min,med,max]=0.0581,0.4962,0.9431 frac(p<.01)=0.0000 frac(p>.99)=0.0000
+   sd(logit p)=0.7153 treated_sh=0.5010 ESS_ctrl/n_ctrl=0.5779 true_att=1.0936 naive_bias=0.7210
+synth_qte1                       v1.6.0 experimental | p[min,med,max]=0.0581,0.4962,0.9431 frac(p<.01)=0.0000 frac(p>.99)=0.0000
+   sd(logit p)=0.7153 treated_sh=0.5010 ESS_ctrl/n_ctrl=0.5779 true_att=0.1393 naive_bias=0.1928
+synth_nonlinear_heteroskedastic  v1.6.0 experimental | p[min,med,max]=0.0581,0.4962,0.9431 frac(p<.01)=0.0000 frac(p>.99)=0.0000
+   sd(logit p)=0.7153 treated_sh=0.5010 ESS_ctrl/n_ctrl=0.5779 true_att=1.0000 naive_bias=0.4739
+synth_overlap_stressed           v1.6.0 experimental | p[min,med,max]=0.0000,0.5161,1.0000 frac(p<.01)=0.3586 frac(p>.99)=0.3542
+   sd(logit p)=12.5236 treated_sh=0.5010 ESS_ctrl/n_ctrl=0.0097 true_att=1.2793 naive_bias=1.7058
+synth_tilt_mild                  v1.6.0 experimental | p[min,med,max]=0.0934,0.4982,0.9114 frac(p<.01)=0.0000 frac(p>.99)=0.0000
+   sd(logit p)=0.6071 treated_sh=0.4934 ESS_ctrl/n_ctrl=0.6759 true_att=1.0976 naive_bias=0.2482
+synth_hd_sparse_plm              v1.5.0 experimental | p[min,med,max]=0.0349,0.4988,0.9692 frac(p<.01)=0.0000 frac(p>.99)=0.0000
+   sd(logit p)=0.9612 treated_sh=0.5040 ESS_ctrl/n_ctrl=0.4279 true_att=1.0000 naive_bias=3.6725
+synth_placebo_tau0               v1.3.0 experimental | p[min,med,max]=0.0581,0.4962,0.9431 frac(p<.01)=0.0000 frac(p>.99)=0.0000
+   sd(logit p)=0.7153 treated_sh=0.5010 ESS_ctrl/n_ctrl=0.5779 true_att=0.0000 naive_bias=0.1432
+synth_placebo_nonlinear          v1.3.0 experimental | p[min,med,max]=0.0581,0.4962,0.9431 frac(p<.01)=0.0000 frac(p>.99)=0.0000
+   sd(logit p)=0.7153 treated_sh=0.5010 ESS_ctrl/n_ctrl=0.5779 true_att=0.0000 naive_bias=0.2593
+synth_placebo_heavytail          v1.3.0 experimental | p[min,med,max]=0.0581,0.4962,0.9431 frac(p<.01)=0.0000 frac(p>.99)=0.0000
+   sd(logit p)=0.7153 treated_sh=0.5010 ESS_ctrl/n_ctrl=0.5779 true_att=0.0000 naive_bias=0.5339
+synth_placebo_tilted             v1.4.0 experimental | p[min,med,max]=0.0285,0.5023,0.9809 frac(p<.01)=0.0000 frac(p>.99)=0.0000
+   sd(logit p)=1.0144 treated_sh=0.4936 ESS_ctrl/n_ctrl=0.3144 true_att=0.0000 naive_bias=0.8170
+synth_placebo_kangschafer        v1.4.0 experimental | p[min,med,max]=0.0135,0.5036,0.9825 frac(p<.01)=0.0000 frac(p>.99)=0.0000
+   sd(logit p)=1.1539 treated_sh=0.4914 ESS_ctrl/n_ctrl=0.3709 true_att=0.0000 naive_bias=-19.6754
+
+== SECTION B: placebo integrity (pathwise Y1==Y0, zero truth) ==
+synth_placebo_tau0           identical(y0,y1)=TRUE max|tau|=0.0000 true_att=0.0000 max|true_qst|=0.0000
+synth_placebo_nonlinear      identical(y0,y1)=TRUE max|tau|=0.0000 true_att=0.0000 max|true_qst|=0.0000
+synth_placebo_heavytail      identical(y0,y1)=TRUE max|tau|=0.0000 true_att=0.0000 max|true_qst|=0.0000
+synth_placebo_tilted         identical(y0,y1)=TRUE max|tau|=0.0000 true_att=0.0000 max|true_qst|=0.0000
+synth_placebo_kangschafer    identical(y0,y1)=TRUE max|tau|=0.0000 true_att=0.0000 max|true_qst|=0.0000
+
+== SECTION C: noise tails (eps0_hat = y0 - mu0(X); baseline mu0=1+X1+0.5X2) ==
+baseline                 sd=0.4942 excess_kurt=0.1 max|eps|=1.7 frac(|eps|>2.5)=0.0000
+heavytail                sd=15.1114 excess_kurt=3774.2 max|eps|=994.8 frac(|eps|>2.5)=0.0454
+qte1                     sd=0.6725 excess_kurt=5.4 max|eps|=6.3 frac(|eps|>2.5)=0.0046
+qte1 sign-flip tau==+/-1 by X1>0: TRUE
+
+== SECTION D: multi-axis coupling (nonlinear_heteroskedastic) ==
+cor(sigma(X),p)=-0.6501 cor(mu0(X),logit p)=0.3556 sd(eps|trt)/sd(eps|ctrl)=0.7941
+
+== SECTION E: shared-noise audit: sd(y1-y0-tau) for non-placebo DGPs ==
+   (0 => eps1 pathwise-identical to eps0 i.e. CRN/shared noise in the DATA path)
+  synth_baseline                   sd(y1-y0-tau)=0.7028
+  synth_heavytail                  sd(y1-y0-tau)=19.6656
+  synth_qte1                       sd(y1-y0-tau)=0.9694
+  synth_nonlinear_heteroskedastic  sd(y1-y0-tau)=1.9763
+  synth_overlap_stressed           sd(y1-y0-tau)=0.7199
+  synth_tilt_mild                  sd(y1-y0-tau)=0.7028
+  synth_hd_sparse_plm              sd(y1-y0-tau)=0.0000
+
+== SECTION F: kang-schafer misspecification (truth=0; OLS/IPW-in-X ATT = bias) ==
+kangschafer OLS-in-X ATT bias=-7.0474 naive=-19.6754 | placebo_tau0 OLS ATT bias=-0.0082
+
+== SECTION G: selection ladder sd(logit p) baseline->tilt->overlap ==
+  synth_tilt_mild          sd(logit p)=0.6071
+  synth_baseline           sd(logit p)=0.7153
+  synth_placebo_tilted     sd(logit p)=1.0144
+  synth_overlap_stressed   sd(logit p)=12.5236
+
+== SECTION H: include_truth=FALSE robustness probe across all 12 IDs ==
+   (does data-only generation succeed, or does the self-check abort?)
+  synth_baseline                   v1.6.0 include_truth=FALSE -> OK
+  synth_heavytail                  v1.6.0 include_truth=FALSE -> ABORT: `true_qst` must be a tibble with columns `tau` and `v
+  synth_qte1                       v1.6.0 include_truth=FALSE -> ABORT: `true_qst` must be a tibble with columns `tau` and `v
+  synth_nonlinear_heteroskedastic  v1.6.0 include_truth=FALSE -> OK
+  synth_overlap_stressed           v1.6.0 include_truth=FALSE -> OK
+  synth_tilt_mild                  v1.6.0 include_truth=FALSE -> ABORT: `true_qst` must be a tibble with columns `tau` and `v
+  synth_hd_sparse_plm              v1.5.0 include_truth=FALSE -> OK
+  synth_placebo_tau0               v1.3.0 include_truth=FALSE -> ABORT: `true_qst` must be a tibble with columns `tau` and `v
+  synth_placebo_nonlinear          v1.3.0 include_truth=FALSE -> ABORT: `true_qst` must be a tibble with columns `tau` and `v
+  synth_placebo_heavytail          v1.3.0 include_truth=FALSE -> ABORT: `true_qst` must be a tibble with columns `tau` and `v
+  synth_placebo_tilted             v1.4.0 include_truth=FALSE -> ABORT: `true_qst` must be a tibble with columns `tau` and `v
+  synth_placebo_kangschafer        v1.4.0 include_truth=FALSE -> ABORT: `true_qst` must be a tibble with columns `tau` and `v
+
+Done. SEED= 20260724
