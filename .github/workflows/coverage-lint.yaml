@@ -69,6 +69,10 @@ jobs:
           extra-packages: |
             any::lintr
 
+      - name: Install package for lint analysis
+        run: |
+          R CMD INSTALL .
+
       - name: Run correctness lint
         run: |
           Rscript tools/ci-lint.R
