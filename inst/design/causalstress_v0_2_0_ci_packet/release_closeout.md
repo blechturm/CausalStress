@@ -1,9 +1,9 @@
 # CausalStress v0.2.0 CI Packet Closeout
 
 **Status:** ACTIVE
-**Gate state:** CS-1228 is complete after independent review and commit
-`9c16cd2`; fresh committed-tree Windows and WSL/Ubuntu gates pass; remote
-branch/main/tag CI remains pending
+**Gate state:** CS-1228 and CS-1229 are complete after independent review;
+the CS-1229-inclusive committed tree at `badeac1` passes the fresh Windows and
+WSL/Ubuntu local gate; remote branch/main/tag CI remains pending
 **Date opened:** 2026-06-18
 **Packet:** `causalstress_v0_2_0_ci_packet`
 
@@ -12,8 +12,9 @@ under **Prior Local Gate Evidence** are the 2026-06-18 pre-correction rehearsal.
 They remain useful implementation evidence, but the CS-1225 Windows and
 WSL/Ubuntu results cover only the pre-CS-1228 tree. Two later branch-CI attempts
 exposed an R 4.6 runtime-installation blocker before package-owned checks began.
-CS-1228 now has fresh committed-tree local evidence below. Remote branch,
-main/default-branch, and tag-triggered GitHub Actions evidence remains pending.
+CS-1228 and the later CS-1229 documentation correction now have fresh
+committed-tree local evidence below. Remote branch, main/default-branch, and
+tag-triggered GitHub Actions evidence remains pending.
 
 ## Shipped
 
@@ -26,7 +27,29 @@ main/default-branch, and tag-triggered GitHub Actions evidence remains pending.
 
 | Ticket | Evidence |
 | --- | --- |
-| CS-1214 | The June local release-gate implementation added dependency bootstrap, workflow hardening, pin compatibility, timeout portability, and Windows/WSL rehearsal evidence. CS-1225 supplies accepted local evidence for baseline `c05be176950603aa374e0202ca70f1e5d7443b1e`. Later branch CI proved the archived dependency bootstrap is not R 4.6-compatible. CS-1228's replacement implementation is complete after independent review and commit `9c16cd2`; its fresh Windows/WSL gates pass. Mandatory remote branch/main/tag CI remains open. |
+| CS-1214 | The June local release-gate implementation added dependency bootstrap, workflow hardening, pin compatibility, timeout portability, and Windows/WSL rehearsal evidence. CS-1225 supplies accepted historical local evidence for baseline `c05be176950603aa374e0202ca70f1e5d7443b1e`. Later branch CI proved the archived dependency bootstrap is not R 4.6-compatible. CS-1228 replaced that runtime; CS-1229 corrected the release-facing heavytail interpretation. Both are independently accepted, and the CS-1229-inclusive commit `badeac1` passes the fresh Windows/WSL gate. Mandatory remote branch/main/tag CI remains open. |
+
+## CS-1229-Inclusive Committed-Tree Local Gate (2026-07-26)
+
+The exact commands and full evidence are recorded in the correction packet's
+`release_closeout.md` under **CS-1229 Fresh Committed-Tree Local Gate**. The
+source was an isolated `git archive` of
+`badeac1f905f4755648c154d8cdea3fd0e8705b4`, excluding unrelated untracked audit
+records and testing the exact committed package.
+
+| Gate | Fresh result |
+| --- | --- |
+| Full tests - Windows | Pass in 183.1 seconds with no failures and 56 governed warnings; the parallel RDS protocol test executed. |
+| Strict validation - Windows | Pass: 24/24 registry rows valid and 153 focused expectations passed. |
+| Lint - Windows | Pass: `lint_count=0`; 33 reviewed internal-helper false positives filtered. |
+| Coverage - Windows | Pass/evidence-only: 81.97% over 3,212 measured entries. |
+| Substrate - Windows | Pass: R 4.5.2 ucrt on `x86_64-w64-mingw32`; governed RNG locked; all truth payload components bitwise-identical; thread-cap variables unset. |
+| R CMD check - Windows | Pass: 0 errors, 0 warnings, 0 notes; check duration 5m 30.7s. |
+| Full tests - WSL/Ubuntu | Pass on default `Ubuntu` WSL 2 in 197.2 seconds with no failures, 12 declared optional-package skips, and 50 governed warnings; the parallel RDS protocol test executed. |
+| Strict validation - WSL/Ubuntu | Pass: 24/24 registry rows valid and 153 focused expectations passed. |
+| Substrate - WSL/Ubuntu | Pass: Ubuntu 20.04 LTS, R 4.5.2, `x86_64-pc-linux-gnu`, governed RNG locked, all truth payload components bitwise-identical, and thread-cap variables unset. |
+| R CMD check - WSL/Ubuntu | Pass through installed `rcmdcheck`: 0 errors, 0 warnings, 0 notes; check duration 1m 32.1s. |
+| WSL lint/coverage | Not rerun because CS-1229 changed documentation and an R comment only. Windows scripts passed; remote coverage/lint CI remains mandatory. |
 
 ## CS-1228 Committed-Tree Local Gate (2026-07-24)
 
@@ -92,8 +115,9 @@ pin-trial
 [test/validation/substrate](https://github.com/blechturm/CausalStress/actions/runs/30102494153).
 
 Neither attempt supplies package test/check evidence. The accepted CS-1225
-local run remains historical evidence for its tested tree, but a new executable
-persistence change requires a fresh local and remote gate.
+run remains historical evidence for its tested tree. The later CS-1228 and
+CS-1229 committed-tree local gates are green; a fresh remote gate remains
+mandatory.
 
 ## Prior Local Gate Evidence (2026-06-18)
 
@@ -145,16 +169,18 @@ The public v0.2.0 tag remains blocked. Unblock only after:
 
 1. Correction tickets CS-1223 and CS-1224 are independently accepted. **Done.**
 2. CS-1225 records a fresh post-correction local gate and CS-1214 receives its
-   final review. **The pre-CS-1228 Windows and WSL/Ubuntu evidence was
-   independently accepted; CS-1214 remains open.**
+   final review. **The latest CS-1229-inclusive Windows and WSL/Ubuntu local gate
+   passes; CS-1214 remains open for remote evidence and final review.**
 3. CS-1228's amended specification is independently accepted. **Done.** Its
    minimal RDS migration is implemented, independently accepted, committed, and
    passes fresh final-tree Windows/WSL gates. **Done.**
-4. The reviewed correction and CI changes are committed and pushed. **Committed
-   at `9c16cd2`; push pending.**
-5. Branch CI is green on `v0.2.0`, including R release and R-devel installation.
-6. Main/default-branch CI is green if the release is merged before tagging.
-7. The tag-triggered `v0.2.0` CI run is green.
+4. CS-1229 is independently accepted, committed, and passes a fresh
+   CS-1229-inclusive Windows/WSL gate. **Done at `badeac1`.**
+5. The reviewed correction and CI changes are committed and pushed. **Committed
+   locally; push pending.**
+6. Branch CI is green on `v0.2.0`, including R release and R-devel installation.
+7. Main/default-branch CI is green if the release is merged before tagging.
+8. The tag-triggered `v0.2.0` CI run is green.
 
 Until then, the June local results are rehearsal evidence and v0.2.0 is not
 publicly released.

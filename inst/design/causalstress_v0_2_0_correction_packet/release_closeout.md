@@ -4,8 +4,8 @@
 **Closeout state:** CS-1225 complete after independent review; emergency
 CS-1228 implementation is complete after independent review and its committed-tree
 Windows/WSL gates pass; CS-1229 documentation is complete after independent
-review; fresh CS-1229-inclusive release gates and remote gates remain pending;
-CS-1226 and CS-1227 remain incomplete
+review and its committed-tree Windows/WSL gates pass; remote gates remain
+pending; CS-1226 and CS-1227 remain incomplete
 **Date opened:** 2026-07-24
 **Date closed:** TBD
 **Packet:** `causalstress_v0_2_0_correction_packet`
@@ -53,7 +53,7 @@ CS-1226 and CS-1227 remain incomplete
 | QST record/row identity | Focused schema-4, pin, projection, science, audit, and historical-resume tests; full package suite; and independent Claude review. | Pass |
 | Emergency RDS implementation | Focused result/batch/oracle persistence tests; valid/invalid destination, corrupt/partial, duplicate, resume-plan identity, legacy-only/mixed staging, and immutable legacy-oracle-cache coverage; full package suite; strict 24/24 registry validation with 153 focused expectations; lint count zero; dependency/code/CI searches found no archived `qs` execution path. Independent implementation re-review returned **APPROVE** with no remaining findings. Commit `9c16cd2` then passed fresh Windows and WSL full tests, validation, substrate probes, and package checks; Windows coverage and lint also passed. | Pass after independent review and committed-tree local gates. Remote branch/main/tag CI remains required. |
 | README and roxygen truthfulness | `README.Rmd` rendered with all evaluated examples; `devtools::document()` regenerated help/namespace artifacts; focused stale-claim searches passed; final-tree Windows `R CMD check` passed examples, documentation, and the full tests with 0 errors, 0 warnings, and one environment-only time-verification NOTE. Claude independently returned **APPROVE WITH NON-BLOCKING NOTES** and accepted the namespace sync. | Pass |
-| Heavytail estimand-boundary documentation | CS-1229 applies the accepted pass-2 maintainer adjudication to the README, heavytail dossier, summary reference, CRN wording, and families horizon without changing executable behavior or suppressing atomic point-error evidence. The focused documentation gate below passed, and Claude independently returned **APPROVE WITH NON-BLOCKING NOTES** with no blocker, major, or minor findings. | Pass after independent review. Fresh CS-1229-inclusive release gates remain required before tagging. |
+| Heavytail estimand-boundary documentation | CS-1229 applies the accepted pass-2 maintainer adjudication to the README, heavytail dossier, summary reference, CRN wording, and families horizon without changing executable behavior or suppressing atomic point-error evidence. The focused documentation gate passed, Claude independently returned **APPROVE WITH NON-BLOCKING NOTES** with no blocker, major, or minor findings, and commit `badeac1` passed the fresh Windows/WSL local gate recorded below. | Pass after independent review and committed-tree local gates. Remote branch/main/tag CI remains required. |
 | Focused tests | Fresh seven-file release selection on 2026-07-24; exact command and file list below. | Pass: 123 expectations, 0 failures. |
 | Full test suite | `testthat::test_local('.', reporter='summary', stop_on_failure=TRUE)` with `NOT_CRAN=true` on 2026-07-24. | Pass in 187.4 seconds with no failures; 50 governed experimental/optional-path warnings. |
 | Registry validation | `tools/ci-validation.R` on 2026-07-24. | Pass: `registry_strict_rows=24`, `validate_registry_rows=24`, `all_valid=TRUE`; 153 focused expectations passed. |
@@ -91,6 +91,31 @@ separately to preserve ticket provenance.
 | Executable scope | The only production-R diffs are the `cs_summarise_runs()` roxygen section and a two-line heavytail CRN comment correction. No generator, truth, RNG, scoring, or aggregation statement changed. |
 | Independent review | **APPROVE WITH NON-BLOCKING NOTES**. The two notes concern only the disclosed sandbox render substitution and benign generated-Rd terminator normalization; neither requires correction. |
 | Worktree hygiene | `git diff --check` passes after normalizing the generated Rd terminator. No push, tag, or publication was performed. |
+
+## CS-1229 Fresh Committed-Tree Local Gate
+
+**Date:** 2026-07-26
+
+**Tested commit:** `badeac1f905f4755648c154d8cdea3fd0e8705b4`
+
+**Source isolation:** The gate ran from a `git archive HEAD` extraction at
+`C:\tmp\CausalStress-badeac1-gate`. This excluded unrelated untracked pass-1
+and simplicity-audit records and tested the exact committed source. The tracked
+repository worktree was clean before evidence recording.
+
+| Gate | Exact command | Result |
+| --- | --- | --- |
+| Windows full tests | `$env:NOT_CRAN='true'; Rscript -e "options(causalstress.validate_on_load=FALSE); testthat::test_local('.', reporter='summary', stop_on_failure=TRUE)"` | Pass in 183.1 seconds with no failures and 56 governed warnings; the parallel RDS protocol test executed. |
+| Windows strict validation | `Rscript tools/ci-validation.R` | Pass: 24/24 registry rows valid and 153 focused expectations passed. |
+| Windows lint | `Rscript tools/ci-lint.R` | Pass: `lint_count=0`; 33 reviewed internal-helper false positives filtered. |
+| Windows coverage | `Rscript tools/ci-coverage.R` | Pass/evidence-only: 81.97% over 3,212 measured entries. |
+| Windows substrate | `Rscript tools/ci-substrate.R` | Pass: R 4.5.2 ucrt on `x86_64-w64-mingw32`; governed RNG `Mersenne-Twister / Inversion / Rounding`; all truth payload components bitwise-identical; thread-cap variables unset. |
+| Windows package check | `devtools::check(document=FALSE, build_args='--no-build-vignettes', args=c('--no-manual','--ignore-vignettes'), error_on='warning')` with `NOT_CRAN=true` | Pass: 0 errors, 0 warnings, 0 notes; check duration 5m 30.7s and wall time 335.1 seconds. |
+| WSL full tests | `wsl.exe -d Ubuntu --cd /mnt/c/tmp/CausalStress-badeac1-gate --exec env NOT_CRAN=true Rscript -e "options(causalstress.validate_on_load=FALSE); testthat::test_local('.', reporter='summary', stop_on_failure=TRUE)"` | Pass on default `Ubuntu` WSL 2 in 197.2 seconds with no failures, 12 declared optional-package skips, and 50 governed warnings; the parallel RDS protocol test executed. |
+| WSL strict validation | `wsl.exe -d Ubuntu --cd /mnt/c/tmp/CausalStress-badeac1-gate --exec Rscript tools/ci-validation.R` | Pass: 24/24 registry rows valid and 153 focused expectations passed. |
+| WSL substrate | `wsl.exe -d Ubuntu --cd /mnt/c/tmp/CausalStress-badeac1-gate --exec Rscript tools/ci-substrate.R` | Pass: Ubuntu 20.04 LTS, R 4.5.2, `x86_64-pc-linux-gnu`, BLAS `/usr/lib/x86_64-linux-gnu/blas/libblas.so.3.9.0`, governed RNG locked, all truth payload components bitwise-identical, and thread-cap variables unset. |
+| WSL package check | `rcmdcheck::rcmdcheck(path='.', args=c('--no-manual','--ignore-vignettes'), build_args='--no-build-vignettes', error_on='warning')` with `NOT_CRAN=true` and `_R_CHECK_FORCE_SUGGESTS_=false` | Pass: 0 errors, 0 warnings, 0 notes; check duration 1m 32.1s and wall time 94.6 seconds. Six unavailable suggested estimator/documentation packages were informational. |
+| WSL lint/coverage | Not rerun. | CS-1229 changed documentation and an R comment only. The committed-tree Windows lint/coverage scripts passed; remote coverage/lint CI remains mandatory. |
 
 ## CS-1228 Fresh Final-Tree Local Gate Detail
 
@@ -228,8 +253,8 @@ CS-1225.
 - CS-1228 is `complete_after_review`; its committed tree passed the fresh local
   Windows and WSL gates. Remote branch/main/tag evidence remains outstanding.
 - CS-1229 is `complete_after_review`; its documentation-focused implementation
-  gate and independent review passed. Fresh CS-1229-inclusive release gates
-  remain outstanding before remote publication sequencing.
+  gate, independent review, and committed-tree Windows/WSL release gates passed.
+  Remote branch/main/tag evidence remains outstanding.
 - `inst/design/README.md` correctly keeps the correction and CI packets active
   until publication, and identifies the Wave 1 packet as final.
 - Every finding in the open v0.1.9 deep audit is routed by the final v0.1.10
@@ -238,10 +263,9 @@ CS-1225.
   `3496e8f90ddddff1a86da4376113d82b5d7e7943` and peels to the governed commit
   `d05164a856b3e19101b989021f20dabe0b2a00a8`. It was inspected only; CS-1226
   still requires maintainer approval immediately before publication.
-- No known constitutional violation is open. Remaining blockers are fresh
-  CS-1229-inclusive release gates; archival publication approval; remote
-  branch/main/tag CI; CS-1214 final closeout; and the final v0.2.0 release
-  decision.
+- No known constitutional violation is open. Remaining blockers are archival
+  publication approval; remote branch/main/tag CI; CS-1214 final closeout; and
+  the final v0.2.0 release decision.
 
 ## Final Release Decision
 
