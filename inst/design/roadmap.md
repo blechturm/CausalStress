@@ -3,7 +3,7 @@
 **Status:** Active roadmap
 **Authority:** Planning document (authority level 5 per `README.md`); below the
 Constitution, `contracts.md`, active packets, and accepted RFC syntheses.
-**Last updated:** 2026-07-24
+**Last updated:** 2026-07-26
 
 ## Completed: v0.1.10
 
@@ -13,10 +13,10 @@ templates) plus the v0.1.9 audit Rev 2 repair cycle. Packet
 
 ------------------------------------------------------------------------
 
-## Current Program: close v0.2.0
+## Completed: v0.2.0
 
-v0.2.0 is a narrow public-release closure, not the complete multi-wave program
-described by earlier roadmap revisions.
+v0.2.0 was published on 2026-07-26 as a narrow public foundation, not the
+complete multi-wave program described by earlier roadmap revisions.
 
 **Implemented release surface:** Constitution v2.0.1; typed ATT, finite-sample
 ATE, and QST scoring; canonical long-form score collection; schema-4 fit,
@@ -24,10 +24,10 @@ score-record, and score-row identities; legacy ATT/QST projections; and CI/relea
 enforcement. CATE remains a registered descriptor with deterministic
 `target_not_implemented` behavior. It is not an implemented v0.2.0 capability.
 
-**Remaining release work:** independently review the completed emergency RDS
-persistence correction in CS-1228, rerun the final-tree local gate, publish the
-immutable v0.1.10 archive, and obtain green branch/main/tag CI evidence. The
-correction and CI packets named in `README.md` own this work.
+The emergency RDS correction, CS-1229 scientific-interpretation correction,
+immutable v0.1.10 archival release, and local/branch/main/tag gates all closed
+before publication. The final v0.2.0 spec, correction, and CI packets named in
+`README.md` are historical authority records.
 
 **Explicitly deferred from v0.2.0:** CATE execution, parameterized families,
 real-data DGP support, a public DGP-extension API, an authoritative feature
@@ -41,7 +41,7 @@ packet lifecycle is declared by the governance index.
 
 ------------------------------------------------------------------------
 
-## Emergency v0.2.0 correction — "Retire `qs`"
+## Completed emergency v0.2.0 correction — "Retire `qs`"
 
 **Trigger and boundary.** The work previously planned as v0.2.1 became a v0.2.0
 release blocker when clean branch CI on R 4.6 proved that archived `qs` 0.27.3
@@ -50,7 +50,7 @@ itself no longer compiles against current R headers. The first failed commit
 `stringfish` compile and exposed the underlying `qs` failure. Transitive pinning
 cannot make the current runtime dependency support the required matrix.
 
-CS-1228 in the active correction packet now owns only the minimum safe removal:
+CS-1228 in the final correction packet owned only the minimum safe removal:
 
 1. Make base-R RDS the sole runtime format for individual-result staging,
    campaign-batch staging, and oracle caches; keep pin artifacts on RDS.
@@ -76,6 +76,40 @@ campaign image, CATE, and parameterized families remain separately planned.
 
 ------------------------------------------------------------------------
 
+## Current Program: v0.2.1 Quarto documentation and bounded maintenance
+
+The active `causalstress_v0_2_1_spec_packet/` owns a patch release with two
+purposes: publish the complete Quarto-authored pkgdown documentation surface and
+remove only the five low-risk concepts accepted from the code-simplicity audit.
+It is not a scientific capability release.
+
+The accepted six-batch plan owns:
+
+1. governance reconciliation and characterization tests around the duplicated
+   per-seed runner paths, with an empty production diff for F1;
+2. independently deferrable F2/F4/F5/F6/F7 maintenance, guarded by exact
+   behavior, identity, and vocabulary locks;
+3. a pinned Quarto/pkgdown build substrate and migration of `README`, the four
+   existing articles, and all 12 DGP dossiers from `.Rmd` to `.qmd`;
+4. canonical workflow, estimator-extension, and contributor-native-DGP guides,
+   plus current roxygen/reference documentation;
+5. integrated site validation; and
+6. a separate release gate following Windows, WSL, branch, main, and tag CI in
+   the governed order.
+
+F1 production unification remains deferred to the v0.3.0 foundation or a
+separately justified v0.2.2 defect correction. F3 campaign-API redesign,
+parameterized families, CATE execution, real-data DGPs, public runtime DGP
+registration, and scientific registry expansion are outside v0.2.1.
+
+The future F1/F3 decision must explicitly adjudicate two characterized runner
+differences: `cs_run_seeds()` returns cached rows while an all-cached grid
+campaign returns an empty tibble, and deprecated-DGP warnings occur once per
+seed-runner call but once per grid task. v0.2.1 records these contracts without
+changing them.
+
+------------------------------------------------------------------------
+
 ## Planning gate for v0.3.0 and later science
 
 Do not assume that CATE is automatically the next scientific release. Before a
@@ -92,17 +126,17 @@ parallel program. It must name consuming studies, dependencies, identity and
 truth requirements, and independent review gates. This roadmap does not decide
 that sequence in advance.
 
-A separate documentation release, with its version assigned during planning,
-owns the pkgdown site, a report for every DGP, a canonical-workflow vignette,
-and contract vignettes for user-defined estimators and DGPs. Until a public DGP
-extension contract is designed, documentation must not advertise one.
+The active v0.2.1 packet now owns the separately versioned documentation
+release. Its native-DGP guide is contributor-facing and must not advertise a
+public runtime DGP-extension API. Completion of v0.2.1 does not decide the
+families-versus-CATE value gate above.
 
 ------------------------------------------------------------------------
 
 ## Parallel & deferred tracks
 
-Tracked in `horizon.md`; these do not gate the main v0.2.0 arc and may proceed
-independently:
+Tracked in `horizon.md`; these do not gate the current v0.2.1 release unless the
+active packet explicitly names them and may otherwise proceed independently:
 
 - **GenGC bootstrap** stabilization (estimator-side, no contract change).
 - **Gatekeeper recalibration RFC** — pass/fail calibration, difficulty tiers, and
@@ -110,16 +144,16 @@ independently:
   §4.2.5 defers these here).
 - **mirai/mori parallelism spike** — evaluate against the Wide & Shallow rule and
   Article VI atomic persistence before any parallel-execution RFC.
-- **Registry-spec version bump** for stale scientific registry entries
-  (`CAUSAL_STRESS_DGP_REGISTRY_1.4.0.md`), corrected by version bump, never by
-  editing scientific history.
+- **Successor registry specification** for parameterized families. DGP Registry
+  1.4.0 is historical/superseded and remains unedited; its successor belongs to
+  the families packet that supplies the missing scientific design, not v0.2.1.
 - **Real-data external-truth RFC** — a generalized external-truth tier for
   ATE/CATE on real DGPs (Constitution §1.7 defers this).
 - **Python spoke** — only after the R package contract is stable (post-freeze).
 
 ------------------------------------------------------------------------
 
-## Non-scope for v0.2.0
+## Released non-scope for v0.2.0
 
 - A generalized external-truth tier for real-data ATE/CATE (deferred RFC).
 - Gatekeeper pass/fail recalibration (deferred RFC).
@@ -134,5 +168,5 @@ independently:
 - Continuous breakdown-curve / "kill-plot" studies built on the RFC-3 families
   (the methodological payoff the stable foundation enables).
 - Sensitivity-analysis design as a DGP stress-axis RFC, if still desired.
-- Public article / vignette polish once the runner and artifact contracts have
-  shipped and settled.
+- Further documentation beyond the accepted v0.2.1 site and article boundary,
+  routed by user need after that release.

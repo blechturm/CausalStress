@@ -39,7 +39,7 @@
   historical/superseded, its successor is deferred to the families packet, and
   no archived authority was rewritten.
 - **Review gate:** Batch 0 governance and characterization review.
-- **Disposition:** open
+- **Disposition:** complete_after_review
 
 ### CS-1231 — Characterize the duplicated per-seed runner contracts
 
@@ -65,7 +65,44 @@
   call order, or undocumented timing.
 - **Review gate:** Batch 0 governance and characterization review; verify an
   empty production diff and route rather than fix any discovered defect.
-- **Disposition:** open
+- **Disposition:** complete_after_review
+
+## Batch 0 Implementation Evidence
+
+- **CS-1230:** `roadmap.md` now records v0.2.0 and its emergency RDS correction
+  as completed, makes v0.2.1 the current program, reproduces the accepted six-
+  batch boundary, keeps F1/F3 and future science out of scope, and labels DGP
+  Registry 1.4.0 historical/superseded without editing it or any final packet.
+- **CS-1231:** `test-runner-characterization.R` adds five public-path contracts:
+  serial result/tau/order/identity equivalence; experimental-parallel warning,
+  stage/gather, thread-cap, backend, and identity equivalence; cached no-
+  overwrite and forced-recompute behavior; path-specific DGP warning counts with
+  progress enabled; and distinct grid versus planned-batch return/artifact
+  contracts. No `R/` file changed.
+- **Focused test:** the final unsandboxed focused run passed 44 expectations.
+  The first managed-sandbox attempt had two `EPERM` harness errors because
+  `pins::board_temp()` could not traverse the user-profile path; no package
+  assertion failed, and the same tree passed with normal filesystem access.
+- **Affected tests:** force-overwrite, parallel protocol/reproducibility,
+  resume, campaign configuration/forwarding/bootstrap, runner seeds, v0.1.8
+  parallel gating/thread caps, and v0.1.9 runner/worker suites all passed.
+- **Full suite:** passed in 223.3 seconds. The 56 warnings came from existing
+  experimental-DGP, optional-estimator CI, and governed RNG-warning tests; the
+  Batch 0 file emitted no warning.
+- **Registry:** strict and executable validation passed 24/24 with every row
+  valid.
+- **Static checks:** the new test file has no lints; `git diff --check` is clean;
+  the production `R/` diff and historical registry/final-packet diffs are empty.
+
+Independent review returned **APPROVE WITH NON-BLOCKING NOTES**. Before commit,
+the test-only estimator registration gained teardown, the two characterized
+runner asymmetries were explicitly routed to the future F1/F3 decision, and the
+current design index cross-referenced the registry successor to the families
+work. The warning-message substring remains a documented characterization
+limitation because the warning has no dedicated class.
+
+CS-1230 and CS-1231 are `complete_after_review`. This acceptance does not
+authorize Batch 1.
 
 ## Batch 1 — Independently Deferrable Bounded Maintenance
 

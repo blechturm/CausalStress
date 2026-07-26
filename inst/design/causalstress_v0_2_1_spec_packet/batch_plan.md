@@ -1,6 +1,6 @@
 # CausalStress v0.2.1 Batch Plan
 
-**Status:** ACTIVE — accepted after independent review; Batch 0 authorized
+**Status:** ACTIVE — Batch 0 complete after independent review; Batch 1 unauthorized
 **Packet:** `causalstress_v0_2_1_spec_packet`
 **Authority commit:** `0b20f12`
 **Accepted:** 2026-07-26
@@ -44,6 +44,7 @@ are not authorized in any batch.
 
 ## Batch 0 — Governance and Runner Characterization
 
+- **State:** complete after independent review.
 - **Purpose:** Make the active release boundary truthful and add the F1
   characterization net without changing production behavior.
 - **Tickets:** CS-1230, CS-1231

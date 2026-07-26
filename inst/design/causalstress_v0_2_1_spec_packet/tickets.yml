@@ -15,7 +15,7 @@ tickets:
     constitutional_check: "Authority ordering and history preservation; no scientific registry, DGP, estimand, or constitutional content change"
     test_obligation: "Current governance identifies v0.2.1 as active and v0.2.0 as historical; Registry 1.4.0 is historical/superseded and unedited; successor work is deferred to families"
     review_gate: "Batch 0 governance and characterization review"
-    disposition: open
+    disposition: complete_after_review
 
   - id: "CS-1231"
     title: "Characterize the duplicated per-seed runner contracts"
@@ -26,7 +26,7 @@ tickets:
     constitutional_check: "Articles II, V, and VI RNG, concurrency, identity, worker-isolation, and persistence contracts"
     test_obligation: "Characterize supported serial/parallel, board/staging, forwarding, provenance, warning/progress, order, resume/no-overwrite, rejection, grid, and planned-batch behavior without locking implementation internals; production diff empty"
     review_gate: "Batch 0 governance and characterization review"
-    disposition: open
+    disposition: complete_after_review
 
   - id: "CS-1232"
     title: "Retire historical fingerprint fixture builders"

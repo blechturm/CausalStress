@@ -2,7 +2,7 @@
 
 **Status:** ACTIVE authority index
 **Last updated:** 2026-07-26
-**Current active packets:** `causalstress_v0_2_1_spec_packet` — accepted Quarto documentation and bounded-maintenance authority; the independently reviewed ticket plan is active and Batch 0 is authorized.
+**Current active packets:** `causalstress_v0_2_1_spec_packet` — accepted Quarto documentation and bounded-maintenance authority; Batch 0 is complete after independent review, and Batch 1 remains unauthorized.
 **Draft packets:** none
 **Latest final packets:** `causalstress_v0_2_0_spec_packet`, `causalstress_v0_2_0_correction_packet`, and `causalstress_v0_2_0_ci_packet` (v0.2.0 published 2026-07-26)
 **Accepted RFCs (authority level 4):** RFC-1 Estimand Registry — `rfc/20260616_estimand_registry_synthesis.md`, accepted 2026-06-16 and consumed by ratified Constitution v2.0.0. DGP contract terminology clarifications — `rfc/20260722_covariate_naming_synthesis.md` (seed `rfc/20260722_covariate_naming_seed.md`, response `rfc/20260722_covariate_naming_response.md`, independent review `rfc/20260722_covariate_naming_synthesis_review.md`), accepted 2026-07-24 and consumed by ratified Constitution v2.0.1 and correction ticket CS-1221.
@@ -74,7 +74,7 @@ active packet, the current authority wins.
 | `release_ci_playbook.md` | Process | CI-backed release sequencing, local WSL gate, and tag-handling playbook. |
 | `templates/` | Process | Canonical packet and closeout templates. |
 | `audit/` | Audit archive | Non-binding review evidence; see `audit/README.md`. The pass-2 maintainer adjudication controls the scientific-design audit's accepted, rejected, and deferred conclusions. |
-| `causalstress_v0_2_1_spec_packet/` | `ACTIVE` packet | Accepted v0.2.1 Quarto documentation and bounded-maintenance authority. Tickets and batch plan were independently reviewed and accepted; Batch 0 is the current implementation boundary. |
+| `causalstress_v0_2_1_spec_packet/` | `ACTIVE` packet | Accepted v0.2.1 Quarto documentation and bounded-maintenance authority. Batch 0 governance/characterization is complete after independent review; Batch 1 remains unauthorized. |
 | `causalstress_v0_2_0_ci_packet/` | `FINAL` packet | v0.2.0 CI and release-gate infrastructure packet, closed after green branch, main, and tag CI on 2026-07-26. |
 | `causalstress_v0_2_0_correction_packet/` | `FINAL` packet | Constitutional, validation, QST-identity, minimal-documentation, emergency RDS-persistence, scientific-interpretation, and publication corrections shipped in v0.2.0. The release was published on 2026-07-26 after green branch, main, and tag CI. |
 | `causalstress_v0_2_0_spec_packet/` | `FINAL` packet | v0.2.0 Wave 1 typed-scoring implementation packet, closed before the public tag; final CI and publication are recorded in the two release closeouts above. |
@@ -93,8 +93,9 @@ registry specifications, not ordinary implementation plans:
 - `CAUSAL_STRESS_DGP_REGISTRY_1.4.0.md`
 - `CAUSAL_STRESS_FAMILIES_SPEC_v3_2_final.md`
 
-Their stale entries identified by audit findings must be corrected through a
-registry-spec version bump, not by silently editing old scientific history.
+`CAUSAL_STRESS_DGP_REGISTRY_1.4.0.md` is historical/superseded. Any successor
+version belongs to the parameterized-families packet identified in
+`roadmap.md`; old scientific history must not be silently edited.
 
 ## Archived Documents
 
