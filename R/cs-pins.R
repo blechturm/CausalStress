@@ -1,10 +1,55 @@
+cs_result_pin_name <- function(dgp_id, estimator_id, n, seed, dgp_version = NULL) {
+  if (!is.null(dgp_version) && !is.na(dgp_version) && nzchar(dgp_version)) {
+    return(glue::glue(
+      "results__dgp={dgp_id}__dgpver={dgp_version}__est={estimator_id}__n={n}__seed={seed}"
+    ))
+  }
+  glue::glue("results__dgp={dgp_id}__est={estimator_id}__n={n}__seed={seed}")
+}
+
+cs_result_pin_name_legacy <- function(dgp_id, estimator_id, n, seed) {
+  glue::glue("results__dgp={dgp_id}__est={estimator_id}__n={n}__seed={seed}")
+}
+
+cs_find_result_pin <- function(board, dgp_id, estimator_id, n, seed, dgp_version = NULL,
+                               include_legacy = TRUE) {
+  if (is.null(dgp_version) || is.na(dgp_version) || !nzchar(dgp_version)) {
+    pins_vec <- pins::pin_list(board)
+    all_names <- if (is.data.frame(pins_vec)) pins_vec$name else pins_vec
+    pattern <- glue::glue(
+      "^results__dgp={dgp_id}__(dgpver=[^_]+__)?est={estimator_id}__n={n}__seed={seed}$"
+    )
+    matches <- all_names[grepl(pattern, all_names)]
+    if (length(matches) > 0L) {
+      versioned <- matches[grepl("__dgpver=", matches)]
+      if (length(versioned) > 0L) return(versioned[[1L]])
+      if (isTRUE(include_legacy)) return(matches[[1L]])
+    }
+    return(NA_character_)
+  }
+  candidates <- cs_result_pin_name(dgp_id, estimator_id, n, seed, dgp_version)
+  if (isTRUE(include_legacy)) {
+    candidates <- unique(c(candidates, cs_result_pin_name_legacy(dgp_id, estimator_id, n, seed)))
+  }
+  for (name in candidates) {
+    if (pins::pin_exists(board, name)) {
+      return(name)
+    }
+  }
+  NA_character_
+}
+
 cs_pin_write <- function(board, result) {
   meta <- result$meta
   att <- result$att %||% list()
   prov <- result$provenance %||% list()
 
-  name <- glue::glue(
-    "results__dgp={meta$dgp_id}__est={meta$estimator_id}__n={meta$n}__seed={meta$seed}"
+  name <- cs_result_pin_name(
+    dgp_id = meta$dgp_id,
+    dgp_version = meta$dgp_version %||% NA_character_,
+    estimator_id = meta$estimator_id,
+    n = meta$n,
+    seed = meta$seed
   )
 
   git_hash <- tryCatch(
@@ -21,7 +66,7 @@ cs_pin_write <- function(board, result) {
       board   = board,
       x       = result,
       name    = name,
-      type    = "qs",
+      type    = "rds",
       metadata = list(
         success      = meta$success %||% NA,
         error        = meta$error %||% NA_character_,
@@ -51,6 +96,12 @@ cs_pin_write <- function(board, result) {
         estimator_pkgs = meta$estimator_pkgs %||% NA_character_,
         config_fingerprint = meta$config_fingerprint %||% NA_character_,
         config_fingerprint_schema = meta$config_fingerprint_schema %||% NA_integer_,
+        fit_fingerprint = meta$fit_fingerprint %||% NA_character_,
+        truth_version = meta$truth_version %||% NA_character_,
+        score_fingerprints = list(meta$score_fingerprints %||% character(0)),
+        score_row_fingerprints = list(
+          meta$score_row_fingerprints %||% character(0)
+        ),
         git_hash     = git_hash,
         session_info = list(utils::sessionInfo()),
         timestamp    = ts_num
@@ -61,9 +112,16 @@ cs_pin_write <- function(board, result) {
   invisible(name)
 }
 
-cs_pin_exists <- function(board, dgp_id, estimator_id, n, seed) {
-  name <- glue::glue(
-    "results__dgp={dgp_id}__est={estimator_id}__n={n}__seed={seed}"
+cs_pin_exists <- function(board, dgp_id, estimator_id, n, seed, dgp_version = NULL,
+                          include_legacy = TRUE) {
+  name <- cs_find_result_pin(
+    board = board,
+    dgp_id = dgp_id,
+    estimator_id = estimator_id,
+    n = n,
+    seed = seed,
+    dgp_version = dgp_version,
+    include_legacy = include_legacy
   )
-  pins::pin_exists(board, name)
+  !is.na(name)
 }

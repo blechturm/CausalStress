@@ -15,6 +15,10 @@ dgp_synth_placebo_tau0_v130(
 \item{n}{Integer, number of observations.}
 
 \item{seed}{Optional seed for reproducibility (passed to \code{cs_set_rng()}).}
+
+\item{include_truth}{Logical; if TRUE, include oracle truth tables where supported.}
+
+\item{oracle_only}{Logical; if TRUE, return only columns needed for oracle truth generation where supported.}
 }
 \value{
 A list with components:

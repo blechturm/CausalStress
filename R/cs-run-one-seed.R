@@ -23,57 +23,41 @@ cs_run_one_seed_internal <- function(dgp_id,
   cs_require_experimental_parallel(parallel = parallel, experimental_parallel = experimental_parallel)
   cs_require_staging_for_parallel_persistence(parallel = parallel, board = board, staging_dir = staging_dir)
 
+  dgp_desc <- cs_get_dgp(dgp_id = dgp_id, version = version, status = status, quiet = TRUE)
+  dgp_version <- dgp_desc$version[[1L]]
   est_desc <- cs_get_estimator(estimator_id)
+  cs_assert_wave1_targets_executable(config = config, estimator_desc = est_desc)
 
   should_try_cache <- isTRUE(skip_existing) && !isTRUE(force)
   if (!is.null(board) && isTRUE(should_try_cache)) {
-      if (cs_pin_exists(board, dgp_id, estimator_id, n, seed)) {
-        name <- glue::glue(
-          "results__dgp={dgp_id}__est={estimator_id}__n={n}__seed={seed}"
-        )
+      name <- cs_find_result_pin(
+        board = board,
+        dgp_id = dgp_id,
+        dgp_version = dgp_version,
+        estimator_id = estimator_id,
+        n = n,
+        seed = seed
+      )
+      if (!is.na(name)) {
         meta_obj <- pins::pin_meta(board, name)
         md <- cs_pin_meta_user_or_metadata(meta_obj)
       stored_fp <- md$config_fingerprint %||% NULL
       stored_schema <- suppressWarnings(as.integer(md$config_fingerprint_schema %||% NA_integer_))
-      expected_fp <- if (is.na(stored_schema) || stored_schema == 1L) {
-        if (is.finite(max_runtime)) {
-          rlang::abort(
-            message = "Cannot resume legacy (v0.1.7) pins with non-infinite `max_runtime`; legacy fingerprints do not encode runtime guards.",
-            class   = "causalstress_fingerprint_error"
-          )
-        }
-        cs_build_config_fingerprint_legacy(
-          dgp_id            = dgp_id,
-          estimator_id      = estimator_id,
-          n                 = n,
-          seed              = seed,
-          bootstrap         = bootstrap,
-          B                 = B,
-          oracle            = isTRUE(est_desc$oracle),
-          estimator_version = est_desc$version,
-          config            = config,
-          tau               = tau
-        )
-      } else if (stored_schema == 2L) {
-        cs_build_config_fingerprint(
-          dgp_id            = dgp_id,
-          estimator_id      = estimator_id,
-          n                 = n,
-          seed              = seed,
-          bootstrap         = bootstrap,
-          B                 = B,
-          oracle            = isTRUE(est_desc$oracle),
-          estimator_version = est_desc$version,
-          config            = config,
-          tau               = tau,
-          max_runtime       = max_runtime
-        )
-      } else {
-        rlang::abort(
-          message = glue::glue("Unsupported config fingerprint schema: {stored_schema}."),
-          class   = "causalstress_fingerprint_error"
-        )
-      }
+      cs_assert_schema4_resume(stored_schema)
+      expected_fp <- cs_build_config_fingerprint(
+        dgp_id            = dgp_id,
+        estimator_id      = estimator_id,
+        n                 = n,
+        seed              = seed,
+        bootstrap         = bootstrap,
+        B                 = B,
+        oracle            = isTRUE(est_desc$oracle),
+        estimator_version = est_desc$version,
+        config            = config,
+        tau               = tau,
+        max_runtime       = max_runtime,
+        dgp_version       = dgp_version
+      )
         if (!is.null(stored_fp) && identical(stored_fp, expected_fp)) {
           cached <- pins::pin_read(board, name)
           tidy_row <- cs_result_to_row(cached)
@@ -93,11 +77,16 @@ cs_run_one_seed_internal <- function(dgp_id,
     }
 
   if (!is.null(board) && !isTRUE(should_try_cache) &&
-      cs_pin_exists(board, dgp_id, estimator_id, n, seed)) {
-    pins::pin_delete(
-      board,
-      glue::glue("results__dgp={dgp_id}__est={estimator_id}__n={n}__seed={seed}")
-    )
+      cs_pin_exists(board, dgp_id, estimator_id, n, seed, dgp_version = dgp_version, include_legacy = FALSE)) {
+    pins::pin_delete(board, cs_find_result_pin(
+      board = board,
+      dgp_id = dgp_id,
+      dgp_version = dgp_version,
+      estimator_id = estimator_id,
+      n = n,
+      seed = seed,
+      include_legacy = FALSE
+    ))
     }
 
   worker_board <- if (isTRUE(parallel) || !is.null(staging_dir)) NULL else board
@@ -127,7 +116,8 @@ cs_run_one_seed_internal <- function(dgp_id,
       B            = B,
       config       = config_eff,
       board        = worker_board,
-      max_runtime  = max_runtime
+      max_runtime  = max_runtime,
+      ...
     )
   )
 

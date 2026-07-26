@@ -5,12 +5,13 @@
 \title{Run a full campaign across DGPs, estimators, and seeds}
 \usage{
 cs_run_campaign(
+  plan = NULL,
   dgp_ids = NULL,
   estimator_ids = NULL,
   dgp_id = NULL,
   estimator_id = NULL,
-  seeds,
-  n,
+  seeds = NULL,
+  n = NULL,
   defaults = list(),
   overrides = list(),
   campaign_seed = NULL,
@@ -23,14 +24,20 @@ cs_run_campaign(
   board = NULL,
   staging_dir = NULL,
   parallel = FALSE,
+  experimental_parallel = FALSE,
+  workers = parallel::detectCores() - 1L,
   show_progress = TRUE,
   force = FALSE,
-  quiet = TRUE,
+  quiet = FALSE,
   max_runtime = Inf,
   ...
 )
 }
 \arguments{
+\item{plan}{Optional plan tibble from \code{cs_plan_campaign()}. If supplied,
+\code{cs_run_campaign()} will execute the planned batches and ignore the
+grid-based arguments.}
+
 \item{dgp_ids}{Character vector of DGP IDs.}
 
 \item{estimator_ids}{Character vector of estimator IDs.}
@@ -44,7 +51,8 @@ cs_run_campaign(
 \item{n}{Integer sample size per run.}
 
 \item{defaults}{Optional default estimator config list forwarded to
-\code{cs_run_single()} (e.g., \code{list(n_boot = 200, num_threads = 1L)}).}
+\code{cs_run_single()} (e.g., \code{list(n_boot = 200, num_threads = 1L)}). Common
+fields include \code{ci_method} (see \link{cs_ci_methods}).}
 
 \item{overrides}{Optional named list of estimator-specific config overrides
 (e.g., \code{list(tmle_att = list(ci_method = "native"))}). Each override is
@@ -55,6 +63,20 @@ shuffle task execution order for better load balancing without relying on
 ambient RNG state. If \code{NULL}, tasks are executed in deterministic grid
 order.}
 
+\item{version}{Optional DGP version string forwarded to \code{\link[=cs_get_dgp]{cs_get_dgp()}}.}
+
+\item{status}{Optional DGP status filter forwarded to \code{\link[=cs_get_dgp]{cs_get_dgp()}}.}
+
+\item{tau}{Numeric vector of quantile levels forwarded to \code{\link[=cs_run_single]{cs_run_single()}}.}
+
+\item{bootstrap}{Logical; runner-level convenience flag forwarded to
+\code{\link[=cs_run_single]{cs_run_single()}}. When \code{TRUE} and \code{ci_method} is missing in the resolved
+config, bootstrap CIs are requested and the per-task seed is injected (see
+\link{cs_ci_methods}).}
+
+\item{B}{Integer; convenience alias forwarded to \code{\link[=cs_run_single]{cs_run_single()}} for setting
+\code{config$n_boot} when \code{bootstrap=TRUE}.}
+
 \item{skip_existing}{Logical; if TRUE, skip tasks already pinned on \code{board}.}
 
 \item{board}{Optional pins board for persistence.}
@@ -63,15 +85,48 @@ order.}
 
 \item{parallel}{Logical; if TRUE, uses furrr/future for parallel execution.}
 
+\item{experimental_parallel}{Logical; must be \code{TRUE} to enable experimental
+parallel execution.}
+
+\item{workers}{Number of parallel workers for plan-based execution.}
+
 \item{show_progress}{Logical; show progressr-based progress.}
+
+\item{force}{Logical; if \code{TRUE}, recompute even when existing pins are found.}
+
+\item{quiet}{Logical; if \code{TRUE}, suppress DGP governance warnings in
+per-task runs. Defaults to \code{FALSE} so governance warnings remain loud.}
+
+\item{max_runtime}{Numeric scalar; maximum allowed runtime in seconds per
+task.}
 
 \item{...}{Additional arguments forwarded to cs_run_single() (tau, etc.).}
 }
 \value{
-Tibble with one row per run.
+Tibble with one row per run (grid mode) or invisibly returns the
+batch ids executed (plan mode).
 }
 \description{
 This runner parallelizes over the full Cartesian product of
 (dgp_id, estimator_id, seed) with dynamic load balancing, making it
 the recommended entry point for large heterogeneous campaigns.
+}
+\examples{
+\dontrun{
+plan <- cs_plan_campaign(
+  dgp_list = "synth_baseline",
+  estimator_list = "lm_att",
+  n_seeds = 1:4,
+  batch_size = 2,
+  campaign_seed = 123,
+  strategy_map = list(defaults = list(n = 200))
+)
+cs_run_campaign(
+  plan = plan,
+  staging_dir = "staging_batches",
+  workers = 2,
+  experimental_parallel = TRUE
+)
+cs_consolidate(staging_dir = "staging_batches", board = pins::board_temp())
+}
 }

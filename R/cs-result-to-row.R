@@ -2,6 +2,7 @@ cs_result_to_row <- function(result) {
   att  <- result$att %||% list()
   meta <- result$meta %||% list()
   prov <- result$provenance %||% list()
+  scores <- result$scores %||% NULL
 
   collapsed_flag <- NA
   if (!is.null(meta$collapsed) && length(meta$collapsed) > 0L) {
@@ -17,10 +18,15 @@ cs_result_to_row <- function(result) {
     success       = meta$success %||% NA,
     error         = meta$error %||% NA_character_,
     dgp_id         = meta$dgp_id %||% NA_character_,
+    dgp_version    = meta$dgp_version %||% NA_character_,
+    dgp_status     = meta$dgp_status %||% NA_character_,
+    dgp_design_spec = meta$dgp_design_spec %||% NA_character_,
     estimator_id   = meta$estimator_id %||% NA_character_,
+    estimator_version = meta$estimator_version %||% NA_character_,
     n              = meta$n %||% NA_integer_,
     seed           = meta$seed %||% NA_integer_,
     oracle         = meta$oracle %||% NA,
+    oracle_columns_granted = list(meta$oracle_columns_granted %||% character(0)),
     supports_qst   = meta$supports_qst %||% NA,
     true_att       = att$true %||% NA_real_,
     est_att        = att$estimate %||% NA_real_,
@@ -50,7 +56,17 @@ cs_result_to_row <- function(result) {
     n_boot_ok      = meta$n_boot_ok %||% 0L,
     n_boot_fail    = meta$n_boot_fail %||% 0L,
     estimator_pkgs = meta$estimator_pkgs %||% NA_character_,
+    config_fingerprint = meta$config_fingerprint %||% NA_character_,
+    config_fingerprint_schema = meta$config_fingerprint_schema %||% NA_integer_,
+    fit_fingerprint = meta$fit_fingerprint %||% NA_character_,
+    truth_version = meta$truth_version %||% NA_character_,
+    score_fingerprints = list(meta$score_fingerprints %||% character(0)),
+    score_row_fingerprints = list(
+      meta$score_row_fingerprints %||% character(0)
+    ),
+    task_fingerprint = meta$task_fingerprint %||% NA_character_,
     log            = meta$log %||% NA_character_,
-    qst            = list(result$qst %||% NULL)
+    qst            = list(result$qst %||% NULL),
+    scores         = list(scores)
   )
 }

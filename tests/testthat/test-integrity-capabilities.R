@@ -1,5 +1,6 @@
 test_that("estimator registry matches estimator outputs", {
   reg <- cs_estimator_registry()
+  reg <- reg[reg$source %in% c("core", "optional"), , drop = FALSE]
 
   dgp <- dgp_synth_baseline(n = 100, seed = 1)
 
@@ -12,7 +13,8 @@ test_that("estimator registry matches estimator outputs", {
       }
     }
 
-    df_run <- cs_airlock(dgp$df, oracle_allowed = isTRUE(est$oracle))
+    est_desc <- cs_get_estimator(est$estimator_id)
+    df_run <- cs_airlock(dgp$df, estimator_desc = est_desc)
 
     res <- est$generator[[1]](
       df = df_run,

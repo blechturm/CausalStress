@@ -1,0 +1,67 @@
+version: "0.2.0"
+packet: "causalstress_v0_2_0_ci_packet"
+status: ACTIVE
+tickets:
+  - id: "CS-1210"
+    title: "Add release CI playbook and GitHub Actions R CMD check matrix"
+    batch: 0
+    source: {type: "roadmap/review", id: "roadmap-phase-1,batch4-M2"}
+    files:
+      - "inst/design/release_ci_playbook.md"
+      - ".github/workflows"
+      - ".Rbuildignore"
+    constitutional_check: "Article VII continuous enforcement; Article II cross-substrate evidence"
+    test_obligation: "release_ci_playbook.md is indexed and cited by the release-gate ticket; CI runs R CMD check with no errors or warnings on Ubuntu release, Ubuntu devel, Windows release, and macOS release; notes are classified"
+    review_gate: "Batch 0 CI matrix review"
+    disposition: "complete_after_review"
+
+  - id: "CS-1211"
+    title: "Add full test, validation, and substrate evidence jobs"
+    batch: 0
+    source: {type: "process/roadmap", id: "release_gate,roadmap-phase-1"}
+    files:
+      - ".github/workflows"
+      - "tests/testthat"
+      - "tools/ci-validation.R"
+      - "tools/ci-substrate.R"
+    constitutional_check: "Articles II, III, V, VI, and VII"
+    test_obligation: "CI runs full testthat with NOT_CRAN=true, registry/DGP validation, substrate evidence, include_truth_bitwise probe, and records local WSL rehearsal evidence or an approved skip"
+    review_gate: "Batch 0 test/validation/substrate review"
+    disposition: "complete_after_review"
+
+  - id: "CS-1212"
+    title: "Add coverage and lint jobs"
+    batch: 1
+    source: {type: "roadmap", id: "roadmap-phase-1"}
+    files:
+      - ".github/workflows"
+      - "tools/ci-coverage.R"
+      - "tools/ci-lint.R"
+    constitutional_check: "Article VII continuous enforcement"
+    test_obligation: "CI produces coverage evidence and lint evidence; any baseline or exclusions are explicit and do not hide new regressions"
+    review_gate: "Batch 1 coverage/lint review"
+    disposition: "complete_after_review"
+
+  - id: "CS-1213"
+    title: "Harden golden-value tests for CI substrates"
+    batch: 1
+    source: {type: "review/horizon", id: "v0.2.0-batch3-golden-tolerance"}
+    files:
+      - "tests/testthat"
+      - ".github/workflows"
+    constitutional_check: "Article II same-substrate bitwise identity and cross-substrate tolerance-level reproducibility"
+    test_obligation: "Exact assertions are limited to in-process schema-preservation identities; DGP/model references use documented tolerances or declared reference substrate gates"
+    review_gate: "Batch 1 CI tolerance review"
+    disposition: "complete_after_review"
+
+  - id: "CS-1214"
+    title: "Run CI release gate and unblock v0.2.0 tag"
+    batch: 2
+    source: {type: "process/closeout/playbook", id: "release_gate,release_ci_playbook,v0_2_0_wave1_closeout"}
+    files:
+      - "inst/design/README.md"
+      - "inst/design/causalstress_v0_2_0_ci_packet/release_closeout.md"
+    constitutional_check: "No known constitutional violation remains open except by amendment or explicit deferral"
+    test_obligation: "Record local Windows and WSL evidence, branch/main/tag CI URLs/status, matrix results, R CMD check, tests, validation, coverage, lint, substrate evidence, review routing, and tag decision"
+    review_gate: "Final CI release-gate review before public v0.2.0 tag"
+    disposition: "implementation_complete_awaiting_final_review"

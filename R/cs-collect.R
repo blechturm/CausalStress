@@ -16,7 +16,7 @@ cs_collect_att <- function(tidy) {
     tidy,
     dplyr::any_of(c(
       "dgp_id", "estimator_id", "n", "seed",
-      "oracle", "supports_qst",
+      "oracle", "oracle_columns_granted", "supports_qst",
       "true_att", "est_att", "att_error", "att_abs_error",
       "att_ci_lo", "att_ci_hi", "att_covered", "att_ci_width",
       "att_ci_method", "att_ci_type", "att_ci_level", "att_ci_valid",
@@ -24,6 +24,52 @@ cs_collect_att <- function(tidy) {
       "n_boot_ok", "n_boot_fail"
     ))
   )
+}
+
+#' Collect canonical typed score records
+#'
+#' Converts run results or tidy run rows into the v0.2.0 long-form typed score
+#' surface. The legacy ATT/QST collection helpers remain compatibility
+#' projections; this helper is the canonical typed score surface.
+#'
+#' @param x A run result, list of run results, or tibble produced by [cs_tidy()].
+#'
+#' @return A tibble with one row per scalar score or QST point coordinate.
+#' @export
+cs_collect_scores <- function(x) {
+  if (is.list(x) && !is.null(x$scores) && !is.data.frame(x)) {
+    scores <- x$scores
+    if (is.null(scores)) {
+      return(tibble::tibble())
+    }
+    return(tibble::as_tibble(scores))
+  }
+
+  if (is.list(x) && length(x) > 0L &&
+      is.list(x[[1L]]) && !is.null(x[[1L]]$scores)) {
+    return(dplyr::bind_rows(lapply(x, cs_collect_scores)))
+  }
+
+  if (!is.data.frame(x)) {
+    x <- cs_tidy(x)
+  } else {
+    x <- tibble::as_tibble(x)
+  }
+
+  if ("estimand_target_id" %in% names(x) && "score_status" %in% names(x)) {
+    return(x)
+  }
+
+  if (!"scores" %in% names(x)) {
+    return(tibble::tibble())
+  }
+
+  dplyr::bind_rows(lapply(x$scores, function(scores) {
+    if (is.null(scores)) {
+      return(tibble::tibble())
+    }
+    tibble::as_tibble(scores)
+  }))
 }
 
 #' Collect QST-level results from tidy runs
@@ -54,6 +100,9 @@ cs_collect_qst <- function(tidy) {
       )
       names(tidy) <- new_names
     }
+  }
+  if (!"tau_id" %in% names(tidy) && "tau" %in% names(tidy)) {
+    tidy <- dplyr::mutate(tidy, tau_id = cs_tau_id(.data$tau))
   }
 
   dplyr::select(

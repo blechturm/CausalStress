@@ -12,8 +12,8 @@ cs_summarise_gatekeeper(suite_results, threshold = 0.9)
 \item{threshold}{Minimum required coverage rate (default 0.90).}
 }
 \value{
-A list with ATT and QST verdicts/culprits. The function also prints a
-short summary via cli.
+A list with ATT and QST verdicts/culprits plus a deferred ATE
+component slot. The function also prints a short summary via cli.
 }
 \description{
 Summarise placebo performance for each estimator and flag failures against

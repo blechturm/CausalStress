@@ -14,9 +14,15 @@
 #' @param skip_existing Logical, whether to resume from existing pins.
 #' @param force Logical, whether to overwrite existing pins (alias for
 #'   `skip_existing = FALSE`).
+#' @param max_runtime Numeric scalar; maximum allowed runtime (seconds) per seed.
+#' @param parallel Logical; if `TRUE`, uses furrr/future for parallel execution.
+#' @param experimental_parallel Logical; must be `TRUE` to enable parallel mode.
+#' @param staging_dir Optional staging directory for crash recovery.
+#' @param show_progress Logical; whether to display per-seed progress messages.
 #' 
-#' @return A tibble with one row per (dgp_id, estimator_id, seed) run, including
-#'   all columns from cs_run_single(), and bindable into cs_summarise_runs().
+#' @return A tibble with one flattened analysis row per
+#'   `(dgp_id, estimator_id, seed)` run, including `qst` and `scores` list
+#'   columns, suitable for [cs_summarise_runs()].
 #' @export
 cs_run_grid <- function(dgp_ids,
                         estimator_ids,

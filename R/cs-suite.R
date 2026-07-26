@@ -60,6 +60,8 @@ cs_get_suite <- function(suite_id) {
 #'
 #' @param suite_id Character scalar identifying the suite.
 #' @param estimator_ids Character vector of estimator IDs.
+#' @param seeds Integer vector of seeds to run for each DGP/estimator pair.
+#' @param n Integer, sample size per run.
 #' @param ... Passed through to [cs_run_grid()].
 #'
 #' @return The tibble returned by [cs_run_grid()].

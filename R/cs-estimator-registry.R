@@ -5,6 +5,8 @@
   type          = character(),
   generator     = list(),
   oracle        = logical(),
+  oracle_columns = list(),
+  oracle_default_columns = list(),
   supports_qst  = logical(),
   version       = character(),
   description   = character(),
@@ -32,17 +34,37 @@ cs_estimator_registry_base <- function() {
       est_tmle_att
     ),
     oracle = c(TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE),
+    oracle_columns = list(
+      "structural_te",
+      character(0),
+      character(0),
+      character(0),
+      character(0),
+      character(0),
+      character(0),
+      character(0)
+    ),
+    oracle_default_columns = list(
+      "structural_te",
+      character(0),
+      character(0),
+      character(0),
+      character(0),
+      character(0),
+      character(0),
+      character(0)
+    ),
     supports_qst = c(FALSE, FALSE, FALSE, TRUE, TRUE, FALSE, FALSE, FALSE),
     version = rep(pkg_ver, 8L),
     description = c(
-      "Oracle ATT using structural treatment effects.",
+      "Oracle ATT/ATE using structural treatment effects.",
       "Linear outcome regression g-computation ATT estimator.",
       "Inverse-probability weighted ATT estimator based on logistic propensity.",
-      "GenGC distributional estimator (ATT + QST).",
-      "GenGC doubly-robust distributional estimator (ATT + QST).",
+      "GenGC distributional estimator (ATT + QST); supports dual-engine (qrf/qr) and optional screening.",
+      "GenGC doubly-robust distributional estimator (ATT + QST); supports dual-engine (qrf/qr) and optional screening.",
       "GRF causal forest doubly-robust ATT estimator.",
       "BART ATT estimator via bartCause::bartc.",
-      "TMLE estimator (ATE target) via tmle::tmle."
+      "TMLE ATT estimator via tmle::tmle."
     ),
     source = c("core", "core", "core", "optional", "optional", "optional", "optional", "optional"),
     requires_pkgs = list(
@@ -85,6 +107,12 @@ cs_estimator_registry <- function() {
 #' @param generator Function that implements the estimator, taking at least
 #'   arguments `(df, config = list(), tau = cs_tau_oracle, ...)`.
 #' @param oracle Logical, whether this is an oracle estimator.
+#' @param oracle_columns Character vector of truth columns this estimator is
+#'   eligible to receive through the runner airlock. Allowed values in v0.2.0
+#'   are `"p"` and `"structural_te"`.
+#' @param oracle_default_columns Character vector of eligible truth columns the
+#'   runner grants without a user config flag. This should be empty except for
+#'   internal benchmark estimators that cannot function otherwise.
 #' @param supports_qst Logical, whether the estimator returns QST values.
 #' @param version Character scalar, version string for the estimator implementation.
 #'   Defaults to `"0.0.0-local"`.
@@ -101,6 +129,8 @@ cs_register_estimator <- function(
   type,
   generator,
   oracle        = FALSE,
+  oracle_columns = character(0),
+  oracle_default_columns = character(0),
   supports_qst  = FALSE,
   version       = "0.0.0-local",
   description   = "",
@@ -149,6 +179,38 @@ cs_register_estimator <- function(
       class = "causalstress_registry_error"
     )
   }
+  supported_oracle_columns <- c("p", "structural_te")
+  if (!is.character(oracle_columns)) {
+    rlang::abort(
+      "`oracle_columns` must be a character vector.",
+      class = "causalstress_registry_error"
+    )
+  }
+  if (!is.character(oracle_default_columns)) {
+    rlang::abort(
+      "`oracle_default_columns` must be a character vector.",
+      class = "causalstress_registry_error"
+    )
+  }
+  bad_cols <- setdiff(unique(c(oracle_columns, oracle_default_columns)), supported_oracle_columns)
+  if (length(bad_cols) > 0L) {
+    rlang::abort(
+      glue::glue("Unsupported oracle column(s): {paste(bad_cols, collapse = ', ')}."),
+      class = "causalstress_registry_error"
+    )
+  }
+  if (length(setdiff(oracle_default_columns, oracle_columns)) > 0L) {
+    rlang::abort(
+      "`oracle_default_columns` must be a subset of `oracle_columns`.",
+      class = "causalstress_registry_error"
+    )
+  }
+  if (!isTRUE(oracle) && length(oracle_columns) > 0L) {
+    rlang::abort(
+      "`oracle_columns` requires `oracle = TRUE`.",
+      class = "causalstress_registry_error"
+    )
+  }
 
   reg <- cs_estimator_registry()
   if (estimator_id %in% reg$estimator_id) {
@@ -164,6 +226,8 @@ cs_register_estimator <- function(
     type          = type,
     generator     = list(generator),
     oracle        = as.logical(oracle),
+    oracle_columns = list(unique(oracle_columns)),
+    oracle_default_columns = list(unique(oracle_default_columns)),
     supports_qst  = as.logical(supports_qst),
     version       = version,
     description   = description,
@@ -189,6 +253,8 @@ cs_register_estimator <- function(
 #'   - type: character scalar
 #'   - fn: function(df, tau, config) returning an estimator result
 #'   - oracle: logical, TRUE if this is an oracle estimator
+#'   - oracle_columns: character vector of eligible oracle columns
+#'   - oracle_default_columns: character vector of default-granted oracle columns
 #'   - supports_qst: logical, TRUE if estimator returns QST
 #'   - version: character scalar
 #'   - description: character scalar
@@ -212,6 +278,8 @@ cs_get_estimator <- function(estimator_id) {
     type          = row$type[[1L]],
     generator     = row$generator[[1L]],
     oracle        = row$oracle[[1L]],
+    oracle_columns = row$oracle_columns[[1L]],
+    oracle_default_columns = row$oracle_default_columns[[1L]],
     supports_qst  = row$supports_qst[[1L]],
     version       = row$version[[1L]],
     description   = row$description[[1L]],

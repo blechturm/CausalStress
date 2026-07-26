@@ -27,7 +27,7 @@ test_that("synth_overlap_stressed produces extreme propensities", {
 test_that("synth_overlap_stressed is registered", {
   reg <- cs_dgp_registry()
   row <- reg[reg$dgp_id == "synth_overlap_stressed", , drop = FALSE]
-  expect_equal(nrow(row), 1L)
-  expect_equal(row$type, "synthetic")
-  expect_true(nchar(row$description) > 0)
+  expect_true(nrow(row) >= 1L)
+  expect_true(all(row$type == "synthetic"))
+  expect_true(all(nchar(row$description) > 0))
 })

@@ -6,13 +6,15 @@
 #' @export
 cs_validate_registry <- function() {
   reg <- cs_dgp_registry()
-  dgp_ids <- reg$dgp_id
 
-  res_list <- lapply(dgp_ids, function(id) {
-    gen <- reg$generator[[match(id, reg$dgp_id)]]
+  res_list <- lapply(seq_len(nrow(reg)), function(i) {
+    id <- reg$dgp_id[[i]]
+    version <- reg$version[[i]]
+    gen <- reg$generator[[i]]
     val <- cs_validate_dgp(gen, verbose = FALSE)
     tibble::tibble(
       dgp_id = id,
+      version = version,
       valid = val$valid,
       cv_true_att = val$cv_true_att,
       mean_naive_bias = val$mean_naive_bias,

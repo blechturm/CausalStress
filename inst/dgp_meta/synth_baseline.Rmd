@@ -26,8 +26,8 @@ if (requireNamespace("patchwork", quietly = TRUE)) {
 
 ```{r meta_table, echo=FALSE, results='asis'}
 stars <- params$meta$difficulty$stars %||% 0
-active_star   <- '<span style="color: #f1c40f;">★</span>'
-inactive_star <- '<span style="color: #e0e0e0;">★</span>'
+active_star   <- '<span style="color: #f1c40f;">&#9733;</span>'
+inactive_star <- '<span style="color: #e0e0e0;">&#9734;</span>'
 difficulty_val <- paste0(
   strrep(active_star, max(0, stars)),
   strrep(inactive_star, max(0, 5 - stars)),
@@ -107,7 +107,7 @@ Baseline sanity check: if an estimator fails here, it is fundamentally broken. I
 
 ## 4. Mathematical Specification
 
-Covariates: $X_1, X_2, X_3, X_4, X_5 \sim \mathcal{N}(0, 1)$ independently. Only $X_1, X_2$ drive outcomes and treatment.
+Covariates: $X_1, X_2, X_3, X_4, X_5 \sim \mathcal{N}(0, 1^2)$ independently. Only $X_1, X_2$ drive outcomes and treatment.
 
 **Outcome (control):** $$\mu_0(X) = 1 + X_1 + 0.5 X_2$$
 
@@ -115,7 +115,10 @@ Covariates: $X_1, X_2, X_3, X_4, X_5 \sim \mathcal{N}(0, 1)$ independently. Only
 
 **Treatment effect:** $$\tau(X) = 1 + 0.5 X_1$$
 
-Treated outcome: $Y_1 = Y_0 + \tau(X)$ with Gaussian noise $\varepsilon \sim \mathcal{N}(0, 0.5)$.
+**Potential Outcomes:**
+$$Y_0 = \mu_0(X) + \varepsilon_0$$
+$$Y_1 = \mu_0(X) + \tau(X) + \varepsilon_1$$
+where $\varepsilon_0, \varepsilon_1 \sim \mathcal{N}(0, 0.5^2)$ are independent.
 
 ## 5. Oracle Truth Definition
 
@@ -144,16 +147,16 @@ p2 <- ggplot(df, aes(x = X1, y = structural_te)) +
 
 p3 <- ggplot(df, aes(x = X1, y = X2, color = factor(w))) +
   geom_point(alpha = 0.4) +
-  labs(title = "Covariate Balance", x = "X1", y = "X2", color = "W") +
+  labs(title = "Covariate Overlap (Joint Support)", x = "X1", y = "X2", color = "W") +
   theme_minimal()
 
 # Plot the True QST curve (stored in dgp_viz$true_qst)
 p4 <- ggplot(dgp$true_qst, aes(x = tau, y = value)) +
-  geom_hline(yintercept = 1.0, linetype = "dashed", color = "gray70") + # Mean ATT reference
+  geom_hline(yintercept = dgp$true_att, linetype = "dashed", color = "gray70") + # True Sample ATT reference
   geom_line(color = "#2c3e50", size = 1) +
   labs(
     title = "True Quantile Shift (QST)",
-    subtitle = "Solid line: True effect at each quantile | Dashed: Mean ATT",
+    subtitle = "Solid line: True effect at each quantile | Dashed: True Sample ATT",
     x = "Quantile (tau)",
     y = "Treatment Effect"
   ) +
@@ -210,9 +213,10 @@ knitr::kable(summary_tbl, digits = 3, caption = "Empirical validation (n=5000, s
 
 ## 9. Implementation Reference
 
--   Code: `R/dgp-synth-baseline.R` (v1.3.0)
+-   Code: `R/dgp-synth-baseline.R` (v1.6.0)
 -   Registry: `cs_dgp_registry()` entry for `synth_baseline`
 -   Oracle: `true_att` computed from `structural_te` among treated
+-   Oracle truth: `cs_get_oracle_qst("synth_baseline", version = "1.6.0")`
 -   Airlock: oracle columns removed unless explicitly allowed
 
 ## 10. Validation Checklist
@@ -226,3 +230,26 @@ knitr::kable(summary_tbl, digits = 3, caption = "Empirical validation (n=5000, s
 ## 11. Changelog
 
 -   v1.0 dossier: Initial dossier following Standard Template v1.0
+- v1.6.0: Implemented Common Random Numbers (CRN) for Oracle generation. This reduces Monte Carlo variance of the QST contrast; it does not eliminate empirical-quantile sampling uncertainty.
+
+## Appendix: Implementation
+
+```{r impl_code, echo=FALSE, comment=''}
+# Dynamically retrieve the specific versioned function for this dossier
+dgp_base <- paste0("dgp_", params$dgp_id)
+dgp_ver  <- if (!is.null(params$meta$version)) {
+  paste0(dgp_base, "_v", gsub("\\.", "", params$meta$version))
+} else {
+  dgp_base
+}
+
+if (exists(dgp_ver)) {
+  cat(sprintf("Source code for: %s\n\n", dgp_ver))
+  print(get(dgp_ver))
+} else if (exists(dgp_base)) {
+  cat(sprintf("Source code for: %s (Wrapper)\n\n", dgp_base))
+  print(get(dgp_base))
+} else {
+  cat("Source code not found in loaded namespace.")
+}
+```

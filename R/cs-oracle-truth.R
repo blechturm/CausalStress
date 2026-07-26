@@ -8,6 +8,77 @@
 ORACLE_SEED <- 99999L
 ORACLE_N <- 1e6L
 
+cs_oracle_algorithm_descriptor <- function(dgp_id, version, tau_grid, N_oracle) {
+  list(
+    oracle_algorithm_version = "1.0.0",
+    oracle_seed = ORACLE_SEED,
+    oracle_n = as.integer(N_oracle),
+    chunk_n = 200000L,
+    tau_id = cs_tau_id(tau_grid),
+    quantile_type = 7L,
+    retention_rule = "retain_treated_until_N_oracle",
+    package_version = as.character(utils::packageVersion("CausalStress")),
+    dgp_id = dgp_id,
+    dgp_version = version
+  )
+}
+
+cs_oracle_algorithm_fingerprint <- function(descriptor) {
+  digest::digest(descriptor, algo = "sha256")
+}
+
+cs_oracle_cache_file <- function(cache_dir, dgp_id, version, oracle_algorithm_fingerprint) {
+  file.path(
+    cache_dir,
+    paste0("truth_", dgp_id, "_", version, "_oracle_", oracle_algorithm_fingerprint, ".rds")
+  )
+}
+
+cs_validate_oracle_cache_payload <- function(payload,
+                                             cache_file,
+                                             expected_fingerprint,
+                                             expected_descriptor) {
+  if (!is.list(payload) || !is.list(expected_descriptor)) {
+    rlang::abort(
+      glue::glue("Oracle RDS cache has invalid structure or identity: {cache_file}"),
+      class = "causalstress_oracle_error"
+    )
+  }
+  valid_truth <- is.data.frame(payload$truth) &&
+    all(c("tau_id", "tau", "value") %in% names(payload$truth)) &&
+    identical(as.character(payload$truth$tau_id), expected_descriptor$tau_id) &&
+    is.numeric(payload$truth$tau) &&
+    is.numeric(payload$truth$value) &&
+    nrow(payload$truth) == length(expected_descriptor$tau_id)
+  if (!identical(payload$oracle_algorithm_fingerprint, expected_fingerprint) ||
+      !identical(payload$oracle_algorithm_descriptor, expected_descriptor) ||
+      !isTRUE(valid_truth)) {
+    rlang::abort(
+      glue::glue("Oracle RDS cache has invalid structure or identity: {cache_file}"),
+      class = "causalstress_oracle_error"
+    )
+  }
+  invisible(payload)
+}
+
+cs_oracle_cache_write <- function(payload, cache_file) {
+  expected_fingerprint <- payload$oracle_algorithm_fingerprint
+  expected_descriptor <- payload$oracle_algorithm_descriptor
+  cs_write_rds_atomic(
+    payload,
+    cache_file,
+    validate = function(candidate, candidate_path) {
+      cs_validate_oracle_cache_payload(
+        candidate,
+        candidate_path,
+        expected_fingerprint,
+        expected_descriptor
+      )
+    },
+    error_class = "causalstress_oracle_error"
+  )
+}
+
 cs_get_oracle_qst <- function(dgp_id,
                               version  = "1.3.0",
                               tau_grid = cs_tau_oracle,
@@ -29,16 +100,21 @@ cs_get_oracle_qst <- function(dgp_id,
     )
   }
 
-  key <- paste(dgp_id, version, sep = "_")
+  oracle_descriptor <- cs_oracle_algorithm_descriptor(dgp_id, version, tau_grid, N_oracle)
+  oracle_fp <- cs_oracle_algorithm_fingerprint(oracle_descriptor)
+  key <- paste(dgp_id, version, oracle_fp, sep = "_")
   dir.create(cache_dir, recursive = TRUE, showWarnings = FALSE)
-  cache_file <- file.path(cache_dir, paste0("truth_", dgp_id, "_", version, ".qs"))
+  cache_file <- cs_oracle_cache_file(cache_dir, dgp_id, version, oracle_fp)
 
   if (file.exists(cache_file)) {
-    truth <- qs::qread(cache_file)
-    if (is.data.frame(truth)) {
-      return(truth)
-    }
-    unlink(cache_file)
+    payload <- cs_read_rds(cache_file, error_class = "causalstress_oracle_error")
+    cs_validate_oracle_cache_payload(
+      payload,
+      cache_file,
+      oracle_fp,
+      oracle_descriptor
+    )
+    return(payload$truth)
   }
 
   # recursion guard
@@ -57,16 +133,8 @@ cs_get_oracle_qst <- function(dgp_id,
     }
   }, add = TRUE)
 
-  # preserve global RNG state
-  has_seed <- exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
-  if (has_seed) old_seed <- get(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
-  on.exit({
-    if (has_seed) {
-      assign(".Random.seed", old_seed, envir = .GlobalEnv)
-    } else if (exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)) {
-      remove(list = ".Random.seed", envir = .GlobalEnv)
-    }
-  }, add = TRUE)
+  rng_state <- cs_rng_state_capture()
+  on.exit(cs_rng_state_restore(rng_state), add = TRUE)
 
   # Optimizations for simple cases
   if (startsWith(dgp_id, "synth_placebo")) {
@@ -75,7 +143,14 @@ cs_get_oracle_qst <- function(dgp_id,
       tau = tau_grid,
       value = rep(0, length(tau_grid))
     )
-    qs::qsave(truth, cache_file)
+    cs_oracle_cache_write(
+      list(
+        oracle_algorithm_fingerprint = oracle_fp,
+        oracle_algorithm_descriptor = oracle_descriptor,
+        truth = truth
+      ),
+      cache_file
+    )
     return(truth)
   }
   if (dgp_id == "synth_hd_sparse_plm") {
@@ -84,14 +159,21 @@ cs_get_oracle_qst <- function(dgp_id,
       tau = tau_grid,
       value = rep(1, length(tau_grid))
     )
-    qs::qsave(truth, cache_file)
+    cs_oracle_cache_write(
+      list(
+        oracle_algorithm_fingerprint = oracle_fp,
+        oracle_algorithm_descriptor = oracle_descriptor,
+        truth = truth
+      ),
+      cache_file
+    )
     return(truth)
   }
 
   # General case: simulate from treated population distribution X|W=1.
   # We obtain N_oracle treated draws by sampling batches from the DGP and
   # retaining treated units until we reach N_oracle.
-  dgp_desc <- cs_get_dgp(dgp_id, version = version)
+  dgp_desc <- cs_get_dgp(dgp_id, version = version, quiet = TRUE)
   gen <- dgp_desc$generator[[1]]
 
   cs_set_rng(ORACLE_SEED)
@@ -130,6 +212,13 @@ cs_get_oracle_qst <- function(dgp_id,
     )
   )
 
-  qs::qsave(truth, cache_file)
+  cs_oracle_cache_write(
+    list(
+      oracle_algorithm_fingerprint = oracle_fp,
+      oracle_algorithm_descriptor = oracle_descriptor,
+      truth = truth
+    ),
+    cache_file
+  )
   truth
 }

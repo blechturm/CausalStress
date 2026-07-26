@@ -1,0 +1,185 @@
+version: "0.1.10"
+packet: "causalstress_v0_1_10_spec_packet"
+status: active_draft
+tickets:
+  - id: "CS-1100"
+    title: "Install authority index and governance scaffold"
+    batch: 0
+    source: {type: "governance_proposal", id: "governance_spec_packet_proposal"}
+    files:
+      - "inst/design/README.md"
+      - "inst/design/contracts.md"
+      - "inst/design/rfc_cycle.md"
+      - "inst/design/release_gate.md"
+      - "inst/design/roadmap.md"
+      - "inst/design/horizon.md"
+      - "inst/design/templates"
+    constitutional_check: "Constitution remains apex authority"
+    test_obligation: "Design review"
+    review_gate: "Batch 0 governance scaffold review"
+    disposition: "complete_after_review"
+  - id: "CS-1101"
+    title: "Resolve C4 TMLE estimand disposition"
+    batch: 1
+    source: {type: "audit", id: "C4"}
+    files: ["R/est-tmle.R", "R/cs-estimator-registry.R", "tests/testthat"]
+    constitutional_check: "Estimator target must match output/scoring contract"
+    test_obligation: "Heterogeneous-effect repro distinguishes ATE from ATT"
+    decision: "Keep tmle_att and extract fit$estimates$ATT"
+    review_gate: "Batch 1 Codex review verifies implementation follows recorded C4 disposition"
+    disposition: "complete_after_review"
+  - id: "CS-1102"
+    title: "Preserve batch task errors and reconcile task counts"
+    batch: 1
+    source: {type: "audit", id: "C1"}
+    files: ["R/cs-run-batch.R", "R/cs-consolidate.R", "tests/testthat"]
+    constitutional_check: "Article VII provenance/error reporting"
+    test_obligation: "Estimator errors become result rows; escaping task errors become batch errors"
+    review_gate: "Batch 1 runner/batch contract review"
+    disposition: "complete_after_review"
+  - id: "CS-1103"
+    title: "Fix package dependencies"
+    batch: 1
+    source: {type: "audit", id: "C5"}
+    files: ["DESCRIPTION", "NAMESPACE"]
+    constitutional_check: "none"
+    test_obligation: "R CMD check has no missing namespace failures"
+    review_gate: "Batch 1 packaging review"
+    disposition: "complete_after_review"
+  - id: "CS-1104"
+    title: "Make DGP validation version-aware and non-vacuous"
+    batch: 1
+    source: {type: "audit", id: "M6,M19"}
+    files: ["R/cs-validate-all.R", "R/cs-validate-dgp.R", "tests/testthat"]
+    constitutional_check: "DGP certification must reject unconstitutional DGPs"
+    test_obligation: "Every registered version validated; missing potential outcomes fail"
+    review_gate: "Batch 1 validation review"
+    disposition: "complete_after_review"
+  - id: "CS-1105"
+    title: "RFC schema-3 fingerprint, RNG isolation, and oracle truth cache design"
+    batch: 2
+    source: {type: "audit", id: "C2,C3,M3,M7,M8,M12"}
+    files: ["inst/design/rfc"]
+    constitutional_check: "Articles II, VI, and VII"
+    test_obligation: "Accepted RFC synthesis"
+    review_gate: "RFC final review and maintainer acceptance"
+    disposition: "complete_accepted_as_amended"
+  - id: "CS-1106"
+    title: "Implement schema-3 resume/fingerprint model"
+    batch: 2
+    source: {type: "audit", id: "C2,M3,M7,M12"}
+    files: ["R", "tests/testthat"]
+    constitutional_check: "Article VII provenance and legacy compatibility"
+    test_obligation: "Default-config resume skips; DGP version and canonical config are fingerprinted"
+    review_gate: "Batch 2 fingerprint/resume review"
+    disposition: "complete_after_review"
+  - id: "CS-1107"
+    title: "Isolate RNG side effects"
+    batch: 2
+    source: {type: "audit", id: "C3"}
+    files: ["R", "tests/testthat"]
+    constitutional_check: "Article II"
+    test_obligation: "Package load preserves absent and existing RNG state"
+    review_gate: "Batch 2 RNG isolation review"
+    disposition: "complete_after_review"
+  - id: "CS-1117"
+    title: "Version oracle truth cache identity and atomic writes"
+    batch: 2
+    source: {type: "audit", id: "M8"}
+    files: ["R/cs-oracle-truth.R", "R", "tests/testthat"]
+    constitutional_check: "Articles II, VI, and VII"
+    test_obligation: "Oracle truth cache key includes DGP version and oracle algorithm identity; cache writes are atomic"
+    review_gate: "Batch 2 truth-cache identity review"
+    disposition: "complete_after_review"
+  - id: "CS-1108"
+    title: "Decide and implement oracle access mechanism"
+    batch: 3
+    source: {type: "audit", id: "M1"}
+    files: ["R", "inst/design", "tests/testthat"]
+    constitutional_check: "Article III"
+    test_obligation: "Propensity-only oracle cannot access counterfactual truth"
+    review_gate: "Batch 3 constitutional decision review"
+    disposition: "complete_after_review"
+  - id: "CS-1109"
+    title: "Decide and implement bitwise scope for BLAS-sensitive DGPs"
+    batch: 3
+    source: {type: "audit", id: "M9"}
+    files: ["R", "inst/design", "tests/testthat"]
+    constitutional_check: "Article II"
+    test_obligation: "Deterministic path or amended documented scope"
+    review_gate: "Batch 3 constitutional decision review"
+    disposition: "complete_after_review"
+  - id: "CS-1110"
+    title: "Fix gatekeeper unverified semantics"
+    batch: 4
+    source: {type: "audit", id: "M2"}
+    files: ["R", "tests/testthat"]
+    constitutional_check: "Article IV"
+    test_obligation: "CI-less ATT/QST paths are Unverified"
+    review_gate: "Batch 4 gatekeeper review"
+    disposition: "complete_after_review"
+  - id: "CS-1111"
+    title: "Restore parallel governance on campaign paths"
+    batch: 4
+    source: {type: "audit", id: "M4,M5"}
+    files: ["R", "tests/testthat"]
+    constitutional_check: "Articles V, VI, and VII"
+    test_obligation: "Parallel opt-in/provenance/env restore/warnings"
+    review_gate: "Batch 4 parallel governance review"
+    disposition: "complete_after_review"
+  - id: "CS-1112"
+    title: "Enhance registry and sidecar validation"
+    batch: 4
+    source: {type: "audit", id: "M10,M11"}
+    files: ["R", "inst/dgp_meta", "tests/testthat"]
+    constitutional_check: "Article VII"
+    test_obligation: "Strict validation checks sidecar version/status and warning dates"
+    review_gate: "Batch 4 registry validation review"
+    disposition: "complete_after_review"
+  - id: "CS-1113"
+    title: "Fix CI/bootstrap and optional-package failure semantics"
+    batch: 4
+    source: {type: "audit", id: "M13,M15"}
+    files: ["R", "tests/testthat"]
+    constitutional_check: "Runner output contract"
+    test_obligation: "Low bootstrap success and missing packages surface as specified"
+    review_gate: "Batch 4 CI/failure semantics review"
+    disposition: "complete_after_review"
+  - id: "CS-1114"
+    title: "Fix campaign forwarding and batch tau handling"
+    batch: 4
+    source: {type: "audit", id: "M16"}
+    files: ["R", "tests/testthat"]
+    constitutional_check: "Requested tau contract"
+    test_obligation: "Documented dots and strategy tau reach cs_run_single"
+    review_gate: "Batch 4 campaign forwarding review"
+    disposition: "complete_after_review"
+  - id: "CS-1115"
+    title: "Close batching schema and consolidation gaps"
+    batch: 4
+    source: {type: "audit", id: "M18"}
+    files: ["R", "tests/testthat"]
+    constitutional_check: "Article VII"
+    test_obligation: "Batch schema and tidy propagation match spec"
+    review_gate: "Batch 4 batching schema review"
+    disposition: "complete_after_review"
+  - id: "CS-1116"
+    title: "Route minors and design-document corrections"
+    batch: 5
+    source: {type: "audit/review", id: "minors,M17,D1-D5,ex-M14,Batch3-full-suite-future-state,Batch4-low-bootstrap-contract"}
+    files: ["inst/design", "R", "tests/testthat"]
+    constitutional_check: "varies"
+    test_obligation: "No stale non-registry design doc remains active; closeout routes residuals; full-suite future/parallel state contamination fixed before release gate; reconcile Batch 4 low-bootstrap success=FALSE semantics with the written CI/bootstrap contract; consider Markdown/YAML line-ending policy"
+    review_gate: "Batch 5 cleanup and audit-routing review"
+    disposition: "complete_after_review"
+  - id: "CS-1118"
+    title: "Run v0.1.10 release gate and closeout"
+    batch: 6
+    source: {type: "process", id: "inst/design/release_gate.md"}
+    files:
+      - "inst/design/README.md"
+      - "inst/design/causalstress_v0_1_10_spec_packet/release_closeout.md"
+    constitutional_check: "No known constitutional violation remains open except by constitutional amendment"
+    test_obligation: "Run or explicitly defer-with-rationale every release gate and record evidence"
+    review_gate: "Final release-gate review before tagging or merging"
+    disposition: "complete_after_review"

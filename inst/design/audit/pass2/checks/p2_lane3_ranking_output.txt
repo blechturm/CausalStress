@@ -1,0 +1,21 @@
+=============== SCOPE 2: RANKING STABILITY (disjoint seed sets) ===============
+mean|ATT error| -- seed set A (1:15):
+  synth_baseline lm_att  synth_baseline ipw_att  synth_heavytail lm_att
+                 0.0431                  0.0690                  0.6356
+synth_heavytail ipw_att
+                 0.6014
+mean|ATT error| -- seed set B (101:115):
+  synth_baseline lm_att  synth_baseline ipw_att  synth_heavytail lm_att
+                 0.0648                  0.0818                  1.9302
+synth_heavytail ipw_att
+                 2.1601
+
+Within-DGP ordering of lm_att vs ipw_att, A vs B:
+  synth_baseline   A:lm<ipw  B:lm<ipw  ordering_stable=TRUE   [finite variance: mean well-posed]
+  synth_heavytail  A:ipw<lm  B:lm<ipw  ordering_stable=FALSE  [NO finite mean: instability is INTENDED L2 break]
+
+Interpretation: stability on synth_baseline is the meaningful check (a mean
+exists there). Any flip on synth_heavytail is the designed demonstration and
+must NOT be filed as an aggregation defect (pass-1's withdrawn error).
+
+Done.

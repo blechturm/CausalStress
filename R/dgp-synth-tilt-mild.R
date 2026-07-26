@@ -17,6 +17,8 @@
 #'
 #' @param n Integer, number of observations.
 #' @param seed Optional seed for reproducibility (passed to `cs_set_rng()`).
+#' @param include_truth Logical; if TRUE, include oracle truth tables where supported.
+#' @param oracle_only Logical; if TRUE, return only columns needed for oracle truth generation where supported.
 #'
 #' @return A list with df, true_att, true_qst, and meta following the synthetic
 #'   DGP contract.
@@ -83,7 +85,85 @@ dgp_synth_tilt_mild_v130 <- function(n, seed = NULL, include_truth = TRUE, oracl
   out
 }
 
+#' Mildly tilted propensity synthetic DGP for CausalStress (v1.6.0)
+#'
+#' Version bump that enables oracle precision via common random numbers (CRN)
+#' when `oracle_only = TRUE`.
+#'
+#' @inheritParams dgp_synth_tilt_mild_v130
+#'
+#' @return A list with df, true_att, true_qst, and meta following the synthetic
+#'   DGP contract.
+#' @export
+dgp_synth_tilt_mild_v160 <- function(n, seed = NULL, include_truth = TRUE, oracle_only = FALSE) {
+  if (!is.null(seed)) {
+    cs_set_rng(seed)
+  }
+
+  X1 <- stats::rnorm(n, mean = 0, sd = 1)
+  X2 <- stats::rnorm(n, mean = 0, sd = 1)
+  X4 <- stats::rnorm(n, mean = 0, sd = 1)
+  if (!isTRUE(oracle_only)) {
+    X3 <- stats::rnorm(n, mean = 0, sd = 1)
+    X5 <- stats::rnorm(n, mean = 0, sd = 1)
+  }
+
+  mu0 <- 1 + X1 + 0.5 * X2
+  tau <- 1 + 0.5 * X1
+  p   <- stats::plogis(0.45 * X1 - 0.3 * X2 - 0.25 * X4)
+
+  w <- stats::rbinom(n, size = 1L, prob = p)
+
+  eps0 <- stats::rnorm(n, mean = 0, sd = 0.5)
+
+  if (isTRUE(oracle_only)) {
+    eps1 <- eps0
+  } else {
+    eps1 <- stats::rnorm(n, mean = 0, sd = 0.5)
+  }
+
+  y0 <- mu0 + eps0
+  y1 <- mu0 + tau + eps1
+
+  if (isTRUE(oracle_only)) {
+    return(list(df = tibble::tibble(w = w, y0 = y0, y1 = y1)))
+  }
+  y  <- ifelse(w == 1L, y1, y0)
+
+  true_att <- cs_true_att(structural_te = tau, w = w)
+  true_qst <- if (isTRUE(include_truth)) cs_get_oracle_qst("synth_tilt_mild", version = "1.6.0") else NULL
+
+  out <- list(
+    df = tibble::tibble(
+      y  = y,
+      w  = w,
+      y0 = y0,
+      y1 = y1,
+      p  = p,
+      structural_te = tau,
+      X1 = X1,
+      X2 = X2,
+      X3 = X3,
+      X4 = X4,
+      X5 = X5
+    ),
+    true_att = true_att,
+    true_qst = true_qst,
+    meta = list(
+      dgp_id        = "synth_tilt_mild",
+      version       = "1.6.0",
+      type          = "synthetic",
+      params        = list(n = n, seed = seed),
+      structural_te = tau
+    )
+  )
+
+  cs_check_dgp_synthetic(out)
+  out
+}
+
+#' @rdname dgp_synth_latest_wrappers
 #' @export
 dgp_synth_tilt_mild <- function(n, seed = NULL) {
-  dgp_synth_tilt_mild_v130(n = n, seed = seed)
+  dgp_synth_tilt_mild_v160(n = n, seed = seed)
 }

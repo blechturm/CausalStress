@@ -2,17 +2,26 @@
 % Please edit documentation in R/est-grf-dr.R
 \name{est_grf_dr_att}
 \alias{est_grf_dr_att}
+\alias{est_grf_dr}
 \title{GRF-based doubly-robust ATT estimator (causal forest)}
 \usage{
 est_grf_dr_att(df, config = list(), tau = cs_tau_oracle, ...)
+
+est_grf_dr(df, config = list(), tau = cs_tau_oracle, ...)
 }
 \arguments{
 \item{df}{Data frame as returned in \code{dgp$df}, containing at least
 \code{y}, \code{w}, and covariates. Covariates are taken as all non-core columns
 (i.e., excluding \code{y}, \code{w}, \code{y0}, \code{y1}, \code{p}, \code{structural_te}).}
 
-\item{config}{Optional list of GRF configuration (e.g., \code{num.trees},
-\code{min.node.size}). If not supplied, defaults are used.}
+\item{config}{Optional list of configuration options. Common fields include:
+\itemize{
+\item \code{ci_method}: CI intent; one of "none", "default", "bootstrap", "native" (see \link{cs_ci_methods}).
+\item \code{seed}: required when bootstrap CIs are requested.
+\item \code{n_boot}: number of bootstrap draws if using bootstrap CIs.
+\item GRF hyperparameters (e.g., \code{num.trees}, \code{min.node.size}).
+}
+For this estimator, \code{ci_method = "default"} maps to \code{"native"}.}
 
 \item{tau}{Ignored. Included for API compatibility with other estimators.}
 

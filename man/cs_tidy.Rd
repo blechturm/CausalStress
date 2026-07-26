@@ -2,12 +2,9 @@
 % Please edit documentation in R/cs-tidy.R
 \name{cs_tidy}
 \alias{cs_tidy}
-\alias{cs_tidy_run}
 \title{Tidy CausalStress run results}
 \usage{
 cs_tidy(x)
-
-cs_tidy_run(x)
 }
 \arguments{
 \item{x}{A result object from \code{cs_run_single()}, \code{cs_run_seeds()}, or a list thereof.}

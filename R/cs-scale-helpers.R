@@ -16,7 +16,7 @@ cs_require_staging_for_parallel_persistence <- function(parallel, board, staging
 cs_require_experimental_parallel <- function(parallel, experimental_parallel) {
   if (isTRUE(parallel) && !isTRUE(experimental_parallel)) {
     rlang::abort(
-      message = "`parallel = TRUE` requires `experimental_parallel = TRUE` (v0.1.x experimental parallel mode).",
+      message = "`parallel = TRUE` requires `experimental_parallel = TRUE` (experimental parallel mode).",
       class   = "causalstress_experimental_parallel_error"
     )
   }
@@ -46,6 +46,20 @@ cs_thread_caps_env <- function() {
     OPENBLAS_NUM_THREADS = "1",
     VECLIB_MAXIMUM_THREADS = "1"
   )
+}
+
+cs_enforce_threads <- function(n_threads = 1L) {
+  if (is.null(n_threads) || !is.finite(n_threads)) {
+    return(invisible(NULL))
+  }
+  n_threads <- as.integer(n_threads)
+  if (is.na(n_threads) || n_threads < 1L) {
+    return(invisible(NULL))
+  }
+  env <- cs_thread_caps_env()
+  env[] <- as.character(n_threads)
+  do.call(Sys.setenv, as.list(env))
+  invisible(env)
 }
 
 cs_with_envvar <- function(env, expr) {

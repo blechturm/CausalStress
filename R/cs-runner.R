@@ -8,6 +8,25 @@
 #' @param status Optional status filter for DGP lookup ("stable", "experimental", "deprecated", "invalidated").
 #' @param quiet Logical; if `TRUE`, suppress warnings from DGP lookup (use with
 #'   care—defaults to `FALSE` to honor loud-warning protocol).
+#' @param tau Numeric vector of quantile levels used by QST-capable estimators.
+#'   Defaults to [cs_tau_oracle].
+#' @param bootstrap Logical; runner-level convenience flag. When `TRUE` and
+#'   `config$ci_method` is missing, the runner sets it to `"bootstrap"` and also
+#'   injects `config$seed` from `seed` (see [cs_ci_methods]).
+#' @param B Integer; convenience alias for `config$n_boot` when `bootstrap=TRUE`.
+#'   Only used if `config$n_boot` is missing.
+#' @param config List of estimator configuration options. Common fields include
+#'   `ci_method`, `n_boot`, and estimator-specific hyperparameters. See
+#'   [cs_ci_methods] for CI semantics.
+#' @param board Optional pins board. If provided, the completed structured
+#'   result is persisted before it is returned.
+#' @param max_runtime Numeric scalar; maximum allowed runtime (seconds) for the
+#'   estimator call. Defaults to `Inf`.
+#' @param ... Additional arguments forwarded to the estimator generator.
+#'
+#' @return A structured result list with `outputs`, canonical typed `scores`,
+#'   compatibility projections `att` and `qst`, optional `boot_draws`, and
+#'   separate `meta` and `provenance` components.
 #' @export
 cs_run_single <- function(
   dgp_id,
@@ -65,6 +84,11 @@ cs_run_single <- function(
     quiet   = quiet
   )
   est_desc <- cs_get_estimator(estimator_id)
+  config_caller <- config
+  requested_estimand_targets <- cs_assert_wave1_targets_executable(
+    config = config_caller,
+    estimator_desc = est_desc
+  )
 
   exec_meta <- cs_dgp_executable_meta(dgp_id = dgp_id, version = dgp_desc$version[[1L]])
 
@@ -77,8 +101,16 @@ cs_run_single <- function(
   df_raw    <- dgp$df
   true_att  <- dgp$true_att
 
-  oracle_allowed <- isTRUE(est_desc$oracle)
-  df_run <- cs_airlock(df_raw, oracle_allowed = oracle_allowed)
+  oracle_flag <- isTRUE(est_desc$oracle)
+  oracle_columns_granted <- cs_oracle_columns_granted(
+    config = config,
+    estimator_desc = est_desc
+  )
+  df_run <- cs_airlock(
+    df_raw,
+    config = config,
+    estimator_desc = est_desc
+  )
 
   config_local <- config
   if (is.null(config_local$seed)) {
@@ -87,8 +119,17 @@ cs_run_single <- function(
   if (isTRUE(bootstrap) && B > 0L && is.null(config_local$n_boot)) {
     config_local$n_boot <- B
   }
+  if (isTRUE(bootstrap) && is.null(config_local$ci_method)) {
+    config_local$ci_method <- "bootstrap"
+    if (is.null(config_local$ci_method_source)) {
+      config_local$ci_method_source <- "runner_bootstrap"
+    }
+  }
   if (isFALSE(bootstrap) && is.null(config_local$ci_method)) {
     config_local$ci_method <- "none"
+    if (is.null(config_local$ci_method_source)) {
+      config_local$ci_method_source <- "runner_none"
+    }
   }
 
   config_fingerprint <- cs_build_config_fingerprint(
@@ -98,48 +139,118 @@ cs_run_single <- function(
     seed              = seed,
     bootstrap         = bootstrap,
     B                 = B,
-    oracle            = oracle_allowed,
+    oracle            = oracle_flag,
     estimator_version = est_desc$version,
-    config            = config_local,
+    config            = config_caller,
     tau               = tau,
-    max_runtime       = max_runtime
+    max_runtime       = max_runtime,
+    dgp_version       = dgp_desc$version[[1L]]
   )
-
+  truth_version <- cs_truth_version_id(
+    dgp_id = dgp_id,
+    dgp_version = dgp_desc$version[[1L]],
+    truth_payload = list(
+      true_att = dgp$true_att,
+      true_qst_tau = dgp$true_qst$tau %||% numeric(0),
+      true_qst_value = dgp$true_qst$value %||% numeric(0),
+      structural_te = dgp$meta$structural_te %||% numeric(0)
+    )
+  )
+  fit_fingerprint <- cs_build_fit_fingerprint(
+    dgp_id = dgp_id,
+    dgp_version = dgp_desc$version[[1L]],
+    estimator_id = estimator_id,
+    estimator_version = est_desc$version,
+    n = n,
+    seed = seed,
+    config_fingerprint = config_fingerprint,
+    config = config_caller
+  )
   # Run estimator
   t_est_start <- Sys.time()
   res <- NULL
   config <- config_local
-  res <- tryCatch(
-    withCallingHandlers(
-      {
-        setTimeLimit(cpu = max_runtime, elapsed = max_runtime, transient = TRUE)
-        on.exit(setTimeLimit(cpu = Inf, elapsed = Inf, transient = TRUE), add = TRUE)
-        est_desc$generator(
-          df     = df_run,
-          config = config,
-          tau    = tau,
-          ...
-        )
+  # Ensure estimators can echo the intended registry ID (e.g., benchmark variants).
+  if (is.null(config$estimator_id)) {
+    config$estimator_id <- estimator_id
+  }
+  required_pkgs <- est_desc$requires_pkgs %||% character(0L)
+  required_pkgs <- required_pkgs[!is.na(required_pkgs) & nzchar(required_pkgs)]
+  missing_pkgs <- required_pkgs[!vapply(required_pkgs, requireNamespace, logical(1), quietly = TRUE)]
+  if (length(missing_pkgs) > 0L) {
+    missing_msg <- paste0(
+      "Required package(s) for estimator `", estimator_id, "` are not installed: ",
+      paste(missing_pkgs, collapse = ", ")
+    )
+    rlang::warn(missing_msg, class = "causalstress_missing_package")
+    logs <- c(logs, paste0("[warning] ", missing_msg))
+    warnings_vec <- c(warnings_vec, missing_msg)
+    errors_vec <- c(errors_vec, missing_msg)
+    success <- FALSE
+    res <- list(
+      att = list(estimate = NA_real_),
+      qst = NULL,
+      meta = list(
+        estimator_id = estimator_id,
+        oracle = est_desc$oracle,
+        supports_qst = est_desc$supports_qst
+      )
+    )
+  } else {
+    res <- tryCatch(
+      withCallingHandlers(
+        {
+          setTimeLimit(cpu = max_runtime, elapsed = max_runtime, transient = TRUE)
+          est_desc$generator(
+            df     = df_run,
+            config = config,
+            tau    = tau,
+            ...
+          )
+        },
+        message = collect_msg,
+        warning = collect_warn
+      ),
+      error = function(e) {
+        logs <<- c(logs, paste0("[error] ", conditionMessage(e)))
+        errors_vec <<- c(errors_vec, conditionMessage(e))
+        success <<- FALSE
+        list(att = list(estimate = NA_real_), qst = NULL)
       },
-      message = collect_msg,
-      warning = collect_warn
-    ),
-    error = function(e) {
-      logs <<- c(logs, paste0("[error] ", conditionMessage(e)))
-      errors_vec <<- c(errors_vec, conditionMessage(e))
-      success <<- FALSE
-      list(att = list(estimate = NA_real_), qst = NULL)
-    }
-  )
+      finally = setTimeLimit(cpu = Inf, elapsed = Inf, transient = TRUE)
+    )
+  }
+  run_time_est <- as.numeric(difftime(Sys.time(), t_est_start, units = "secs"))
+  if (isTRUE(success) && is.finite(max_runtime) && run_time_est > max_runtime) {
+    timeout_msg <- sprintf(
+      "Estimator exceeded elapsed time limit: %.3f seconds > %.3f seconds.",
+      run_time_est,
+      max_runtime
+    )
+    logs <- c(logs, paste0("[error] ", timeout_msg))
+    errors_vec <- c(errors_vec, timeout_msg)
+    success <- FALSE
+    res$att <- list(estimate = NA_real_)
+    res$qst <- NULL
+  }
   if (isTRUE(success)) {
     cs_check_estimator_output(res, require_qst = est_desc$supports_qst, tau = tau)
   }
-  run_time_est <- as.numeric(difftime(Sys.time(), t_est_start, units = "secs"))
+  typed_outputs <- if (isTRUE(success)) {
+    cs_normalize_estimator_outputs(res, tau = tau)
+  } else {
+    list()
+  }
+  produced_estimand_targets <- names(typed_outputs)
+  truth_available_targets <- cs_truth_available_targets(dgp)
 
-  extracted <- cs_extract_estimator_result(res)
+  extracted <- list(
+    att = typed_outputs$att$estimate %||% NA_real_,
+    qst = typed_outputs$qst %||% NULL
+  )
   est_att <- extracted$att
 
-  att_ci <- res$att %||% list()
+  att_ci <- typed_outputs$att %||% res$att %||% list()
   ci_lo_att <- att_ci$ci_lo %||% NA_real_
   ci_hi_att <- att_ci$ci_hi %||% NA_real_
   res_meta <- res$meta %||% list()
@@ -147,6 +258,33 @@ cs_run_single <- function(
   n_boot_ok <- res_meta$n_boot_ok %||% 0L
   n_boot_fail <- res_meta$n_boot_fail %||% 0L
   boot_draws <- res$boot_draws %||% NULL
+
+  ci_fail_codes <- c(
+    res_meta$ci_fail_code %||% NA_character_,
+    res_meta$qst_ci_fail_code %||% NA_character_
+  )
+  ci_fail_codes <- ci_fail_codes[!is.na(ci_fail_codes) & nzchar(ci_fail_codes)]
+  reported_bootstrap_ci <- identical(res_meta$ci_method %||% NA_character_, "bootstrap") ||
+    identical(res_meta$qst_ci_method %||% NA_character_, "bootstrap")
+  expected_boot <- suppressWarnings(as.integer(config_local$n_boot %||% B %||% NA_integer_))
+  boot_success_counts <- suppressWarnings(as.integer(n_boot_ok))
+  low_boot_by_count <- isTRUE(reported_bootstrap_ci) &&
+    is.finite(expected_boot) &&
+    expected_boot > 0L &&
+    length(boot_success_counts) > 0L &&
+    any(boot_success_counts < ceiling(0.9 * expected_boot), na.rm = TRUE)
+  low_boot_by_code <- any(ci_fail_codes %in% c("low_boot_success", "initial_failure"))
+  if (isTRUE(success) && (isTRUE(low_boot_by_code) || isTRUE(low_boot_by_count))) {
+    ci_msg <- paste0(
+      "Bootstrap CI failed validation for estimator `", estimator_id,
+      "`: fewer than 90% of bootstrap replicates succeeded."
+    )
+    rlang::warn(ci_msg, class = "causalstress_ci_warning")
+    logs <- c(logs, paste0("[warning] ", ci_msg))
+    warnings_vec <- c(warnings_vec, ci_msg)
+    errors_vec <- c(errors_vec, ci_msg)
+    success <- FALSE
+  }
 
   att_error      <- est_att - true_att
   att_abs_error  <- abs(att_error)
@@ -172,7 +310,7 @@ cs_run_single <- function(
         truth_tbl$tau_id <- cs_tau_id(truth_tbl$tau)
       }
       truth_tbl <- truth_tbl %>%
-        dplyr::select(.data$tau_id, .data$true)
+        dplyr::select("tau_id", "true")
 
       qst_df <- qst_df %>%
         dplyr::left_join(truth_tbl, by = "tau_id") %>%
@@ -180,6 +318,18 @@ cs_run_single <- function(
           error = estimate - true,
           abs_error = abs(error)
         )
+      unmatched_truth <- is.na(qst_df$true)
+      if (any(unmatched_truth)) {
+        unmatched_tau <- paste(qst_df$tau[unmatched_truth], collapse = ", ")
+        qst_truth_msg <- paste0(
+          "QST truth is unavailable for requested tau value(s): ",
+          unmatched_tau,
+          ". Error and coverage fields are NA for those rows."
+        )
+        rlang::warn(qst_truth_msg, class = "causalstress_qst_truth_warning")
+        logs <- c(logs, paste0("[warning] ", qst_truth_msg))
+        warnings_vec <- c(warnings_vec, qst_truth_msg)
+      }
     } else {
       qst_df <- qst_df %>%
         dplyr::mutate(
@@ -223,7 +373,13 @@ cs_run_single <- function(
   } else {
     dep_versions <- vapply(
       est_desc$requires_pkgs,
-      function(pkg) as.character(utils::packageVersion(pkg)),
+      function(pkg) {
+        if (requireNamespace(pkg, quietly = TRUE)) {
+          as.character(utils::packageVersion(pkg))
+        } else {
+          NA_character_
+        }
+      },
       character(1)
     )
     pkg_versions <- c(CausalStress = cs_ver, dep_versions)
@@ -245,22 +401,46 @@ cs_run_single <- function(
 
   log_str <- if (length(logs) == 0L) NA_character_ else paste(logs, collapse = "\n")
 
-  log_str <- if (length(logs) == 0L) NA_character_ else paste(logs, collapse = "\n")
-
   # Non-deterministic provenance is stored separately from the science payload.
   ts_now <- Sys.time()
 
+  att_result <- list(
+    estimate     = est_att,
+    true         = true_att,
+    error        = att_error,
+    abs_error    = att_abs_error,
+    ci_lo        = ci_lo_att,
+    ci_hi        = ci_hi_att,
+    boot_covered = att_covered,
+    ci_width     = att_ci_width
+  )
+
+  score_surface <- cs_build_score_surface(
+    requested_targets = requested_estimand_targets,
+    outputs = typed_outputs,
+    dgp = dgp,
+    att = att_result,
+    qst = qst_df,
+    failure_status = if (!isTRUE(success)) "estimator_error" else NULL
+  )
+  score_surface <- cs_attach_score_identity(
+    score_surface,
+    fit_fingerprint = fit_fingerprint,
+    truth_version = truth_version
+  )
+  if (nrow(score_surface) > 0L) {
+    score_surface$dgp_id <- dgp_id
+    score_surface$dgp_version <- dgp_desc$version[[1L]] %||% NA_character_
+    score_surface$estimator_id <- estimator_id
+    score_surface$estimator_version <- est_desc$version %||% NA_character_
+    score_surface$n <- as.integer(n)
+    score_surface$seed <- as.integer(seed)
+  }
+
   result <- list(
-    att = list(
-      estimate     = est_att,
-      true         = true_att,
-      error        = att_error,
-      abs_error    = att_abs_error,
-      ci_lo        = ci_lo_att,
-      ci_hi        = ci_hi_att,
-      boot_covered = att_covered,
-      ci_width     = if (!is.na(ci_lo_att) && !is.na(ci_hi_att)) ci_hi_att - ci_lo_att else NA_real_
-    ),
+    outputs    = typed_outputs,
+    scores     = score_surface,
+    att        = att_result,
     qst        = qst_df %||% NULL,
     boot_draws = boot_draws,
     meta = list(
@@ -281,17 +461,27 @@ cs_run_single <- function(
       n              = as.integer(n),
       seed           = as.integer(seed),
       oracle         = est_desc$oracle,
+      oracle_columns_granted = oracle_columns_granted,
       supports_qst   = est_desc$supports_qst,
+      requested_estimand_targets = requested_estimand_targets,
+      produced_estimand_targets = produced_estimand_targets,
+      truth_available_targets = truth_available_targets,
       dgp_version    = dgp_desc$version[[1L]] %||% NA_character_,
       dgp_status     = dgp_desc$status[[1L]] %||% NA_character_,
       dgp_design_spec = dgp_desc$design_spec[[1L]] %||% NA_character_,
       estimator_version = est_desc$version %||% NA_character_,
       estimator_reported_version = reported_ver,
-      config_fingerprint_schema = 2L,
+      config_fingerprint_schema = 4L,
+      fit_fingerprint = fit_fingerprint,
+      truth_version = truth_version,
+      score_fingerprints = unique(score_surface$score_fingerprint %||% character(0)),
+      score_row_fingerprints = score_surface$score_row_fingerprint %||% character(0),
       estimator_pkgs = estimator_pkgs,
       n_boot_ok      = n_boot_ok,
       n_boot_fail    = n_boot_fail,
       ci_method      = res_meta$ci_method %||% NA_character_,
+      ci_method_in   = res_meta$ci_method_in %||% NA_character_,
+      ci_method_source = res_meta$ci_method_source %||% NA_character_,
       ci_type        = res_meta$ci_type %||% NA_character_,
       ci_level       = res_meta$ci_level %||% NA_real_,
       ci_valid       = res_meta$ci_valid %||% NA,
@@ -331,11 +521,12 @@ cs_run_single <- function(
 }
 
 
-#' Run a DGP × estimator combination over multiple seeds
+#' Run a DGP x estimator combination over multiple seeds
 #'
 #' This function repeatedly calls [cs_run_single()] for a given DGP and
-#' estimator, using a vector of seeds. It returns a tibble with one row
-#' per seed and the same columns as [cs_run_single()].
+#' estimator, using a vector of seeds. It flattens each structured result into
+#' one analysis row while retaining QST and canonical score tables in list
+#' columns.
 #'
 #' @param dgp_id Character scalar, identifier of the DGP (e.g., "synth_baseline").
 #' @param estimator_id Character scalar, identifier of the estimator (e.g., "oracle_att").
@@ -346,17 +537,28 @@ cs_run_single <- function(
 #' @param status Optional DGP status filter; forwarded to [cs_get_dgp()].
 #' @param tau Numeric vector of quantile levels. Passed through to the
 #'   estimator via [cs_run_single()]. Default is [cs_tau_oracle].
+#' @param bootstrap Logical; runner-level convenience flag. When `TRUE` and
+#'   `config$ci_method` is missing, the runner sets it to `"bootstrap"` and also
+#'   injects `config$seed` from each per-seed `seed` (see [cs_ci_methods]).
+#' @param B Integer; convenience alias for `config$n_boot` when `bootstrap=TRUE`.
+#'   Only used if `config$n_boot` is missing.
 #' @param config List of estimator-specific configuration options. Passed
 #'   through to the estimator via [cs_run_single()].
+#' @param board Optional pins board for persistence.
 #' @param force Logical; if `TRUE`, recompute even when pins exist (alias for
 #'   setting `skip_existing = FALSE`).
+#' @param skip_existing Logical; whether to resume from existing pins.
+#' @param show_progress Logical; whether to display per-seed progress messages.
 #' @param quiet Logical; if `TRUE`, suppress DGP governance warnings inside
 #'   per-seed runs (use with care; pre-flight still warns once).
+#' @param max_runtime Numeric scalar; maximum allowed runtime (seconds) per seed.
+#' @param parallel Logical; if `TRUE`, uses furrr/future for parallel execution.
+#' @param experimental_parallel Logical; must be `TRUE` to enable parallel mode.
+#' @param staging_dir Optional staging directory for crash recovery.
 #'
-#' @return A tibble with one row per seed and at least the columns returned
-#'   by [cs_run_single()], including `dgp_id`, `estimator_id`, `n`, `seed`,
-#'   `oracle`, `supports_qst`, `true_att`, `est_att`, `att_error`,
-#'   `att_abs_error`.
+#' @return A tibble with one row per seed. Scalar identifiers and ATT metrics
+#'   are flattened; QST and canonical typed score records are retained in the
+#'   `qst` and `scores` list columns.
 #'
 #' @export
 cs_run_seeds <- function(
@@ -420,26 +622,24 @@ cs_run_seeds <- function(
     cs_gather_results(board, staging_dir)
   }
 
+  dgp_desc <- cs_get_dgp(dgp_id = dgp_id, version = version, status = status, quiet = TRUE)
+  dgp_version <- dgp_desc$version[[1L]]
   est_desc <- cs_get_estimator(estimator_id)
+  cs_assert_wave1_targets_executable(config = config, estimator_desc = est_desc)
 
-  pin_name_for_seed <- function(s) {
-    glue::glue(
-      "results__dgp={dgp_id}__est={estimator_id}__n={n}__seed={s}"
+  pin_name_for_seed <- function(s, include_legacy = TRUE) {
+    cs_find_result_pin(
+      board = board,
+      dgp_id = dgp_id,
+      dgp_version = dgp_version,
+      estimator_id = estimator_id,
+      n = n,
+      seed = s,
+      include_legacy = include_legacy
     )
   }
 
-  apply_runner_defaults <- function(cfg, seed_i) {
-    if (is.null(cfg$seed)) {
-      cfg$seed <- seed_i
-    }
-    if (isTRUE(bootstrap) && B > 0L && is.null(cfg$n_boot)) {
-      cfg$n_boot <- B
-    }
-    cfg
-  }
-
-  build_expected_fp_schema2 <- function(seed_i) {
-    expected_cfg <- apply_runner_defaults(config, seed_i)
+  build_expected_fp_schema4 <- function(seed_i) {
     cs_build_config_fingerprint(
       dgp_id            = dgp_id,
       estimator_id      = estimator_id,
@@ -449,31 +649,10 @@ cs_run_seeds <- function(
       B                 = B,
       oracle            = isTRUE(est_desc$oracle),
       estimator_version = est_desc$version,
-      config            = expected_cfg,
+      config            = config,
       tau               = tau,
-      max_runtime       = max_runtime
-    )
-  }
-
-  build_expected_fp_legacy <- function(seed_i) {
-    if (is.finite(max_runtime)) {
-      rlang::abort(
-        message = "Cannot resume legacy (v0.1.7) pins with non-infinite `max_runtime`; legacy fingerprints do not encode runtime guards.",
-        class   = "causalstress_fingerprint_error"
-      )
-    }
-    expected_cfg <- apply_runner_defaults(config, seed_i)
-    cs_build_config_fingerprint_legacy(
-      dgp_id            = dgp_id,
-      estimator_id      = estimator_id,
-      n                 = n,
-      seed              = seed_i,
-      bootstrap         = bootstrap,
-      B                 = B,
-      oracle            = isTRUE(est_desc$oracle),
-      estimator_version = est_desc$version,
-      config            = expected_cfg,
-      tau               = tau
+      max_runtime       = max_runtime,
+      dgp_version       = dgp_version
     )
   }
 
@@ -485,23 +664,14 @@ cs_run_seeds <- function(
     cached <- logical(length(seeds))
     for (i in seq_along(seeds)) {
       s <- seeds[[i]]
-      if (!cs_pin_exists(board, dgp_id, estimator_id, n, s)) next
-
       name <- pin_name_for_seed(s)
+      if (is.na(name)) next
       meta_obj <- pins::pin_meta(board, name)
       md <- cs_pin_meta_user_or_metadata(meta_obj)
       stored_fp <- md$config_fingerprint %||% NULL
       stored_schema <- suppressWarnings(as.integer(md$config_fingerprint_schema %||% NA_integer_))
-      expected_fp <- if (is.na(stored_schema) || stored_schema == 1L) {
-        build_expected_fp_legacy(s)
-      } else if (stored_schema == 2L) {
-        build_expected_fp_schema2(s)
-      } else {
-        rlang::abort(
-          message = glue::glue("Unsupported config fingerprint schema: {stored_schema}."),
-          class   = "causalstress_fingerprint_error"
-        )
-      }
+      cs_assert_schema4_resume(stored_schema)
+      expected_fp <- build_expected_fp_schema4(s)
 
       if (is.null(stored_fp) || !identical(stored_fp, expected_fp)) {
         old_txt <- if (is.null(stored_fp)) "missing" else stored_fp
@@ -534,8 +704,9 @@ cs_run_seeds <- function(
   # If we are forcing recompute and a pin exists, delete it to avoid stale metadata
   if (!is.null(board) && !isTRUE(should_try_cache)) {
     for (s in seeds_to_run) {
-      if (!cs_pin_exists(board, dgp_id, estimator_id, n, s)) next
-      pins::pin_delete(board, pin_name_for_seed(s))
+      name <- pin_name_for_seed(s, include_legacy = FALSE)
+      if (is.na(name)) next
+      pins::pin_delete(board, name)
     }
   }
 

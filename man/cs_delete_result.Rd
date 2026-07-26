@@ -4,7 +4,25 @@
 \alias{cs_delete_result}
 \title{Delete a single result pin}
 \usage{
-cs_delete_result(board, dgp_id, estimator_id, n, seed)
+cs_delete_result(board, dgp_id, estimator_id, n, seed, version = NULL)
+}
+\arguments{
+\item{board}{A pins board.}
+
+\item{dgp_id}{Character scalar identifying the DGP.}
+
+\item{estimator_id}{Character scalar identifying the estimator.}
+
+\item{n}{Integer sample size.}
+
+\item{seed}{Integer simulation seed.}
+
+\item{version}{Optional DGP version. When supplied, only the exact versioned
+result pin is deleted; when omitted, legacy and versioned pins matching the
+tuple are deleted.}
+}
+\value{
+Logical scalar indicating whether any pin was deleted.
 }
 \description{
 Delete a single result pin

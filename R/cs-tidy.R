@@ -26,6 +26,3 @@ cs_tidy <- function(x) {
   )
 }
 
-#' @rdname cs_tidy
-#' @export
-cs_tidy_run <- cs_tidy

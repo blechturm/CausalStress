@@ -9,8 +9,14 @@ est_bart_att(df, config = list(), tau = cs_tau_oracle, ...)
 \arguments{
 \item{df}{Data frame with outcome \code{y}, treatment \code{w}, and covariates.}
 
-\item{config}{Optional list of parameters passed through to \code{bartCause::bartc}.
-Recognised fields: \code{seed} (numeric scalar).}
+\item{config}{Optional list of configuration options. Common fields include:
+\itemize{
+\item \code{ci_method}: CI intent; one of "none", "default", "bootstrap", "native" (see \link{cs_ci_methods}).
+\item \code{seed}: required when bootstrap CIs are requested.
+\item \code{n_boot}: number of bootstrap draws if using bootstrap CIs.
+\item Additional parameters passed through to \code{bartCause::bartc}.
+}
+For this estimator, \code{ci_method = "default"} maps to \code{"native"}.}
 
 \item{tau}{Unused (included for signature compatibility).}
 

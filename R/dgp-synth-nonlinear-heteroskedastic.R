@@ -24,6 +24,8 @@
 #'
 #' @param n Integer, number of observations.
 #' @param seed Optional seed for reproducibility (passed to `cs_set_rng()`).
+#' @param include_truth Logical; if TRUE, include oracle truth tables where supported.
+#' @param oracle_only Logical; if TRUE, return only columns needed for oracle truth generation where supported.
 #'
 #' @return A list with `df`, `true_att`, `true_qst`, and `meta` satisfying
 #'   the synthetic DGP contract.
@@ -58,7 +60,11 @@ dgp_synth_nonlinear_heteroskedastic_v130 <- function(n, seed = NULL, include_tru
   y  <- ifelse(w == 1L, y1, y0)
 
   true_att <- cs_true_att(structural_te = tau, w = w)
-  true_qst <- if (isTRUE(include_truth)) cs_get_oracle_qst("synth_nonlinear_heteroskedastic", version = "1.3.0") else NULL
+  true_qst <- if (isTRUE(include_truth)) {
+    cs_get_oracle_qst("synth_nonlinear_heteroskedastic", version = "1.3.0")
+  } else {
+    tibble::tibble(tau = cs_tau_oracle, value = rep(NA_real_, length(cs_tau_oracle)))
+  }
 
   out <- list(
     df = tibble::tibble(
@@ -88,7 +94,248 @@ dgp_synth_nonlinear_heteroskedastic_v130 <- function(n, seed = NULL, include_tru
   out
 }
 
+#' Nonlinear heteroskedastic synthetic DGP for CausalStress (v1.4.0)
+#'
+#' Version bump that hardens nonlinearity and heteroskedasticity to reliably
+#' stress OLS and other linear smoothers.
+#'
+#' @details
+#' \strong{Outcome (control):} \eqn{\mu_0(X) = 1 + 0.5 X_1^3 + 1.5 X_2^2 - 1.0 X_4}.
+#'
+#' \strong{Noise:} \eqn{\varepsilon \sim \mathcal{N}(0, \sigma(X)^2)} where
+#' \eqn{\sigma(X) = 0.1 + 1.0 \exp(0.5 X_2)}.
+#'
+#' \strong{Propensity:} \eqn{p(X) = \mathrm{plogis}(1.5 X_1 - 1.5 X_2)} (stronger selection).
+#'
+#' @inheritParams dgp_synth_nonlinear_heteroskedastic_v130
+#'
+#' @return A list with `df`, `true_att`, `true_qst`, and `meta` satisfying
+#'   the synthetic DGP contract.
+#' @export
+dgp_synth_nonlinear_heteroskedastic_v140 <- function(n, seed = NULL, include_truth = TRUE, oracle_only = FALSE) {
+  if (!is.null(seed)) {
+    cs_set_rng(seed)
+  }
+
+  X1 <- stats::rnorm(n, mean = 0, sd = 1)
+  X2 <- stats::rnorm(n, mean = 0, sd = 1)
+  X3 <- stats::runif(n, min = -2, max = 2)
+  X4 <- stats::rbinom(n, size = 1L, prob = 0.4)
+
+  mu0 <- 1 + 0.5 * X1^3 + 1.5 * X2^2 - 1.0 * X4
+  tau <- rep(1.0, n)
+
+  sigma <- 0.1 + 1.0 * exp(0.5 * X2)
+  eps0  <- stats::rnorm(n, mean = 0, sd = sigma)
+  eps1  <- stats::rnorm(n, mean = 0, sd = sigma)
+
+  p <- stats::plogis(1.5 * X1 - 1.5 * X2)
+  w <- stats::rbinom(n, size = 1L, prob = p)
+
+  y0 <- mu0 + eps0
+  y1 <- mu0 + tau + eps1
+
+  if (isTRUE(oracle_only)) {
+    return(list(df = tibble::tibble(w = w, y0 = y0, y1 = y1)))
+  }
+  y  <- ifelse(w == 1L, y1, y0)
+
+  true_att <- cs_true_att(structural_te = tau, w = w)
+  true_qst <- if (isTRUE(include_truth)) {
+    cs_get_oracle_qst("synth_nonlinear_heteroskedastic", version = "1.4.0")
+  } else {
+    tibble::tibble(tau = cs_tau_oracle, value = rep(NA_real_, length(cs_tau_oracle)))
+  }
+
+  out <- list(
+    df = tibble::tibble(
+      y  = y,
+      w  = w,
+      y0 = y0,
+      y1 = y1,
+      p  = p,
+      structural_te = tau,
+      X1 = X1,
+      X2 = X2,
+      X3 = X3,
+      X4 = X4
+    ),
+    true_att = true_att,
+    true_qst = true_qst,
+    meta = list(
+      dgp_id        = "synth_nonlinear_heteroskedastic",
+      version       = "1.4.0",
+      type          = "synthetic",
+      params        = list(n = n, seed = seed),
+      structural_te = tau
+    )
+  )
+
+  cs_check_dgp_synthetic(out)
+  out
+}
+
+#' Nonlinear heteroskedastic synthetic DGP for CausalStress (v1.5.0)
+#'
+#' Version bump that relaxes propensity to moderate overlap to isolate
+#' nonlinear/heteroskedastic stress.
+#'
+#' @details
+#' \strong{Outcome (control):} \eqn{\mu_0(X) = 1 + 0.5 X_1^3 + 1.5 X_2^2 - 1.0 X_4}.
+#'
+#' \strong{Noise:} \eqn{\varepsilon \sim \mathcal{N}(0, \sigma(X)^2)} where
+#' \eqn{\sigma(X) = 0.1 + 1.0 \exp(0.5 X_2)}.
+#'
+#' \strong{Propensity:} \eqn{p(X) = \mathrm{plogis}(0.5 X_1 - 0.5 X_2)} (moderate overlap).
+#'
+#' @inheritParams dgp_synth_nonlinear_heteroskedastic_v130
+#'
+#' @return A list with `df`, `true_att`, `true_qst`, and `meta` satisfying
+#'   the synthetic DGP contract.
+#' @export
+dgp_synth_nonlinear_heteroskedastic_v150 <- function(n, seed = NULL, include_truth = TRUE, oracle_only = FALSE) {
+  if (!is.null(seed)) {
+    cs_set_rng(seed)
+  }
+
+  X1 <- stats::rnorm(n, mean = 0, sd = 1)
+  X2 <- stats::rnorm(n, mean = 0, sd = 1)
+  X3 <- stats::runif(n, min = -2, max = 2)
+  X4 <- stats::rbinom(n, size = 1L, prob = 0.4)
+
+  mu0 <- 1 + 0.5 * X1^3 + 1.5 * X2^2 - 1.0 * X4
+  tau <- rep(1.0, n)
+
+  sigma <- 0.1 + 1.0 * exp(0.5 * X2)
+  eps0  <- stats::rnorm(n, mean = 0, sd = sigma)
+  eps1  <- stats::rnorm(n, mean = 0, sd = sigma)
+
+  p <- stats::plogis(0.5 * X1 - 0.5 * X2)
+  w <- stats::rbinom(n, size = 1L, prob = p)
+
+  y0 <- mu0 + eps0
+  y1 <- mu0 + tau + eps1
+
+  if (isTRUE(oracle_only)) {
+    return(list(df = tibble::tibble(w = w, y0 = y0, y1 = y1)))
+  }
+  y  <- ifelse(w == 1L, y1, y0)
+
+  true_att <- cs_true_att(structural_te = tau, w = w)
+  true_qst <- if (isTRUE(include_truth)) {
+    cs_get_oracle_qst("synth_nonlinear_heteroskedastic", version = "1.5.0")
+  } else {
+    tibble::tibble(tau = cs_tau_oracle, value = rep(NA_real_, length(cs_tau_oracle)))
+  }
+
+  out <- list(
+    df = tibble::tibble(
+      y  = y,
+      w  = w,
+      y0 = y0,
+      y1 = y1,
+      p  = p,
+      structural_te = tau,
+      X1 = X1,
+      X2 = X2,
+      X3 = X3,
+      X4 = X4
+    ),
+    true_att = true_att,
+    true_qst = true_qst,
+    meta = list(
+      dgp_id        = "synth_nonlinear_heteroskedastic",
+      version       = "1.5.0",
+      type          = "synthetic",
+      params        = list(n = n, seed = seed),
+      structural_te = tau
+    )
+  )
+
+  cs_check_dgp_synthetic(out)
+  out
+}
+
+#' Nonlinear heteroskedastic synthetic DGP for CausalStress (v1.6.0)
+#'
+#' Version bump that enables oracle precision via common random numbers (CRN)
+#' when `oracle_only = TRUE`.
+#'
+#' @inheritParams dgp_synth_nonlinear_heteroskedastic_v130
+#'
+#' @return A list with `df`, `true_att`, `true_qst`, and `meta` satisfying
+#'   the synthetic DGP contract.
+#' @export
+dgp_synth_nonlinear_heteroskedastic_v160 <- function(n, seed = NULL, include_truth = TRUE, oracle_only = FALSE) {
+  if (!is.null(seed)) {
+    cs_set_rng(seed)
+  }
+
+  X1 <- stats::rnorm(n, mean = 0, sd = 1)
+  X2 <- stats::rnorm(n, mean = 0, sd = 1)
+  X3 <- stats::runif(n, min = -2, max = 2)
+  X4 <- stats::rbinom(n, size = 1L, prob = 0.4)
+
+  mu0 <- 1 + 0.5 * X1^3 + 1.5 * X2^2 - 1.0 * X4
+  tau <- rep(1.0, n)
+
+  sigma <- 0.1 + 1.0 * exp(0.5 * X2)
+  eps0  <- stats::rnorm(n, mean = 0, sd = sigma)
+
+  if (isTRUE(oracle_only)) {
+    eps1 <- eps0
+  } else {
+    eps1 <- stats::rnorm(n, mean = 0, sd = sigma)
+  }
+
+  p <- stats::plogis(0.5 * X1 - 0.5 * X2)
+  w <- stats::rbinom(n, size = 1L, prob = p)
+
+  y0 <- mu0 + eps0
+  y1 <- mu0 + tau + eps1
+
+  if (isTRUE(oracle_only)) {
+    return(list(df = tibble::tibble(w = w, y0 = y0, y1 = y1)))
+  }
+  y  <- ifelse(w == 1L, y1, y0)
+
+  true_att <- cs_true_att(structural_te = tau, w = w)
+  true_qst <- if (isTRUE(include_truth)) {
+    cs_get_oracle_qst("synth_nonlinear_heteroskedastic", version = "1.6.0")
+  } else {
+    tibble::tibble(tau = cs_tau_oracle, value = rep(NA_real_, length(cs_tau_oracle)))
+  }
+
+  out <- list(
+    df = tibble::tibble(
+      y  = y,
+      w  = w,
+      y0 = y0,
+      y1 = y1,
+      p  = p,
+      structural_te = tau,
+      X1 = X1,
+      X2 = X2,
+      X3 = X3,
+      X4 = X4
+    ),
+    true_att = true_att,
+    true_qst = true_qst,
+    meta = list(
+      dgp_id        = "synth_nonlinear_heteroskedastic",
+      version       = "1.6.0",
+      type          = "synthetic",
+      params        = list(n = n, seed = seed),
+      structural_te = tau
+    )
+  )
+
+  cs_check_dgp_synthetic(out)
+  out
+}
+
+#' @rdname dgp_synth_latest_wrappers
 #' @export
 dgp_synth_nonlinear_heteroskedastic <- function(n, seed = NULL) {
-  dgp_synth_nonlinear_heteroskedastic_v130(n = n, seed = seed)
+  dgp_synth_nonlinear_heteroskedastic_v160(n = n, seed = seed)
 }

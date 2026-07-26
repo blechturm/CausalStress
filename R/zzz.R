@@ -7,6 +7,6 @@
   }
 
   if (isTRUE(getOption("causalstress.validate_on_load", TRUE))) {
-    cs_validate_dgp_registry(strict = FALSE)
+    cs_with_preserved_rng(cs_validate_dgp_registry(strict = FALSE))
   }
 }

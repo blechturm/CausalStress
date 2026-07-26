@@ -24,6 +24,23 @@ test_that("parallel=TRUE requires experimental_parallel=TRUE (campaign and seeds
     ),
     "experimental_parallel"
   )
+
+  plan <- cs_plan_campaign(
+    dgp_list = "synth_baseline",
+    estimator_list = "lm_att",
+    n_seeds = 1L,
+    batch_size = 1,
+    strategy_map = list(defaults = list(n = 30))
+  )
+  expect_error(
+    cs_run_campaign(
+      plan = plan,
+      staging_dir = tempfile("cs_stage_plan_gate_"),
+      workers = 1,
+      show_progress = FALSE
+    ),
+    "experimental_parallel"
+  )
 })
 
 test_that("experimental parallel warning is emitted exactly once per call", {
@@ -85,7 +102,7 @@ test_that("experimental parallel warning is emitted exactly once per call", {
   expect_equal(sum(vapply(warnings_seen, inherits, logical(1), "causalstress_experimental_parallel")), 1L)
   expect_true(is.data.frame(res_seeds))
 
-  name <- "results__dgp=synth_baseline__est=lm_att__n=30__seed=1"
+  name <- CausalStress:::cs_result_pin_name("synth_baseline", "lm_att", 30, 1, "1.6.0")
   pin <- pins::pin_read(board, name)
   expect_true(isTRUE(pin$provenance$experimental_parallel))
   expect_true(isTRUE(pin$provenance$parallel_warning_emitted))

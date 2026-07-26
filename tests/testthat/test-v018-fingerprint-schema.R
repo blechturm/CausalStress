@@ -1,4 +1,4 @@
-test_that("v0.1.8 writes config_fingerprint_schema=2 and max_runtime participates in identity", {
+test_that("v0.2.0 writes config_fingerprint_schema=4 and max_runtime participates in identity", {
   skip_if_not_installed("pins")
 
   board <- pins::board_temp()
@@ -15,10 +15,13 @@ test_that("v0.1.8 writes config_fingerprint_schema=2 and max_runtime participate
     max_runtime = Inf
   )
 
-  name <- "results__dgp=synth_baseline__est=lm_att__n=30__seed=1"
+  name <- CausalStress:::cs_result_pin_name("synth_baseline", "lm_att", 30, 1, "1.6.0")
   pin <- pins::pin_read(board, name)
-  expect_identical(pin$meta$config_fingerprint_schema, 2L)
+  expect_identical(pin$meta$config_fingerprint_schema, 4L)
+  expect_identical(pin$meta$dgp_version, "1.6.0")
   expect_true(is.character(pin$meta$config_fingerprint))
+  expect_true(is.character(pin$meta$fit_fingerprint))
+  expect_true(is.character(pin$meta$truth_version))
 
   expect_error(
     cs_run_seeds(
@@ -36,7 +39,7 @@ test_that("v0.1.8 writes config_fingerprint_schema=2 and max_runtime participate
   )
 })
 
-test_that("legacy (schema-missing) pins resume deterministically and forbid finite max_runtime", {
+test_that("legacy (schema-missing) pins fail closed as schema-4 resume targets", {
   skip_if_not_installed("pins")
 
   board <- pins::board_temp()
@@ -89,12 +92,12 @@ test_that("legacy (schema-missing) pins resume deterministically and forbid fini
     provenance = list()
   )
 
-  name <- glue::glue("results__dgp={dgp_id}__est={estimator_id}__n={n}__seed={seed}")
+  name <- CausalStress:::cs_result_pin_name_legacy(dgp_id, estimator_id, n, seed)
   pins::pin_write(
     board = board,
     x = legacy_obj,
     name = name,
-    type = "qs",
+    type = "rds",
     metadata = list(
       dgp_id = dgp_id,
       estimator_id = estimator_id,
@@ -104,19 +107,6 @@ test_that("legacy (schema-missing) pins resume deterministically and forbid fini
       # schema intentionally omitted
     )
   )
-
-  resumed <- cs_run_seeds(
-    dgp_id       = dgp_id,
-    estimator_id = estimator_id,
-    n            = n,
-    seeds        = seed,
-    board        = board,
-    skip_existing = TRUE,
-    show_progress = FALSE,
-    quiet = TRUE,
-    max_runtime = Inf
-  )
-  expect_equal(resumed$est_att[1], 999)
 
   expect_error(
     cs_run_seeds(
@@ -128,9 +118,81 @@ test_that("legacy (schema-missing) pins resume deterministically and forbid fini
       skip_existing = TRUE,
       show_progress = FALSE,
       quiet = TRUE,
-      max_runtime = 0.5
+      max_runtime = Inf
     ),
-    "legacy.*max_runtime|Cannot resume legacy",
-    ignore.case = TRUE
+    class = "causalstress_schema_migration_error"
+  )
+})
+
+test_that("schema-2 pins fail closed as schema-4 resume targets", {
+  skip_if_not_installed("pins")
+
+  board <- pins::board_temp()
+
+  dgp_id <- "synth_baseline"
+  estimator_id <- "lm_att"
+  n <- 30L
+  seed <- 1L
+  est_desc <- cs_get_estimator(estimator_id)
+  schema2_fp <- CausalStress:::cs_build_config_fingerprint_schema2(
+    dgp_id = dgp_id,
+    estimator_id = estimator_id,
+    n = n,
+    seed = seed,
+    bootstrap = FALSE,
+    B = 200L,
+    oracle = isTRUE(est_desc$oracle),
+    estimator_version = est_desc$version,
+    config = list(seed = seed),
+    tau = cs_tau_oracle,
+    max_runtime = Inf
+  )
+  obj <- list(
+    att = list(estimate = 999, true = 0, error = 999, abs_error = 999),
+    qst = NULL,
+    boot_draws = NULL,
+    meta = list(
+      success = TRUE,
+      error = NA_character_,
+      dgp_id = dgp_id,
+      estimator_id = estimator_id,
+      n = n,
+      seed = seed,
+      oracle = FALSE,
+      supports_qst = FALSE,
+      estimator_version = est_desc$version,
+      config_fingerprint_schema = 2L,
+      config_fingerprint = schema2_fp
+    ),
+    provenance = list()
+  )
+  pins::pin_write(
+    board = board,
+    x = obj,
+    name = CausalStress:::cs_result_pin_name_legacy(dgp_id, estimator_id, n, seed),
+    type = "rds",
+    metadata = list(
+      dgp_id = dgp_id,
+      estimator_id = estimator_id,
+      n = n,
+      seed = seed,
+      config_fingerprint_schema = 2L,
+      config_fingerprint = schema2_fp
+    )
+  )
+
+  expect_error(
+    cs_run_seeds(
+      dgp_id = dgp_id,
+      estimator_id = estimator_id,
+      n = n,
+      seeds = seed,
+      board = board,
+      skip_existing = TRUE,
+      show_progress = FALSE,
+      quiet = TRUE,
+      max_runtime = Inf
+    ),
+    class = "causalstress_schema_migration_error"
   )
 })

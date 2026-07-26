@@ -17,8 +17,8 @@ interface compatibility with the estimator contract.}
 for being stored in the returned metadata.}
 }
 \value{
-A list with components \code{att}, \code{qst}, \code{cf}, and \code{meta}, satisfying
-the estimator contract used in CausalStress.
+A list with typed \code{outputs} plus legacy \code{att}, \code{qst}, \code{cf}, and
+\code{meta} components, satisfying the estimator contract used in CausalStress.
 }
 \description{
 This estimator uses the structural treatment effect \code{structural_te}

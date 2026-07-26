@@ -6,11 +6,15 @@ make_dummy_reg <- function(status = "stable", version = "1.0.0", design_spec = "
     type = "synthetic",
     generator = list(function(n, seed = NULL) {
       if (!is.null(seed)) cs_set_rng(seed)
+      structural_te <- rep(0, n)
       list(
-        df = tibble::tibble(y0 = rep(0, n), y1 = rep(0, n), p = rep(0.5, n), structural_te = rep(0, n)),
+        df = tibble::tibble(
+          y = rep(0, n), w = rep(0, n), y0 = rep(0, n), y1 = rep(0, n),
+          p = rep(0.5, n), structural_te = structural_te, X1 = seq_len(n)
+        ),
         true_att = 0,
         true_qst = tibble::tibble(tau = cs_tau_oracle, value = rep(0, length(cs_tau_oracle))),
-        meta = list()
+        meta = list(dgp_id = "foo", type = "synthetic", structural_te = structural_te)
       )
     }),
     version = version,
@@ -25,6 +29,39 @@ make_dummy_reg <- function(status = "stable", version = "1.0.0", design_spec = "
 test_that("real registry validates (with informational warnings)", {
   res <- cs_validate_dgp_registry(strict = FALSE)
   expect_s3_class(res, "tbl_df")
+})
+
+test_that("strict registry validation executes all 24 synthetic versions", {
+  res <- suppressWarnings(cs_validate_dgp_registry(strict = TRUE))
+  expect_s3_class(res, "tbl_df")
+  expect_equal(nrow(res), 24L)
+  expect_true(all(res$type == "synthetic"))
+})
+
+test_that("registry executable validation uses canonical covariate predicate", {
+  bad_reg <- make_dummy_reg()
+  original <- bad_reg$generator[[1L]]
+  bad_reg$generator[[1L]] <- function(n, seed = NULL) {
+    out <- original(n = n, seed = seed)
+    names(out$df)[names(out$df) == "X1"] <- "x1"
+    out
+  }
+
+  with_mocked_bindings(
+    cs_dgp_registry = function() bad_reg,
+    expect_error(
+      cs_validate_dgp_registry(strict = TRUE),
+      class = "causalstress_dgp_error"
+    )
+  )
+
+  with_mocked_bindings(
+    cs_dgp_registry = function() bad_reg,
+    expect_warning(
+      cs_validate_dgp_registry(strict = FALSE),
+      "covariates must be named"
+    )
+  )
 })
 
 test_that("registry validation catches structural violations", {
@@ -83,5 +120,44 @@ test_that("registry validation enforces single stable per dgp_id", {
   with_mocked_bindings(
     cs_dgp_registry = function() reg_two_stable,
     expect_error(cs_validate_dgp_registry(strict = TRUE), "more than one stable", ignore.case = TRUE)
+  )
+})
+
+test_that("strict registry validation compares sidecar version and status", {
+  real_row <- cs_dgp_registry()[cs_dgp_registry()$dgp_id == "synth_baseline" &
+    cs_dgp_registry()$version == "1.6.0", , drop = FALSE]
+
+  with_mocked_bindings(
+    cs_dgp_registry = function() {
+      reg <- real_row
+      reg$version <- "9.9.9"
+      reg
+    },
+    expect_error(
+      cs_validate_dgp_registry(strict = TRUE),
+      "declares version 1.6.0",
+      ignore.case = TRUE
+    )
+  )
+
+  with_mocked_bindings(
+    cs_dgp_registry = function() {
+      reg <- real_row
+      reg$status <- "deprecated"
+      reg$rationale <- "test status mismatch"
+      reg
+    },
+    expect_error(
+      cs_validate_dgp_registry(strict = TRUE),
+      "status='stable'.*registry says 'deprecated'",
+      ignore.case = TRUE
+    )
+  )
+})
+
+test_that("deprecated DGP warnings include date_status_changed when present", {
+  expect_warning(
+    cs_get_dgp("synth_baseline", version = "1.3.0", quiet = FALSE),
+    "2026-01-11"
   )
 })

@@ -11,8 +11,8 @@
 #' @param config List of estimator-specific settings. Ignored here except
 #'   for being stored in the returned metadata.
 #'
-#' @return A list with components `att`, `qst`, `cf`, and `meta`, satisfying
-#'   the estimator contract used in CausalStress.
+#' @return A list with typed `outputs` plus legacy `att`, `qst`, `cf`, and
+#'   `meta` components, satisfying the estimator contract used in CausalStress.
 #'
 #' @export
 est_oracle_att <- function(df, tau = cs_tau_oracle, config = list()) {
@@ -46,8 +46,17 @@ est_oracle_att <- function(df, tau = cs_tau_oracle, config = list()) {
   }
 
   att_hat <- mean(tau_x[w == 1])
+  ate_hat <- cs_true_ate(tau_x)
 
   res <- list(
+    outputs = list(
+      att = list(
+        estimate = att_hat
+      ),
+      ate = list(
+        estimate = ate_hat
+      )
+    ),
     att = list(
       estimate = att_hat
     ),
@@ -56,7 +65,7 @@ est_oracle_att <- function(df, tau = cs_tau_oracle, config = list()) {
     meta = list(
       estimator_id = "oracle_att",
       version      = "0.0.1",
-      capabilities = c("att"),
+      capabilities = c("att", "ate"),
       target_level = "population",
       config       = config,
       warnings     = character(),

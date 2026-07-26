@@ -1,0 +1,223 @@
+# CausalStress v0.1.10 Batch Plan
+
+**Status:** Batch 6 complete after final release-gate review.
+
+## Review Protocol
+
+A batch is the unit of Codex code review. Work one batch at a time.
+Batch 0 closed under Claude review before this protocol amendment; starting with
+Batch 1, Codex code review is required after every implemented batch before the
+next batch starts. Claude or maintainer review may supplement this gate, but it
+does not replace the required Codex review.
+
+For implementation or governance batches:
+
+- finish the scoped batch;
+- run targeted consistency checks;
+- update `v0_1_10_tickets.md`, `tickets.yml`, and this batch plan together;
+- stop and ask for Codex code review with an inline prompt;
+- do not proceed to the next batch until the Codex review findings are routed.
+
+If a batch starts requiring broad unrelated diffs or work outside the ticket,
+stop and ask before continuing.
+
+## Batch 0 - Governance Bootstrap
+
+- **Status:** Complete after Claude review.
+- **Purpose:** Install the spec-packet governance structure.
+- **Tickets:** CS-1100
+- **Scope completed:** authority README, contract index, release gate, RFC cycle,
+  roadmap, horizon, archive index, audit records, canonical templates, v0.1.10
+  spec packet, ticket files, batch plan, and release closeout scaffold.
+- **Review checkpoint:** authority index and packet scaffold reviewed before
+  implementation batches begin.
+- **Review evidence:** Claude review reported no blocking findings and confirmed
+  Batch 0 is ready to close. Non-blocking wording/process fixes were routed in
+  the Batch 0 closeout commit.
+
+## Batch 1 - Mechanical High-Yield Fixes
+
+- **Status:** Complete after review.
+- **Purpose:** Fix top-priority correctness and packaging defects with focused
+  tests.
+- **Tickets:** CS-1101, CS-1102, CS-1103, CS-1104
+- **Scope completed:** TMLE now extracts `fit$estimates$ATT` under the existing
+  `tmle_att` id; batch workers preserve task errors and reconcile planned tasks
+  against result/error counts; runtime imports are declared in `DESCRIPTION`;
+  DGP validation iterates every registered `(dgp_id, version)` row and rejects
+  missing potential outcomes.
+- **Checks run:** June 12, 2026, with
+  `C:/PROGRA~1/R/R-45~1.2/bin/x64/Rscript.exe` and `.libPaths()` =
+  `C:/Users/maxth/Documents/R/win-library/4.5`;
+  `C:/Users/maxth/AppData/Local/R/win-library/4.5`;
+  `C:/Program Files/R/R-4.5.2/library`. Focused testthat filter
+  `est-tmle|v019-worker|v019-e2e|validate-dgp|validate-all` passed; local
+  runtime probe confirmed `tmle::tmle()` exposes `ATT$psi` and `ATT$CI`;
+  `devtools::check()` with `--no-manual --ignore-vignettes` and build-stage
+  vignette rebuilding disabled completed with 0 errors and dependency checks
+  OK.
+- **Review evidence:** Claude review found one blocking dependency issue
+  (`yaml` still Suggests-only) and three non-blocking routing notes; the
+  dependency issue and routing notes were fixed, re-reviewed, and cleared for
+  commit. Batch 1 committed as `068c0ff`.
+- **Review checkpoint:** Codex code review confirms C4 uses
+  `fit$estimates$ATT` under the existing `tmle_att` id, C1 semantics,
+  dependency declarations, and validator negative tests.
+
+## Batch 2 - Schema 3, RNG Isolation, and Oracle Truth Cache Identity
+
+- **Status:** Complete after review.
+- **Purpose:** Coordinate resume/fingerprint, RNG, and oracle truth cache
+  identity changes under one design.
+- **Tickets:** CS-1105, CS-1106, CS-1107, CS-1117
+- **Scope completed:** CS-1105 draft synthesis added at
+  `inst/design/rfc/20260612_schema3_rng_oracle_synthesis.md`, covering
+  schema-3 fingerprint payload, versioned pin identity, canonical planner
+  fingerprints, RNG isolation, and oracle truth cache identity/atomicity.
+- **Review evidence:** CS-1105 synthesis was reviewed with no blocking findings;
+  non-blocking amendments were routed in the RFC; maintainer accepted CS-1105 as
+  amended on 2026-06-12.
+- **Implementation completed:** CS-1106 schema-3 fingerprints, versioned pin
+  identity, exact-version resume, schema-2/v0.1.7 compatibility handling, and
+  canonical planner fingerprints; CS-1107 RNG preservation for load validation,
+  validation helpers, and campaign planning; CS-1117 oracle algorithm
+  fingerprinted cache identity and atomic temp-write/rename cache writes.
+- **Checks run:** design-document consistency review against audit C2, C3, M3,
+  M7, M8, M12; `contracts.md`; and the current fingerprint, runner, campaign,
+  planner, load-validation, RNG, and oracle truth-cache code paths.
+- **Implementation checks run:** June 12, 2026, with
+  `C:/Program Files/R/R-4.5.2/bin/x64/Rscript.exe`; focused testthat filter
+  `fingerprint|resume|v019-planner|rng-isolation|oracle-truth|pins-integration|pin-management|force-overwrite|usability-permutations|v018-parallel-gating|parallel-protocol|v019-worker|v019-e2e`
+  passed. Remaining warnings are pre-existing tidyselect `.data` deprecations
+  in the v0.1.9 e2e path. `devtools::check(document = FALSE,
+  build_args = '--no-build-vignettes', args = c('--no-manual',
+  '--ignore-vignettes'), error_on = 'never')` completed with 0 errors, 4
+  warnings, and 4 notes; the remaining warnings/notes are pre-existing
+  documentation/package-structure items, and dependency/codoc checks are OK.
+- **Review checkpoint:** accepted RFC synthesis before implementation; focused
+  Codex code review after implementation.
+- **Review evidence:** Claude review reported no blocking findings, verified
+  all CS-1105 amendments and Batch 2 code paths, and cleared Batch 2 for
+  commit after confirming no `withr::` calls remain in `R/`. Non-blocking
+  migration note for legacy v0.1.9 boards was routed to release closeout.
+
+## Batch 3 - Constitutionally Gated Fixes
+
+- **Status:** Complete after review.
+- **Purpose:** Resolve issues requiring constitutional decisions.
+- **Tickets:** CS-1108, CS-1109
+- **Scope completed:** Draft synthesis added at
+  `inst/design/rfc/20260613_oracle_access_bitwise_scope_synthesis.md`.
+  Recommended decisions: implement column-scoped config-based oracle access for
+  CS-1108, and amend Article II to same-substrate bitwise identity plus
+  tolerance-level cross-substrate reproducibility for CS-1109. The synthesis was
+  amended after design review to clarify Article III structural-oracle access,
+  name the `config$use_structural_te` flag, specify estimator descriptor fields
+  for oracle-column grants, add metadata tests, cross-reference Article VII
+  performance refactors, and add a release-gate substrate-evidence hook.
+- **Decision evidence:** Maintainer accepted the Batch 3 RFC as amended on
+  2026-06-13.
+- **Implementation completed:** CS-1108 column-scoped oracle grants implemented
+  through estimator descriptor fields, config flags, fail-closed airlock checks,
+  metadata recording, and tests. CS-1109 Article II/VII substrate-scoped
+  reproducibility amendment implemented with same-substrate regression evidence
+  for `synth_hd_sparse_plm` and a release-gate substrate-evidence requirement.
+- **Implementation checks run:** June 13, 2026, with
+  `C:/Program Files/R/R-4.5.2/bin/x64/Rscript.exe`; focused testthat filter
+  `airlock|estimator-registry|integrity-capabilities|reproducibility-scope|runner-single|collect`
+  passed. Remaining warnings are pre-existing estimator/tidyselect warnings in
+  existing tests. `devtools::check(document = FALSE,
+  build_args = '--no-build-vignettes', args = c('--no-manual',
+  '--ignore-vignettes'), error_on = 'never')` completed with 0 errors, 4
+  warnings, and 4 notes; the remaining warnings/notes are pre-existing
+  documentation/package-structure items, and dependency/codoc checks are OK.
+- **Review checkpoint:** RFC/amendment path complete before code change; Codex
+  code review after implementation.
+- **Review evidence:** Claude review reported no blocking findings and verified
+  the accepted amended RFC was implemented faithfully for CS-1108 and CS-1109.
+  Non-blocking full-suite future-state contamination was routed to CS-1116, and
+  the oracle-truth-path same-substrate evidence gap was closed by the Batch 6
+  release-gate evidence.
+
+## Batch 4 - Governance Conformance
+
+- **Status:** Complete after review.
+- **Purpose:** Close remaining major runner, registry, gatekeeper, and batching
+  conformance gaps.
+- **Tickets:** CS-1110, CS-1111, CS-1112, CS-1113, CS-1114, CS-1115
+- **Scope completed:** CS-1110 gatekeeper ATT/QST CI-less paths now report
+  `UNVERIFIED`; CS-1111 planned campaign parallel execution requires
+  `experimental_parallel`, records provenance, scopes thread caps, and leaves
+  DGP warnings loud by default; CS-1112 strict registry validation checks
+  sidecar version/status and dated deprecation warnings; CS-1113 missing
+  estimator packages and low bootstrap CI success become explicit failed rows
+  with classed warnings; CS-1114 campaign `...` and planned task `tau` reach
+  `cs_run_single()`; CS-1115 new batch artifacts validate task
+  fingerprint/schema metadata and tidy rows propagate required schema fields.
+- **Implementation checks run:** June 14, 2026, with
+  `C:/Program Files/R/R-4.5.2/bin/x64/Rscript.exe` and `NOT_CRAN=true`;
+  focused test files `test-gatekeeper.R`, `test-validate-dgp-registry.R`,
+  `test-robust-bootstrap.R`, `test-runner-single.R`, `test-run-campaign.R`,
+  `test-v018-parallel-gating.R`, `test-v019-worker.R`,
+  `test-v019-runner.R`, and `test-consolidate-schema.R` passed with 0
+  failures, 0 warnings, and 0 skips in the executed set.
+- **Review checkpoint:** Codex code review confirms the release-gate validation
+  suite can pass after this batch.
+
+## Batch 5 - Cleanup
+
+- **Status:** Complete after review.
+- **Purpose:** Route minors and design-document corrections.
+- **Tickets:** CS-1116
+- **Scope completed:** removed the duplicate `cs_tidy_run` alias/Rd entry;
+  added a classed warning for requested QST tau values without matching truth
+  rows; restored prior `future::plan()` state in the robust-bootstrap test;
+  reconciled low-bootstrap `success = FALSE` semantics in `contracts.md`; added
+  explicit Markdown/YAML LF rules in `.gitattributes`; routed D1-D5 and
+  remaining release-gate documentation backlog in `release_closeout.md`; and
+  fixed Batch 4 `cs_run_batch()`/`cs_run_campaign()` Rd drift plus the `%||%`
+  Rd-name warning.
+- **Checks run:** June 14, 2026, with
+  `C:/Program Files/R/R-4.5.2/bin/x64/Rscript.exe` and `NOT_CRAN=true`;
+  focused test files `test-v018-contract-fail-loud.R`,
+  `test-robust-bootstrap.R`, `test-runner-single.R`, `test-tidy.R`,
+  `test-timing.R`, `test-v019-e2e.R`, and `test-v019-worker.R` passed. Full
+  `devtools::test(reporter='summary')` passed. `devtools::check(document =
+  FALSE, build_args = '--no-build-vignettes', args = c('--no-manual',
+  '--ignore-vignettes', '--no-tests'), error_on = 'never')` completed with 0
+  errors, 2 warnings, and 4 notes; the remaining warnings/notes are routed to
+  the release gate as documentation/package-structure backlog, and code/doc
+  mismatches are OK.
+- **Review evidence:** Batch 5 review reported no blocking findings, verified
+  every CS-1116 cleanup item, and found one non-blocking Batch 4 status drift;
+  the status drift was corrected before commit.
+- **Review checkpoint:** Codex code review confirms every audit finding is
+  ticketed, deferred, or rejected.
+
+## Batch 6 - v0.1.10 Release Gate
+
+- **Purpose:** Verify release readiness and record closeout evidence.
+- **Tickets:** CS-1118
+- **Status:** Complete after final release-gate review.
+- **Scope:** read `inst/design/release_gate.md`; run or explicitly defer every
+  required gate; verify the design README planning state; complete
+  `release_closeout.md`; stop for final review before tagging or merging.
+- **Scope completed:** `DESCRIPTION` and `NEWS.md` now identify v0.1.10;
+  package-check warnings/notes were fixed rather than deferred; the release
+  closeout records validation, full-test, full-check, audit-routing, README,
+  constitutional, substrate, and include-truth same-substrate evidence.
+- **Test evidence:** On 2026-06-14 with
+  `C:\Program Files\R\R-4.5.2\bin\x64\Rscript.exe`, final
+  `devtools::check(document = FALSE, build_args = "--no-build-vignettes",
+  args = c("--no-manual", "--ignore-vignettes"), error_on = "never")`
+  returned `Status: OK` for `CausalStress_0.1.10` with 0 errors, 0 warnings,
+  and 0 notes. Focused validation returned `registry_strict_rows=24`,
+  `validate_registry_rows=24; all_valid=TRUE`, and
+  `include_truth_bitwise=TRUE`; all focused validation test files passed.
+- **Review checkpoint:** final Codex code review confirms all release-gate
+  evidence is recorded, skipped gates have rationale, audit routing is complete,
+  and no constitutional violation is known open except by constitutional
+  amendment.
+- **Review evidence:** Claude review accepted Batch 6 / CS-1118 on 2026-06-14
+  with no blocking findings, independently reproducing the full check,
+  validation suite, and include-truth same-substrate bitwise evidence.

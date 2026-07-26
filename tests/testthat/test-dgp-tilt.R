@@ -24,7 +24,8 @@ test_that("synth_tilt_mild propensity is tilted (non-baseline distribution)", {
 test_that("synth_tilt_mild is registered", {
   reg <- cs_dgp_registry()
   row <- reg[reg$dgp_id == "synth_tilt_mild", , drop = FALSE]
-  expect_equal(nrow(row), 1L)
-  expect_equal(row$type, "synthetic")
-  expect_true(nchar(row$description) > 0)
+  expect_true(nrow(row) >= 1L)
+  expect_true(all(row$type == "synthetic"))
+  expect_true(all(nchar(row$description) > 0))
+  expect_true("1.6.0" %in% row$version)
 })

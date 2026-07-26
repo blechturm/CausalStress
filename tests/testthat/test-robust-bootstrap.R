@@ -21,11 +21,17 @@ test_that("bootstrap instability triggers NA CIs and warning", {
     ci_lo <- NA_real_
     ci_hi <- NA_real_
     n_ok <- 0L
+    n_fail <- 0L
+    ci_fail_code <- NA_character_
+    ci_valid <- NA
     if (identical(config$ci_method, "bootstrap")) {
       ci_res <- cs_bootstrap_ci(stat_fn, df, n_boot = config$n_boot, seed = config$seed)
       ci_lo <- if (length(ci_res$ci_lo) > 0) ci_res$ci_lo[1] else NA_real_
       ci_hi <- if (length(ci_res$ci_hi) > 0) ci_res$ci_hi[1] else NA_real_
       n_ok <- if (length(ci_res$meta$n_boot_ok) > 0) ci_res$meta$n_boot_ok[1] else 0L
+      n_fail <- if (length(ci_res$meta$n_boot_fail) > 0) ci_res$meta$n_boot_fail[1] else 0L
+      ci_fail_code <- ci_res$meta$ci_fail_code %||% NA_character_
+      ci_valid <- ci_res$meta$ci_valid %||% NA
     }
 
     list(
@@ -35,7 +41,11 @@ test_that("bootstrap instability triggers NA CIs and warning", {
         estimator_id = "flaky_boot",
         oracle = FALSE,
         supports_qst = FALSE,
-        n_boot_ok = n_ok
+        ci_method = config$ci_method,
+        n_boot_ok = n_ok,
+        n_boot_fail = n_fail,
+        ci_valid = ci_valid,
+        ci_fail_code = ci_fail_code
       )
     )
   }
@@ -53,21 +63,26 @@ test_that("bootstrap instability triggers NA CIs and warning", {
   )
 
   # serial plan for reproducibility
+  old_plan <- future::plan()
+  on.exit(future::plan(old_plan), add = TRUE)
   future::plan(future::sequential)
-  on.exit(future::plan(future::sequential), add = TRUE)
 
-  res <- cs_run_single(
-    dgp_id        = "synth_baseline",
-    estimator_id  = "flaky_boot",
-    n             = 100,
-    seed          = 1,
-    bootstrap     = TRUE,
-    B             = 20,
-    parallel      = FALSE,
-    show_progress = FALSE
+  expect_warning(
+    res <- cs_run_single(
+      dgp_id        = "synth_baseline",
+      estimator_id  = "flaky_boot",
+      n             = 100,
+      seed          = 1,
+      bootstrap     = TRUE,
+      B             = 20,
+      parallel      = FALSE,
+      show_progress = FALSE
+    ),
+    class = "causalstress_ci_warning"
   )
 
-  expect_true(res$meta$success)
+  expect_false(res$meta$success)
+  expect_match(res$meta$error, "Bootstrap CI failed validation")
   expect_true(is.na(res$att$ci_lo))
   expect_true(res$meta$n_boot_ok < 18)  # below 90% of 20
 })

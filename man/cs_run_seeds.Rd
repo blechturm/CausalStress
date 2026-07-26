@@ -2,7 +2,7 @@
 % Please edit documentation in R/cs-runner.R
 \name{cs_run_seeds}
 \alias{cs_run_seeds}
-\title{Run a DGP × estimator combination over multiple seeds}
+\title{Run a DGP x estimator combination over multiple seeds}
 \usage{
 cs_run_seeds(
   dgp_id,
@@ -22,6 +22,7 @@ cs_run_seeds(
   quiet = FALSE,
   max_runtime = Inf,
   parallel = FALSE,
+  experimental_parallel = FALSE,
   staging_dir = NULL
 )
 }
@@ -42,23 +43,44 @@ in the output tibble.}
 \item{tau}{Numeric vector of quantile levels. Passed through to the
 estimator via \code{\link[=cs_run_single]{cs_run_single()}}. Default is \link{cs_tau_oracle}.}
 
+\item{bootstrap}{Logical; runner-level convenience flag. When \code{TRUE} and
+\code{config$ci_method} is missing, the runner sets it to \code{"bootstrap"} and also
+injects \code{config$seed} from each per-seed \code{seed} (see \link{cs_ci_methods}).}
+
+\item{B}{Integer; convenience alias for \code{config$n_boot} when \code{bootstrap=TRUE}.
+Only used if \code{config$n_boot} is missing.}
+
 \item{config}{List of estimator-specific configuration options. Passed
 through to the estimator via \code{\link[=cs_run_single]{cs_run_single()}}.}
+
+\item{board}{Optional pins board for persistence.}
 
 \item{force}{Logical; if \code{TRUE}, recompute even when pins exist (alias for
 setting \code{skip_existing = FALSE}).}
 
+\item{skip_existing}{Logical; whether to resume from existing pins.}
+
+\item{show_progress}{Logical; whether to display per-seed progress messages.}
+
 \item{quiet}{Logical; if \code{TRUE}, suppress DGP governance warnings inside
 per-seed runs (use with care; pre-flight still warns once).}
+
+\item{max_runtime}{Numeric scalar; maximum allowed runtime (seconds) per seed.}
+
+\item{parallel}{Logical; if \code{TRUE}, uses furrr/future for parallel execution.}
+
+\item{experimental_parallel}{Logical; must be \code{TRUE} to enable parallel mode.}
+
+\item{staging_dir}{Optional staging directory for crash recovery.}
 }
 \value{
-A tibble with one row per seed and at least the columns returned
-by \code{\link[=cs_run_single]{cs_run_single()}}, including \code{dgp_id}, \code{estimator_id}, \code{n}, \code{seed},
-\code{oracle}, \code{supports_qst}, \code{true_att}, \code{est_att}, \code{att_error},
-\code{att_abs_error}.
+A tibble with one row per seed. Scalar identifiers and ATT metrics
+are flattened; QST and canonical typed score records are retained in the
+\code{qst} and \code{scores} list columns.
 }
 \description{
 This function repeatedly calls \code{\link[=cs_run_single]{cs_run_single()}} for a given DGP and
-estimator, using a vector of seeds. It returns a tibble with one row
-per seed and the same columns as \code{\link[=cs_run_single]{cs_run_single()}}.
+estimator, using a vector of seeds. It flattens each structured result into
+one analysis row while retaining QST and canonical score tables in list
+columns.
 }

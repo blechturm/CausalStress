@@ -1,0 +1,156 @@
+version: "0.2.0"
+packet: "causalstress_v0_2_0_correction_packet"
+status: ACTIVE
+tickets:
+  - id: "CS-1220"
+    title: "Ratify and apply Constitution v2.0.1"
+    batch: 0
+    source: {type: "rfc", id: "20260722_covariate_naming_synthesis"}
+    files:
+      - "inst/design/CAUSAL_STRESS_CONSTITUTION.md"
+      - "inst/design/README.md"
+      - "NEWS.md"
+    constitutional_check: "Patch-amendment process; preserve v2.0.0 history and historical RFCs"
+    test_obligation: "v2.0.1 header/history and three live real-data DGP sites match the accepted synthesis; type=real and implementation remain unchanged"
+    review_gate: "Maintainer ratification/application review before CS-1221"
+    disposition: "complete_after_review"
+
+  - id: "CS-1221"
+    title: "Enforce canonical synthetic covariate names"
+    batch: 1
+    source: {type: "rfc/constitution", id: "20260722_covariate_naming_synthesis,constitution-v2.0.1"}
+    files:
+      - "R/cs-contracts.R"
+      - "R/cs-validate-registry.R"
+      - "R/cs-validate-dgp.R"
+      - "inst/design/contracts.md"
+      - "tests/testthat"
+    constitutional_check: "Implement after CS-1220; no DGP, truth, RNG, version, or type=real change"
+    test_obligation: "One shared predicate covers internal, all-version registry, and public validation; all 24 pass and malformed covariate names fail closed without RNG leakage"
+    review_gate: "Focused constitutional-contract review and all-version validation"
+    disposition: "complete_after_review"
+
+  - id: "CS-1222"
+    title: "Correct QST score-record and row identity"
+    batch: 1
+    source: {type: "contract/spec", id: "v0_2_0_spec-line-155,constitution-article-V-5.2"}
+    files:
+      - "R/cs-fingerprint.R"
+      - "R/cs-contracts.R"
+      - "R/cs-runner.R"
+      - "R/cs-accessors.R"
+      - "R/cs-result-to-row.R"
+      - "R/cs-pins.R"
+      - "R/cs-provenance.R"
+      - "inst/design/contracts.md"
+      - "tests/testthat"
+    constitutional_check: "One fit x target x metric is one score record; tau is a row coordinate; schema remains unreleased version 4"
+    test_obligation: "QST record fingerprints are shared, row fingerprints are unique/deterministic, scalar/status coordinates are canonical, and all projections preserve both levels"
+    review_gate: "Schema-4 identity and compatibility-surface review"
+    disposition: "complete_after_review"
+
+  - id: "CS-1223"
+    title: "Repair release-blocking README and roxygen claims"
+    batch: 2
+    source: {type: "audit/maintenance", id: "release-documentation-truthfulness"}
+    files:
+      - "README.Rmd"
+      - "README.md"
+      - "R"
+      - "man"
+      - "NEWS.md"
+    constitutional_check: "No overclaim about scientific status, real-data support, estimands, airlock security, or parallelism"
+    test_obligation: "README renders, roxygen regenerates, stale/nonexistent claims are absent, examples parse/run, and R CMD check has no documentation errors or warnings"
+    review_gate: "Release-facing truthfulness review"
+    disposition: "complete_after_review"
+
+  - id: "CS-1224"
+    title: "Normalize release governance and route deferrals"
+    batch: 2
+    source: {type: "governance/review", id: "packet-status-and-release-boundary"}
+    files:
+      - "inst/design/README.md"
+      - "inst/design/horizon.md"
+      - "inst/design/roadmap.md"
+      - "inst/design/causalstress_v0_2_0_correction_packet"
+      - "inst/design/causalstress_v0_2_0_ci_packet"
+    constitutional_check: "Do not edit the closed Wave 1 v0.2.0 spec or claim deferred implementation"
+    test_obligation: "Packet states and v0.2.0 boundary are unambiguous; CATE, families, real-data, feature roster, persistence, and full docs are routed"
+    review_gate: "Governance consistency review"
+    disposition: "complete_after_review"
+
+  - id: "CS-1225"
+    title: "Run the post-correction local release gate"
+    batch: 3
+    source: {type: "process", id: "release_gate,release_ci_playbook,CS-1214"}
+    files:
+      - "inst/design/causalstress_v0_2_0_correction_packet/release_closeout.md"
+      - "inst/design/causalstress_v0_2_0_ci_packet/release_closeout.md"
+    constitutional_check: "Refuse closeout while any constitutional violation remains open"
+    test_obligation: "Fresh focused/full tests, strict validation, lint, coverage, substrate, Windows/WSL checks, acceptance audit, SHA, and commands are recorded"
+    review_gate: "Independent final local-gate review feeding CS-1214"
+    disposition: "complete_after_review"
+
+  - id: "CS-1228"
+    title: "Retire archived qs from the v0.2.0 runtime"
+    batch: 3
+    source: {type: "ci-failure/maintainer-decision", id: "13bd7a2,56376a6,minimal-rds-retirement"}
+    files:
+      - "DESCRIPTION"
+      - "R/cs-staging.R"
+      - "R/cs-run-batch.R"
+      - "R/cs-campaign-runner.R"
+      - "R/cs-consolidate.R"
+      - "R/cs-oracle-truth.R"
+      - "inst/design/contracts.md"
+      - "tests/testthat"
+      - ".github/workflows"
+      - "tools/ci-install-archived-qs.R"
+      - "NEWS.md"
+      - "inst/design/causalstress_v0_2_0_correction_packet/release_closeout.md"
+      - "inst/design/causalstress_v0_2_0_ci_packet/release_closeout.md"
+    constitutional_check: "Preserve Article VI atomicity and classed failures; change only private encoding; no scientific, identity, schema, pin-name, or public-signature change; never mutate legacy qs evidence"
+    test_obligation: "RDS-only staging/cache runtime, shared non-pluggable atomic boundary, no qs runtime/CI path, strict current-artifact and pre-existing-destination validation without overwrite, classed legacy staging refusal, immutable legacy oracle-cache coexistence, and fresh local plus R release/devel remote gates"
+    review_gate: "Independent specification review before implementation, then focused persistence/atomicity and final-gate review"
+    disposition: "complete_after_review"
+
+  - id: "CS-1229"
+    title: "Document heavytail estimand boundary and moment-regime metric limits"
+    batch: 2
+    source: {type: "audit/maintainer-adjudication", id: "pass2-scientific-review"}
+    files:
+      - "inst/dgp_meta/synth_heavytail.Rmd"
+      - "R/cs-summary.R"
+      - "man/cs_summarise_runs.Rd"
+      - "README.Rmd"
+      - "README.md"
+      - "inst/dgp_meta/*.Rmd (six v1.6.0 CRN dossiers: baseline/heavytail/nonlinear_heteroskedastic/overlap_stressed/qte1/tilt_mild)"
+      - "R/dgp-synth-heavytail.R"
+      - "inst/design/horizon.md"
+    constitutional_check: "Documentation only; no DGP logic/truth/RNG/scoring change; keep synth_heavytail stable (NO demotion); no constitutional amendment; the R comment edit is bitwise-identical output (Art VII 7.2.d)"
+    test_obligation: "Exact wording per inst/design/audit/pass2/maintainer-adjudication.md 6. Heavytail dossier distinguishes the conventional mean potential-outcome ATT (nonexistent under Cauchy) from the governed structural signal anchor and states 'not an ATT shootout; use QST'. cs_summarise_runs roxygen warns mean/SD/RMSE summaries require finite moments. README states synth_heavytail is an estimand-boundary DGP, not an ATT-ranking scenario. No 'eliminates Monte Carlo noise' wording remains in any dossier or R comment (replaced by 'reduces MC variance; does not eliminate empirical-quantile sampling uncertainty'). README renders; devtools::document regenerates man. Atomic point_error score rows are NOT suppressed."
+    review_gate: "Release-facing documentation-truthfulness review (as CS-1223)"
+    disposition: "complete_after_review"
+
+  - id: "CS-1226"
+    title: "Publish the immutable v0.1.10 archival release"
+    batch: 3
+    source: {type: "release-lineage", id: "v0.1.10-closeout"}
+    files: []
+    constitutional_check: "Push the existing annotated tag unchanged; never move, delete, or recreate it"
+    test_obligation: "v0.1.10 resolves to d05164a856b3e19101b989021f20dabe0b2a00a8; archival/pre-CI public URL and tag object are recorded"
+    review_gate: "Maintainer approval immediately before external publication"
+    disposition: "complete_after_review"
+
+  - id: "CS-1227"
+    title: "Complete remote CI and publish v0.2.0"
+    batch: 3
+    source: {type: "process/release", id: "CS-1214,release_ci_playbook,correction-packet"}
+    files:
+      - "inst/design/README.md"
+      - "inst/design/causalstress_v0_2_0_correction_packet/release_closeout.md"
+      - "inst/design/causalstress_v0_2_0_ci_packet/release_closeout.md"
+    constitutional_check: "No blocker remains; reviewed v0.2.0 tag target is immutable"
+    test_obligation: "Green branch/main/tag CI URLs, version 0.2.0, Constitution 2.0.1, fresh local gate, tag target, ticket routing, and FINAL packet states are recorded"
+    review_gate: "Maintainer final release decision after CS-1214, CS-1226, CS-1228, and CS-1229"
+    disposition: "blocked_by_CS-1214"

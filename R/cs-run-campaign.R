@@ -4,6 +4,9 @@
 #' (dgp_id, estimator_id, seed) with dynamic load balancing, making it
 #' the recommended entry point for large heterogeneous campaigns.
 #'
+#' @param plan Optional plan tibble from `cs_plan_campaign()`. If supplied,
+#'   `cs_run_campaign()` will execute the planned batches and ignore the
+#'   grid-based arguments.
 #' @param dgp_ids Character vector of DGP IDs.
 #' @param estimator_ids Character vector of estimator IDs.
 #' @param dgp_id Deprecated alias for `dgp_ids` (scalar character).
@@ -11,7 +14,8 @@
 #' @param seeds Integer vector of seeds.
 #' @param n Integer sample size per run.
 #' @param defaults Optional default estimator config list forwarded to
-#'   `cs_run_single()` (e.g., `list(n_boot = 200, num_threads = 1L)`).
+#'   `cs_run_single()` (e.g., `list(n_boot = 200, num_threads = 1L)`). Common
+#'   fields include `ci_method` (see [cs_ci_methods]).
 #' @param overrides Optional named list of estimator-specific config overrides
 #'   (e.g., `list(tmle_att = list(ci_method = "native"))`). Each override is
 #'   merged over `defaults` using `utils::modifyList()`.
@@ -19,22 +23,60 @@
 #'   shuffle task execution order for better load balancing without relying on
 #'   ambient RNG state. If `NULL`, tasks are executed in deterministic grid
 #'   order.
+#' @param version Optional DGP version string forwarded to [cs_get_dgp()].
+#' @param status Optional DGP status filter forwarded to [cs_get_dgp()].
+#' @param tau Numeric vector of quantile levels forwarded to [cs_run_single()].
 #' @param skip_existing Logical; if TRUE, skip tasks already pinned on `board`.
 #' @param board Optional pins board for persistence.
 #' @param staging_dir Optional staging directory for crash recovery.
 #' @param parallel Logical; if TRUE, uses furrr/future for parallel execution.
+#' @param experimental_parallel Logical; must be `TRUE` to enable experimental
+#'   parallel execution.
+#' @param workers Number of parallel workers for plan-based execution.
 #' @param show_progress Logical; show progressr-based progress.
+#' @param force Logical; if `TRUE`, recompute even when existing pins are found.
+#' @param quiet Logical; if `TRUE`, suppress DGP governance warnings in
+#'   per-task runs. Defaults to `FALSE` so governance warnings remain loud.
+#' @param max_runtime Numeric scalar; maximum allowed runtime in seconds per
+#'   task.
+#' @param bootstrap Logical; runner-level convenience flag forwarded to
+#'   [cs_run_single()]. When `TRUE` and `ci_method` is missing in the resolved
+#'   config, bootstrap CIs are requested and the per-task seed is injected (see
+#'   [cs_ci_methods]).
+#' @param B Integer; convenience alias forwarded to [cs_run_single()] for setting
+#'   `config$n_boot` when `bootstrap=TRUE`.
 #' @param ... Additional arguments forwarded to cs_run_single() (tau, etc.).
 #'
-#' @return Tibble with one row per run.
+#' @return Tibble with one row per run (grid mode) or invisibly returns the
+#'   batch ids executed (plan mode).
 #' @export
+#'
+#' @examples
+#' \dontrun{
+#' plan <- cs_plan_campaign(
+#'   dgp_list = "synth_baseline",
+#'   estimator_list = "lm_att",
+#'   n_seeds = 1:4,
+#'   batch_size = 2,
+#'   campaign_seed = 123,
+#'   strategy_map = list(defaults = list(n = 200))
+#' )
+#' cs_run_campaign(
+#'   plan = plan,
+#'   staging_dir = "staging_batches",
+#'   workers = 2,
+#'   experimental_parallel = TRUE
+#' )
+#' cs_consolidate(staging_dir = "staging_batches", board = pins::board_temp())
+#' }
 cs_run_campaign <- function(
+  plan = NULL,
   dgp_ids = NULL,
   estimator_ids = NULL,
   dgp_id = NULL,
   estimator_id = NULL,
-  seeds,
-  n,
+  seeds = NULL,
+  n = NULL,
   defaults = list(),
   overrides = list(),
   campaign_seed = NULL,
@@ -48,12 +90,26 @@ cs_run_campaign <- function(
   staging_dir = NULL,
   parallel = FALSE,
   experimental_parallel = FALSE,
+  workers = parallel::detectCores() - 1L,
   show_progress = TRUE,
   force = FALSE,
-  quiet = TRUE,
+  quiet = FALSE,
   max_runtime = Inf,
   ...
 ) {
+  if (!is.null(plan)) {
+    if (is.null(staging_dir) || !nzchar(staging_dir)) {
+      rlang::abort("`staging_dir` must be provided when plan is supplied.")
+    }
+    return(cs_run_campaign_plan(
+      plan = plan,
+      staging_dir = staging_dir,
+      board = board,
+      workers = workers,
+      show_progress = show_progress,
+      experimental_parallel = experimental_parallel
+    ))
+  }
   dots <- list(...)
   # Backward compatibility: `config` / `config_by_estimator` were the previous
   # names for `defaults` / `overrides`. Prefer the new names for clarity.
@@ -86,6 +142,12 @@ cs_run_campaign <- function(
   }
   if (is.null(estimator_ids) || length(estimator_ids) == 0L) {
     rlang::abort("`estimator_ids` must be a non-empty character vector.", class = "causalstress_contract_error")
+  }
+  if (is.null(seeds) || length(seeds) == 0L) {
+    rlang::abort("`seeds` must be a non-empty integer vector.", class = "causalstress_contract_error")
+  }
+  if (is.null(n) || length(n) != 1L || !is.finite(n)) {
+    rlang::abort("`n` must be a finite numeric scalar.", class = "causalstress_contract_error")
   }
 
   tasks <- tidyr::expand_grid(
@@ -125,16 +187,12 @@ cs_run_campaign <- function(
     }
     cfg
   }
-
-  apply_runner_defaults <- function(cfg, seed_i) {
-    if (is.null(cfg$seed)) {
-      cfg$seed <- seed_i
-    }
-    if (isTRUE(bootstrap) && B > 0L && is.null(cfg$n_boot)) {
-      cfg$n_boot <- B
-    }
-    cfg
-  }
+  invisible(lapply(unique(tasks$estimator_id), function(est_id) {
+    cs_assert_wave1_targets_executable(
+      config = resolve_config(est_id),
+      estimator_desc = cs_get_estimator(est_id)
+    )
+  }))
 
   # Skip existing pins if requested (with fingerprint/CI checks)
   should_try_cache <- isTRUE(skip_existing) && !isTRUE(force)
@@ -146,56 +204,39 @@ cs_run_campaign <- function(
       est_id_i  <- tasks$estimator_id[i]
       n_i       <- tasks$n[i]
       seed_i    <- tasks$seed[i]
+      dgp_desc_i <- cs_get_dgp(dgp_id_i, version = version, status = status, quiet = TRUE)
+      dgp_version_i <- dgp_desc_i$version[[1L]]
 
-      if (cs_pin_exists(board, dgp_id_i, est_id_i, n_i, seed_i)) {
-        name <- glue::glue(
-          "results__dgp={dgp_id_i}__est={est_id_i}__n={n_i}__seed={seed_i}"
-        )
+      name <- cs_find_result_pin(
+        board = board,
+        dgp_id = dgp_id_i,
+        dgp_version = dgp_version_i,
+        estimator_id = est_id_i,
+        n = n_i,
+        seed = seed_i
+      )
+      if (!is.na(name)) {
         meta_obj <- pins::pin_meta(board, name)
         md <- cs_pin_meta_user_or_metadata(meta_obj)
         stored_fp <- md$config_fingerprint %||% NULL
         est_desc <- cs_get_estimator(est_id_i)
-        task_config <- apply_runner_defaults(resolve_config(est_id_i), seed_i)
+        caller_config <- resolve_config(est_id_i)
         stored_schema <- suppressWarnings(as.integer(md$config_fingerprint_schema %||% NA_integer_))
-        expected_fp <- if (is.na(stored_schema) || stored_schema == 1L) {
-          if (is.finite(max_runtime)) {
-            rlang::abort(
-              message = "Cannot resume legacy (v0.1.7) pins with non-infinite `max_runtime`; legacy fingerprints do not encode runtime guards.",
-              class   = "causalstress_fingerprint_error"
-            )
-          }
-          cs_build_config_fingerprint_legacy(
-            dgp_id            = dgp_id_i,
-            estimator_id      = est_id_i,
-            n                 = n_i,
-            seed              = seed_i,
-            bootstrap         = bootstrap,
-            B                 = B,
-            oracle            = isTRUE(est_desc$oracle),
-            estimator_version = est_desc$version,
-            config            = task_config,
-            tau               = tau
-          )
-        } else if (stored_schema == 2L) {
-          cs_build_config_fingerprint(
-            dgp_id            = dgp_id_i,
-            estimator_id      = est_id_i,
-            n                 = n_i,
-            seed              = seed_i,
-            bootstrap         = bootstrap,
-            B                 = B,
-            oracle            = isTRUE(est_desc$oracle),
-            estimator_version = est_desc$version,
-            config            = task_config,
-            tau               = tau,
-            max_runtime       = max_runtime
-          )
-        } else {
-          rlang::abort(
-            message = glue::glue("Unsupported config fingerprint schema: {stored_schema}."),
-            class   = "causalstress_fingerprint_error"
-          )
-        }
+        cs_assert_schema4_resume(stored_schema)
+        expected_fp <- cs_build_config_fingerprint(
+          dgp_id            = dgp_id_i,
+          estimator_id      = est_id_i,
+          n                 = n_i,
+          seed              = seed_i,
+          bootstrap         = bootstrap,
+          B                 = B,
+          oracle            = isTRUE(est_desc$oracle),
+          estimator_version = est_desc$version,
+          config            = caller_config,
+          tau               = tau,
+          max_runtime       = max_runtime,
+          dgp_version       = dgp_version_i
+        )
         if (is.null(stored_fp) || !identical(stored_fp, expected_fp)) {
           old_txt <- if (is.null(stored_fp)) "missing" else stored_fp
           stop(
@@ -232,12 +273,12 @@ cs_run_campaign <- function(
 
   # Shuffle tasks (deterministically when campaign_seed is provided)
   if (!is.null(campaign_seed)) {
-    idx <- withr::with_seed(as.integer(campaign_seed), sample.int(nrow(tasks)))
+    idx <- cs_with_mandated_rng(as.integer(campaign_seed), sample.int(nrow(tasks)))
     tasks <- tasks[idx, , drop = FALSE]
   }
 
   run_task <- function(dgp_id, estimator_id, seed, n, p = NULL) {
-    task_config <- apply_runner_defaults(resolve_config(estimator_id), seed)
+    task_config <- resolve_config(estimator_id)
     do.call(
       cs_run_one_seed_internal,
       c(
@@ -296,6 +337,18 @@ cs_run_campaign <- function(
   }
 
   if (isTRUE(show_progress)) {
+    current_handlers <- progressr::handlers(default = NA)
+    if (length(current_handlers) == 0L) {
+      if (requireNamespace("cli", quietly = TRUE)) {
+        progressr::handlers(
+          progressr::handler_cli(
+            intrusiveness = getOption("progressr.intrusiveness.gui", 1)
+          )
+        )
+      } else {
+        progressr::handlers(progressr::handler_txtprogressbar(style = 3))
+      }
+    }
     progressr::with_progress(run_campaign())
   } else {
     run_campaign()

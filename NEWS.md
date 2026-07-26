@@ -1,3 +1,54 @@
+# CausalStress 0.2.0
+
+## Wave 1 Typed Estimand Registry
+* Governance: Ratified Constitution v2.0.1, preserving the v2.0 estimand
+  registry while correcting the synthetic covariate contract to uppercase,
+  consecutive, one-based `X1...Xk` and adopting `real-data DGP` terminology;
+  activated the Wave 1 packet for typed scoring, schema-4 identity, and staged
+  CATE support.
+* Scoring: Added canonical ATT, ATE, QST, and CATE target descriptors, typed
+  estimator outputs, a legacy `list(att, qst, meta)` shim, and the three-way
+  requested/produced/truth scoring join. ATT, ATE, and QST are executable;
+  CATE is registered but deliberately staged as not implemented.
+* ATE: Added finite-sample synthetic ATE scoring from runner-owned structural
+  truth, with ordinary estimator airlock protections and a typed oracle benchmark
+  producer.
+* Persistence: Introduced schema-4 fit, score-record, and score-row
+  fingerprints so one fit can produce multiple score records and one QST score
+  record can contain multiple coordinate rows, while schema 1-3 resume attempts
+  fail closed.
+* Runtime persistence: Replaced the archived `qs` dependency with atomic base-R
+  RDS staging and oracle caches, added strict current-artifact identity checks,
+  and made legacy `.qs` staging fail closed without reading or modifying it.
+* Surfaces: Added the canonical long-form typed score collection surface and
+  preserved ATT/QST helpers as compatibility projections.
+* Staging: Registered CATE as a governed target while Wave 1 deterministically
+  hard-rejects CATE-only tasks and emits `target_not_implemented` rows for mixed
+  requests.
+* Gatekeeping: Preserved ATT/QST policy and added only an uncalibrated,
+  non-consequential ATE gate slot.
+* Release hygiene: Fixed GenGC wrapper formulas for the v0.2.0 additive-formula
+  parser, corrected README/roxygen claims and current registry inventories, and
+  routed CI golden-value tolerance guidance into the horizon.
+
+# CausalStress 0.1.10
+
+## Governed Repair Cycle and Release Gate
+* Governance: Added the active design authority index, contract ledger, RFC cycle,
+  release gate, and v0.1.10 spec packet with machine-readable tickets.
+* Correctness: Fixed ATT extraction for TMLE, batch error capture/reconciliation,
+  dependency declarations, and version-aware DGP validation.
+* Reproducibility: Introduced schema-3 fingerprints, versioned DGP pins, RNG
+  isolation for validation/planning/oracle paths, and substrate-scoped bitwise
+  reproducibility claims.
+* Oracle safety: Replaced blanket oracle access with column-scoped airlock
+  grants and recorded oracle-column provenance in result metadata.
+* Statistical gates: Hardened CI-less gatekeeper handling, QST run-failure
+  arithmetic, low-bootstrap CI semantics, and registry/sidecar validation.
+* Release hygiene: Removed stale duplicate aliases, documented exported wrappers
+  and runner arguments, cleaned package-check notes, and recorded release-gate
+  evidence.
+
 # CausalStress 0.1.8
 
 ## Patch-Only: Reproducibility & Audit Closure

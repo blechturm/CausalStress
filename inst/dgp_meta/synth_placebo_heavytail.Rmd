@@ -1,0 +1,247 @@
+﻿---
+title: "DGP Dossier: `r params$meta$dgp_id`"
+output: html_document
+params:
+  meta: NULL
+  dgp_id: "synth_placebo_heavytail"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE,
+  message = FALSE,
+  warning = FALSE
+)
+library(CausalStress)
+library(ggplot2)
+have_kableextra <- requireNamespace("kableExtra", quietly = TRUE)
+if (requireNamespace("patchwork", quietly = TRUE)) {
+  patchwork_available <- TRUE
+} else {
+  patchwork_available <- FALSE
+}
+```
+
+## 1. Identity & Status
+
+```{r meta_table, echo=FALSE, results='asis'}
+stars <- params$meta$difficulty$stars %||% 0
+active_star   <- '<span style="color: #f1c40f;">&#9733;</span>'
+inactive_star <- '<span style="color: #e0e0e0;">&#9734;</span>'
+difficulty_val <- paste0(
+  strrep(active_star, max(0, stars)),
+  strrep(inactive_star, max(0, 5 - stars)),
+  " (", stars, "/5)"
+)
+prof <- params$meta$stress_profile
+
+get_badge_color <- function(val) {
+  val <- tolower(as.character(val))
+  if (val %in% c("linear", "gaussian", "strong", "high", "easy", "stable", "att")) return("success")
+  if (val %in% c("moderate", "medium", "experimental")) return("warning")
+  if (val %in% c("nonlinear", "heavytail", "heavy", "poor", "severe", "deprecated", "heterogeneous")) return("danger")
+  "secondary"
+}
+
+stress_val <- if (is.null(prof)) {
+  "N/A"
+} else {
+  badge_vec <- mapply(
+    function(k, v) {
+      cls <- get_badge_color(v)
+      sprintf('<span class="badge bg-%s" style="margin-right:4px;">%s: %s</span>', cls, k, v)
+    },
+    names(prof),
+    unlist(prof),
+    USE.NAMES = FALSE
+  )
+  paste0("&nbsp;", paste(badge_vec, collapse = ""))
+}
+
+status_raw <- params$meta$status %||% "N/A"
+status_class <- get_badge_color(status_raw)
+status_val <- sprintf('<span class="badge bg-%s">%s</span>', status_class, status_raw)
+
+version_val <- params$meta$version %||% "N/A"
+dgp_id_val <- params$meta$dgp_id %||% "N/A"
+if (is.character(dgp_id_val)) {
+  dgp_id_val <- dgp_id_val
+}
+
+meta_df <- tibble::tibble(
+  Attribute = c("DGP ID", "Version", "Status", "Difficulty", "Stress Profile"),
+  Value = c(
+    dgp_id_val,
+    version_val,
+    status_val,
+    difficulty_val,
+    stress_val
+  )
+)
+
+knitr::kable(meta_df, format = "html", col.names = NULL, escape = FALSE) %>%
+  {
+    if (have_kableextra) {
+      kableExtra::kable_styling(
+        .,
+        bootstrap_options = c("hover", "condensed"),
+        full_width = TRUE,
+        position = "left"
+      ) %>%
+        kableExtra::column_spec(1, bold = TRUE, width = "150px")
+    } else {
+      .
+    }
+  }
+```
+## 2. What This DGP Stresses (Intent)
+
+**Intent:** The "Infinite Variance Test."
+The data generation contains a mixture of Normal and Cauchy noise. Crucially, the **Cauchy distribution has no defined mean**.
+
+**The Scientific Question:** "Does the estimator fail when the theoretical expectation $E[Y]$ is undefined?"
+This is a lethal stress test for **Mean-Based Estimators** (OLS, IPW, ATE) which rely on the Central Limit Theorem. Since the mean does not exist, the sample mean will never converge. Only Robust Estimators (e.g., Median/Quantile treatment effects) are theoretically valid here.
+
+## 3. Identification Assumptions (Explicit)
+
+-   Selection on observables holds.
+-   Overlap is moderate (propensity bounded).
+-   SUTVA holds.
+-   Sharp Null: $Y_1 \equiv Y_0$.
+
+## 4. Mathematical Specification
+
+Covariates: $X_1, X_2, X_3, X_4, X_5 \sim \mathcal{N}(0, 1^2)$ independently.
+
+**Outcome (control):** $$\mu_0(X) = 1 + X_1 + 0.5 X_2$$
+
+**Propensity:** $$p(X) = \text{expit}(0.5 X_1 - 0.5 X_2)$$
+
+**Treatment effect (sharp null):** $$\tau(X) \equiv 0$$
+
+**Noise mixture:** $$\varepsilon \sim 0.8 \cdot \mathcal{N}(0, 0.5^2) + 0.2 \cdot \text{Cauchy}(0, 1)$$
+
+Mean and variance are undefined due to the Cauchy component.
+
+## 5. Oracle Truth Definition
+
+-   True ATT is zero by construction.
+-   True QST is identically zero on the canonical grid.
+
+## 6. Visual Diagnostics (n = 5000)
+
+```{r visuals, fig.width=10, fig.height=7}
+set.seed(123)
+dgp <- dgp_synth_placebo_heavytail(n = 5000, seed = 123)
+df <- dgp$df
+
+p1 <- ggplot(df, aes(x = p, fill = factor(w))) +
+  geom_histogram(alpha = 0.6, bins = 30, position = "identity") +
+  labs(title = "Propensity Distribution (Moderate Overlap)",
+       x = "p(X)", y = "Count", fill = "W") +
+  theme_minimal()
+
+p2 <- ggplot(df, aes(x = X1, y = structural_te)) +
+  geom_point(alpha = 0.3) +
+  geom_smooth(method = "lm", se = TRUE) +
+  labs(title = expression(paste("Treatment Effect: ", tau(X), " = 0")),
+       x = "X1", y = "structural_te") +
+  theme_minimal()
+
+p3 <- ggplot(df, aes(x = X1, y = X2, color = factor(w))) +
+  geom_point(alpha = 0.4) +
+  labs(title = "Covariate Overlap (Joint Support)", x = "X1", y = "X2", color = "W") +
+  theme_minimal()
+
+p4 <- ggplot(dgp$true_qst, aes(x = tau, y = value)) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "gray70") +
+  geom_line(color = "#2c3e50", size = 1) +
+  labs(
+    title = "True Quantile Shift (QST)",
+    subtitle = "Sharp null: flat line at 0",
+    x = "Quantile (tau)",
+    y = "Treatment Effect"
+  ) +
+  theme_minimal()
+
+if (patchwork_available) {
+  library(patchwork)
+  (p1 + p2) / (p3 + p4)
+} else {
+  print(p1)
+  print(p2)
+  print(p3)
+  print(p4)
+}
+```
+
+## 7. Empirical Validation
+
+We validate only the oracle estimator to keep builds fast.
+
+```{r empirical, cache=TRUE}
+res_oracle <- cs_run_seeds(
+  dgp_id        = "synth_placebo_heavytail",
+  estimator_id  = "oracle_att",
+  n             = 1000,
+  seeds         = 1:20,
+  bootstrap     = FALSE,
+  parallel      = FALSE,
+  show_progress = FALSE
+)
+
+summary_tbl <- cs_tidy(res_oracle) %>%
+  dplyr::summarise(
+    mean_bias = mean(att_error, na.rm = TRUE),
+    rmse      = sqrt(mean(att_error^2, na.rm = TRUE))
+  )
+
+knitr::kable(summary_tbl, digits = 4, caption = "Oracle validation (n=1000, seeds=1:20)")
+```
+
+## 8. Failure Mode Summary
+
+-   **Mean Non-Convergence:** Standard estimators (OLS, IPW) will jump erratically as sample size increases, driven by extreme outliers.
+-   **Finite Sample Breakdown:** A single extreme value can pull the estimate arbitrarily far from zero, as the estimator chases a mean that doesn't exist.
+
+## 9. Implementation Reference
+
+-   Code: `R/dgp-synth-placebo-heavytail.R` (v1.3.0)
+-   Registry: `cs_dgp_registry()` entry for `synth_placebo_heavytail`
+-   Oracle: `true_att = 0`, `true_qst = 0`
+
+## 10. Validation Checklist
+
+-   [x] Sharp null enforced ($Y_1 \equiv Y_0$)
+-   [x] Structural ATT = 0
+-   [x] QST truth is identically zero
+-   [x] Oracle validation passes
+
+## 11. Changelog
+
+-   v1.0 dossier: Initial placebo dossier
+
+## Appendix: Implementation
+
+```{r impl_code, echo=FALSE, comment=''}
+# Dynamically retrieve the specific versioned function for this dossier
+dgp_base <- paste0("dgp_", params$dgp_id)
+dgp_ver  <- if (!is.null(params$meta$version)) {
+  paste0(dgp_base, "_v", gsub("\\.", "", params$meta$version))
+} else {
+  dgp_base
+}
+
+if (exists(dgp_ver)) {
+  cat(sprintf("Source code for: %s\n\n", dgp_ver))
+  print(get(dgp_ver))
+} else if (exists(dgp_base)) {
+  cat(sprintf("Source code for: %s (Wrapper)\n\n", dgp_base))
+  print(get(dgp_base))
+} else {
+  cat("Source code not found in loaded namespace.")
+}
+```
+
+
+

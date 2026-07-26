@@ -1,0 +1,109 @@
+== Part 1: ATT score-surface row, heavytail vs baseline (mean-targeting lm_att) ==
+-- score-surface column names --
+estimand_target_id, truth_tier, target_level, target_population, evaluation_policy, scoring_population_id, metric_id, tau, tau_id, tau_index, estimate, truth, error, abs_error, ci_lo, ci_hi, score_status, non_comparable_reason, fit_fingerprint, score_fingerprint, score_row_fingerprint, truth_version, seed_eval, n_eval, eval_derivation, unit_id_digest, prediction_digest, transductive, schema_version, dgp_id, dgp_version, estimator_id, estimator_version, n, seed
+
+-- heavytail ATT row (transposed) --
+                      [,1]
+estimand_target_id    "att"
+truth_tier            "structural"
+target_level          "population-scalar"
+target_population     "treated"
+evaluation_policy     "observed-run-sample"
+scoring_population_id "treated"
+metric_id             "point_error"
+tau                   NA
+tau_id                NA
+tau_index             NA
+estimate              "1.917895"
+truth                 "1.098095"
+error                 "0.8197998"
+abs_error             "0.8197998"
+ci_lo                 NA
+ci_hi                 NA
+score_status          "scored"
+non_comparable_reason NA
+fit_fingerprint       "f4a2e10cb3d1eca4c32cae08f825f1a2b5834eef1b5dbc50e67a25146422d1f7"
+score_fingerprint     "590758b51c897482dd3aa99175cd61d261d1c8155f368ffe9ad9078d289260e7"
+score_row_fingerprint "fe72706fafe98af26bfeb54ab8ba14c79207a7c519c33269cab245fa6fd5f07f"
+truth_version         "574101b05b613a92fc17d9f9afecb8ed3a4f9ad702329a4834bc3ba27817e2b9"
+seed_eval             NA
+n_eval                NA
+eval_derivation       NA
+unit_id_digest        NA
+prediction_digest     NA
+transductive          NA
+schema_version        "4"
+dgp_id                "synth_heavytail"
+dgp_version           "1.6.0"
+estimator_id          "lm_att"
+estimator_version     "0.2.0"
+n                     "2000"
+seed                  "202"
+
+-- baseline ATT row (transposed) --
+                      [,1]
+estimand_target_id    "att"
+truth_tier            "structural"
+target_level          "population-scalar"
+target_population     "treated"
+evaluation_policy     "observed-run-sample"
+scoring_population_id "treated"
+metric_id             "point_error"
+tau                   NA
+tau_id                NA
+tau_index             NA
+estimate              "1.093153"
+truth                 "1.098095"
+error                 "-0.004942288"
+abs_error             "0.004942288"
+ci_lo                 NA
+ci_hi                 NA
+score_status          "scored"
+non_comparable_reason NA
+fit_fingerprint       "05296f0656b08ef1ca5028702f8c0d82960b872ec289e92f1824036bfd0ea72f"
+score_fingerprint     "a671b8f7792b7c099652af4d888e05be6900f1043646647f8e1d8e951e371d54"
+score_row_fingerprint "9dd3ffdcca4004a5f04d41a9a5bbf08f374b0b1b10f2a56a751d3423e610a000"
+truth_version         "a85b4b70d602ce5dba267586c6a8cdb1c606e5635824147557bfdcda0eee141f"
+seed_eval             NA
+n_eval                NA
+eval_derivation       NA
+unit_id_digest        NA
+prediction_digest     NA
+transductive          NA
+schema_version        "4"
+dgp_id                "synth_baseline"
+dgp_version           "1.6.0"
+estimator_id          "lm_att"
+estimator_version     "0.2.0"
+n                     "2000"
+seed                  "202"
+
+[PASS] heavytail mean-ATT score_status == 'scored' (got 'scored')
+[PASS] baseline  mean-ATT score_status == 'scored' (got 'scored')
+[PASS] score_status IDENTICAL across no-mean heavytail and Gaussian baseline
+[PASS] heavytail ATT non_comparable_reason is NA (got 'NA')
+[PASS] non_comparable_reason IDENTICAL (both NA) across heavytail and baseline
+[PASS] score surface carries NO regime/difficulty flag column (found: <none>)
+
+Columns differing between heavytail and baseline ATT rows:
+  estimate, error, abs_error, fit_fingerprint, score_fingerprint, score_row_fingerprint, truth_version, dgp_id
+[PASS] NO status/semantic column differs between the two DGPs' ATT rows (differing semantic cols: <none>)
+
+== Part 2: metric_invalid_for_regime declared but never emitted ==
+[PASS] metric_invalid_for_regime IS a declared non-comparable-reason vocabulary term
+Reasons actually emitted across both full runs: estimator_not_produced, target_not_implemented
+[PASS] metric_invalid_for_regime is NEVER emitted for heavytail (nor baseline) in produced score surface
+
+== Part 3: DEFINITIONAL — structural TRUTH well-posed vs mean-ESTIMATOR unstable ==
+heavytail true_att across 20 seeds: all finite = TRUE; range = [1.0695, 1.1449]
+heavytail lm_att   |error|: median = 0.354, max = 38.555  (mean-estimator variance explosion)
+heavytail oracle_att |error|: max = 0.000e+00  (structural truth layer stable)
+baseline  lm_att   |error|: median = 0.034, max = 0.065  (Gaussian: well-behaved)
+[PASS] STRUCTURAL ATT truth is FINITE on every heavytail seed (target well-posed)
+[PASS] oracle_att recovers structural truth ~exactly (max|err| = 0.00e+00)
+[PASS] heavytail mean-ESTIMATOR error is far more extreme than baseline (ht max 38.56 vs bl max 0.07)
+
+cs_truth_available_targets(heavytail) = {att, qst, ate}
+[PASS] ATT and ATE truth are BOTH machine-available on heavytail (finite structural means) -> both scorable
+
+== RESULT: ALL PASS (0 failures) ==

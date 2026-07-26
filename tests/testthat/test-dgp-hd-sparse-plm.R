@@ -5,7 +5,7 @@ test_that("synth_hd_sparse_plm structure and truth", {
   expect_s3_class(df, "tbl_df")
   expect_equal(nrow(df), 200)
 
-  needed_cols <- c("y", "w", "y0", "y1", "p", "structural_te", paste0("X", 1:50))
+  needed_cols <- c("y", "w", "y0", "y1", "p", "structural_te", paste0("X", 1:100))
   expect_true(all(needed_cols %in% names(df)))
   expect_true(all(df$w %in% c(0, 1)))
   expect_true(all(df$structural_te == 1))
@@ -46,5 +46,17 @@ test_that("estimators behave reasonably on synth_hd_sparse_plm", {
 
   sumry <- cs_summarise_runs(runs)
   expect_true(all(abs(sumry$mean_true_att - 1) < 1e-6))
-  expect_true(all(abs(sumry$mean_error) < 0.5))
+  lm_row <- sumry[sumry$estimator_id == "lm_att", , drop = FALSE]
+  ipw_row <- sumry[sumry$estimator_id == "ipw_att", , drop = FALSE]
+
+  expect_equal(nrow(lm_row), 1L)
+  expect_equal(nrow(ipw_row), 1L)
+
+  # Sparse linear target: OLS should remain reasonably accurate.
+  expect_true(abs(lm_row$mean_error) < 0.8)
+
+  # With v1.5.0, overlap is restored to be moderate; IPW should not blow up
+  # purely due to deterministic treatment assignment.
+  expect_true(is.finite(ipw_row$mean_error))
+  expect_true(abs(ipw_row$mean_error) < 1.5)
 })

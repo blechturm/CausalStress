@@ -27,6 +27,8 @@
 #'
 #' @param n Integer, number of observations.
 #' @param seed Optional seed for reproducibility (passed to `cs_set_rng()`).
+#' @param include_truth Logical; if TRUE, include oracle truth tables where supported.
+#' @param oracle_only Logical; if TRUE, return only columns needed for oracle truth generation where supported.
 #'
 #' @return A synthetic DGP list with df, true_att, true_qst, meta.
 #' @export
@@ -92,6 +94,7 @@ dgp_synth_placebo_kangschafer_v140 <- function(n, seed = NULL, include_truth = T
   out
 }
 
+#' @rdname dgp_synth_latest_wrappers
 #' @export
 dgp_synth_placebo_kangschafer <- function(n, seed = NULL) {
   dgp_synth_placebo_kangschafer_v140(n = n, seed = seed)

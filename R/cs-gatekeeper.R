@@ -7,8 +7,8 @@
 #' @param suite_results Result object from [cs_run_suite()] or [cs_run_grid()].
 #' @param threshold Minimum required coverage rate (default 0.90).
 #'
-#' @return A list with ATT and QST verdicts/culprits. The function also prints a
-#'   short summary via cli.
+#' @return A list with ATT and QST verdicts/culprits plus a deferred ATE
+#'   component slot. The function also prints a short summary via cli.
 #'
 #' @export
 cs_summarise_gatekeeper <- function(suite_results, threshold = 0.90) {
@@ -27,6 +27,8 @@ cs_summarise_gatekeeper <- function(suite_results, threshold = 0.90) {
     return(list(
       att_verdict = tibble::tibble(),
       att_culprits = tibble::tibble(),
+      ate_verdict = tibble::tibble(),
+      ate_culprits = tibble::tibble(),
       qst_verdict = tibble::tibble(),
       qst_culprits = tibble::tibble()
     ))
@@ -35,29 +37,65 @@ cs_summarise_gatekeeper <- function(suite_results, threshold = 0.90) {
   verdict <- placebo %>%
     dplyr::group_by(.data$estimator_id) %>%
     dplyr::summarise(
-      coverage_rate = mean(.data$att_covered, na.rm = TRUE),
+      n_verified = sum(!is.na(.data$att_covered)),
+      coverage_rate = dplyr::if_else(
+        n_verified > 0L,
+        mean(.data$att_covered, na.rm = TRUE),
+        NA_real_
+      ),
       .groups = "drop"
     ) %>%
     dplyr::mutate(
-      status = ifelse(.data$coverage_rate >= threshold, "PASS", "FAIL")
+      status = dplyr::case_when(
+        .data$n_verified == 0L ~ "UNVERIFIED",
+        .data$coverage_rate >= threshold ~ "PASS",
+        TRUE ~ "FAIL"
+      )
     )
 
   culprits <- placebo %>%
     dplyr::group_by(.data$dgp_id, .data$estimator_id) %>%
     dplyr::summarise(
-      dgp_coverage = mean(.data$att_covered, na.rm = TRUE),
+      n_verified = sum(!is.na(.data$att_covered)),
+      dgp_coverage = dplyr::if_else(
+        n_verified > 0L,
+        mean(.data$att_covered, na.rm = TRUE),
+        NA_real_
+      ),
       .groups = "drop"
     ) %>%
-    dplyr::filter(.data$dgp_coverage < threshold)
+    dplyr::filter(.data$n_verified > 0L, .data$dgp_coverage < threshold)
+
+  # v0.2.0 Wave 1 exposes the ATE gatekeeper component structurally only.
+  # Calibration, thresholds, and registry consequences are deferred to the
+  # gatekeeper-recalibration RFC; do not infer Non-Robust status from this slot.
+  ate_verdict <- tibble::tibble(
+    estimand_target_id = "ate",
+    estimator_id = unique(placebo$estimator_id),
+    n_verified = 0L,
+    coverage_rate = NA_real_,
+    threshold = NA_real_,
+    status = "UNVERIFIED",
+    policy_status = "deferred_gatekeeper_recalibration",
+    registry_consequence = NA_character_
+  )
+  ate_culprits <- tibble::tibble(
+    estimand_target_id = character(),
+    dgp_id = character(),
+    estimator_id = character(),
+    dgp_coverage = numeric()
+  )
 
   # Console summary
-  purrr::pwalk(verdict, function(estimator_id, coverage_rate, status) {
+  purrr::pwalk(verdict, function(estimator_id, coverage_rate, status, ...) {
     msg <- sprintf(
       "%s: coverage = %.2f (threshold %.2f)",
       estimator_id, coverage_rate, threshold
     )
     if (identical(status, "PASS")) {
       cli::cli_alert_success(msg)
+    } else if (identical(status, "UNVERIFIED")) {
+      cli::cli_alert_warning(paste0(msg, " [UNVERIFIED]"))
     } else {
       cli::cli_alert_danger(msg)
     }
@@ -67,7 +105,7 @@ cs_summarise_gatekeeper <- function(suite_results, threshold = 0.90) {
     cli::cli_alert_info("Culprits (below threshold):")
     culprits %>%
       dplyr::arrange(.data$estimator_id, .data$dgp_id) %>%
-      purrr::pwalk(function(dgp_id, estimator_id, dgp_coverage) {
+      purrr::pwalk(function(dgp_id, estimator_id, dgp_coverage, ...) {
         cli::cli_text(
           "  - {estimator_id} on {dgp_id}: coverage = {sprintf('%.2f', dgp_coverage)}"
         )
@@ -103,12 +141,17 @@ cs_summarise_gatekeeper <- function(suite_results, threshold = 0.90) {
       qst_verdict <- run_failures %>%
         dplyr::group_by(.data$estimator_id) %>%
         dplyr::summarise(
-          run_fail_rate = mean(.data$run_fail, na.rm = TRUE),
+          n_verified = sum(!is.na(.data$null_rejection_rate)),
+          run_fail_rate = dplyr::if_else(
+            n_verified > 0L,
+            sum(.data$run_fail, na.rm = TRUE) / n_verified,
+            NA_real_
+          ),
           .groups = "drop"
         ) %>%
         dplyr::mutate(
           status = dplyr::case_when(
-            is.na(.data$run_fail_rate) ~ "UNVERIFIED",
+            .data$n_verified == 0L ~ "UNVERIFIED",
             .data$run_fail_rate > 0.10 ~ "FAIL",
             TRUE ~ "PASS"
           )
@@ -116,6 +159,7 @@ cs_summarise_gatekeeper <- function(suite_results, threshold = 0.90) {
     } else {
       qst_verdict <- tibble::tibble(
         estimator_id = unique(suite_results$estimator_id),
+        n_verified = 0L,
         run_fail_rate = NA_real_,
         status = "UNVERIFIED"
       )
@@ -127,7 +171,7 @@ cs_summarise_gatekeeper <- function(suite_results, threshold = 0.90) {
     cli::cli_alert_info("QST Gatekeeper: no QST-capable placebo runs found.")
   } else {
     cli::cli_alert_info("QST Gatekeeper (10/10 rule):")
-    purrr::pwalk(qst_verdict, function(estimator_id, run_fail_rate, status) {
+    purrr::pwalk(qst_verdict, function(estimator_id, run_fail_rate, status, ...) {
       msg <- sprintf(
         "%s: run failure rate = %.2f (threshold 0.10)",
         estimator_id, ifelse(is.na(run_fail_rate), NA_real_, run_fail_rate)
@@ -156,6 +200,8 @@ cs_summarise_gatekeeper <- function(suite_results, threshold = 0.90) {
   list(
     att_verdict = verdict,
     att_culprits = culprits,
+    ate_verdict = ate_verdict,
+    ate_culprits = ate_culprits,
     qst_verdict = qst_verdict,
     qst_culprits = qst_culprits
   )
