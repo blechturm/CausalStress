@@ -5,7 +5,7 @@
 CS-1228 implementation is complete after independent review and its committed-tree
 Windows/WSL gates pass; CS-1229 documentation is complete after independent
 review and its committed-tree Windows/WSL gates pass; remote gates remain
-pending; CS-1226 and CS-1227 remain incomplete
+pending; CS-1226 is complete and CS-1227 remains incomplete
 **Date opened:** 2026-07-24
 **Date closed:** TBD
 **Packet:** `causalstress_v0_2_0_correction_packet`
@@ -21,6 +21,7 @@ pending; CS-1226 and CS-1227 remain incomplete
 | CS-1224 | Defined the packet lifecycle vocabulary, normalized both active packets, reclassified the closed Wave 1 packet only in the authority index, narrowed the v0.2.0 roadmap boundary, and routed persistence, real-data/feature-roster/extension risks, families/CATE planning, and the full documentation release. Claude returned **APPROVE WITH NON-BLOCKING NOTES** and confirmed the closed Wave 1 packet remains byte-identical. |
 | CS-1225 | Fresh post-correction Windows and WSL/Ubuntu gates passed on 2026-07-24: focused/full tests, strict validation, lint, coverage, substrate, and platform-local `R CMD check` evidence are recorded below. Claude's independent re-review returned **APPROVE WITH NON-BLOCKING NOTES**, confirmed the corrected host-context WSL evidence, closed the sole prior blocker, and found no executable rerun necessary. Ubuntu 20.04 remains useful early-warning evidence while remote Ubuntu CI remains mandatory. |
 | CS-1229 | Applied the accepted scientific-review adjudication without changing DGP status, generator logic, truth, RNG, scoring, or atomic score rows. The README and heavytail dossier now distinguish the governed finite-sample structural signal anchor from the nonexistent conventional superpopulation mean potential-outcome ATT; prohibit ATT shootout interpretation while preserving breakdown evidence; and direct valid distributional comparison to QST. `cs_summarise_runs()` documents its moment assumptions; the dossier validation uses finite-replicate structural-anchor diagnostics; six dossier changelogs and the heavytail CRN comment now say CRN reduces rather than eliminates Monte Carlo uncertainty; `horizon.md` records the three regimes and future `diagnostic_only` aggregation design. Claude's independent review returned **APPROVE WITH NON-BLOCKING NOTES**, with only the disclosed sandbox render override and benign generated-Rd terminator normalization noted. |
+| CS-1226 | Maintainer authorization was given immediately before publication. The pre-existing annotated tag object `3496e8f90ddddff1a86da4376113d82b5d7e7943`, peeling to governed commit `d05164a856b3e19101b989021f20dabe0b2a00a8`, was verified unchanged on the remote. A non-latest archival/pre-CI GitHub Release was published without moving or recreating the tag. |
 
 ## Open Release Blocker
 
@@ -62,7 +63,7 @@ pending; CS-1226 and CS-1227 remain incomplete
 | Reproducibility substrate | `tools/ci-substrate.R` on 2026-07-24; exact substrate below and in ignored artifact `ci-substrate.txt`. | Pass: governed RNG and all bitwise truth payload components confirmed. |
 | R CMD check - Windows | Fresh isolated build/check on 2026-07-24; exact command below. | Pass: 0 errors, 0 warnings, 1 environment-only NOTE (`unable to verify current time`). |
 | R CMD check - WSL/Ubuntu | Fresh full tests, strict validation, substrate probe, and `rcmdcheck::rcmdcheck()` on the configured default `Ubuntu` WSL 2 distribution on 2026-07-24; exact commands and substrate below. | Pass: full suite and 24/24 validation passed; `R CMD check` reported 0 errors, 0 warnings, and 0 notes. Remote Ubuntu branch/tag CI remains mandatory. |
-| v0.1.10 archival publication | TBD | TBD |
+| v0.1.10 archival publication | Existing remote tag object `3496e8f90ddddff1a86da4376113d82b5d7e7943` peels to `d05164a856b3e19101b989021f20dabe0b2a00a8`; public archival/pre-CI release: `https://github.com/blechturm/CausalStress/releases/tag/v0.1.10`, published 2026-07-26 after maintainer authorization. | Pass: immutable tag preserved; release is public, non-draft, non-prerelease, and not marked latest. |
 | Branch CI | All three workflows failed at `13bd7a2` in archived `stringfish` bootstrap and again at `56376a6` in archived `qs` compilation on R 4.6. | Fail: routed to CS-1228; package-owned gates did not begin. |
 | Main/tag CI | Coordinated through CS-1214 and CS-1227 after fresh branch CI passes. | TBD |
 | Audit and ticket routing | Authority index lifecycle definitions, active packet headers/YAML, roadmap, horizon, and both closeouts were reconciled. All CS-1224 deferrals have named destinations. The final v0.1.10 closeout records every finding in the still-open v0.1.9 audit as ticketed, fixed, rejected with rationale, or deferred to a named destination. | Pass |
@@ -261,11 +262,13 @@ CS-1225.
   closeout; all correction-packet deferrals have named destinations.
 - The immutable annotated `refs/tags/v0.1.10` object is
   `3496e8f90ddddff1a86da4376113d82b5d7e7943` and peels to the governed commit
-  `d05164a856b3e19101b989021f20dabe0b2a00a8`. It was inspected only; CS-1226
-  still requires maintainer approval immediately before publication.
-- No known constitutional violation is open. Remaining blockers are archival
-  publication approval; remote branch/main/tag CI; CS-1214 final closeout; and
-  the final v0.2.0 release decision.
+  `d05164a856b3e19101b989021f20dabe0b2a00a8`. After immediate maintainer
+  authorization, the archival/pre-CI GitHub Release was published at
+  `https://github.com/blechturm/CausalStress/releases/tag/v0.1.10` without
+  moving or recreating the tag; CS-1226 is complete.
+- No known constitutional violation is open. Remaining blockers are remote
+  branch/main/tag CI, CS-1214 final closeout, and the final v0.2.0 release
+  decision.
 
 ## Final Release Decision
 

@@ -140,7 +140,7 @@ tickets:
     constitutional_check: "Push the existing annotated tag unchanged; never move, delete, or recreate it"
     test_obligation: "v0.1.10 resolves to d05164a856b3e19101b989021f20dabe0b2a00a8; archival/pre-CI public URL and tag object are recorded"
     review_gate: "Maintainer approval immediately before external publication"
-    disposition: open
+    disposition: "complete_after_review"
 
   - id: "CS-1227"
     title: "Complete remote CI and publish v0.2.0"
@@ -153,4 +153,4 @@ tickets:
     constitutional_check: "No blocker remains; reviewed v0.2.0 tag target is immutable"
     test_obligation: "Green branch/main/tag CI URLs, version 0.2.0, Constitution 2.0.1, fresh local gate, tag target, ticket routing, and FINAL packet states are recorded"
     review_gate: "Maintainer final release decision after CS-1214, CS-1226, CS-1228, and CS-1229"
-    disposition: "blocked_by_CS-1214_CS-1226_CS-1228_CS-1229"
+    disposition: "blocked_by_CS-1214"

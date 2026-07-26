@@ -76,7 +76,7 @@ active packet, the current authority wins.
 | `causalstress_v0_2_0_ci_packet/` | `ACTIVE` packet | v0.2.0 CI and release-gate infrastructure packet. |
 | `causalstress_v0_2_0_correction_packet/` | `ACTIVE` packet | Release-blocking constitutional, validation, QST-identity, minimal-documentation, emergency RDS-persistence, scientific-interpretation, and final-publication corrections for v0.2.0. CS-1228 and CS-1229 are complete after independent review, and the CS-1229-inclusive committed tree passes the fresh Windows/WSL local gate. Remote branch/main/tag CI remains pending. |
 | `causalstress_v0_2_0_spec_packet/` | `FINAL` packet | v0.2.0 Wave 1 typed-scoring implementation packet, closed before public tag pending CI. |
-| `causalstress_v0_1_10_spec_packet/` | `FINAL` packet | v0.1.10 governance and defect-repair packet, closed on 2026-06-14. |
+| `causalstress_v0_1_10_spec_packet/` | `FINAL` packet | v0.1.10 governance and defect-repair packet, closed on 2026-06-14; immutable archival/pre-CI GitHub Release published on 2026-07-26. |
 | `rfc/` | RFC records | Accepted syntheses become binding in stated scope. |
 | `research/` | Research notes | Literature/prior-art assessments; informative only unless promoted via RFC or packet. |
 | `research/prior_art_acic_2026_benchmark_audit.md` | Research note | Focused ACIC 2026 prior-art, compatibility, estimand-scope, and incorporation audit; non-binding. |

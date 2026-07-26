@@ -167,20 +167,22 @@ tag authorization.
 
 The public v0.2.0 tag remains blocked. Unblock only after:
 
-1. Correction tickets CS-1223 and CS-1224 are independently accepted. **Done.**
-2. CS-1225 records a fresh post-correction local gate and CS-1214 receives its
+1. The immutable v0.1.10 archival/pre-CI release is publicly recorded without
+   moving its tag. **Done:** `https://github.com/blechturm/CausalStress/releases/tag/v0.1.10`.
+2. Correction tickets CS-1223 and CS-1224 are independently accepted. **Done.**
+3. CS-1225 records a fresh post-correction local gate and CS-1214 receives its
    final review. **The latest CS-1229-inclusive Windows and WSL/Ubuntu local gate
    passes; CS-1214 remains open for remote evidence and final review.**
-3. CS-1228's amended specification is independently accepted. **Done.** Its
+4. CS-1228's amended specification is independently accepted. **Done.** Its
    minimal RDS migration is implemented, independently accepted, committed, and
    passes fresh final-tree Windows/WSL gates. **Done.**
-4. CS-1229 is independently accepted, committed, and passes a fresh
+5. CS-1229 is independently accepted, committed, and passes a fresh
    CS-1229-inclusive Windows/WSL gate. **Done at `badeac1`.**
-5. The reviewed correction and CI changes are committed and pushed. **Committed
+6. The reviewed correction and CI changes are committed and pushed. **Committed
    locally; push pending.**
-6. Branch CI is green on `v0.2.0`, including R release and R-devel installation.
-7. Main/default-branch CI is green if the release is merged before tagging.
-8. The tag-triggered `v0.2.0` CI run is green.
+7. Branch CI is green on `v0.2.0`, including R release and R-devel installation.
+8. Main/default-branch CI is green if the release is merged before tagging.
+9. The tag-triggered `v0.2.0` CI run is green.
 
 Until then, the June local results are rehearsal evidence and v0.2.0 is not
 publicly released.

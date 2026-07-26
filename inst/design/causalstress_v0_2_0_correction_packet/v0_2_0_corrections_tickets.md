@@ -211,7 +211,7 @@
   note referencing its governed closeout; record the public URL and immutable
   object/commit IDs.
 - **Review gate:** Maintainer approval immediately before external publication.
-- **Disposition:** open
+- **Disposition:** complete_after_review
 
 ### CS-1227 - Complete remote CI and publish v0.2.0
 
@@ -230,7 +230,7 @@
 - **Review gate:** Maintainer final release decision after CS-1214, CS-1226,
   CS-1228, and CS-1229; close correction and CI packets as `FINAL` only after tag
   CI is green.
-- **Disposition:** blocked_by_CS-1214_CS-1226_CS-1228_CS-1229
+- **Disposition:** blocked_by_CS-1214
 
 ## Release-Gate Ticket Requirement
 
