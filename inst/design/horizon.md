@@ -323,7 +323,7 @@ truth-algorithm promotion, RIF arms, and the diagnostic gate each require the
 estimand-registry RFC below, constitutional adjudication, and a **named
 consuming study**.
 
-### Selection/missingness DGP class and MAR-standardization estimands (parked 2026-07-27; routes through the estimand-registry RFC; no implementation authority)
+### Selection/missingness DGP class and MAR-standardization estimands (Phase-S0 PARK / NO-GO 2026-07-27; no implementation authority)
 
 **Context for a fresh agent.** Programme candidate WP-06
 ([`thomasberger-phd-research/META_RESEARCH_MEMORY.md`](../../../thomasberger-phd-research/META_RESEARCH_MEMORY.md)
@@ -345,6 +345,14 @@ promotion-stage DGP extensions — lives in
 oracle scripts only). This entry records solely what package support WOULD be
 demanded IF WP-06 is promoted, so the estimand-registry RFC sees the demand
 signal early instead of absorbing it as a one-off later:
+
+**Outcome update.** Phase-S0 completed with technical `PASS`, exact replay, and
+scientific `PARK / NO-GO`. All ten `rho=0.5` pointwise truth targets failed,
+one PT endpoint was unstable, and no frozen sign-contrast gate passed. WP-06
+was not promoted. The requirements below remain a historical demand sketch,
+not a backlog: no selection DGP, estimand, adapter, family, or package work is
+authorized. Any reconsideration must begin as a distinct externally reviewed
+research candidate, not as an S0 repair or CausalStress feature request.
 
 - **A new DGP contract shape.** Multi-state status S ∈ {NE, PT, FT},
   state-specific potential outcomes (Y\*\_FT, Y\*\_PT — the review killed the
@@ -392,12 +400,11 @@ signal early instead of absorbing it as a one-off later:
   of the parametrized-families packet — recorded for the requirements intake
   only; the initial families implementation still serves ATT/QST first.
 
-**Activation gate:** authorizes nothing. Strictly behind WP-06 promotion
-(five review conditions, including Phase-S0 reaching its CONTINUE TO
-PROMOTION CHECK verdict under the recorded decision rule), the
-estimand-registry RFC below, and the programme WIP rule. Quarterly prior-art
-re-sweeps are mandatory while parked; re-verify the must-cite list before any
-spec freeze.
+**Activation gate:** closed for the current WP-06 route because Phase-S0 did
+not reach `CONTINUE TO PROMOTION CHECK`. This entry authorizes nothing. A
+future, distinct candidate would still require its own prior-art review, the
+estimand-registry RFC below, and the programme WIP rule before any spec or
+implementation work.
 
 ### Estimand registry generalization: §1.7 list → governed schema (parked 2026-06-17; requires deep research, an RFC, and a §1.7 amendment)
 
