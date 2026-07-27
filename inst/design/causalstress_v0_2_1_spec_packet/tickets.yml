@@ -205,10 +205,12 @@ tickets:
     files:
       - "DESCRIPTION"
       - "NEWS.md"
+      - ".github/workflows/pkgdown-site.yaml"
       - "inst/design/README.md"
       - "inst/design/roadmap.md"
+      - "inst/design/release_ci_playbook.md"
       - "inst/design/causalstress_v0_2_1_spec_packet"
     constitutional_check: "Read release_gate.md first; no known constitutional violation may remain open except by amendment"
-    test_obligation: "Record all local Windows/WSL, full-vignette R CMD build/check, test, validation, lint, coverage, substrate, branch/main/tag CI, site, clean-tree, audit, and publication evidence; confirm no vignette-skipping command is release evidence; publish only after maintainer authorization"
+    test_obligation: "Record all local Windows/WSL, full-vignette R CMD build/check, test, validation, lint, coverage, substrate, branch/main/tag CI, site, clean-tree, audit, and publication evidence; confirm no vignette-skipping command is release evidence; deploy Pages only by a manual version-matched tag dispatch after green tag CI and maintainer authorization"
     review_gate: "Final release-gate review before merge/tag/publication and maintainer release decision"
     disposition: open

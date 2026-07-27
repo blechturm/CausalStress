@@ -1,6 +1,6 @@
 # CausalStress v0.2.1 Batch Plan
 
-**Status:** ACTIVE — Batch 4 complete after independent review; Batch 5 unauthorized
+**Status:** ACTIVE — Batches 0–4 and the Batch 5 Pages mechanism complete after independent review; release gate not started
 **Packet:** `causalstress_v0_2_1_spec_packet`
 **Authority commit:** `0b20f12`
 **Accepted:** 2026-07-26
@@ -120,6 +120,8 @@ are not authorized in any batch.
 
 ## Batch 5 — Release Gate and Publication
 
+- **State:** Pages publication mechanism complete after independent review;
+  release-gate execution and remote publication have not started.
 - **Purpose:** Record complete final-tree release evidence and publish only in
   the governed order.
 - **Tickets:** CS-1245
@@ -127,6 +129,9 @@ are not authorized in any batch.
   build/check on Windows, WSL, R-release, and R-devel; focused/full tests;
   strict validation; lint; coverage; reproducibility substrate; clean tree;
   closeout; and green branch/main/tag CI in order.
+- **Pages boundary:** Automatic branch, pull-request, main, and tag site builds
+  remain previews. Pages publication is a manual dispatch at the exact package-
+  version tag, only after green tag CI and final maintainer acceptance.
 - **Stop condition:** A failed gate is triaged and routed to its owning ticket;
   no test weakening, vignette-ignore flag, premature merge/tag, or external
   publication.

@@ -74,7 +74,7 @@ active packet, the current authority wins.
 | `release_ci_playbook.md` | Process | CI-backed release sequencing, local WSL gate, and tag-handling playbook. |
 | `templates/` | Process | Canonical packet and closeout templates. |
 | `audit/` | Audit archive | Non-binding review evidence; see `audit/README.md`. The pass-2 maintainer adjudication controls the scientific-design audit's accepted, rejected, and deferred conclusions. |
-| `causalstress_v0_2_1_spec_packet/` | `ACTIVE` packet | Accepted v0.2.1 Quarto documentation and bounded-maintenance authority. Batches 0–4 are complete after independent review; Batch 5 is unauthorized. |
+| `causalstress_v0_2_1_spec_packet/` | `ACTIVE` packet | Accepted v0.2.1 Quarto documentation and bounded-maintenance authority. Batches 0–4 and the Batch 5 manual tag-only Pages mechanism are complete after independent review; release-gate execution has not started. |
 | `causalstress_v0_2_0_ci_packet/` | `FINAL` packet | v0.2.0 CI and release-gate infrastructure packet, closed after green branch, main, and tag CI on 2026-07-26. |
 | `causalstress_v0_2_0_correction_packet/` | `FINAL` packet | Constitutional, validation, QST-identity, minimal-documentation, emergency RDS-persistence, scientific-interpretation, and publication corrections shipped in v0.2.0. The release was published on 2026-07-26 after green branch, main, and tag CI. |
 | `causalstress_v0_2_0_spec_packet/` | `FINAL` packet | v0.2.0 Wave 1 typed-scoring implementation packet, closed before the public tag; final CI and publication are recorded in the two release closeouts above. |

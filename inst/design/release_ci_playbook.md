@@ -52,6 +52,11 @@ branch, main, coverage, and tag signals.
 8. Wait for the tag-triggered CI. The tag is not release-valid until its own CI
    run is green.
 9. Create or update the GitHub Release entry only after tag CI is green.
+10. If Pages publication is authorized, manually dispatch the site workflow at
+    the exact validated release tag with `deploy_pages=true`, wait for the
+    `github-pages` environment deployment to succeed, and verify the public
+    URL. A branch, main, pull-request, or automatic tag build remains a preview
+    and must never deploy.
 
 ## Local WSL/Ubuntu Gate
 
@@ -78,19 +83,72 @@ Documentation-aware v0.2.1 checks use the exact versions declared in
 gates. The check must find the declared CLI directly through `PATH` or
 `QUARTO_PATH`; an undisclosed IDE fallback is not acceptable release evidence.
 
-The complete local documentation rehearsal is:
+The complete Windows PowerShell documentation rehearsal installs the package
+under test once and places that isolated library before any user library:
+
+```powershell
+$docLib = Join-Path ([System.IO.Path]::GetTempPath()) ("CausalStress-doc-lib-" + [guid]::NewGuid())
+New-Item -ItemType Directory -Path $docLib | Out-Null
+R CMD INSTALL --library="$docLib" .
+$env:CAUSALSTRESS_DOC_LIB = $docLib
+$env:R_LIBS_USER = if ($env:R_LIBS_USER) { "$docLib;$env:R_LIBS_USER" } else { $docLib }
+Rscript tools/ci-docs.R
+Rscript dev/render_dossiers.R --installed --validate-only
+quarto render README.qmd --to gfm
+git diff --exit-code -- README.md
+Rscript -e "Sys.setenv(RSTUDIO_PANDOC = file.path(dirname(quarto::quarto_path()), 'tools')); pkgdown::build_site(new_process = FALSE, install = FALSE)"
+Rscript dev/render_dossiers.R --installed --output-dir=docs/dgp
+Rscript tools/ci-site.R
+git diff --exit-code
+if (git ls-files --others --exclude-standard) { throw "Documentation rehearsal created untracked source files." }
+```
+
+The WSL/Ubuntu equivalent uses the same installed-package boundary:
 
 ```sh
+doc_lib="$(mktemp -d)"
+R CMD INSTALL --library="$doc_lib" .
+export CAUSALSTRESS_DOC_LIB="$doc_lib"
+export R_LIBS_USER="$doc_lib${R_LIBS_USER:+:$R_LIBS_USER}"
 Rscript tools/ci-docs.R
-Rscript dev/render_dossiers.R --validate-only
+Rscript dev/render_dossiers.R --installed --validate-only
 quarto render README.qmd --to gfm
-Rscript -e "Sys.setenv(RSTUDIO_PANDOC = file.path(dirname(quarto::quarto_path()), 'tools')); pkgdown::build_site(new_process = TRUE, install = TRUE)"
-Rscript dev/render_dossiers.R --output-dir=docs/dgp
+git diff --exit-code -- README.md
+Rscript -e "Sys.setenv(RSTUDIO_PANDOC = file.path(dirname(quarto::quarto_path()), 'tools')); pkgdown::build_site(new_process = FALSE, install = FALSE)"
+Rscript dev/render_dossiers.R --installed --output-dir=docs/dgp
+Rscript tools/ci-site.R
+git diff --exit-code
+test -z "$(git ls-files --others --exclude-standard)"
 ```
 
 The final source diff must remain unchanged after the rehearsal. Generated
 `docs/`, Quarto working files, and dossier caches are ignored preview artifacts,
 not publication authority.
+
+## GitHub Pages Publication
+
+The repository Pages source must be **GitHub Actions**, and the
+`github-pages` environment should allow selected tags matching `v*` rather than
+ordinary branches. The
+`pkgdown-site.yaml` workflow builds and uploads ordinary preview artifacts on
+branch, pull-request, main, tag, and non-deploying manual runs. It packages and
+deploys a Pages artifact only when a maintainer manually dispatches the
+workflow with `deploy_pages=true` against a `vX.Y.Z` tag that exactly matches
+the package version in `DESCRIPTION`.
+
+Run the deployment only after the ordinary tag-triggered CI matrix is green and
+the maintainer has accepted the final release evidence:
+
+```sh
+gh workflow run pkgdown-site.yaml --ref vX.Y.Z -f deploy_pages=true
+gh run list --workflow pkgdown-site.yaml --limit 5
+```
+
+The deployment job uses the `github-pages` environment, serializes deployments,
+and holds only the documented `pages: write` and `id-token: write` permissions.
+Its successful `page_url` must be recorded in the release closeout and opened
+after deployment. A successful preview artifact, manual build with
+`deploy_pages=false`, or skipped deployment job is not publication evidence.
 
 If coverage or lint behavior changed, also run the closest local equivalent:
 

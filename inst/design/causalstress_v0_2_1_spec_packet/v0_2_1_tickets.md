@@ -657,8 +657,9 @@ publication, or release.
   `inst/design/release_ci_playbook.md`, and accepted v0.2.1 specification
 - **Motivation:** The release must close with reproducible package, vignette,
   site, and CI evidence; no local preview or tag alone authorizes publication.
-- **Files:** `DESCRIPTION`, `NEWS.md`, `inst/design/README.md`,
-  `inst/design/roadmap.md`, packet ticket status files,
+- **Files:** `DESCRIPTION`, `NEWS.md`, `.github/workflows/pkgdown-site.yaml`,
+  `inst/design/README.md`, `inst/design/roadmap.md`,
+  `inst/design/release_ci_playbook.md`, packet ticket status files,
   `inst/design/causalstress_v0_2_1_spec_packet/release_closeout.md`, and only
   release-gate fixes routed back to their owning ticket.
 - **Constitutional check:** Read `inst/design/release_gate.md` before gate work;
@@ -673,10 +674,63 @@ publication, or release.
   evidence; then obtain green branch, main, and tag CI in the playbook order.
   Update version/date/NEWS and governance state. Publish the GitHub Release and
   Pages site only after their preceding gates and explicit maintainer
-  authorization.
+  authorization. Pages deployment must be manual, tag-only, version-matched,
+  environment-scoped, and later than green tag CI; all automatic site builds
+  remain non-publishing previews.
 - **Review gate:** Final release-gate review before merge/tag/publication, then
   maintainer release decision.
 - **Disposition:** open
+
+**Maintainer decision (2026-07-27):** Publish the v0.2.1 pkgdown site through
+GitHub Pages. This resolves the publication VALUE decision already reserved to
+CS-1245; it is not a constitutional amendment or authority to bypass the
+release order. The deployment mechanism is implemented for independent review
+before any push. Actual deployment remains gated on a clean release tree,
+green branch/main/tag CI, final maintainer acceptance, valid GitHub
+authentication, and the repository Pages source being set to GitHub Actions.
+The `github-pages` environment must also be checked for a selected-tag `v*`
+deployment rule before the first publication dispatch.
+
+Pages-mechanism implementation evidence (2026-07-27):
+
+- Current official GitHub guidance was checked before implementation. The
+  workflow uses `actions/upload-pages-artifact@v4`,
+  `actions/configure-pages@v5`, and `actions/deploy-pages@v4`; only the deploy
+  job receives `pages: write` and `id-token: write`, and it targets the
+  `github-pages` environment with serialized deployments.
+- Pushes, pull requests, main/default-branch builds, tag pushes, and manual
+  runs with `deploy_pages=false` still produce preview artifacts only. A Pages
+  artifact and deployment job exist only for an explicit manual
+  `deploy_pages=true` dispatch.
+- The build fails closed unless the dispatch ref is a semantic `vX.Y.Z` tag
+  whose value exactly equals `v` plus the `DESCRIPTION` version. The current
+  pre-release `DESCRIPTION` remains 0.2.0, so a premature v0.2.1 deployment
+  cannot pass before the ordinary CS-1245 version update.
+- The deployment depends on both the complete site build and the runtime-
+  without-documentation-tooling smoke job. The release playbook now records
+  the manual post-tag-CI dispatch and rehearses documentation on Windows and
+  WSL using the same isolated installed-package boundary accepted in Batch 4.
+- Workflow and ticket YAML parse, the permission/environment/action-version
+  assertions pass, `git diff --check` is clean, and the production/package diff
+  is empty. `actionlint` is not installed locally; workflow semantics remain an
+  explicit independent-review and later remote-CI obligation.
+- GitHub CLI 2.91.0 is present but its current `blechturm` credential is
+  invalid. No Pages setting, workflow dispatch, push, merge, tag, deployment,
+  or other remote mutation has occurred.
+
+Independent review returned **APPROVE WITH NON-BLOCKING NOTES** on 2026-07-27.
+It confirmed the authority boundary, fail-closed event matrix, version guard,
+artifact handoff, job dependencies, scoped permissions, action versions,
+environment, concurrency, playbook order, and truthful open-ticket state. The
+review made two load-bearing operational controls explicit: ordinary tag CI
+greenness remains a playbook prerequisite rather than a sibling-workflow query,
+and the remote `github-pages` selected-tag rule remains mandatory before the
+first deployment. Neither note requires a code correction.
+
+The reviewed Pages mechanism may be committed. CS-1245 remains `open` because
+the final release gate, remote repository configuration, branch/main/tag CI,
+maintainer release decision, GitHub Release, and Pages deployment have not
+occurred. The review authorizes none of those actions.
 
 ## Release-Gate Requirement
 

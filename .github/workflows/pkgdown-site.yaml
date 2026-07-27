@@ -6,6 +6,12 @@ name: pkgdown-site
     tags: ["v*"]
   pull_request:
   workflow_dispatch:
+    inputs:
+      deploy_pages:
+        description: Deploy this exact release tag to GitHub Pages after tag CI is green
+        required: true
+        default: false
+        type: boolean
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -26,6 +32,20 @@ jobs:
         with:
           r-version: release
           use-public-rspm: true
+
+      - name: Validate an explicit Pages deployment request
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.deploy_pages }}
+        shell: bash
+        run: |
+          if [[ "$GITHUB_REF_TYPE" != "tag" || ! "$GITHUB_REF_NAME" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Pages deployment requires a semantic release tag ref (vX.Y.Z)." >&2
+            exit 1
+          fi
+          package_version="$(sed -n 's/^Version:[[:space:]]*//p' DESCRIPTION)"
+          if [[ "$GITHUB_REF_NAME" != "v$package_version" ]]; then
+            echo "Tag $GITHUB_REF_NAME does not match DESCRIPTION version $package_version." >&2
+            exit 1
+          fi
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
@@ -77,6 +97,12 @@ jobs:
           name: pkgdown-preview-${{ github.sha }}
           path: docs
 
+      - name: Package the reviewed site for GitHub Pages
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.deploy_pages }}
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: docs
+
   runtime-without-documentation-tooling:
     runs-on: ubuntu-latest
 
@@ -98,3 +124,26 @@ jobs:
         run: |
           R CMD INSTALL .
           Rscript -e "stopifnot(!requireNamespace('quarto', quietly = TRUE), !requireNamespace('pkgdown', quietly = TRUE)); library(CausalStress); cs_run_single('synth_baseline', 'lm_att', n = 50, seed = 1)"
+
+  deploy-pages:
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.deploy_pages && github.ref_type == 'tag' }}
+    needs: [build-site, runtime-without-documentation-tooling]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    concurrency:
+      group: github-pages
+      cancel-in-progress: false
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Deploy the reviewed release site
+        id: deployment
+        uses: actions/deploy-pages@v4
