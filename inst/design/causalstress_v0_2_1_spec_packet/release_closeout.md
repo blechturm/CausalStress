@@ -13,7 +13,7 @@ local gates; none of its results are represented as final-tree release evidence.
 | Ticket | Evidence |
 | --- | --- |
 | CS-1230--CS-1244 | Complete after their recorded independent reviews; final release-gate acceptance audit remains pending. |
-| CS-1245 | Open. The Pages mechanism passed independent review, and remote setup is verified in `v0_2_1_tickets.md` under "Remote Pages-configuration evidence." Two initial branch-CI corrections passed independent review; fresh CI is pending. |
+| CS-1245 | Open. The Pages mechanism passed independent review, remote setup is verified in `v0_2_1_tickets.md`, and all release-gate corrections are documented below. Fresh complete branch CI is pending. |
 
 ## Initial Branch-CI Preflight — 2026-07-27
 
@@ -231,6 +231,37 @@ main, and tag CI remain mandatory.
 - Constitution v2.0.1, the active contract/spec boundary, test/validation
   results, audit dispositions, and release scope were inspected. No known
   constitutional violation remains open or deferred.
+
+## Final Branch-CI Attempt and Correction
+
+The first final-candidate branch run was bound to evidence-only head
+`61c9015a30742d22a9360e7fcf5cf532960d0660`. R-CMD-check
+[run 30307956641](https://github.com/blechturm/CausalStress/actions/runs/30307956641),
+test/validation/substrate
+[run 30307956621](https://github.com/blechturm/CausalStress/actions/runs/30307956621),
+and coverage/lint
+[run 30307956827](https://github.com/blechturm/CausalStress/actions/runs/30307956827)
+passed. The pkgdown workflow
+[run 30307956634](https://github.com/blechturm/CausalStress/actions/runs/30307956634)
+failed only in `runtime-without-documentation-tooling`; the complete site-build
+job passed.
+
+The failing job requested only `"hard"` dependencies and disabled automatic
+Pandoc and Quarto installation, but `setup-r-dependencies` restored a broad
+fallback package-library cache that already contained the `quarto` and
+`pkgdown` R packages. Package installation and its runtime smoke call
+succeeded; the deliberate absence assertion correctly failed. The dependency
+selection was not the defect: pak defines `"hard"` as `Depends`, `Imports`,
+and `LinkingTo`, while the log showed the unrelated packages arriving through
+cache restoration.
+
+The CS-1245 correction sets `cache: false` only for this negative-control job.
+The positive site-build job retains caching, and the runtime job still installs
+the declared hard dependencies before installing, loading, and exercising the
+package. Disabling restoration is required for the assertion to test an
+actually clean documentation-tooling boundary. This changes no package code,
+dependency declaration, scientific behavior, or release authority. Fresh
+complete branch CI is required before merge.
 
 ## Deferred
 

@@ -796,6 +796,19 @@ Claude review. Targeted Windows validation confirmed that an isolated child R
 session loads the current package from that temporary library; fresh complete
 branch CI remains mandatory.
 
+**Final-candidate branch correction (2026-07-27):** At candidate evidence head
+`61c9015a`, all R-CMD-check matrix jobs, test/validation/substrate, coverage,
+lint, and the complete pkgdown site-build job passed. The
+`runtime-without-documentation-tooling` negative control alone failed because
+`setup-r-dependencies` restored a broad fallback cache containing `quarto` and
+`pkgdown` even though dependency selection remained `"hard"` and automatic
+Pandoc/Quarto installation was disabled. The absence assertion therefore
+caught a contaminated fixture, not a runtime dependency. CS-1245 disables the
+package cache for that job only. The site-build cache remains enabled; hard
+dependencies are still resolved and installed; and no runtime, scientific, or
+dependency-declaration behavior changes. Fresh complete branch CI is required
+before merge.
+
 ## Release-Gate Requirement
 
 CS-1245 is the required final release-gate ticket. It names
