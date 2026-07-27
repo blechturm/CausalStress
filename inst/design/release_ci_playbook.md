@@ -36,9 +36,12 @@ branch, main, coverage, and tag signals.
 2. Run local Windows gates:
    - full package tests;
    - validation suite;
-   - `R CMD check --no-manual --no-build-vignettes`;
+   - build the source package with its declared vignette builder and run
+     `R CMD check --no-manual` on that tarball, without
+     `--no-build-vignettes` or `--ignore-vignettes`;
    - coverage when coverage behavior changed or coverage is release evidence;
-   - pkgdown/vignette checks only when documentation work is in scope.
+   - the complete pkgdown and DGP-report build when documentation work is in
+     scope.
 3. Run the local WSL/Ubuntu gate for any change touching executable R code,
    CI, file paths, time-sensitive behavior, test infrastructure, coverage, or
    release-gate logic.
@@ -58,8 +61,36 @@ pushing CI-sensitive changes. For CausalStress, the minimum WSL gate is:
 ```sh
 Rscript -e "devtools::test(reporter = 'summary')"
 Rscript -e "devtools::load_all(quiet=TRUE); strict <- cs_validate_dgp_registry(strict=TRUE); val <- cs_validate_registry(); stopifnot(nrow(strict) == nrow(val), all(val$valid))"
-Rscript -e "devtools::check(document = FALSE, build_args = '--no-build-vignettes', args = c('--no-manual','--ignore-vignettes'), error_on = 'never')"
+R CMD build .
+R CMD check --no-manual CausalStress_*.tar.gz
 ```
+
+For a documentation release, the build/check commands above require the
+versions pinned in `DESCRIPTION` and must build the vignettes. A command using
+`--no-build-vignettes` and `--ignore-vignettes` is permitted only as an optional
+fast pre-check; it is never release-gate evidence.
+
+## Governed Documentation Toolchain
+
+Documentation-aware v0.2.1 checks use the exact versions declared in
+`DESCRIPTION`: Quarto CLI 1.9.38, the `quarto` R package 1.5.1, and `pkgdown`
+2.2.1. Run `Rscript tools/ci-docs.R` before local Windows and WSL documentation
+gates. The check must find the declared CLI directly through `PATH` or
+`QUARTO_PATH`; an undisclosed IDE fallback is not acceptable release evidence.
+
+The complete local documentation rehearsal is:
+
+```sh
+Rscript tools/ci-docs.R
+Rscript dev/render_dossiers.R --validate-only
+quarto render README.qmd --to gfm
+Rscript -e "Sys.setenv(RSTUDIO_PANDOC = file.path(dirname(quarto::quarto_path()), 'tools')); pkgdown::build_site(new_process = TRUE, install = TRUE)"
+Rscript dev/render_dossiers.R --output-dir=docs/dgp
+```
+
+The final source diff must remain unchanged after the rehearsal. Generated
+`docs/`, Quarto working files, and dossier caches are ignored preview artifacts,
+not publication authority.
 
 If coverage or lint behavior changed, also run the closest local equivalent:
 

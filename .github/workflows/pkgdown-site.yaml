@@ -1,0 +1,91 @@
+name: pkgdown-site
+
+"on":
+  push:
+    branches: [main, master, v0.2.1]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  NOT_CRAN: "true"
+  _R_CHECK_FORCE_SUGGESTS_: "false"
+
+permissions:
+  contents: read
+
+jobs:
+  build-site:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: release
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          dependencies: '"hard"'
+          install-quarto: true
+          quarto-version: 1.9.38
+          extra-packages: |
+            any::pkgload
+            any::knitr
+            any::rmarkdown
+            quarto@1.5.1
+            pkgdown@2.2.1
+          needs: website
+
+      - name: Verify Quarto-only source policy and toolchain pins
+        run: Rscript tools/ci-docs.R
+
+      - name: Validate registry-keyed dossier sources
+        run: Rscript dev/render_dossiers.R --validate-only
+
+      - name: Install the source revision used by executable documentation
+        run: R CMD INSTALL .
+
+      - name: Render and verify README
+        run: |
+          quarto render README.qmd --to gfm
+          git diff --exit-code -- README.md
+
+      - name: Build non-publishing pkgdown preview
+        run: Rscript -e "Sys.setenv(RSTUDIO_PANDOC = file.path(dirname(quarto::quarto_path()), 'tools')); pkgdown::build_site(new_process = TRUE, install = TRUE)"
+
+      - name: Render all DGP reports into the preview
+        run: Rscript dev/render_dossiers.R --output-dir=docs/dgp
+
+      - name: Verify source worktree stayed clean
+        run: git diff --exit-code
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pkgdown-preview-${{ github.sha }}
+          path: docs
+
+  runtime-without-documentation-tooling:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: release
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          dependencies: '"hard"'
+          install-pandoc: false
+          install-quarto: false
+
+      - name: Install and load without Quarto or pkgdown
+        run: |
+          R CMD INSTALL .
+          Rscript -e "stopifnot(!requireNamespace('quarto', quietly = TRUE), !requireNamespace('pkgdown', quietly = TRUE)); library(CausalStress); cs_run_single('synth_baseline', 'lm_att', n = 50, seed = 1)"

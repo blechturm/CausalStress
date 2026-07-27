@@ -290,7 +290,7 @@ acceptance does not authorize Batch 2.
   documentation release. Any retained vignette-skipping command must be
   labelled only as an optional fast pre-check, never release evidence.
 - **Review gate:** Batch 2 Quarto substrate and migration review.
-- **Disposition:** open
+- **Disposition:** complete_after_review
 
 ### CS-1238 — Migrate existing README and articles to Quarto
 
@@ -313,7 +313,7 @@ acceptance does not authorize Batch 2.
   variance but does not eliminate empirical-quantile sampling uncertainty.
 - **Review gate:** Batch 2 Quarto substrate and migration review, including a
   protected-prose diff against the v0.2.0 CS-1229 sources.
-- **Disposition:** open
+- **Disposition:** complete_after_review
 
 ### CS-1239 — Migrate and strictly publish all DGP dossiers through Quarto
 
@@ -339,7 +339,80 @@ acceptance does not authorize Batch 2.
   in `synth_heavytail.qmd` and preserve the heavy-tail operating rule.
 - **Review gate:** Batch 2 Quarto substrate and migration review with registry,
   scientific-content, clean-tree, and all-12 render evidence.
-- **Disposition:** open
+- **Disposition:** complete_after_review
+
+## Batch 2 Implementation Evidence
+
+- **CS-1237:** `DESCRIPTION` now pins Quarto CLI 1.9.38, the `quarto` R
+  package 1.5.1, and pkgdown 2.2.1; declares `VignetteBuilder: quarto`; and
+  keeps Quarto/pkgdown in `Suggests`, outside runtime `Imports`. The release
+  workflow installs the exact documentation toolchain and runs full-vignette
+  checks without vignette-ignore flags. A separate non-publishing site
+  workflow builds and uploads a preview and has a clean-session job that
+  installs, loads, and exercises CausalStress without Quarto or pkgdown.
+  `release_ci_playbook.md` now makes the full-vignette gate mandatory for a
+  documentation release and labels any skipping command as an optional fast
+  pre-check only.
+- **CS-1238:** `README.Rmd` and all four package-vignette R Markdown sources
+  were migrated to QMD. `README.qmd` renders reproducibly to the checked-in
+  GFM `README.md`, and all four articles use `quarto::html`. Obsolete Pandoc
+  exits were removed. The optional GenGC chunks now require both GenGC and the
+  explicit `CAUSALSTRESS_RUN_OPTIONAL_DOCS=true` opt-in because the installed
+  optional package currently does not satisfy those pre-existing examples;
+  substantive example reconciliation remains CS-1243. Automated checks retain
+  the CS-1229 heavy-tail signal-anchor, no-ATT-shootout, QST, and empirical-
+  quantile-uncertainty wording.
+- **CS-1239:** All 12 registry-keyed DGP report sources were migrated from Rmd
+  to QMD. Eight reports now explicitly attach their already-used `dplyr`
+  dependency so they render in clean processes; no scientific prose changed.
+  `dev/render_dossiers.R` rejects missing, extra, duplicate, or mis-keyed
+  top-level sidecars, verifies exactly 2 stable and 10 experimental records,
+  requires the pinned CLI, and renders each report in a fresh Quarto process
+  with explicit parameters and job-local cache paths. The former copied
+  `inst/dossiers/` outputs were removed; generated reports now exist only in
+  the ignored pkgdown preview. A final all-12 render produced exactly 12
+  registry-keyed HTML pages with correct titles and one navigation entry each.
+- **Scientific boundary:** The Batch 2 diff contains no `R/` file and no DGP
+  YAML change. DGP implementations, truths, oracle algorithms, RNG, IDs,
+  versions, and statuses are untouched. Source comparison found only Quarto
+  front-matter changes, the eight required `dplyr` attachments, and the
+  article execution guards described above. The protected heavy-tail text is
+  checked directly by `tools/ci-docs.R`.
+- **Local validation:** The pinned Windows toolchain passed the documentation
+  validator, strict 12-pair dossier validator, full all-12 render, README
+  render, pkgdown build, governed lint (`lint_count=0`), and a full
+  vignette-enabled `R CMD build` plus `R CMD check --no-manual` with
+  `Status: OK`. The configured Ubuntu 20.04 WSL substrate independently passed
+  the pinned validators and the same full-vignette build/check with
+  `Status: OK`; unavailable optional estimator packages were informational
+  only. Both workflow YAML files and `tickets.yml` parse successfully, and
+  `git diff --check` is clean.
+- **Gate chronology:** The Windows and WSL `R CMD check` runs preceded only the
+  final developer-renderer staging cleanup and its two ignored-output rules;
+  no installed package file or vignette source changed afterward. On the
+  resulting tree, the full-vignette Windows `R CMD build`, all-12 dossier
+  render, documentation validators, lint, YAML/disposition checks, and tarball
+  source-policy check all passed. The full checks were not repeated for this
+  developer-tool-only correction; remote CI remains mandatory after review and
+  commit.
+- **Generated-state boundary:** Quarto output, support files, local libraries,
+  and caches are ignored. The final dossier job removed its job-local cache
+  and created no source-side `*_files/`, cache, or accidental path artifacts.
+  The unrelated concurrent maintainer edits in `inst/design/horizon.md` are
+  explicitly outside Batch 2 and must be excluded from its review and commit.
+
+Independent review returned **APPROVE WITH NON-BLOCKING NOTES**. The reviewer
+confirmed the Batch 2 scope, exact documentation-tool pins, non-publishing CI,
+format-faithful README/article migration, all-12 registry-keyed dossier
+migration, renderer isolation/cleanup, CS-1229 protected prose, and honest gate
+chronology. Two transparency notes recorded the necessary removal of obsolete
+Pandoc exits plus repair of malformed vignette directives, and the inherent
+fact that remote CI cannot run before commit; neither requires a correction or
+executable rerun.
+
+CS-1237 through CS-1239 are `complete_after_review`. This acceptance authorizes
+the Batch 2 commit only. It does not authorize Batch 3, push, merge, tag, or
+publication. Remote CI remains mandatory after a future authorized push.
 
 ## Batch 3 — Canonical Documentation and Reference Truthfulness
 

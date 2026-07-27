@@ -103,7 +103,7 @@ tickets:
     constitutional_check: "Documentation tooling only; Quarto/pkgdown are not runtime imports"
     test_obligation: "Suggests quarto; VignetteBuilder quarto; pkgdown declared as website tooling; knitr/rmarkdown retained directly only if required; pinned CLI/R package provisioned and verified on Windows, WSL, R-release, and R-devel; build/check vignettes without ignore flags; reconcile both vignette-skipping playbook command blocks so skips are at most optional fast pre-checks; non-publishing site CI"
     review_gate: "Batch 2 Quarto substrate and migration review"
-    disposition: open
+    disposition: complete_after_review
 
   - id: "CS-1238"
     title: "Migrate existing README and articles to Quarto"
@@ -117,7 +117,7 @@ tickets:
     constitutional_check: "Format-only migration; no API, scientific interpretation, example result, or contract drift"
     test_obligation: "README QMD renders current GFM; four articles render with quarto::html; no current README/vignettes Rmd; CS-1229 heavy-tail and MC-uncertainty wording preserved"
     review_gate: "Batch 2 Quarto substrate and migration review with protected-prose diff"
-    disposition: open
+    disposition: complete_after_review
 
   - id: "CS-1239"
     title: "Migrate and strictly publish all DGP dossiers through Quarto"
@@ -130,7 +130,7 @@ tickets:
     constitutional_check: "Articles II and VII; DGP implementation, truth, RNG, identity, version, status, YAML, and scientific content unchanged"
     test_obligation: "Exact registry-keyed YAML/QMD pairs; schema/cache exclusions; fail missing/extra/duplicate/unrenderable; Quarto-only clean-process all-12 build; 2 stable/10 experimental; clean tree; CS-1229 prose preserved"
     review_gate: "Batch 2 Quarto substrate and migration review with all-12 render evidence"
-    disposition: open
+    disposition: complete_after_review
 
   - id: "CS-1240"
     title: "Author the canonical typed-scoring workflow"

@@ -1,6 +1,6 @@
 # CausalStress v0.2.1 Batch Plan
 
-**Status:** ACTIVE — Batch 1 complete after independent review; Batch 2 unauthorized
+**Status:** ACTIVE — Batch 2 complete after independent review; Batch 3 unauthorized
 **Packet:** `causalstress_v0_2_1_spec_packet`
 **Authority commit:** `0b20f12`
 **Accepted:** 2026-07-26
@@ -74,6 +74,7 @@ are not authorized in any batch.
 
 ## Batch 2 — Quarto Platform and Source Migration
 
+- **State:** complete after independent review.
 - **Purpose:** Establish a reproducible Quarto/pkgdown build and mechanically
   migrate every current long-form source before substantive new writing.
 - **Tickets:** CS-1237, CS-1238, CS-1239
