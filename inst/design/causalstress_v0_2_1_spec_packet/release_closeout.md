@@ -2,7 +2,7 @@
 
 **Status:** OPEN — final v0.2.1 release candidate under validation
 **Date closed:** TBD
-**Release candidate commit:** TBD
+**Release candidate commit:** `9031c0d3353be7d9b3462695ff7749f04ca541b4`
 
 This closeout is an active evidence record, not release authorization. The
 initial branch push below predates the v0.2.1 version/date/NEWS update and final
