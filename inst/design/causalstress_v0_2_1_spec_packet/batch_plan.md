@@ -1,6 +1,6 @@
 # CausalStress v0.2.1 Batch Plan
 
-**Status:** ACTIVE — Batches 0–4 and the Batch 5 Pages mechanism complete after review; a second CS-1245 branch-CI correction is under validation
+**Status:** ACTIVE — Batches 0–4 and the Batch 5 Pages mechanism complete after review; correction CI is green and the final CS-1245 release gate is active
 **Packet:** `causalstress_v0_2_1_spec_packet`
 **Authority commit:** `0b20f12`
 **Accepted:** 2026-07-26

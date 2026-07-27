@@ -1,3 +1,22 @@
+# CausalStress 0.2.1
+
+## Quarto Documentation and Bounded Maintenance
+
+* Documentation: Migrated the README, package articles, and all 12 registered
+  DGP dossiers to governed Quarto sources; added canonical typed-scoring,
+  estimator-extension, and native-DGP contribution guides.
+* Website: Added a pinned, validated pkgdown build with one registry-keyed
+  report per DGP and a manual, tag-only GitHub Pages publication workflow.
+* Maintenance: Removed obsolete fingerprint fixtures, a thread setter, an
+  unused estimator-result adapter, duplicated tau forwarding, and one-use
+  vocabulary getters while preserving public behavior and governed identities.
+* Regression safety: Added characterization coverage for the duplicated
+  per-seed runner paths without changing their current behavior or public
+  contracts.
+* Release tooling: Pinned Quarto CLI 1.9.38, the `quarto` R package 1.5.1, and
+  pkgdown 2.2.1 across local and remote documentation gates, including
+  full-vignette Windows, Ubuntu release/devel, and macOS package checks.
+
 # CausalStress 0.2.0
 
 ## Wave 1 Typed Estimand Registry

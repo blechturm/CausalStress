@@ -3,7 +3,7 @@
 **Status:** Active roadmap
 **Authority:** Planning document (authority level 5 per `README.md`); below the
 Constitution, `contracts.md`, active packets, and accepted RFC syntheses.
-**Last updated:** 2026-07-26
+**Last updated:** 2026-07-27
 
 ## Completed: v0.1.10
 
@@ -107,6 +107,12 @@ differences: `cs_run_seeds()` returns cached rows while an all-cached grid
 campaign returns an empty tibble, and deprecated-DGP warnings occur once per
 seed-runner call but once per grid task. v0.2.1 records these contracts without
 changing them.
+
+All implementation batches and the governed Pages mechanism are complete after
+review. Branch preflight is green; CS-1245 is the active final release gate and
+must still collect final-tree Windows/WSL, branch, main, tag, GitHub Release,
+and public Pages evidence in that order before this milestone becomes
+completed.
 
 ------------------------------------------------------------------------
 

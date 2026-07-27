@@ -1,6 +1,6 @@
 # CausalStress v0.2.1 Release Closeout
 
-**Status:** OPEN — second branch-CI correction under validation
+**Status:** OPEN — final v0.2.1 release candidate under validation
 **Date closed:** TBD
 **Release candidate commit:** TBD
 
@@ -123,11 +123,120 @@ profile. Those filesystem denials are local harness limitations, not passes;
 the fresh remote Windows full-vignette check is therefore mandatory before any
 release-state work resumes.
 
+### Fresh correction result
+
+Commit `fd3e4fcc2a234746a690eb89388ced5b42658acc` passed every required branch
+preflight signal. The Windows check installed the exact revision through the
+new temporary-library step and then completed the full Quarto-vignette package
+build/check successfully.
+
+| Signal | Evidence | Result |
+| --- | --- | --- |
+| R CMD check — Ubuntu R-devel | [job 90103627106](https://github.com/blechturm/CausalStress/actions/runs/30303998160/job/90103627106) | Pass |
+| R CMD check — Ubuntu R release | [job 90103627223](https://github.com/blechturm/CausalStress/actions/runs/30303998160/job/90103627223) | Pass |
+| R CMD check — Windows R release | [job 90103627187](https://github.com/blechturm/CausalStress/actions/runs/30303998160/job/90103627187) | Pass, including exact-revision install and full vignette build/check |
+| R CMD check — macOS R release | [job 90103627260](https://github.com/blechturm/CausalStress/actions/runs/30303998160/job/90103627260) | Pass |
+| Test/validation/substrate | [run 30303998024](https://github.com/blechturm/CausalStress/actions/runs/30303998024) | Pass |
+| Coverage/lint | [run 30303997892](https://github.com/blechturm/CausalStress/actions/runs/30303997892) | Pass |
+| Pkgdown preview/runtime smoke | [run 30303997952](https://github.com/blechturm/CausalStress/actions/runs/30303997952) | Pass; no deployment requested or permitted |
+
+These results close the branch-CI correction loop but remain preflight evidence:
+they precede the v0.2.1 version/date/NEWS update. The final-tree local Windows
+and WSL gates, final release-candidate branch CI, main CI, tag CI, GitHub
+Release, and Pages deployment remain required in playbook order.
+
+## Final-tree Windows Gate — 2026-07-27
+
+The candidate reports version `0.2.1` and date `2026-07-27`. Windows used R
+4.5.2 (`x86_64-w64-mingw32`) and the isolated installation
+`C:/Users/maxth/AppData/Local/Temp/CausalStress-v021-gate-lib-c3f94da0293c4db88b09eba5d2e98236/CausalStress`.
+Documentation used Quarto CLI 1.9.38, `quarto` R 1.5.1, and pkgdown 2.2.1.
+
+| Gate | Command/evidence | Result |
+| --- | --- | --- |
+| Exact candidate install | `R CMD INSTALL --library=<gate-lib> .` | Pass; installed CausalStress 0.2.1 for worker and documentation child processes |
+| Full tests | `testthat::test_local('.', reporter='summary', stop_on_failure=TRUE)` | Pass in 238.2-second combined core gate; 0 failures, with expected optional skips and governed warnings |
+| Validation | `Rscript tools/ci-validation.R` | Pass; strict registry and negative certification tests completed with 0 failures |
+| Reproducibility substrate | `Rscript tools/ci-substrate.R` | Pass; ambient RNG `Mersenne-Twister/Inversion/Rejection`, governed generation `Mersenne-Twister/Inversion/Rounding`, `include_truth` and `df`/`true_att`/`true_qst`/`meta` bitwise checks all `TRUE`; thread-cap variables unset |
+| Source build and check | Pinned `Rscript tools/ci-docs.R`; `R CMD build <source>`; `R CMD check --no-manual CausalStress_0.2.1.tar.gz` | Pass in 335 seconds at `C:/Users/maxth/AppData/Local/Temp/CausalStress-v021-build-4e45c54c5ec44167b0f8e9eafe5cefaf`; all seven Quarto vignettes built and rebuilt; `Status: OK` |
+| Documentation/site | Pinned README render, `pkgdown::build_site(new_process=FALSE, install=FALSE)`, all-12 `dev/render_dossiers.R --installed`, and `tools/ci-site.R` | Pass in 163.7 seconds; 7 articles, 12 registry-keyed reports, 121 HTML pages, no broken internal links, and no source drift after the accepted generated README version update |
+| Coverage | `Rscript tools/ci-coverage.R` | Pass; 82.53%, 3,172 entries |
+| Correctness lint | `Rscript tools/ci-lint.R` | Pass; 0 findings and 5 documented internal-helper false positives ignored |
+
+Three local documentation attempts are explicitly not counted as passes. Two
+full-build attempts showed that the Windows Quarto child selected the older
+user-library CausalStress despite the outer isolated library variables; their
+missing `cs_collect_scores` and old estimator-shape failures matched that stale
+installation. A temporary R startup profile outside the repository prepended
+the validated candidate library inside the Quarto child; the passing build
+above used it, and the temporary profile was then deleted. The first standalone
+site attempt selected a separately installed R 4.6.0 and failed on an R 4.5
+binary-library mismatch. Pinning `QUARTO_R`, `R_HOME`, and `PATH` to R 4.5.2
+fixed that harness issue. The next README render correctly changed six generated
+estimator-version cells from 0.2.0 to 0.2.1; that mechanical release artifact
+is retained, and the complete rerun then passed without further source drift.
+
+## Final-tree WSL/Ubuntu Gate — 2026-07-27
+
+The configured default distribution was Ubuntu 20.04 LTS on x86_64 under WSL2,
+using R 4.5.2 (`x86_64-pc-linux-gnu`). Because the distribution had no local
+documentation tooling, the gate installed `quarto` R 1.5.1 and pkgdown 2.2.1
+into disposable library `/tmp/tmp.ZFFdds4ort` and unpacked Quarto CLI 1.9.38
+into a separate temporary directory. The CLI archive SHA-256 was
+`ea8c897368791ad9f200010c087ea3111b2e556b12a960487dd4e216902aa102`.
+No system package or repository file was used to persist this tooling.
+
+| Gate | Command/evidence | Result |
+| --- | --- | --- |
+| Exact candidate install and tool pins | Temporary `pak::pkg_install(c('quarto@1.5.1', 'pkgdown@2.2.1'))`, Quarto 1.9.38 archive, and `R CMD INSTALL --library=/tmp/tmp.ZFFdds4ort .` | Pass; the child library resolved `/tmp/tmp.ZFFdds4ort/CausalStress` and all three documentation versions exactly |
+| Full tests | `testthat::test_local('.', reporter='summary', stop_on_failure=TRUE)` | Pass; 12 optional-estimator skips, 50 governed warnings, and 0 failures |
+| Validation | `Rscript tools/ci-validation.R` | Pass; 24 strict registry rows matched 24 executable validation rows, all valid, and the certification/negative tests passed |
+| Reproducibility substrate | `Rscript tools/ci-substrate.R` | Pass; BLAS `/usr/lib/x86_64-linux-gnu/blas/libblas.so.3.9.0`, ambient RNG `Mersenne-Twister/Inversion/Rejection`, governed generation `Mersenne-Twister/Inversion/Rounding`, all bitwise checks `TRUE`, and thread-cap variables unset |
+| Source build and check | `R CMD build <repo>` then `R CMD check --no-manual CausalStress_0.2.1.tar.gz` | Pass at `/tmp/tmp.wgkb35ci5W/CausalStress.Rcheck/00check.log`; all vignette checks and rebuilds passed, `Status: OK` |
+| Documentation/site | Pinned README render, pkgdown build, all-12 dossier render, and `tools/ci-site.R` | Pass; 7 articles, 12 indexed reports, 121 HTML pages, no broken internal links, and identical source diff/untracked set before and after |
+
+The complete cold-substrate command took 810.6 seconds. The default Ubuntu
+rehearsal is local early-warning evidence only; remote current-Ubuntu branch,
+main, and tag CI remain mandatory.
+
+## Acceptance, Audit Routing, and Constitutional Gate — 2026-07-27
+
+- Machine-readable ticket inspection confirmed the exact sequence CS-1230
+  through CS-1245: CS-1230--CS-1244 are `complete_after_review`, and CS-1245 is
+  the sole `open` ticket while publication evidence remains incomplete.
+- The v0.1.9 deep-code-review audit's historical `OPEN` header does not denote
+  unrouted current work: the v0.1.10 specification's disposition table maps
+  every C1--C5 and M1--M19 finding to CS-1101--CS-1117 or records the reviewed
+  rejection/downgrade for M14/M17; that packet is `FINAL` in the governance
+  index.
+- The code-simplicity audit is fully routed by the v0.2.1 specification: F1
+  characterization shipped while production unification remains in the v0.3.0
+  foundation/v0.2.2 defect escape hatch; F2 and F4--F7 are complete; high-risk
+  F3 remains a pre-families governance decision in the roadmap and horizon.
+- Scientific pass 2 is controlled by `audit/pass2/maintainer-adjudication.md`:
+  CS-1229 shipped the accepted release-facing heavytail/oracle wording in
+  v0.2.0; aggregation-regime, survivorship/SEM, successor-registry, and future
+  family work are explicitly routed to the families planning gate/horizon; the
+  rejected atomic suppression remains rejected. The v0.2.1 maintainer decision
+  preserves Registry 1.4.0 as historical/superseded rather than silently
+  editing it.
+- All other horizon entries are non-binding and retain explicit activation
+  gates; none is implied as v0.2.1 implementation. No audit finding was found
+  silently omitted from current routing.
+- Acceptance assertions found exactly 12 current dossier `.qmd` sources, no
+  current authored `.Rmd` in the README/vignette/dossier locations, no remaining
+  definitions of the three retired helpers, exact descriptor-name/embedded-ID
+  agreement for `att`, `ate`, `qst`, and `cate`, valid ticket YAML, and a clean
+  `git diff --check`.
+- Constitution v2.0.1, the active contract/spec boundary, test/validation
+  results, audit dispositions, and release scope were inspected. No known
+  constitutional violation remains open or deferred.
+
 ## Deferred
 
 | Ticket/Finding | Rationale | Destination |
 | --- | --- | --- |
-| Final CS-1245 release gates | Version/date/NEWS and final-tree local/remote gates have not started. | CS-1245 after correction review and fresh branch CI |
+| Final CS-1245 release gates | Version/date/NEWS are being prepared; final-tree local/remote gates remain pending. | Active CS-1245 release gate |
 
 ## Rejected
 
@@ -139,13 +248,13 @@ release-state work resumes.
 
 | Gate | Evidence | Result |
 | --- | --- | --- |
-| R CMD check | Initial preflight recorded above; final Windows/WSL and branch/main/tag evidence pending | Pending |
-| Validation suite | Initial branch workflow did not trigger; correction awaiting review | Pending |
-| Full test suite | Final local and remote evidence pending | Pending |
-| Documentation and site | Initial pkgdown preview passed; final pinned Windows/WSL and remote evidence pending | Pending |
-| Coverage and lint | Initial branch signal passed; final-tree signal pending | Pending |
-| Acceptance criteria | Final packet-wide audit pending | Pending |
-| Audit routing | Final open-audit routing check pending | Pending |
-| README planning state | Active packet state is current; final closeout update pending | Pending |
-| Known constitutional violations | Final check pending; none introduced by this workflow-only correction | Pending |
-| Reproducibility substrate | Required branch signal missing on initial push; final local/remote evidence pending | Pending |
+| R CMD check | Final Windows and WSL source build/check passed with all Quarto vignettes; branch/main/tag evidence pending | Pending remote sequence |
+| Validation suite | Final Windows and WSL strict/certification validation passed; branch/main/tag evidence pending | Pending remote sequence |
+| Full test suite | Final Windows and WSL suites passed; branch/main/tag evidence pending | Pending remote sequence |
+| Documentation and site | Final pinned Windows/WSL rehearsals passed; remote branch/main/tag preview and public Pages deployment pending | Pending remote/publication sequence |
+| Coverage and lint | Final Windows coverage 82.53% and lint 0; final branch/main/tag signals pending | Pending remote sequence |
+| Acceptance criteria | Packet-wide assertions and reviewed batch dispositions checked as recorded above | Pass |
+| Audit routing | Historical deep audit, simplicity audit, scientific pass 2, and horizon destinations reconciled as recorded above | Pass |
+| README planning state | Governance README names the active CS-1245 final gate; generated README now contains v0.2.1 example output | Pass for candidate; final packet-state update pending |
+| Known constitutional violations | Constitution v2.0.1, contracts, tests, and routed findings checked | Pass: none known open or deferred |
+| Reproducibility substrate | Final Windows and Ubuntu substrate evidence recorded above; branch/main/tag artifacts pending | Pending remote sequence |

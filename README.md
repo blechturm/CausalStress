@@ -162,12 +162,12 @@ cs_audit(board) |>
 
 | dgp_id         | estimator_id | seed | estimator_version |
 |:---------------|:-------------|-----:|:------------------|
-| synth_baseline | ipw_att      |    1 | 0.2.0             |
-| synth_baseline | ipw_att      |    2 | 0.2.0             |
-| synth_baseline | ipw_att      |    3 | 0.2.0             |
-| synth_baseline | lm_att       |    1 | 0.2.0             |
-| synth_baseline | lm_att       |    2 | 0.2.0             |
-| synth_baseline | lm_att       |    3 | 0.2.0             |
+| synth_baseline | ipw_att      |    1 | 0.2.1             |
+| synth_baseline | ipw_att      |    2 | 0.2.1             |
+| synth_baseline | ipw_att      |    3 | 0.2.1             |
+| synth_baseline | lm_att       |    1 | 0.2.1             |
+| synth_baseline | lm_att       |    2 | 0.2.1             |
+| synth_baseline | lm_att       |    3 | 0.2.1             |
 
 For new analysis code, prefer:
 
