@@ -658,6 +658,8 @@ publication, or release.
 - **Motivation:** The release must close with reproducible package, vignette,
   site, and CI evidence; no local preview or tag alone authorizes publication.
 - **Files:** `DESCRIPTION`, `NEWS.md`, `.github/workflows/pkgdown-site.yaml`,
+  `.github/workflows/R-CMD-check.yaml`,
+  `.github/workflows/test-validation-substrate.yaml`,
   `inst/design/README.md`, `inst/design/roadmap.md`,
   `inst/design/release_ci_playbook.md`, packet ticket status files,
   `inst/design/causalstress_v0_2_1_spec_packet/release_closeout.md`, and only
@@ -745,6 +747,42 @@ Remote Pages-configuration evidence (2026-07-27):
 - API read-back verified the workflow build type and the single tag policy.
   No workflow was dispatched and no merge, tag, release, or Pages deployment
   occurred during configuration.
+
+Initial branch-CI correction routing (2026-07-27):
+
+- The first `v0.2.1` branch push at `e42d216` produced green coverage/lint and
+  pkgdown-preview workflows. In R-CMD-check run
+  `https://github.com/blechturm/CausalStress/actions/runs/30292862144`, Ubuntu R
+  release and R-devel passed, while Windows and macOS stopped before package
+  check in `setup-r-dependencies`.
+- Both failed jobs reported the same cause: the action's automatic Pandoc
+  detection called `pak::pkg_deps()` over all dependency types and therefore
+  tried to resolve optional non-CRAN Suggests package `GenGC`. The existing
+  `dependencies: "hard"` boundary had already installed the required check and
+  documentation packages successfully. The correction sets
+  `install-pandoc: false`; the separately pinned Quarto CLI remains installed
+  and `tools/ci-docs.R` remains the executable documentation-substrate gate.
+- The same push exposed that `test-validation-substrate.yaml` still named
+  `v0.2.0` but not `v0.2.1`, so the required test/validation/substrate branch
+  workflow did not run. The correction adds only the active release branch to
+  that existing trigger list.
+- These are narrow release-evidence corrections owned by CS-1245: one prevents
+  an irrelevant optional-Suggests scan before cross-platform checks, and one
+  restores a required branch gate. They do not alter package runtime,
+  scientific behavior, dependency declarations, test semantics, or release
+  authorization. Both require independent review and fresh branch CI before
+  they may count as evidence.
+
+Independent correction review returned **APPROVE WITH NON-BLOCKING NOTES** on
+2026-07-27. It independently confirmed the platform-specific `GenGC` failure
+diagnosis, the two-line executable scope, the independence of the Pandoc and
+Quarto inputs, unchanged full-vignette check semantics, the restored substrate
+trigger, CS-1245 ownership, YAML/Markdown agreement, and the truthful open
+closeout. The reviewer authorized only committing and pushing the correction
+for fresh branch CI. It did not authorize the final release gate, merge, tag,
+GitHub Release, or Pages deployment. Its lineage note correctly observed that
+the correction sits after horizon-only commit `9586841`; fresh CI must be bound
+to the new pushed head rather than the failed `e42d216` preflight.
 
 ## Release-Gate Requirement
 

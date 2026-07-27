@@ -1,6 +1,6 @@
 # CausalStress v0.2.1 Batch Plan
 
-**Status:** ACTIVE — Batches 0–4 and the Batch 5 Pages mechanism complete after independent review; release gate not started
+**Status:** ACTIVE — Batches 0–4, the Batch 5 Pages mechanism, and two initial branch-CI corrections complete after independent review; fresh correction CI pending
 **Packet:** `causalstress_v0_2_1_spec_packet`
 **Authority commit:** `0b20f12`
 **Accepted:** 2026-07-26
@@ -121,7 +121,9 @@ are not authorized in any batch.
 ## Batch 5 — Release Gate and Publication
 
 - **State:** Pages publication mechanism complete after independent review;
-  release-gate execution and remote publication have not started.
+  two narrow initial branch-CI corrections are also complete after independent
+  review. Fresh correction CI is pending. Final release-gate execution and
+  remote publication have not started.
 - **Purpose:** Record complete final-tree release evidence and publish only in
   the governed order.
 - **Tickets:** CS-1245

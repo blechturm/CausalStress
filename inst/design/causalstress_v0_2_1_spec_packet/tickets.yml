@@ -206,6 +206,8 @@ tickets:
       - "DESCRIPTION"
       - "NEWS.md"
       - ".github/workflows/pkgdown-site.yaml"
+      - ".github/workflows/R-CMD-check.yaml"
+      - ".github/workflows/test-validation-substrate.yaml"
       - "inst/design/README.md"
       - "inst/design/roadmap.md"
       - "inst/design/release_ci_playbook.md"
