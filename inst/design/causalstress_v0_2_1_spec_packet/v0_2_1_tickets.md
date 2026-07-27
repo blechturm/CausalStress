@@ -684,12 +684,11 @@ publication, or release.
 **Maintainer decision (2026-07-27):** Publish the v0.2.1 pkgdown site through
 GitHub Pages. This resolves the publication VALUE decision already reserved to
 CS-1245; it is not a constitutional amendment or authority to bypass the
-release order. The deployment mechanism is implemented for independent review
-before any push. Actual deployment remains gated on a clean release tree,
-green branch/main/tag CI, final maintainer acceptance, valid GitHub
-authentication, and the repository Pages source being set to GitHub Actions.
-The `github-pages` environment must also be checked for a selected-tag `v*`
-deployment rule before the first publication dispatch.
+release order. The deployment mechanism passed independent review before any
+push. Actual deployment remains gated on a clean release tree, green
+branch/main/tag CI, and final maintainer acceptance. GitHub authentication,
+the GitHub Actions Pages source, and the selected-tag `v*` environment rule
+were configured and verified afterward as recorded below.
 
 Pages-mechanism implementation evidence (2026-07-27):
 
@@ -714,9 +713,9 @@ Pages-mechanism implementation evidence (2026-07-27):
   assertions pass, `git diff --check` is clean, and the production/package diff
   is empty. `actionlint` is not installed locally; workflow semantics remain an
   explicit independent-review and later remote-CI obligation.
-- GitHub CLI 2.91.0 is present but its current `blechturm` credential is
-  invalid. No Pages setting, workflow dispatch, push, merge, tag, deployment,
-  or other remote mutation has occurred.
+- At implementation and independent-review time, GitHub CLI 2.91.0 was present
+  but its `blechturm` credential was invalid. No remote mutation occurred before
+  review.
 
 Independent review returned **APPROVE WITH NON-BLOCKING NOTES** on 2026-07-27.
 It confirmed the authority boundary, fail-closed event matrix, version guard,
@@ -728,9 +727,24 @@ and the remote `github-pages` selected-tag rule remains mandatory before the
 first deployment. Neither note requires a code correction.
 
 The reviewed Pages mechanism may be committed. CS-1245 remains `open` because
-the final release gate, remote repository configuration, branch/main/tag CI,
-maintainer release decision, GitHub Release, and Pages deployment have not
-occurred. The review authorizes none of those actions.
+the final release gate, branch/main/tag CI, maintainer release decision,
+GitHub Release, and Pages deployment have not occurred. The review authorizes
+none of those actions.
+
+Remote Pages-configuration evidence (2026-07-27):
+
+- The maintainer reauthenticated GitHub CLI as `blechturm` through the secure
+  keyring with `repo` and `workflow` scope; no credential value is recorded.
+- The public `blechturm/CausalStress` repository now has a GitHub Pages site
+  with `build_type: workflow`, enforced HTTPS, and the expected URL
+  `https://blechturm.github.io/CausalStress/`.
+- The `github-pages` environment uses custom deployment policies rather than
+  protected-branch selection. Its sole policy is the tag pattern `v*`. GitHub
+  initially generated an additional `main` branch policy during setup; that
+  exact policy was detected during read-back verification and removed.
+- API read-back verified the workflow build type and the single tag policy.
+  No workflow was dispatched and no merge, tag, release, or Pages deployment
+  occurred during configuration.
 
 ## Release-Gate Requirement
 
