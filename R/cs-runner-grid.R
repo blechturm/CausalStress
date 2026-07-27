@@ -65,53 +65,31 @@ cs_run_grid <- function(dgp_ids,
     estimator_id = estimator_ids,
     stringsAsFactors = FALSE
   )
+  effective_tau <- tau %||% cs_tau_oracle
 
   runs <- lapply(seq_len(nrow(grid)), function(i) {
     message(glue::glue("Running batch: {grid$dgp_id[i]} x {grid$estimator_id[i]}"))
-    if (is.null(tau)) {
-      cs_run_seeds(
-        dgp_id       = grid$dgp_id[i],
-        estimator_id = grid$estimator_id[i],
-        n            = n,
-        seeds        = seeds,
-        version      = version,
-        status       = status,
-        bootstrap    = bootstrap,
-        B            = B,
-        config       = config,
-        board        = board,
-        skip_existing = skip_existing,
-        force         = force,
-        show_progress = show_progress,
-        quiet         = TRUE,
-        max_runtime   = max_runtime,
-        parallel      = parallel,
-        experimental_parallel = experimental_parallel,
-        staging_dir   = staging_dir
-      )
-    } else {
-      cs_run_seeds(
-        dgp_id       = grid$dgp_id[i],
-        estimator_id = grid$estimator_id[i],
-        n            = n,
-        seeds        = seeds,
-        version      = version,
-        status       = status,
-        tau          = tau,
-        bootstrap    = bootstrap,
-        B            = B,
-        config       = config,
-        board        = board,
-        skip_existing = skip_existing,
-        force         = force,
-        show_progress = show_progress,
-        quiet         = TRUE,
-        max_runtime   = max_runtime,
-        parallel      = parallel,
-        experimental_parallel = experimental_parallel,
-        staging_dir   = staging_dir
-      )
-    }
+    cs_run_seeds(
+      dgp_id       = grid$dgp_id[i],
+      estimator_id = grid$estimator_id[i],
+      n            = n,
+      seeds        = seeds,
+      version      = version,
+      status       = status,
+      tau          = effective_tau,
+      bootstrap    = bootstrap,
+      B            = B,
+      config       = config,
+      board        = board,
+      skip_existing = skip_existing,
+      force         = force,
+      show_progress = show_progress,
+      quiet         = TRUE,
+      max_runtime   = max_runtime,
+      parallel      = parallel,
+      experimental_parallel = experimental_parallel,
+      staging_dir   = staging_dir
+    )
   })
 
   tibble::as_tibble(do.call(rbind, runs))

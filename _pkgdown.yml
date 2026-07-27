@@ -1,0 +1,120 @@
+url: https://blechturm.github.io/CausalStress/
+
+template:
+  bootstrap: 5
+
+development:
+  mode: auto
+
+navbar:
+  structure:
+    left: [intro, reference, articles, dgps, news]
+    right: [search, github]
+  components:
+    dgps:
+      text: DGP reports
+      menu:
+        - text: Linear baseline
+          href: dgp/synth_baseline.html
+        - text: Heavy-tail boundary
+          href: dgp/synth_heavytail.html
+        - text: Sharp-null placebo
+          href: dgp/synth_placebo_tau0.html
+        - text: Sign-flip quantile effects
+          href: dgp/synth_qte1.html
+        - text: Nonlinear heteroskedasticity
+          href: dgp/synth_nonlinear_heteroskedastic.html
+        - text: Overlap stress
+          href: dgp/synth_overlap_stressed.html
+        - text: Mild selection tilt
+          href: dgp/synth_tilt_mild.html
+        - text: Nonlinear placebo
+          href: dgp/synth_placebo_nonlinear.html
+        - text: Heavy-tail placebo
+          href: dgp/synth_placebo_heavytail.html
+        - text: Tilted placebo
+          href: dgp/synth_placebo_tilted.html
+        - text: Kang–Schafer placebo
+          href: dgp/synth_placebo_kangschafer.html
+        - text: High-dimensional sparse PLM
+          href: dgp/synth_hd_sparse_plm.html
+
+articles:
+  - title: Start here
+    contents:
+      - canonical-workflow
+  - title: Extend CausalStress
+    contents:
+      - estimator-extension
+      - native-dgp-contribution
+  - title: Further guides
+    contents:
+      - benchmarking-with-suites
+      - caching-and-resume
+      - distributional_intelligence
+      - from-run-to-history
+
+reference:
+  - title: Run benchmarks
+    desc: Discover, configure, and execute governed benchmark tasks.
+    contents:
+      - cs_run_single
+      - cs_run_seeds
+      - cs_run_grid
+      - cs_run_suite
+      - cs_run_campaign
+      - cs_plan_campaign
+      - cs_run_batch
+      - cs_get_dgp
+      - cs_get_estimator
+      - cs_get_suite
+      - cs_suite_registry
+      - cs_register_estimator
+      - cs_register_grf_dr_att
+      - cs_set_rng
+  - title: Collect and interpret evidence
+    contents:
+      - cs_collect_scores
+      - cs_collect_att
+      - cs_collect_qst
+      - cs_tidy
+      - cs_tidy_run
+      - cs_tidy_batch
+      - cs_summarise_runs
+      - cs_summarise_qst
+      - cs_summarise_gatekeeper
+      - cs_plot_att_error
+      - cs_plot_qst
+      - cs_plot_placebo
+      - cs_science_payload
+      - cs_provenance
+      - cs_meta_flatten
+  - title: Persistence and audit
+    contents:
+      - cs_consolidate
+      - cs_gather_results
+      - cs_stage_result
+      - cs_read_batch
+      - cs_audit
+      - cs_delete_result
+      - cs_delete_campaign
+  - title: Truth and validation
+    contents:
+      - cs_true_att
+      - cs_true_qst
+      - cs_tau_oracle
+      - cs_validate_tau_grid
+      - cs_validate_dgp
+      - cs_validate_registry
+      - cs_validate_dgp_registry
+      - cs_dgp_executable_meta
+  - title: Included estimators
+    contents:
+      - starts_with("est_")
+  - title: Included DGP generators
+    contents:
+      - starts_with("dgp_")
+  - title: Package concepts
+    contents:
+      - cs_ci_methods
+      - null_coalesce

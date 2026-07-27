@@ -1,8 +1,8 @@
 Package: CausalStress
 Title: A Rigorous Benchmarking Framework Built on a
         Constitutional Architecture
-Version: 0.2.0
-Date: 2026-07-24
+Version: 0.2.1
+Date: 2026-07-27
 Authors@R: person("Maximilian", "Thomasberger", , "max@blechturm.com",
         role = c("aut", "cre"))
 Description: A rigorous framework for benchmarking causal inference
@@ -15,6 +15,9 @@ Description: A rigorous framework for benchmarking causal inference
         hashes, and a standardized interface for comparing estimators
         across diverse synthetic data-generating processes.
 License: MIT + file LICENSE
+URL: https://blechturm.github.io/CausalStress/,
+    https://github.com/blechturm/CausalStress
+BugReports: https://github.com/blechturm/CausalStress/issues
 Depends:
     R (>= 4.1.0)
 Encoding: UTF-8
@@ -29,10 +32,15 @@ Suggests:
     SuperLearner,
     knitr,
     rmarkdown,
+    quarto (>= 1.5.1),
+    pkgdown (>= 2.2.1),
     patchwork,
     fs,
     withr
 Config/testthat/edition: 3
+Config/CausalStress/QuartoCLI: 1.9.38
+Config/CausalStress/QuartoR: 1.5.1
+Config/CausalStress/pkgdown: 2.2.1
 Imports:
     glue,
     rlang,
@@ -54,4 +62,4 @@ Imports:
     parallel,
     tools,
     magrittr
-VignetteBuilder: knitr
+VignetteBuilder: quarto

@@ -42,6 +42,11 @@ vignettes/*.pdf
 # pkgdown site
 docs/
 
+# Quarto working and generated support files
+/.quarto/
+/_freeze/
+vignettes/*_files/
+
 # translation temp files
 po/*~
 

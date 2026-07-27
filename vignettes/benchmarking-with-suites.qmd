@@ -1,0 +1,117 @@
+---
+title: "Benchmarking with suites and visualization"
+format: html
+vignette: >
+  %\VignetteIndexEntry{Benchmarking with suites and visualization}
+  %\VignetteEngine{quarto::html}
+  %\VignetteEncoding{UTF-8}
+---
+
+Suites are named collections of DGP IDs. They make repeated benchmark setup
+convenient, but membership is not evidence that a DGP is stable or that every
+aggregate is scientifically meaningful. Inspect registry status and each DGP
+report before designing a study.
+
+```{r}
+#| label: setup
+#| message: false
+library(CausalStress)
+library(dplyr)
+library(ggplot2)
+
+board_path <- tempfile("causalstress-suite-")
+dir.create(board_path)
+board <- pins::board_folder(board_path)
+```
+
+## Discover suites
+
+```{r}
+cs_suite_registry() |>
+  select(suite_id, description)
+
+cs_get_suite("placebo")
+```
+
+The placebo suite currently contains experimental DGPs. The call below requests
+that status explicitly and uses a small bootstrap only to make interval plots
+executable. Increase the number of seeds and bootstrap replicates for scientific
+work.
+
+```{r}
+#| warning: false
+placebo_runs <- cs_run_suite(
+  suite_id = "placebo",
+  estimator_ids = "lm_att",
+  n = 150,
+  seeds = 1:2,
+  status = "experimental",
+  bootstrap = TRUE,
+  B = 20,
+  board = board,
+  show_progress = FALSE
+)
+
+placebo_tidy <- cs_tidy(placebo_runs)
+cs_collect_scores(placebo_runs) |>
+  count(estimator_id, estimand_target_id, score_status)
+```
+
+## Visualize ATT evidence
+
+`cs_plot_placebo()` shows each placebo ATT estimate and interval; color records
+whether the interval covers the sharp-null target. `cs_plot_att_error()` shows
+the finite set of per-run ATT deviations.
+
+```{r}
+#| fig-width: 7
+#| fig-height: 4
+cs_plot_placebo(placebo_tidy) +
+  ggtitle("Placebo ATT intervals")
+```
+
+```{r}
+#| fig-width: 7
+#| fig-height: 4
+cs_plot_att_error(placebo_tidy) +
+  ggtitle("ATT deviations in the example runs")
+```
+
+## Interpret the gatekeeper components
+
+`cs_summarise_gatekeeper()` returns separate target-specific components. The ATT
+component compares interval coverage with `threshold`. ATE remains structurally
+present but unverified pending recalibration. For QST, a run fails when more
+than 10% of its tau intervals exclude the placebo truth, and an estimator fails
+when more than 10% of verified runs fail. Missing intervals produce
+`UNVERIFIED`, not a pass.
+
+```{r}
+gate <- cs_summarise_gatekeeper(placebo_runs, threshold = 0.90)
+
+gate$att_verdict
+gate$att_culprits
+gate$ate_verdict
+gate$qst_verdict
+```
+
+The two seeds above demonstrate the API; they are far too few to support a
+scientific gatekeeper decision.
+
+## Inspect execution metadata and persisted evidence
+
+```{r}
+placebo_tidy |>
+  select(
+    dgp_id, estimator_id, seed,
+    run_time_dgp, run_time_est, run_time_total
+  ) |>
+  arrange(desc(run_time_total))
+
+cs_audit(board) |>
+  select(dgp_id, estimator_id, seed, fit_fingerprints)
+```
+
+Timing fields are provenance, not scientific identities. Persisted results are
+written only because this example supplied `board`; `skip_existing = TRUE` is a
+separate opt-in for strict fingerprint-checked resume.

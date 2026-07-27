@@ -127,6 +127,16 @@ Population-target quantile estimators exist in the field and will arrive:
 - **DoubleML** QTE is population by default: `Q_{Y(1)}(τ) − Q_{Y(0)}(τ)` over all
   units, not treated-target.
 - `unc_qte` ships both `qtt` (treated) and `qte` (population) in one package.
+- **RQR** (Borgen–Haupt–Wiborg 2026, *Sociological Methodology*): two-step
+  OLS-residualized bivariate CQR targeting the **population QTE** for binary
+  and continuous treatments; **no identification theorem** (verbal FWL-style
+  argument + simulations only) and no published independent evaluation as of
+  2026-07 — a first-order stress-test specimen. Stata-only (`rqr`, SSC); an R
+  adapter is a trivial hand-implementation that must be validated against the
+  authors' Stata output before any comparison. A GenGC population-QTE
+  DR-CDF-band variant (`gengc_dr_qte`) is parked GenGC-side (roadmap RFC
+  Queue #5) as the candidate DR representative for this panel once the `qte`
+  target exists.
 - CFM `Counterfactual`, GenGC, Firpo `ci.qtet` are treated-target.
 
 **Hazard.** With only `qst` registered, a population-QTE output either (a) is
@@ -147,6 +157,254 @@ While every registered estimator is treated-target, the single `qst` target is
 honest. This is the line that decides whether the headline quantile comparison is
 honest the moment a population-quantile estimator joins. Folded into the registry
 generalization below; do not solve it as a one-off `qte` patch.
+
+### Composition-derivative estimand axis (UQPE) and RIF stress testing: a fourth consumer for parametrized families (parked 2026-07-26; routes through the estimand-registry RFC and the families packet)
+
+**Context for a fresh agent.** The applied world's most-used "quantile effect"
+tool — RIF/unconditional quantile regression (Firpo–Fortin–Lemieux 2009) — does
+not estimate the QTE or the QST/QTT. For a binary treatment `W` with treatment
+prevalence `s = Pr[W = 1]` (written `s`, never `p` — `p` is the unit-level
+propensity column in the DGP contract), the saturated dummy-only RIF
+coefficient has the local prevalence-derivative geometry commonly called the
+**UQPE**:
+
+```text
+UQPE(tau) = dq_tau(s)/ds = [F_{Y|W=0}(q_tau) - F_{Y|W=1}(q_tau)] / f_Y(q_tau)
+```
+
+— the derivative of the **pooled** marginal quantile with respect to
+**treatment prevalence**, built from **observational** conditionals. Ordinary
+covariate-adjusted RIF regressions add projection and density-estimation layers,
+so their fitted coefficient, this observational mixture-share derivative, and a
+causal distributional policy effect must not be treated as synonyms. The
+mixture-share derivative is a distinct **contrast/intervention type**: not
+treated-target (`qst`/`qtt`), not population-target (the reopened `qte`), but a
+**composition derivative**. It differs from QTT through stacked wedges
+(vertical-CDF-gap-over-density geometry vs horizontal quantile gaps; derivative
+per unit share vs discrete per-person switch; pooled vs treated population;
+selection built into the observational conditionals), and the wedges close only
+for infinitesimal effects on linear functionals — the **mean** is the degenerate
+case where the derivative equals the discrete gap exactly, which is why the
+"coefficient = effect" intuition formed there and silently breaks on quantiles.
+The mismatch generalizes: **every marginal functional ν** (quantile, variance,
+Gini, tail share) spawns the triple {population effect, treated effect,
+share-derivative}, so this entry is an instance of the registry-generalization
+question below, not a one-off.
+
+**Prior-art status (provisional 2026-07-26 reconnaissance; reverify before a
+specification):**
+the divergence *theory* is fully crowded — FFL 2009 state the share-derivative
+reading themselves (p. 954; FFL 2007 NBER t0339 Corollary 3 for the dummy
+case); Rothe (2012, *Econometrica*) calls FFL's binary parameter "substantially
+different" from the unconditional share effect and shows the discrete case is
+only set-identified; Martínez-Iriarte & Sun (2024, *J. Econometrics*) give an
+Apparent/Bias decomposition and prove RIF/UQR can be **inconsistent even under
+exogenous treatment**. Borgen, Haupt & Wiborg (2026, *Sociological
+Methodology* 56(2), DOI 10.1177/00811750261450139) already provide
+truth-anchored simulations under both randomized assignment and observed
+confounding (single-binary-covariate selection; normal/right-skew outcomes
+only — heavy tails and overlap stress not simulated). **Residual open cell:** systematic overlap
+and heavy-tail stress, continuous breakdown surfaces, same-τ sign disagreement
+against known truth, and a deployable diagnostic/gate beyond the existing
+UQR-versus-QTE simulations. Full working bibliography,
+must-cite list, and residual uncertainties:
+[`phd-KB/syntheses/rif-uqpe-vs-qtt-prior-art.md`](../../../phd-KB/syntheses/rif-uqpe-vs-qtt-prior-art.md).
+Audience evidence (RIF ≈ 4k-citation applied user base vs ≈ 12 named-QTT works;
+documented misinterpretation literature):
+[`phd-KB/syntheses/qte-estimand-empirical-usage.md`](../../../phd-KB/syntheses/qte-estimand-empirical-usage.md).
+
+**First oracle evidence (2026-07-26, exploratory, inside the accepted A2 R 4.6
+image, no estimators):** UQPE overstates QTT by 14–27% through the body of
+`synth_baseline` and flips to ~50% understatement at τ = 0.99; at the
+`synth_qte1` median the three objects triple-diverge (QTE ≈ 0.005, QTT = 0.646,
+UQPE = 0.736); and a kernel-density denominator produced a **10× artifact in
+the exploratory calculation** on `synth_heavytail` before a kernel-free method
+replaced it. A candidate oracle is therefore the **mixture-quantile central
+finite difference** (pure ECDF inversion of
+`s·F_{Y|W=1} + (1−s)·F_{Y|W=0}` at `s ± δ`; script preserved in the prior-art
+KB note). It is not yet governed truth: the RFC must specify population versus
+finite-Monte-Carlo semantics, δ sensitivity/convergence, Monte Carlo
+uncertainty, and algorithm/version identity. The same 1/f_Y(q_τ)
+fragility afflicts real RIF software and density-scaled Wald quantile inference
+generally; CDF-band inversion (the GenGC DR-QST design) is the density-free
+alternative — a cross-cutting inference-design contrast worth making explicit
+in any study.
+
+**Candidate package mechanisms (all RFC-gated, none authorized):**
+
+1. **Register a composition-derivative target** (working id `uqpe_share`) with its own
+   governed mixture-derivative truth algorithm and a distinct
+   `estimand_target_id`, so no-cross-scoring keeps it
+   structurally apart from `qst`/`qtt`/`qte` — the exact mechanism that
+   separates ATT/ATE and motivates the quantile-axis split above. Article I
+   note: UQPE truth is a functional of the *observational* joint (selection
+   included), oracle-computable from any DGP without identification
+   assumptions. The RFC should first try to express it within the existing
+   distributional truth tier rather than inventing a third tier, and should add
+   a `contrast_type` or `intervention_spec` identity axis so a potential-outcome
+   contrast cannot be confused with a mixture-share derivative.
+2. **RIF-OLS / RIF-logit as registered estimator arms** declaring
+   `estimand_target = uqpe_share`, enabling **two-layer scoring**: (a)
+   own-estimand validity — does RIF even estimate its own UQPE well, given the
+   linear-projection and density-estimation layers; (b) misreading damage —
+   divergence from `qst`/`qte` truths reported only through an explicit,
+   labeled mismatch analysis, never silent cross-scoring.
+3. **Parametrized-families requirements — and the full consumer matrix
+   (updated 2026-07-26).** The families packet has **four estimand-axis
+   consumers**, not two: (i) **ATT** kill-plots (the original motivation; its
+   unique demands — moment-regime dial endpoints and `diagnostic_only`
+   planning — are recorded in the moment-regime entry above); (ii) the
+   **QST/QTE** validity-envelope phase diagram (thesis flagship); (iii)
+   **CATE**, whose execution stays deferred but whose stress axis is a
+   *surface*, uniquely demanding heterogeneity-structure dials (amplitude,
+   modifier sparsity, τ(X) smoothness) plus sharp-null endpoints for the
+   heterogeneity-detection Type-I test (see the estimand-expansion entry);
+   and (iv) **UQPE/composition** (this entry). Each consumer surfaces requirements
+   the others would not — the families spec intake must collect all four
+   demand sets before freezing dial vocabulary. Only the DGP side (registry
+   entries, versioning, truth machinery) amortizes across all four; estimator
+   compute does not, and the consumer count reorders no gates ("families
+   before CATE" stands). This entry's consumer imposes design requirements
+   the others would not surface:
+   - a **treatment-prevalence dial** named `treatment_prevalence` or
+     `treated_share`, not `p` (which already denotes unit-level propensity in
+     CausalStress). The design must distinguish configured prevalence, realized
+     finite-sample share, and the local perturbation `δ`; changing a propensity
+     intercept across family members is not automatically the same intervention
+     as reweighting fixed observational conditionals;
+   - **scorer-only oracle access to observational conditionals plus a
+     share-shift computation**, so functional-triple truths {population,
+     treated, share-derivative} can be governed without entering estimator
+     inputs or weakening the Airlock;
+   - the tail-index, selection/overlap, and heterogeneity/reranking dials
+     (shared with the other consumers) plus per-dial-point DGP identity and
+     versioning (already the families packet's core question);
+   - an **assignment-model misspecification dial** (functional-form wrongness
+     of the treatment equation — omitted interactions/quadratics dialed 0 →
+     severe; a *different axis* than selection strength). Motivating
+     consumers: the QST/QTE panel and any single-robust-vs-orthogonal
+     contrast — e.g. the parked RQR orthogonality-gap experiment (first-order
+     vs second-order nuisance-error propagation); see phd-KB
+     `syntheses/rif-uqpe-vs-qtt-prior-art.md` §"RQR as benchmark specimen".
+4. **Why families matter here specifically:** twelve discrete DGPs yield a
+   mismatch *table*; continuous dials yield **breakdown curves** — UQPE/QTT
+   distortion as a surface in (tail index × τ), (selection × τ), (share × τ) —
+   and a diagnostic threshold can only be **calibrated** on a curve, not on
+   twelve points. Same argument as the estimator kill-plot flagship, fourth
+   consumer.
+
+**Hazard and interim guardrail (no code change):** do **not** register any
+RIF/UQR estimator until the composition-derivative target exists — a RIF arm labeled `qst`
+would be silently cross-scored against treated-target truth, the exact defect
+class the typed system exists to prevent. Consistent with this, the R QTE
+shootout preregistration
+([`thomasberger-phd-research/campaigns/specifications/qte-shootout/PREREGISTRATION.md`](../../../thomasberger-phd-research/campaigns/specifications/qte-shootout/PREREGISTRATION.md))
+excludes RIF from its fair core as a category error rather than a competitor.
+
+**Activation gate:** authorizes nothing. Sequenced behind WP-01/G1 and WP-02
+seals and the families planning gate; the estimand-target addition routes
+through the estimand-registry RFC below (do not solve as a one-off), and the
+programme-side study is parked as candidate WP-05 in
+[`thomasberger-phd-research/META_RESEARCH_MEMORY.md`](../../../thomasberger-phd-research/META_RESEARCH_MEMORY.md)
+§2A. Before any spec freeze, re-verify the prior-art must-cite list — the
+Martínez-Iriarte/Sun and Borgen/RQR lines are active. (The RQR manuscript's
+April-2024 SocArXiv revision was read in full on 2026-07-26 and matches the
+published abstract/content; confirm the *Sociological Methodology* version of
+record at freeze.)
+
+**Release treatment (recorded from the 2026-07-26 external review):** v0.2.1
+batches are untouched. v0.2.1 documentation may describe the four currently
+governed targets and the generic no-cross-scoring rule but must **not**
+advertise UQPE or QTE support. v0.3.0 families planning carries
+`treatment_prevalence`, selection/overlap, tails, and heterogeneity/reranking
+into the requirements intake; the initial families implementation stays
+**target-neutral and serves ATT/QST first**. The UQPE target, its
+truth-algorithm promotion, RIF arms, and the diagnostic gate each require the
+estimand-registry RFC below, constitutional adjudication, and a **named
+consuming study**.
+
+### Selection/missingness DGP class and MAR-standardization estimands (Phase-S0 PARK / NO-GO 2026-07-27; no implementation authority)
+
+**Context for a fresh agent.** Programme candidate WP-06
+([`thomasberger-phd-research/META_RESEARCH_MEMORY.md`](../../../thomasberger-phd-research/META_RESEARCH_MEMORY.md)
+§2A) is an applied-methods paper on sequential full-time/part-time/
+non-employment selection for distributional gender-gap estimands, with an
+Austrian application. The complete evidence record — corrected prior-art
+verdict (the 2026-07-27 recon found no exact published match for the five-part
+  conjunction of sequential FT/PT/NE states, state-specific distributional
+  potential outcomes, gender-gap decomposition, MNAR sensitivity, and
+truth-anchored simulation; closest priors Pereda-Fernández JBES 2025,
+Fernández-Val & Hong JoE 251, Kim 2026; this is a dated search result, not an
+unconditional novelty claim), the
+external peer-review disposition, the Phase-S0 triage mandate/output contract
+with its decision rule, and the split between S0 baseline constraints and
+promotion-stage DGP extensions — lives in
+[`phd-KB/syntheses/selection-distributional-decompositions-prior-art.md`](../../../phd-KB/syntheses/selection-distributional-decompositions-prior-art.md).
+**Phase-S0 is mandated to run OUTSIDE CausalStress** (external review
+2026-07-27: no CausalStress DGP, campaign, adapter, or package feature —
+oracle scripts only). This entry records solely what package support WOULD be
+demanded IF WP-06 is promoted, so the estimand-registry RFC sees the demand
+signal early instead of absorbing it as a one-off later:
+
+**Outcome update.** Phase-S0 completed with technical `PASS`, exact replay, and
+scientific `PARK / NO-GO`. All ten `rho=0.5` pointwise truth targets failed,
+one PT endpoint was unstable, and no frozen sign-contrast gate passed. WP-06
+was not promoted. The requirements below remain a historical demand sketch,
+not a backlog: no selection DGP, estimand, adapter, family, or package work is
+authorized. Any reconsideration must begin as a distinct externally reviewed
+research candidate, not as an S0 repair or CausalStress feature request.
+
+- **A new DGP contract shape.** Multi-state status S ∈ {NE, PT, FT},
+  state-specific potential outcomes (Y\*\_FT, Y\*\_PT — the review killed the
+  single-latent-wage form: one w\* plus a shift imposes common ranks across
+  states by construction), and observed-data masking (wages missing for NE).
+  The current contract assumes complete observation of one outcome plus
+  y0/y1/p; masking generalizes the existing airlock/oracle separation
+  (observed table vs latent truths) rather than violating it, but it is a
+  contract change and therefore Article VII + registry-RFC territory.
+- **New truth objects — with a four-way type distinction the registry must
+  keep.** The trimmed S0 registry contains within-state observed gaps;
+  population distributions of Y\*\_FT and Y\*\_PT; **ONE** precisely defined
+  status-standardized counterfactual distribution; and **ONE** fixed-ordering
+  decomposition. No additional counterfactual or decomposition variants are
+  authorized. (i) *Latent target/truth objects* are the state-specific latent
+  distributions. The observed gaps and decomposition are separately typed
+  descriptive/decomposition outputs; the status-standardized counterfactual is
+  the MAR-standardization estimand. (ii) *Identification regime*: whether MAR
+  standardization
+  identifies a given functional of those truths is a property of the
+  DGP-assumption pair, not of the truth object. (iii) *Estimands*: the
+  identified functionals a method targets under a declared regime. (iv)
+  *Sensitivity parameters* (next bullet). Latent Y\*-distributions do not
+  become "MAR estimands" merely because MAR identifies certain functionals
+  under maintained assumptions. This is a selection-regime/
+  population-descriptor axis for the registry, adjacent to but distinct from
+  the composition-derivative entry's contrast_type axis.
+- **Sensitivity parameters are not estimands.** The Gaussian `rho` is a known
+  selection–outcome dependence parameter in the S0 oracle DGP, while the v0.7
+  analysis varies four observable-law exponential-tilt `gamma` parameters as
+  an explicitly imposed pattern-mixture relaxation, evaluated through weighted
+  empirical CDFs and compared with collapsed binary missingness. Nested widths
+  are descriptive; the decision contrast requires `collapsed_upper<=-0.01`
+  versus `two_pattern_upper>=0.01`, under the
+  same equal-range independently varying relaxation. Neither object
+  is an estimand, and the `gamma` values are not inferred from `rho`. Pointwise
+  oracle-gap coverage is not model-family containment. Empirical work
+  must report over a declared relaxation set (robustness curves/breakdown
+  frontiers, Masten–Poirier structure) rather than treating `rho` or `gamma` as
+  estimated or using oracle truth as a deployable gate. The review explicitly
+  rejected "bias vs true rho" as a gate.
+- **Families note (weight zero until promotion).** If promoted, selection
+  strength, instrument strength (two instruments Z_P/Z_F in the reviewed
+  design), and exclusion-violation dials would make this a further consumer
+  of the parametrized-families packet — recorded for the requirements intake
+  only; the initial families implementation still serves ATT/QST first.
+
+**Activation gate:** closed for the current WP-06 route because Phase-S0 did
+not reach `CONTINUE TO PROMOTION CHECK`. This entry authorizes nothing. A
+future, distinct candidate would still require its own prior-art review, the
+estimand-registry RFC below, and the programme WIP rule before any spec or
+implementation work.
 
 ### Estimand registry generalization: §1.7 list → governed schema (parked 2026-06-17; requires deep research, an RFC, and a §1.7 amendment)
 
@@ -766,6 +1024,31 @@ isolation) and CS-1111 (parallel governance) land, so it evaluates against the
 repaired baseline rather than the audited defects. Outcome routes through an
 RFC before any backend change — execution-backend swaps touch Art. V/VI and
 are an `rfc_cycle.md` trigger.
+
+### Documentation experience follow-ons after v0.2.1 (parked 2026-07-27)
+
+The v0.2.1 documentation release establishes a complete, governed, and
+truthful Quarto/pkgdown surface. A later documentation-experience pass should
+build on that baseline rather than reopening its contracts:
+
+- add a genuine **60-second quickstart** that reaches one interpretable result
+  without requiring readers to understand campaign internals first;
+- add **two or three task-oriented how-to guides** organized around concrete
+  research questions and informed by actual study experience, rather than by
+  package subsystems;
+- create a flagship **heavy-tail estimand-boundary page** that demonstrates the
+  ATT failure/non-convergence under Cauchy noise, explains why the failure is
+  the scientific result rather than a defective DGP, rules out an ordinary ATT
+  shootout in that regime, and shows QST as the well-defined distributional
+  alternative; and
+- make the site more inviting and motivated while preserving the concise
+  warning language, typed-target distinctions, and no-cross-scoring guarantees
+  established in v0.2.1.
+
+These are presentation and pedagogy improvements, not authority to change the
+heavytail DGP, demote its structural ATT signal anchor, or introduce new
+estimands. Promotion should name the consuming study material and include a
+documentation-truthfulness review.
 
 - GitHub Actions CI for install, tests, and release-gate smoke checks.
   Golden-value tests that depend on generated DGP data or fitted model output

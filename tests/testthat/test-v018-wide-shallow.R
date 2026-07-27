@@ -120,3 +120,36 @@ test_that("serial runs do not mutate thread cap env vars", {
   after <- Sys.getenv(keys, unset = "__UNSET__")
   expect_identical(after, before)
 })
+
+test_that("scoped thread caps restore set and unset caller values", {
+  keys <- c(
+    "OMP_NUM_THREADS",
+    "MKL_NUM_THREADS",
+    "OPENBLAS_NUM_THREADS",
+    "VECLIB_MAXIMUM_THREADS"
+  )
+  withr::local_envvar(c(
+    OMP_NUM_THREADS = "7",
+    MKL_NUM_THREADS = NA,
+    OPENBLAS_NUM_THREADS = "3",
+    VECLIB_MAXIMUM_THREADS = NA
+  ))
+  before <- Sys.getenv(keys, unset = NA_character_)
+
+  inside <- CausalStress:::cs_with_envvar(
+    CausalStress:::cs_thread_caps_env(),
+    Sys.getenv(keys, unset = NA_character_)
+  )
+  expect_identical(inside, setNames(rep("1", length(keys)), keys))
+  expect_identical(Sys.getenv(keys, unset = NA_character_), before)
+
+  expect_error(
+    CausalStress:::cs_with_envvar(
+      CausalStress:::cs_thread_caps_env(),
+      stop("thread-cap characterization error")
+    ),
+    "thread-cap characterization error",
+    fixed = TRUE
+  )
+  expect_identical(Sys.getenv(keys, unset = NA_character_), before)
+})

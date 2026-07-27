@@ -28,12 +28,8 @@ For this estimator, \code{ci_method = "default"} maps to \code{"native"}.}
 \item{...}{Ignored. Reserved for future extensions.}
 }
 \value{
-A list with components:
-\itemize{
-\item att: tibble with columns \code{estimand} and \code{estimate}.
-\item qst: \code{NULL} (this estimator does not provide QST).
-\item meta: list with fields \code{estimator_id}, \code{oracle}, \code{supports_qst}.
-}
+A legacy-compatible estimator result containing an \code{att} estimate
+and optional interval, \code{qst = NULL}, \code{cf = NULL}, and CI/provenance \code{meta}.
 }
 \description{
 This estimator wraps the \code{grf::causal_forest()} implementation to estimate
@@ -42,7 +38,6 @@ the average treatment effect on the treated (ATT). It is treated as
 orthogonalization with nuisance estimates for propensity and outcome.
 }
 \details{
-This estimator is \strong{optional} and requires the \code{grf} package. It is not
-part of the core estimator registry by default; instead, it can be
-registered via \code{cs_register_grf_dr_att()}.
+This estimator is an optional registry entry and requires the \code{grf} package.
+The descriptor is discoverable without \code{grf}; execution requires the package.
 }

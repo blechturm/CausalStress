@@ -10,7 +10,9 @@ cs_register_grf_dr_att()
 Invisibly, the updated estimator registry.
 }
 \description{
-This helper registers \code{est_grf_dr_att} under the id \code{grf_dr_att} in the
-estimator registry, marking it as an optional estimator that requires the
-\code{grf} package. It can be called from user code or from an extension package.
+This compatibility helper attempts to register \code{est_grf_dr_att} under the ID
+\code{grf_dr_att}. Current releases already ship that optional descriptor, so
+ordinary use should call the estimator through the runner and does not need
+this helper. Like any duplicate registration, calling it when the ID is
+already present aborts with \code{causalstress_registry_error}.
 }

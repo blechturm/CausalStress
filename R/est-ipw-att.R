@@ -11,6 +11,9 @@
 #' @param tau Numeric vector of quantile levels (unused; included for a uniform estimator interface).
 #' @param ... Unused; included for compatibility with runner forwarding.
 #'
+#' @return A legacy-compatible estimator result with an `att` estimate and
+#'   optional interval, `qst = NULL`, `cf = NULL`, and CI/provenance `meta`.
+#'
 #' @export
 est_ipw_att <- function(df, config = list(), tau = cs_tau_oracle, ...) {
   method_in <- config$ci_method %||% "none"

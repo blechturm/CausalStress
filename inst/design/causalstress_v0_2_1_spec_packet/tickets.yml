@@ -1,0 +1,218 @@
+version: "0.2.1"
+packet: "causalstress_v0_2_1_spec_packet"
+status: active
+authority_commit: "0b20f12"
+accepted: "2026-07-26"
+independent_review: "approve_with_non_blocking_notes_f1_f3_incorporated"
+tickets:
+  - id: "CS-1230"
+    title: "Reconcile the v0.2.1 governance and release boundary"
+    batch: 0
+    source: {type: "spec/roadmap/audit", id: "v0_2_1_spec,roadmap,scientific-pass2"}
+    files:
+      - "inst/design/README.md"
+      - "inst/design/roadmap.md"
+    constitutional_check: "Authority ordering and history preservation; no scientific registry, DGP, estimand, or constitutional content change"
+    test_obligation: "Current governance identifies v0.2.1 as active and v0.2.0 as historical; Registry 1.4.0 is historical/superseded and unedited; successor work is deferred to families"
+    review_gate: "Batch 0 governance and characterization review"
+    disposition: complete_after_review
+
+  - id: "CS-1231"
+    title: "Characterize the duplicated per-seed runner contracts"
+    batch: 0
+    source: {type: "audit/spec", id: "simplicity-F1,v0_2_1_spec"}
+    files:
+      - "tests/testthat"
+    constitutional_check: "Articles II, V, and VI RNG, concurrency, identity, worker-isolation, and persistence contracts"
+    test_obligation: "Characterize supported serial/parallel, board/staging, forwarding, provenance, warning/progress, order, resume/no-overwrite, rejection, grid, and planned-batch behavior without locking implementation internals; production diff empty"
+    review_gate: "Batch 0 governance and characterization review"
+    disposition: complete_after_review
+
+  - id: "CS-1232"
+    title: "Retire historical fingerprint fixture builders"
+    batch: 1
+    source: {type: "audit/spec", id: "simplicity-F2,v0_2_1_spec"}
+    files:
+      - "R/cs-fingerprint.R"
+      - "tests/testthat/test-v018-fingerprint-schema.R"
+    constitutional_check: "Article V schema-4 identity and Article VI fail-closed resume; legacy readers/discovery retained"
+    test_obligation: "Use an unmistakable non-hash sentinel; prove schemas 1-3 reject before comparison with exact classes; freeze representative schema-4 fingerprints; stop on identity drift"
+    review_gate: "Batch 1 bounded-maintenance review; independently deferrable with no partial diff"
+    disposition: complete_after_review
+
+  - id: "CS-1233"
+    title: "Remove the obsolete thread setter"
+    batch: 1
+    source: {type: "audit/spec", id: "simplicity-F4,v0_2_1_spec"}
+    files:
+      - "R/cs-scale-helpers.R"
+      - "tests/testthat"
+    constitutional_check: "Articles V and VI thread caps and worker isolation; caller environment restored"
+    test_obligation: "Confirm no supported or maintainer-declared private use; remove cs_enforce_threads; preserve scoped caps and restoration on success/error"
+    review_gate: "Batch 1 bounded-maintenance review; independently deferrable with no partial diff"
+    disposition: complete_after_review
+
+  - id: "CS-1234"
+    title: "Remove the unused estimator-result adapter"
+    batch: 1
+    source: {type: "audit/spec", id: "simplicity-F5,v0_2_1_spec"}
+    files:
+      - "R/cs-helpers.R"
+      - "tests/testthat/test-helpers-extraction.R"
+      - "tests/testthat"
+    constitutional_check: "Article III estimator output and Airlock contracts"
+    test_obligation: "Move unique fixtures to canonical normalization tests; preserve typed and legacy list(att,qst,meta) shapes; remove adapter without replacement alias"
+    review_gate: "Batch 1 bounded-maintenance review; independently deferrable with no partial diff"
+    disposition: complete_after_review
+
+  - id: "CS-1235"
+    title: "Collapse the duplicated cs_run_grid() tau branch"
+    batch: 1
+    source: {type: "audit/spec", id: "simplicity-F6,v0_2_1_spec"}
+    files:
+      - "R/cs-runner-grid.R"
+      - "tests/testthat/test-runner-grid.R"
+      - "tests/testthat"
+    constitutional_check: "Articles I and V public target behavior and identities unchanged"
+    test_obligation: "Characterize omitted, NULL, default, and custom tau; collapse only if equivalent; preserve validation, warnings, order, score coordinates, and fingerprints"
+    review_gate: "Batch 1 bounded-maintenance review; independently deferrable with no partial diff"
+    disposition: complete_after_review
+
+  - id: "CS-1236"
+    title: "Make governed vocabularies single-source"
+    batch: 1
+    source: {type: "audit/constitution/spec", id: "simplicity-F7,Article-I-1.7,v0_2_1_spec"}
+    files:
+      - "R/cs-contracts.R"
+      - "tests/testthat/test-v020-typed-scoring-core.R"
+    constitutional_check: "Every exact governed target ID, descriptor, non-comparable reason, class, and public message is preserved"
+    test_obligation: "Descriptor names source target IDs and equal embedded IDs; reasons stay adjacent without a framework; stop on vocabulary drift"
+    review_gate: "Batch 1 bounded-maintenance review; independently deferrable with no partial diff"
+    disposition: complete_after_review
+
+  - id: "CS-1237"
+    title: "Establish the pinned Quarto/pkgdown build substrate"
+    batch: 2
+    source: {type: "spec/review/process", id: "v0_2_1_spec,N1,N3,release_ci_playbook"}
+    files:
+      - "DESCRIPTION"
+      - ".Rbuildignore"
+      - "_pkgdown.yml"
+      - ".github/workflows"
+      - "inst/design/release_ci_playbook.md"
+    constitutional_check: "Documentation tooling only; Quarto/pkgdown are not runtime imports"
+    test_obligation: "Suggests quarto; VignetteBuilder quarto; pkgdown declared as website tooling; knitr/rmarkdown retained directly only if required; pinned CLI/R package provisioned and verified on Windows, WSL, R-release, and R-devel; build/check vignettes without ignore flags; reconcile both vignette-skipping playbook command blocks so skips are at most optional fast pre-checks; non-publishing site CI"
+    review_gate: "Batch 2 Quarto substrate and migration review"
+    disposition: complete_after_review
+
+  - id: "CS-1238"
+    title: "Migrate existing README and articles to Quarto"
+    batch: 2
+    source: {type: "spec/review", id: "v0_2_1_spec,N2"}
+    files:
+      - "README.qmd"
+      - "README.md"
+      - "vignettes"
+      - ".Rbuildignore"
+    constitutional_check: "Format-only migration; no API, scientific interpretation, example result, or contract drift"
+    test_obligation: "README QMD renders current GFM; four articles render with quarto::html; no current README/vignettes Rmd; CS-1229 heavy-tail and MC-uncertainty wording preserved"
+    review_gate: "Batch 2 Quarto substrate and migration review with protected-prose diff"
+    disposition: complete_after_review
+
+  - id: "CS-1239"
+    title: "Migrate and strictly publish all DGP dossiers through Quarto"
+    batch: 2
+    source: {type: "spec/audit/review", id: "v0_2_1_spec,scientific-pass2,N2"}
+    files:
+      - "inst/dgp_meta"
+      - "dev/render_dossiers.R"
+      - "_pkgdown.yml"
+    constitutional_check: "Articles II and VII; DGP implementation, truth, RNG, identity, version, status, YAML, and scientific content unchanged"
+    test_obligation: "Exact registry-keyed YAML/QMD pairs; schema/cache exclusions; fail missing/extra/duplicate/unrenderable; Quarto-only clean-process all-12 build; 2 stable/10 experimental; clean tree; CS-1229 prose preserved"
+    review_gate: "Batch 2 Quarto substrate and migration review with all-12 render evidence"
+    disposition: complete_after_review
+
+  - id: "CS-1240"
+    title: "Author the canonical typed-scoring workflow"
+    batch: 3
+    source: {type: "spec/roadmap", id: "v0_2_1_spec,documentation-commitment"}
+    files:
+      - "vignettes"
+      - "_pkgdown.yml"
+    constitutional_check: "Articles I, III, V, and VI no-cross-scoring, Airlock, identity, and persistence"
+    test_obligation: "Exported-API-only clean-install workflow covers discovery, runs, typed collection, ATT/ATE/QST, CATE staging, summaries, provenance, persistence, and resume without optional estimators"
+    review_gate: "Batch 3 scientific and user-documentation truthfulness review"
+    disposition: complete_after_review
+
+  - id: "CS-1241"
+    title: "Document the user-defined estimator contract"
+    batch: 3
+    source: {type: "spec/contract", id: "v0_2_1_spec,cs_register_estimator"}
+    files:
+      - "vignettes"
+      - "_pkgdown.yml"
+    constitutional_check: "Article III Airlock and estimator output contract"
+    test_obligation: "Public-API minimal estimator demonstrates typed output and documents lifecycle, versioning, targets, legacy shapes, dependencies, CI, Airlock, and failures"
+    review_gate: "Batch 3 scientific and user-documentation truthfulness review"
+    disposition: complete_after_review
+
+  - id: "CS-1242"
+    title: "Document native DGP contribution without inventing a public API"
+    batch: 3
+    source: {type: "spec/constitution", id: "v0_2_1_spec,Articles-II-VII"}
+    files:
+      - "vignettes"
+      - "_pkgdown.yml"
+    constitutional_check: "Immutable DGP versions, truth/RNG review, registry status, and X1...Xk naming"
+    test_obligation: "Contributor guide covers native generator/sidecar/truth/validation/RNG/status/review and explicitly says no public runtime DGP-registration API or real-data/family support"
+    review_gate: "Batch 3 scientific and user-documentation truthfulness review"
+    disposition: complete_after_review
+
+  - id: "CS-1243"
+    title: "Reconcile existing articles, roxygen, and reference truth"
+    batch: 3
+    source: {type: "spec/release-history", id: "v0_2_1_spec,CS-1223,CS-1229"}
+    files:
+      - "vignettes"
+      - "R"
+      - "man"
+      - "README.qmd"
+      - "README.md"
+      - "_pkgdown.yml"
+    constitutional_check: "Documentation-only contract repair; no signature, behavior, status, or vocabulary change"
+    test_obligation: "Remove stale v0.1.x/qs/shape/target/DGP/parallel/collector/registration claims; preserve CS-1229; regenerate Rd; review every exported page and article"
+    review_gate: "Batch 3 scientific and user-documentation truthfulness review"
+    disposition: complete_after_review
+
+  - id: "CS-1244"
+    title: "Validate the complete Quarto/pkgdown publication artifact"
+    batch: 4
+    source: {type: "spec/review", id: "v0_2_1_acceptance,N1-N3"}
+    files:
+      - "_pkgdown.yml"
+      - ".github/workflows"
+      - "tests/testthat"
+      - "dev"
+    constitutional_check: "Documentation truthfulness across Articles I-VII; site assembly creates no runtime or scientific authority"
+    test_obligation: "Clean pinned-toolchain site build; QMD-only sources; exactly 12 indexed reports; complete links; executable guarded examples; typed/heavy-tail truth; current README; clean tree; affected full gates"
+    review_gate: "Batch 4 integrated-site and documentation-truthfulness review"
+    disposition: complete_after_review
+
+  - id: "CS-1245"
+    title: "Run the v0.2.1 release gate and publish in playbook order"
+    batch: 5
+    source: {type: "process/spec", id: "release_gate,release_ci_playbook,v0_2_1_spec"}
+    files:
+      - "DESCRIPTION"
+      - "NEWS.md"
+      - ".github/workflows/pkgdown-site.yaml"
+      - ".github/workflows/R-CMD-check.yaml"
+      - ".github/workflows/test-validation-substrate.yaml"
+      - "inst/design/README.md"
+      - "inst/design/roadmap.md"
+      - "inst/design/release_ci_playbook.md"
+      - "inst/design/causalstress_v0_2_1_spec_packet"
+    constitutional_check: "Read release_gate.md first; no known constitutional violation may remain open except by amendment"
+    test_obligation: "Record all local Windows/WSL, full-vignette R CMD build/check, test, validation, lint, coverage, substrate, branch/main/tag CI, site, clean-tree, audit, and publication evidence; confirm no vignette-skipping command is release evidence; deploy Pages only by a manual version-matched tag dispatch after green tag CI and maintainer authorization"
+    review_gate: "Final release-gate review before merge/tag/publication and maintainer release decision"
+    disposition: open

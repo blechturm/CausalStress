@@ -1,24 +1,94 @@
 test_that("canonical estimand target descriptors and reason vocabulary are strict", {
   targets <- CausalStress:::cs_estimand_targets()
 
-  expect_named(targets, c("att", "ate", "qst", "cate"))
-  expect_equal(
-    vapply(targets, CausalStress:::cs_compact_estimand_target_id, character(1)),
-    c(att = "att", ate = "ate", qst = "qst", cate = "cate")
+  expect_identical(
+    targets,
+    list(
+      att = list(
+        estimand_target_id = "att",
+        truth_tier = "structural",
+        target_level = "population-scalar",
+        target_population = "treated",
+        evaluation_policy = "observed-run-sample",
+        metric_ids = "point_error",
+        scoring_population_id = "treated"
+      ),
+      ate = list(
+        estimand_target_id = "ate",
+        truth_tier = "structural",
+        target_level = "population-scalar",
+        target_population = "all",
+        evaluation_policy = "observed-run-sample",
+        metric_ids = "point_error",
+        scoring_population_id = "full_generated_run_sample"
+      ),
+      qst = list(
+        estimand_target_id = "qst",
+        truth_tier = "distributional",
+        target_level = "distributional-curve",
+        target_population = "treated",
+        evaluation_policy = "runner-tau-grid",
+        metric_ids = "point_error",
+        scoring_population_id = "treated"
+      ),
+      cate = list(
+        estimand_target_id = "cate",
+        truth_tier = "structural",
+        target_level = "unit-level",
+        target_population = "held-out-eval",
+        evaluation_policy = "held-out-eval",
+        metric_ids = "point_error",
+        scoring_population_id = "held_out_eval"
+      )
+    )
   )
-  expect_equal(targets$att$target_population, "treated")
-  expect_equal(targets$ate$target_population, "all")
-  expect_equal(targets$qst$target_level, "distributional-curve")
-  expect_equal(targets$cate$evaluation_policy, "held-out-eval")
+  expect_identical(
+    names(targets),
+    unname(vapply(targets, `[[`, character(1), "estimand_target_id"))
+  )
 
-  expect_invisible(CausalStress:::cs_check_non_comparable_reason("truth_unavailable"))
-  expect_error(
+  reasons <- c(
+    "estimator_not_produced",
+    "truth_unavailable",
+    "metric_invalid_for_regime",
+    "ci_unavailable",
+    "gate_unimplemented",
+    "not_requested",
+    "target_not_implemented"
+  )
+  for (reason in reasons) {
+    expect_identical(CausalStress:::cs_check_non_comparable_reason(reason), reason)
+  }
+
+  reason_error <- expect_error(
     CausalStress:::cs_check_non_comparable_reason("truth_missing"),
     class = "causalstress_non_comparable_reason_error"
   )
-  expect_error(
+  expect_identical(
+    conditionMessage(reason_error),
+    "Unknown non-comparable reason: truth_missing."
+  )
+  reason_shape_error <- expect_error(
+    CausalStress:::cs_check_non_comparable_reason(""),
+    class = "causalstress_non_comparable_reason_error"
+  )
+  expect_identical(
+    conditionMessage(reason_shape_error),
+    "`reason` must be a non-empty character scalar."
+  )
+
+  target_error <- expect_error(
     CausalStress:::cs_estimand_target("att_typo"),
     class = "causalstress_estimand_target_error"
+  )
+  expect_identical(conditionMessage(target_error), "Unknown estimand target id: att_typo.")
+  target_shape_error <- expect_error(
+    CausalStress:::cs_estimand_target(""),
+    class = "causalstress_estimand_target_error"
+  )
+  expect_identical(
+    conditionMessage(target_shape_error),
+    "`target` must identify one estimand target."
   )
 })
 
@@ -36,6 +106,24 @@ test_that("legacy estimator outputs normalize to typed ATT and QST outputs", {
   expect_equal(outputs$att$estimate, 1.5)
   expect_equal(outputs$qst$estimate, c(0.1, 0.2))
   expect_equal(outputs$qst$tau_id, cs_tau_id(tau))
+})
+
+test_that("legacy tabular and missing outputs normalize at the canonical boundary", {
+  tabular <- list(
+    att = tibble::tibble(estimate = 5),
+    qst = tibble::tibble(tau = c(0.3, 0.4), estimate = c(3, 4))
+  )
+  outputs <- CausalStress:::cs_normalize_estimator_outputs(tabular)
+
+  expect_identical(outputs$att$estimate, 5)
+  expect_identical(outputs$att$estimand_target_id, "att")
+  expect_equal(outputs$qst$estimate, c(3, 4))
+  expect_equal(outputs$qst$tau_id, cs_tau_id(c(0.3, 0.4)))
+
+  expect_identical(
+    CausalStress:::cs_normalize_estimator_outputs(list(att = NULL, qst = NULL)),
+    list()
+  )
 })
 
 test_that("typed outputs normalize and do not cross-score ATT and ATE", {

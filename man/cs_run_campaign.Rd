@@ -100,16 +100,19 @@ per-task runs. Defaults to \code{FALSE} so governance warnings remain loud.}
 \item{max_runtime}{Numeric scalar; maximum allowed runtime in seconds per
 task.}
 
-\item{...}{Additional arguments forwarded to cs_run_single() (tau, etc.).}
+\item{...}{Additional arguments forwarded to \code{\link[=cs_run_single]{cs_run_single()}} in direct
+grid mode. Plan mode ignores the grid-mode arguments.}
 }
 \value{
-Tibble with one row per run (grid mode) or invisibly returns the
-batch ids executed (plan mode).
+In direct grid mode, a tibble with one row per executed run. In plan
+mode, invisibly returns the batch IDs executed.
 }
 \description{
-This runner parallelizes over the full Cartesian product of
-(dgp_id, estimator_id, seed) with dynamic load balancing, making it
-the recommended entry point for large heterogeneous campaigns.
+This function preserves two public execution modes. With \code{plan}, it executes
+advanced planned batches. Without \code{plan}, it executes the requested
+DGP-estimator-seed Cartesian product directly. For ordinary new workflows,
+\code{\link[=cs_run_single]{cs_run_single()}}, \code{\link[=cs_run_seeds]{cs_run_seeds()}}, and \code{\link[=cs_run_grid]{cs_run_grid()}} are the narrower
+entry points; this function's two return contracts remain supported.
 }
 \examples{
 \dontrun{

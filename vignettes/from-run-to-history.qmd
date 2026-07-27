@@ -1,0 +1,145 @@
+---
+title: "From a run to persisted history"
+format: html
+vignette: >
+  %\VignetteIndexEntry{From a run to persisted history}
+  %\VignetteEngine{quarto::html}
+  %\VignetteEncoding{UTF-8}
+---
+
+CausalStress separates execution, optional persistence, typed scoring, and
+audit. A board is required only when results should be stored; without it,
+runners simply return their result objects.
+
+```{r}
+#| label: setup
+#| message: false
+library(CausalStress)
+library(dplyr)
+library(pins)
+
+board_path <- tempfile("causalstress-history-")
+dir.create(board_path)
+board <- board_folder(board_path)
+```
+
+## Run and persist one seed
+
+`cs_run_single()` returns typed outputs and scores, compatibility ATT/QST
+projections, optional bootstrap draws, metadata, and provenance. Bootstrap draws
+are present only when the estimator/runner produced them.
+
+```{r}
+one_run <- cs_run_single(
+  dgp_id = "synth_baseline",
+  estimator_id = "lm_att",
+  n = 200,
+  seed = 123,
+  board = board
+)
+
+names(one_run)
+
+cs_collect_scores(one_run) |>
+  select(estimand_target_id, metric_id, score_status, estimate, truth, error)
+
+cs_tidy(one_run) |>
+  select(dgp_id, estimator_id, seed, est_att, att_error)
+```
+
+Only the completed result is persisted. The board does not make an in-progress
+estimator call recoverable.
+
+## Scale to an ordinary grid
+
+This small grid uses the finite-moment baseline DGP, so the displayed mean ATT
+error summaries have their ordinary interpretation. Heavy-tail estimand-boundary
+runs should be executed and reported separately, not placed in a mean-based ATT
+RMSE, coverage, or ranking shootout.
+
+```{r}
+runs <- cs_run_grid(
+  dgp_ids = "synth_baseline",
+  estimator_ids = c("lm_att", "ipw_att"),
+  n = 200,
+  seeds = 1:3,
+  board = board,
+  show_progress = FALSE
+)
+
+scorecard <- cs_summarise_runs(runs)
+scorecard |>
+  select(
+    dgp_id, estimator_id, n_runs,
+    mean_error, mean_abs_error, sd_error
+  )
+```
+
+`mean_error` is signed mean deviation, `mean_abs_error` is mean absolute
+deviation, and `sd_error` is the standard deviation across the supplied runs.
+None of those columns is RMSE.
+
+## Resume matching completed work
+
+Resume is explicit and strict. `skip_existing = TRUE` requires current schema-4
+metadata and an exact configuration fingerprint before reading an existing pin.
+Here all requested records already exist, so the estimators are not rerun.
+
+```{r}
+resumed <- cs_run_grid(
+  dgp_ids = "synth_baseline",
+  estimator_ids = c("lm_att", "ipw_att"),
+  n = 200,
+  seeds = 1:3,
+  board = board,
+  skip_existing = TRUE,
+  show_progress = FALSE
+)
+
+resumed |>
+  count(estimator_id)
+```
+
+Filesystem reads and validation still take time. A mismatch or historical
+schema fails closed; use `force = TRUE` only when recomputation and replacement
+are intentional.
+
+## Audit and reload persisted evidence
+
+`cs_audit()` inventories pins and their recorded identities. It does not turn
+timestamps or runtime logs into scientific identity fields.
+
+```{r}
+history <- cs_audit(board)
+history |>
+  select(
+    dgp_id, estimator_id, estimator_version,
+    seed, fit_fingerprints, score_fingerprints, pin_name
+  ) |>
+  head()
+```
+
+A pins board remains an ordinary persistence boundary, so a selected artifact
+can be loaded with pins and then inspected through CausalStress accessors.
+
+```{r}
+target <- history |>
+  filter(
+    dgp_id == "synth_baseline",
+    estimator_id == "lm_att",
+    seed == 1
+  ) |>
+  slice(1)
+
+stored_result <- pin_read(board, target$pin_name)
+
+cs_meta_flatten(stored_result) |>
+  select(dgp_id, estimator_id, seed, fit_fingerprint)
+
+cs_provenance(stored_result)[c("run_time_dgp", "run_time_est", "run_time_total")]
+```
+
+For experimental parallel execution, workers stage completed RDS artifacts and
+the controlling process gathers them through a single-writer path. That is a
+different contract from serial board writes and does not make a whole campaign
+transactional.

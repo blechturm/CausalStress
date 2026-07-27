@@ -1,8 +1,10 @@
 #' Run a full campaign across DGPs, estimators, and seeds
 #'
-#' This runner parallelizes over the full Cartesian product of
-#' (dgp_id, estimator_id, seed) with dynamic load balancing, making it
-#' the recommended entry point for large heterogeneous campaigns.
+#' This function preserves two public execution modes. With `plan`, it executes
+#' advanced planned batches. Without `plan`, it executes the requested
+#' DGP-estimator-seed Cartesian product directly. For ordinary new workflows,
+#' [cs_run_single()], [cs_run_seeds()], and [cs_run_grid()] are the narrower
+#' entry points; this function's two return contracts remain supported.
 #'
 #' @param plan Optional plan tibble from `cs_plan_campaign()`. If supplied,
 #'   `cs_run_campaign()` will execute the planned batches and ignore the
@@ -45,10 +47,11 @@
 #'   [cs_ci_methods]).
 #' @param B Integer; convenience alias forwarded to [cs_run_single()] for setting
 #'   `config$n_boot` when `bootstrap=TRUE`.
-#' @param ... Additional arguments forwarded to cs_run_single() (tau, etc.).
+#' @param ... Additional arguments forwarded to [cs_run_single()] in direct
+#'   grid mode. Plan mode ignores the grid-mode arguments.
 #'
-#' @return Tibble with one row per run (grid mode) or invisibly returns the
-#'   batch ids executed (plan mode).
+#' @return In direct grid mode, a tibble with one row per executed run. In plan
+#'   mode, invisibly returns the batch IDs executed.
 #' @export
 #'
 #' @examples

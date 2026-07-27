@@ -1,0 +1,226 @@
+---
+title: "Extend CausalStress with an estimator"
+format: html
+vignette: >
+  %\VignetteIndexEntry{Extend CausalStress with an estimator}
+  %\VignetteEngine{quarto::html}
+  %\VignetteEncoding{UTF-8}
+---
+
+`cs_register_estimator()` is the supported runtime extension boundary for
+estimators. Registration is process-local: repeat it in each R session, or have
+an extension package register during its own startup. CausalStress does not
+persist registrations, replace an existing ID, or provide an unregister
+operation.
+
+```{r}
+#| label: setup
+#| message: false
+library(CausalStress)
+library(dplyr)
+```
+
+## A minimal typed estimator
+
+An estimator generator accepts `(df, config = list(), tau = cs_tau_oracle,
+...)`. The `df` supplied to an ordinary estimator contains observed `y`, binary
+`w`, and covariates. This deliberately simple unadjusted mean difference is a
+contract example, not a generally adequate causal estimator.
+
+```{r}
+mean_difference_att <- function(
+  df,
+  config = list(),
+  tau = cs_tau_oracle,
+  ...
+) {
+  estimate <- mean(df$y[df$w == 1]) - mean(df$y[df$w == 0])
+
+  list(
+    outputs = list(
+      att = list(estimate = estimate)
+    ),
+    meta = list(
+      estimator_id = "mean_difference_att",
+      version = "1.0.0",
+      capabilities = "att"
+    )
+  )
+}
+
+cs_register_estimator(
+  estimator_id = "mean_difference_att",
+  type = "external",
+  generator = mean_difference_att,
+  version = "1.0.0",
+  description = "Unadjusted mean difference for contract documentation."
+)
+
+cs_get_estimator("mean_difference_att")[c(
+  "estimator_id", "type", "version", "source", "requires_pkgs"
+)]
+```
+
+The ordinary runner now treats the registered implementation like any other
+estimator and scores only the requested target.
+
+```{r}
+custom_run <- cs_run_single(
+  dgp_id = "synth_baseline",
+  estimator_id = "mean_difference_att",
+  n = 200,
+  seed = 4
+)
+
+cs_collect_scores(custom_run) |>
+  select(estimand_target_id, metric_id, score_status, estimate, truth, error)
+```
+
+## Treat identity and versioning as evidence
+
+The estimator ID and version enter provenance and run identities. Change the
+version whenever the scientific implementation changes. Because IDs cannot be
+replaced within a session, restart R before registering a new implementation
+under the same ID. For reproducible campaigns, define registration in a
+versioned package or script and record the versions of its dependencies.
+
+## Typed and legacy return shapes
+
+Typed output is preferred. Each produced target is named under `outputs`:
+
+```{r}
+#| eval: false
+list(
+  outputs = list(
+    att = list(estimate = 0.5),
+    ate = list(estimate = 0.4),
+    qst = tibble::tibble(
+      tau = c(0.25, 0.50, 0.75),
+      estimate = c(0.2, 0.4, 0.8)
+    )
+  ),
+  meta = list(
+    estimator_id = "my_estimator",
+    version = "1.2.0",
+    capabilities = c("att", "ate", "qst")
+  )
+)
+```
+
+QST output must contain the exact requested `tau` coordinates and an
+`estimate` column. A legacy `list(att, qst, meta)` result is still normalized
+for compatibility, but new extensions should return typed `outputs` so target
+identity is explicit.
+
+```{r}
+#| eval: false
+list(
+  att = list(estimate = 0.5),
+  qst = tibble::tibble(tau = tau, estimate = qst_estimates),
+  meta = list(estimator_id = "legacy_shape", version = "1.0.0")
+)
+```
+
+Registration's `supports_qst = TRUE` declares that the estimator can produce a
+QST curve. Actual target production is still determined by the returned output
+and the requested `config$estimand_targets`. It does not authorize substituting
+QST for ATT, ATE, or CATE.
+
+## Optional dependencies
+
+Declare packages used by the implementation in `requires_pkgs`. The runner
+checks them before calling the generator. If one is unavailable, the run
+records a controlled estimator failure rather than entering the generator.
+
+```{r}
+#| eval: false
+cs_register_estimator(
+  estimator_id = "my_optional_estimator",
+  type = "external",
+  generator = my_optional_estimator,
+  version = "1.0.0",
+  requires_pkgs = c("someModelPackage")
+)
+```
+
+Keep the package namespace explicit inside the generator, and test both the
+installed and missing-dependency paths in the extension's CI.
+
+## Confidence intervals
+
+`bootstrap = TRUE` is a runner convenience: when absent, it supplies
+`config$ci_method = "bootstrap"`, the per-run seed, and `config$n_boot` from
+`B`. The estimator still owns interval computation and must return interval
+fields and truthful CI metadata. Do not label a normal approximation, model
+interval, or failed bootstrap as a successful bootstrap interval.
+
+```{r}
+#| eval: false
+list(
+  outputs = list(
+    att = list(
+      estimate = estimate,
+      ci_lo = ci[1],
+      ci_hi = ci[2]
+    )
+  ),
+  meta = list(
+    estimator_id = "my_estimator",
+    version = "1.2.0",
+    capabilities = "att",
+    ci_method = "bootstrap",
+    ci_type = "percentile",
+    ci_level = 0.95,
+    ci_valid = TRUE
+  )
+)
+```
+
+## The Airlock boundary
+
+Ordinary estimators receive observed `y`, `w`, and covariates only. The runner
+removes DGP-owned `y0`, `y1`, `p`, and `structural_te`. Only a registry
+descriptor marked `oracle = TRUE` may be eligible for `p` or `structural_te`,
+and the grant must also follow its declared columns and run configuration.
+`y0` and `y1` are never granted. This is an honest-code scientific boundary,
+not a security sandbox for hostile R code.
+
+External estimators should normally remain non-oracle. Do not request oracle
+metadata merely to simplify an implementation.
+
+## Failures are classed at the boundary
+
+Invalid registration and unknown or duplicate IDs use
+`causalstress_registry_error`. Invalid estimator output uses estimator or
+contract error classes. Truth-access violations use
+`causalstress_airlock_error`. Consumers should catch the narrowest relevant
+class rather than parse message text.
+
+```{r}
+duplicate_class <- tryCatch(
+  {
+    cs_register_estimator(
+      estimator_id = "mean_difference_att",
+      type = "external",
+      generator = mean_difference_att
+    )
+    NA_character_
+  },
+  causalstress_registry_error = function(error) class(error)[1]
+)
+
+duplicate_class
+```
+
+## Extension-package checklist
+
+Before using an external estimator in an evidence campaign:
+
+1. freeze a unique ID and implementation version;
+2. return explicit typed targets and exact requested QST coordinates;
+3. declare and test optional dependencies;
+4. test point estimates, interval metadata, deterministic seed forwarding, and
+   classed failure paths;
+5. verify ordinary execution cannot see DGP truth;
+6. register afresh in every worker/session that needs the estimator; and
+7. retain the registration code and dependency versions with the campaign.

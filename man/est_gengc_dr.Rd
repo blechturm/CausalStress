@@ -25,8 +25,8 @@ est_gengc_dr(df, tau = cs_tau_oracle, config = list())
 For this estimator, \code{ci_method = "default"} maps to \code{"bootstrap"}.}
 }
 \value{
-List with \code{att}, \code{qst}, \code{cf = NULL}, and \code{meta} satisfying
-\code{cs_check_estimator_output(require_qst = TRUE)}.
+A legacy-compatible estimator result containing scalar \code{att}, a QST
+table at the requested \code{tau} values, \code{cf = NULL}, and CI/provenance \code{meta}.
 }
 \description{
 Adapter around GenGC's doubly robust estimator. Mirrors \code{est_gengc} but

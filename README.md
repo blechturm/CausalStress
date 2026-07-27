@@ -1,9 +1,10 @@
 
-<!-- README.md is generated from README.Rmd. Please edit that file. -->
+
+<!-- README.md is generated from README.qmd. Please edit that file. -->
 
 # CausalStress
 
-> **CausalStress v0.2.0 scientific status** CausalStress has a tested
+> **CausalStress v0.2.1 scientific status** CausalStress has a tested
 > execution and evidence contract, but most bundled DGPs have not
 > completed scientific validation. Use it for development and governed
 > benchmarking, not as evidence that an estimator is scientifically
@@ -17,7 +18,7 @@ analysis.
 
 ## Current scientific scope
 
-Version 0.2.0 implements scoring for:
+Version 0.2.1 implements scoring for:
 
 - **ATT**: average treatment effect on the treated;
 - **ATE**: finite-sample average treatment effect;
@@ -29,7 +30,7 @@ closed; when CATE is included in a mixed request, it is represented by a
 explicit without claiming a working CATE benchmark.
 
 All bundled DGPs are **synthetic**. Real-data DGP support is planned,
-but no real-data DGP or public DGP-registration API exists in v0.2.0.
+but no real-data DGP or public DGP-registration API exists in v0.2.1.
 
 The registry contains 12 DGP IDs and 24 immutable versioned entries. The
 current default stable versions are `synth_baseline` and
@@ -83,7 +84,7 @@ historical fidelity, or citations.
   consolidation.
 
 The governing rules and operational contracts live under
-[`inst/design/`](inst/design/README.md).
+[`inst/design/`](https://github.com/blechturm/CausalStress/blob/main/inst/design/README.md).
 
 ## Installation
 
@@ -161,12 +162,12 @@ cs_audit(board) |>
 
 | dgp_id         | estimator_id | seed | estimator_version |
 |:---------------|:-------------|-----:|:------------------|
-| synth_baseline | ipw_att      |    1 | 0.2.0             |
-| synth_baseline | ipw_att      |    2 | 0.2.0             |
-| synth_baseline | ipw_att      |    3 | 0.2.0             |
-| synth_baseline | lm_att       |    1 | 0.2.0             |
-| synth_baseline | lm_att       |    2 | 0.2.0             |
-| synth_baseline | lm_att       |    3 | 0.2.0             |
+| synth_baseline | ipw_att      |    1 | 0.2.1             |
+| synth_baseline | ipw_att      |    2 | 0.2.1             |
+| synth_baseline | ipw_att      |    3 | 0.2.1             |
+| synth_baseline | lm_att       |    1 | 0.2.1             |
+| synth_baseline | lm_att       |    2 | 0.2.1             |
+| synth_baseline | lm_att       |    3 | 0.2.1             |
 
 For new analysis code, prefer:
 
@@ -195,9 +196,10 @@ estimators require their listed optional packages.
 | `tmle_att`   | ATT           | tmle, SuperLearner |
 
 User-defined estimators can be added with `cs_register_estimator()`. See
-`?cs_register_estimator` for the current contract. A fuller
-estimator-contract vignette is deferred to the dedicated documentation
-release.
+the [estimator extension
+guide](https://blechturm.github.io/CausalStress/articles/estimator-extension.html)
+for the executable contract, registration lifetime, Airlock boundary,
+dependency handling, and typed output shapes.
 
 ## Experimental parallel execution
 
@@ -227,11 +229,21 @@ claim.
 
 ## Documentation scope
 
-This README and the generated function reference describe the v0.2.0
-release surface. A separate documentation release will add the pkgdown
-site, reports for every DGP, a canonical-workflow vignette, and contract
-vignettes for user-defined estimators and DGPs. The future DGP vignette
-does not imply that a public DGP-registration API already exists.
+The Quarto/pkgdown site contains:
+
+- the [canonical typed-scoring
+  workflow](https://blechturm.github.io/CausalStress/articles/canonical-workflow.html);
+- the [user-defined estimator
+  contract](https://blechturm.github.io/CausalStress/articles/estimator-extension.html);
+- the [native synthetic-DGP contribution
+  guide](https://blechturm.github.io/CausalStress/articles/native-dgp-contribution.html);
+- focused benchmarking, persistence, distributional, and audit guides;
+  and
+- one reproducible report for each registered DGP.
+
+The DGP contribution guide describes maintainer-reviewed package
+development. It does not imply that a public runtime DGP-registration
+API, real-data DGPs, or user-defined DGP families already exist.
 
 ## Citation
 

@@ -1,0 +1,133 @@
+---
+title: "Distributional intelligence with QST"
+format: html
+vignette: >
+  %\VignetteIndexEntry{Distributional intelligence with QST}
+  %\VignetteEngine{quarto::html}
+  %\VignetteEncoding{UTF-8}
+---
+
+A mean effect and a distributional contrast answer different questions. The
+experimental `synth_qte1` DGP has a sign-changing structural effect. Treatment
+selection changes the composition of the treated group, so a mean ATT summary
+cannot by itself describe the lower and upper parts of the treated
+potential-outcome distributions.
+
+```{r}
+#| label: setup
+#| message: false
+library(CausalStress)
+library(dplyr)
+library(ggplot2)
+```
+
+## Inspect the governed truth
+
+Direct DGP output contains potential outcomes for truth construction. Those
+columns are runner-owned truth and are not inputs to an ordinary estimator.
+
+```{r}
+dgp <- dgp_synth_qte1(n = 1000, seed = 42)
+
+tibble::tibble(
+  structural_effect = dgp$meta$structural_te,
+  treated = dgp$df$w
+) |>
+  count(treated, structural_effect)
+
+cs_true_qst(
+  y0 = dgp$df$y0,
+  y1 = dgp$df$y1,
+  w = dgp$df$w,
+  tau = c(0.10, 0.25, 0.50, 0.75, 0.90)
+)
+```
+
+## ATT-only evidence
+
+The core linear estimator produces ATT only. Its typed score surface says that
+explicitly; the scalar result must not be presented as a recovered QST curve.
+
+```{r}
+#| warning: false
+att_run <- cs_run_single(
+  dgp_id = "synth_qte1",
+  estimator_id = "lm_att",
+  n = 500,
+  seed = 1,
+  status = "experimental"
+)
+
+cs_collect_scores(att_run) |>
+  select(estimand_target_id, metric_id, score_status, estimate, truth, error)
+```
+
+## Optional QST estimation
+
+The shipped GenGC adapter is optional. The example runs only when GenGC is
+installed and the environment variable `CAUSALSTRESS_RUN_OPTIONAL_DOCS=true`
+is set. This guard is visible so a rendered article cannot make a skipped
+optional analysis look like successful evidence.
+
+```{r}
+#| label: optional-gengc-status
+run_optional_gengc <- requireNamespace("GenGC", quietly = TRUE) &&
+  identical(tolower(Sys.getenv("CAUSALSTRESS_RUN_OPTIONAL_DOCS")), "true")
+
+if (!run_optional_gengc) {
+  message(
+    "Optional GenGC example skipped. Install GenGC and set ",
+    "CAUSALSTRESS_RUN_OPTIONAL_DOCS=true to execute it."
+  )
+}
+```
+
+```{r}
+#| label: optional-gengc-run
+#| eval: !expr run_optional_gengc
+#| warning: false
+qst_run <- cs_run_single(
+  dgp_id = "synth_qte1",
+  estimator_id = "gengc",
+  n = 500,
+  seed = 1,
+  status = "experimental",
+  tau = c(0.10, 0.25, 0.50, 0.75, 0.90),
+  config = list(estimand_targets = "qst")
+)
+
+qst_scores <- cs_collect_scores(qst_run)
+qst_scores |>
+  select(estimand_target_id, tau, metric_id, score_status, estimate, truth, error)
+
+cs_plot_qst(cs_collect_qst(cs_tidy(qst_run)))
+```
+
+QST estimates below zero at lower tau and above zero at higher tau would be
+evidence of a sign-changing distributional contrast. The article does not claim
+that result when the optional estimator run is skipped.
+
+## Placebo gatekeeper
+
+For QST placebo evidence, a run fails when more than 10% of verified tau
+intervals exclude the null. An estimator fails when more than 10% of its
+verified runs fail. ATT uses its separately supplied coverage threshold; the ATE
+gatekeeper component is currently deferred and returns `UNVERIFIED`.
+
+```{r}
+#| eval: false
+placebo_runs <- cs_run_suite(
+  suite_id = "placebo",
+  estimator_ids = "gengc",
+  n = 1000,
+  seeds = 1:100,
+  status = "experimental",
+  bootstrap = TRUE,
+  B = 500
+)
+
+cs_summarise_gatekeeper(placebo_runs)
+```
+
+The gatekeeper needs interval-bearing placebo runs and enough replicates for its
+decision; a point-estimate example is not a pass.

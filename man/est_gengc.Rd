@@ -22,6 +22,10 @@ est_gengc(df, tau = cs_tau_oracle, config = list())
 }
 For this estimator, \code{ci_method = "default"} maps to \code{"bootstrap"}.}
 }
+\value{
+A legacy-compatible estimator result containing scalar \code{att}, a QST
+table at the requested \code{tau} values, \code{cf = NULL}, and CI/provenance \code{meta}.
+}
 \description{
 GenGC ATT + QST estimator (soft dependency)
 }

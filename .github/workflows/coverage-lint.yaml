@@ -2,7 +2,7 @@ name: coverage-lint
 
 "on":
   push:
-    branches: [main, master, v0.2.0]
+    branches: [main, master, v0.2.0, v0.2.1]
     tags: ["v*"]
   pull_request:
   workflow_dispatch:

@@ -13,6 +13,9 @@
 #' }
 #' For this estimator, \code{ci_method = "default"} maps to \code{"bootstrap"}.
 #'
+#' @return A legacy-compatible estimator result containing scalar `att`, a QST
+#'   table at the requested `tau` values, `cf = NULL`, and CI/provenance `meta`.
+#'
 #' @export
 est_gengc <- function(df, tau = cs_tau_oracle, config = list()) {
   if (!requireNamespace("GenGC", quietly = TRUE)) {
