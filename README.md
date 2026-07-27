@@ -84,7 +84,7 @@ historical fidelity, or citations.
   consolidation.
 
 The governing rules and operational contracts live under
-[`inst/design/`](inst/design/README.md).
+[`inst/design/`](https://github.com/blechturm/CausalStress/blob/main/inst/design/README.md).
 
 ## Installation
 
@@ -196,8 +196,9 @@ estimators require their listed optional packages.
 | `tmle_att`   | ATT           | tmle, SuperLearner |
 
 User-defined estimators can be added with `cs_register_estimator()`. See
-the [estimator extension guide](vignettes/estimator-extension.qmd) for
-the executable contract, registration lifetime, Airlock boundary,
+the [estimator extension
+guide](https://blechturm.github.io/CausalStress/articles/estimator-extension.html)
+for the executable contract, registration lifetime, Airlock boundary,
 dependency handling, and typed output shapes.
 
 ## Experimental parallel execution
@@ -231,11 +232,11 @@ claim.
 The Quarto/pkgdown site contains:
 
 - the [canonical typed-scoring
-  workflow](vignettes/canonical-workflow.qmd);
+  workflow](https://blechturm.github.io/CausalStress/articles/canonical-workflow.html);
 - the [user-defined estimator
-  contract](vignettes/estimator-extension.qmd);
+  contract](https://blechturm.github.io/CausalStress/articles/estimator-extension.html);
 - the [native synthetic-DGP contribution
-  guide](vignettes/native-dgp-contribution.qmd);
+  guide](https://blechturm.github.io/CausalStress/articles/native-dgp-contribution.html);
 - focused benchmarking, persistence, distributional, and audit guides;
   and
 - one reproducible report for each registered DGP.

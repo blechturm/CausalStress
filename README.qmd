@@ -90,7 +90,7 @@ review of a DGP's scientific interpretation, historical fidelity, or citations.
   Parallel persistence uses worker staging followed by controlled consolidation.
 
 The governing rules and operational contracts live under
-[`inst/design/`](inst/design/README.md).
+[`inst/design/`](https://github.com/blechturm/CausalStress/blob/main/inst/design/README.md).
 
 ## Installation
 
@@ -178,7 +178,7 @@ listed optional packages.
 | `tmle_att` | ATT | tmle, SuperLearner |
 
 User-defined estimators can be added with `cs_register_estimator()`. See
-the [estimator extension guide](vignettes/estimator-extension.qmd) for the
+the [estimator extension guide](https://blechturm.github.io/CausalStress/articles/estimator-extension.html) for the
 executable contract, registration lifetime, Airlock boundary, dependency
 handling, and typed output shapes.
 
@@ -210,9 +210,9 @@ The explicit opt-in is a readiness boundary, not a production-safety claim.
 
 The Quarto/pkgdown site contains:
 
-- the [canonical typed-scoring workflow](vignettes/canonical-workflow.qmd);
-- the [user-defined estimator contract](vignettes/estimator-extension.qmd);
-- the [native synthetic-DGP contribution guide](vignettes/native-dgp-contribution.qmd);
+- the [canonical typed-scoring workflow](https://blechturm.github.io/CausalStress/articles/canonical-workflow.html);
+- the [user-defined estimator contract](https://blechturm.github.io/CausalStress/articles/estimator-extension.html);
+- the [native synthetic-DGP contribution guide](https://blechturm.github.io/CausalStress/articles/native-dgp-contribution.html);
 - focused benchmarking, persistence, distributional, and audit guides; and
 - one reproducible report for each registered DGP.
 

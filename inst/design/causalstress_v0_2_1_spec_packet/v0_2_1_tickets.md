@@ -595,7 +595,58 @@ authorize Batch 4, push, merge, tag, site publication, or release.
   full, strict-registry, lint, coverage, and documentation gates required by the
   final diff before independent documentation and behavior-preservation review.
 - **Review gate:** Batch 4 integrated-site and documentation-truthfulness review.
-- **Disposition:** open
+- **Disposition:** complete_after_review
+
+Implementation evidence (2026-07-27):
+
+- The site workflow now installs the source revision once into an isolated
+  library, puts that library first for every executable-documentation child
+  process, renders dossiers with an explicit installed-package mode, and fails
+  on both tracked changes and untracked source artifacts. The coverage/lint
+  workflow now runs on the active `v0.2.1` branch.
+- `tools/ci-docs.R` rejects missing, extra, or duplicate DGP navigation entries
+  in addition to its Quarto-only article, source, optional-example, typed-
+  target, and CS-1229 truthfulness checks. `tools/ci-site.R` verifies that the
+  resolved package comes from the declared clean library, matches the source
+  version, contains exactly 12 registry-keyed reports indexed exactly once,
+  and has no broken local page or fragment links.
+- The first assembled-site crawl correctly failed on four README links that
+  were valid on GitHub but invalid after pkgdown assembly. That finding was
+  routed narrowly to the CS-1243-owned README source: the governance link now
+  targets the repository and the three guide links target their published
+  article pages. `README.md` was regenerated from `README.qmd`; no prose,
+  behavior, API, target, DGP, truth, RNG, status, or identity changed.
+- With Quarto CLI 1.9.38, quarto R 1.5.1, and pkgdown 2.2.1, README execution
+  passed and reproduced the committed Markdown; pkgdown checks and the final
+  seven-article site build passed; all 12 dossiers rendered from the isolated
+  installed package; and the integrated crawl passed 121 HTML pages with zero
+  broken internal links. The final source status contained only this Batch 4
+  review diff plus a separately identified concurrent maintainer edit in
+  `inst/design/horizon.md`; generated preview files added no source-tree delta.
+- Strict validation passed 24/24 registry rows plus 153 focused expectations.
+  Governed lint reported 0 findings and 34 recognized internal-helper false
+  positives. The full suite passed with 0 failures, 56 expected warnings, and
+  0 skips in 169.6 seconds. Coverage completed at 82.53% over 3,172 entries.
+- An initial README/full-suite attempt inside the managed filesystem sandbox
+  failed only at temporary `pins` storage with `EPERM`; both passed on the
+  ordinary Windows filesystem substrate. A redundant nested pkgdown reinstall
+  also produced an opaque Quarto subprocess failure; the final CI path removes
+  that duplicate install and the exact single-install build command passed.
+
+Independent review returned **APPROVE WITH NON-BLOCKING NOTES**. The reviewer
+confirmed the isolated installed-package boundary, layered exactly-12 DGP
+proof, recursive Quarto-source and index validation, internal page/fragment
+link coverage, narrow CS-1243 ownership of the four README link corrections,
+behavior preservation, and the recorded executable evidence. The two advisory
+notes require no correction: asset references remain pkgdown's responsibility
+rather than part of this anchor-navigation checker, and non-canonical absolute
+self-links could evade the exact configured-URL rewrite even though pkgdown and
+the corrected README use the canonical form.
+
+CS-1244 is `complete_after_review`. This acceptance authorizes the Batch 4
+commit only, excluding the concurrent maintainer edit in
+`inst/design/horizon.md`. It does not authorize Batch 5, push, merge, tag, site
+publication, or release.
 
 ## Batch 5 — Release Gate and Publication
 

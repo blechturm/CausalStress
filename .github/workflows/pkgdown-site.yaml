@@ -47,7 +47,11 @@ jobs:
         run: Rscript dev/render_dossiers.R --validate-only
 
       - name: Install the source revision used by executable documentation
-        run: R CMD INSTALL .
+        run: |
+          mkdir -p "$RUNNER_TEMP/causalstress-doc-lib"
+          R CMD INSTALL --library="$RUNNER_TEMP/causalstress-doc-lib" .
+          echo "CAUSALSTRESS_DOC_LIB=$RUNNER_TEMP/causalstress-doc-lib" >> "$GITHUB_ENV"
+          echo "R_LIBS_USER=$RUNNER_TEMP/causalstress-doc-lib:$R_LIBS_USER" >> "$GITHUB_ENV"
 
       - name: Render and verify README
         run: |
@@ -55,13 +59,18 @@ jobs:
           git diff --exit-code -- README.md
 
       - name: Build non-publishing pkgdown preview
-        run: Rscript -e "Sys.setenv(RSTUDIO_PANDOC = file.path(dirname(quarto::quarto_path()), 'tools')); pkgdown::build_site(new_process = TRUE, install = TRUE)"
+        run: Rscript -e "Sys.setenv(RSTUDIO_PANDOC = file.path(dirname(quarto::quarto_path()), 'tools')); pkgdown::build_site(new_process = FALSE, install = FALSE)"
 
       - name: Render all DGP reports into the preview
-        run: Rscript dev/render_dossiers.R --output-dir=docs/dgp
+        run: Rscript dev/render_dossiers.R --installed --output-dir=docs/dgp
+
+      - name: Verify assembled site links, indexes, and installed package
+        run: Rscript tools/ci-site.R
 
       - name: Verify source worktree stayed clean
-        run: git diff --exit-code
+        run: |
+          git diff --exit-code
+          test -z "$(git ls-files --others --exclude-standard)"
 
       - uses: actions/upload-artifact@v4
         with:

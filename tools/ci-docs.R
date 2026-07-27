@@ -54,7 +54,7 @@ if (length(forbidden_rmd)) {
   stop("Current long-form sources must be QMD, not Rmd: ", paste(forbidden_rmd, collapse = ", "), call. = FALSE)
 }
 
-article_qmd <- list.files("vignettes", pattern = "[.]qmd$", recursive = FALSE, full.names = TRUE)
+article_qmd <- list.files("vignettes", pattern = "[.]qmd$", recursive = TRUE, full.names = TRUE)
 dossier_qmd <- list.files(file.path("inst", "dgp_meta"), pattern = "[.]qmd$", recursive = FALSE, full.names = TRUE)
 required_articles <- file.path(
   "vignettes",
@@ -95,6 +95,16 @@ required_article_ids <- tools::file_path_sans_ext(basename(required_articles))
 if (!identical(sort(indexed_articles), sort(required_article_ids)) ||
     anyDuplicated(indexed_articles)) {
   stop("Every committed package article must be indexed exactly once in _pkgdown.yml.", call. = FALSE)
+}
+
+dossier_ids <- tools::file_path_sans_ext(basename(dossier_qmd))
+dossier_menu <- site_config$navbar$components$dgps$menu
+indexed_dossiers <- vapply(dossier_menu, `[[`, character(1), "href")
+expected_dossiers <- file.path("dgp", paste0(dossier_ids, ".html"))
+if (!setequal(indexed_dossiers, expected_dossiers) ||
+    length(indexed_dossiers) != length(expected_dossiers) ||
+    anyDuplicated(indexed_dossiers)) {
+  stop("Every DGP dossier must be indexed exactly once in _pkgdown.yml.", call. = FALSE)
 }
 
 readme_source <- paste(readLines("README.qmd", warn = FALSE, encoding = "UTF-8"), collapse = "\n")

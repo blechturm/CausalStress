@@ -196,7 +196,7 @@ tickets:
     constitutional_check: "Documentation truthfulness across Articles I-VII; site assembly creates no runtime or scientific authority"
     test_obligation: "Clean pinned-toolchain site build; QMD-only sources; exactly 12 indexed reports; complete links; executable guarded examples; typed/heavy-tail truth; current README; clean tree; affected full gates"
     review_gate: "Batch 4 integrated-site and documentation-truthfulness review"
-    disposition: open
+    disposition: complete_after_review
 
   - id: "CS-1245"
     title: "Run the v0.2.1 release gate and publish in playbook order"

@@ -1,6 +1,6 @@
 # CausalStress v0.2.1 Batch Plan
 
-**Status:** ACTIVE — Batch 2 complete after independent review; Batch 3 unauthorized
+**Status:** ACTIVE — Batch 4 complete after independent review; Batch 5 unauthorized
 **Packet:** `causalstress_v0_2_1_spec_packet`
 **Authority commit:** `0b20f12`
 **Accepted:** 2026-07-26
@@ -90,6 +90,7 @@ are not authorized in any batch.
 
 ## Batch 3 — Canonical Documentation and Reference Truthfulness
 
+- **State:** complete after independent review.
 - **Purpose:** Publish the canonical workflow and supported extension guides,
   then reconcile all remaining public documentation with v0.2.0 behavior.
 - **Tickets:** CS-1240, CS-1241, CS-1242, CS-1243
@@ -105,6 +106,7 @@ are not authorized in any batch.
 
 ## Batch 4 — Integrated Documentation Validation
 
+- **State:** complete after independent review.
 - **Purpose:** Validate the combined site and package as one reviewable artifact
   before release-gate work starts.
 - **Tickets:** CS-1244

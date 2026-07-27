@@ -1,10 +1,12 @@
 # Validate and render the 12 registry-keyed DGP dossiers through Quarto.
 # Usage:
 #   Rscript dev/render_dossiers.R --validate-only
+#   Rscript dev/render_dossiers.R --installed --output-dir=docs/dgp
 #   Rscript dev/render_dossiers.R --output-dir=docs/dgp
 
 args <- commandArgs(trailingOnly = TRUE)
 validate_only <- "--validate-only" %in% args
+use_installed <- "--installed" %in% args
 output_arg <- grep("^--output-dir=", args, value = TRUE)
 if (length(output_arg) > 1L) {
   stop("Supply at most one --output-dir argument.", call. = FALSE)
@@ -19,7 +21,11 @@ if (!file.exists("DESCRIPTION") || !dir.exists(file.path("inst", "dgp_meta"))) {
   stop("Run dev/render_dossiers.R from the CausalStress project root.", call. = FALSE)
 }
 
-if (requireNamespace("pkgload", quietly = TRUE)) {
+if (use_installed) {
+  if (!requireNamespace("CausalStress", quietly = TRUE)) {
+    stop("Install CausalStress before using --installed.", call. = FALSE)
+  }
+} else if (requireNamespace("pkgload", quietly = TRUE)) {
   pkgload::load_all(quiet = TRUE, export_all = FALSE, helpers = FALSE)
 } else if (!requireNamespace("CausalStress", quietly = TRUE)) {
   stop("Install pkgload or CausalStress before validating dossiers.", call. = FALSE)
