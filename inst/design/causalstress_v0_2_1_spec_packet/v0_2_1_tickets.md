@@ -784,6 +784,18 @@ GitHub Release, or Pages deployment. Its lineage note correctly observed that
 the correction sits after horizon-only commit `9586841`; fresh CI must be bound
 to the new pushed head rather than the failed `e42d216` preflight.
 
+**Second branch-CI correction (2026-07-27):** Fresh CI at `991185f` closed the
+automatic-Pandoc failure and passed coverage/lint, test/validation/substrate,
+the non-deploying site preview, Ubuntu R release check, and macOS R release
+check. Windows then exposed a separate full-vignette build boundary: Quarto's
+child R process could not see the package staged by the parent `R CMD build`.
+CS-1245 therefore prepends a temporary installation of the exact checked-out
+revision to `R_LIBS` on Windows only before `rcmdcheck`. This preserves
+full vignette execution and all check strictness. The maintainer waived another
+Claude review. Targeted Windows validation confirmed that an isolated child R
+session loads the current package from that temporary library; fresh complete
+branch CI remains mandatory.
+
 ## Release-Gate Requirement
 
 CS-1245 is the required final release-gate ticket. It names

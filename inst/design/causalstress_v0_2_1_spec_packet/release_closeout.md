@@ -1,6 +1,6 @@
 # CausalStress v0.2.1 Release Closeout
 
-**Status:** OPEN — initial branch-CI corrections approved; fresh branch CI pending
+**Status:** OPEN — second branch-CI correction under validation
 **Date closed:** TBD
 **Release candidate commit:** TBD
 
@@ -82,6 +82,46 @@ macOS release; test-validation-substrate; coverage-lint; and the non-deploying
 pkgdown-site preview. It does not authorize the final release gate, merge, tag,
 GitHub Release, or Pages deployment. Horizon-only commit `9586841` is part of
 the new lineage but does not change the two-line executable correction.
+
+## Fresh Correction CI and Windows Vignette Follow-up — 2026-07-27
+
+The reviewed correction was committed as `991185f` and pushed to `v0.2.1`.
+Coverage/lint, test/validation/substrate, and the non-deploying pkgdown preview
+passed. R-CMD-check passed on Ubuntu R release and macOS R release. The original
+automatic-Pandoc dependency-resolution failure is therefore closed.
+
+Windows R release reached `R CMD check` but failed while `R CMD build` rebuilt
+the Quarto vignettes: each Quarto child R process failed at
+`library(CausalStress)` because it could not see the package that the parent
+build process had staged in its temporary library. This is a Windows process-
+library propagation boundary, not a vignette-content or package-runtime
+failure. The Ubuntu R-devel job was still running when the Windows blocker was
+diagnosed; no result is recorded here prematurely.
+
+The narrow follow-up installs the exact checked-out revision into a temporary
+Windows-only check library and prepends that library to `R_LIBS` before
+`rcmdcheck`. It does not skip vignette execution, weaken check policy, alter
+package sources, or change non-Windows jobs. Targeted local validation,
+workflow validation, a fresh commit, and complete fresh branch CI are required
+before the final CS-1245 release gate may begin. The maintainer explicitly
+waived another independent Claude review for this release-gate correction.
+
+Targeted local validation parsed the workflow YAML and executed the exact
+PowerShell install/load mechanism with Windows R 4.5.2. The step resolves
+`R.exe` explicitly because `R` is a PowerShell history alias, installs the
+working tree into a fresh temporary library, prepends it to `R_LIBS`, and then
+successfully loads CausalStress from that exact path in a `--vanilla` child R
+session with the ordinary user library disabled. The child also confirmed that
+the current `cs_collect_scores` export is present.
+
+Two diagnostic full-build attempts are not release evidence. The first showed
+that `R_LIBS_USER` is not a reliable boundary for the vignette child and was
+discarded. The second reached and executed the current vignette code through
+the package staged by `R CMD build`, but this managed sandbox denied the
+vignettes' temporary `pins` paths and Quarto cache database under the user
+profile. Those filesystem denials are local harness limitations, not passes;
+the fresh remote Windows full-vignette check is therefore mandatory before any
+release-state work resumes.
 
 ## Deferred
 

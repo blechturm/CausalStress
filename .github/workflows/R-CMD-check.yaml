@@ -57,6 +57,17 @@ jobs:
       - name: Verify documentation substrate
         run: Rscript tools/ci-docs.R
 
+      - name: Expose the checked-out package to Windows vignette subprocesses
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $checkLib = Join-Path $env:RUNNER_TEMP "causalstress-check-lib"
+          New-Item -ItemType Directory -Force -Path $checkLib | Out-Null
+          $rExe = (Get-Command R.exe -ErrorAction Stop).Source
+          & $rExe CMD INSTALL --library="$checkLib" .
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          "R_LIBS=$checkLib;$env:R_LIBS" >> $env:GITHUB_ENV
+
       - name: Run R CMD check
         run: |
           Rscript -e "rcmdcheck::rcmdcheck(args = '--no-manual', error_on = 'warning', check_dir = 'check')"
