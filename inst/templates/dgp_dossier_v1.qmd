@@ -1,0 +1,65 @@
+---
+title: "DGP Dossier: `r params$meta$dgp_id`"
+format: html
+params:
+  meta: null
+  dgp_id: "Unknown"
+---
+
+```{r}
+#| label: setup
+#| include: false
+knitr::opts_chunk$set(
+  echo = FALSE,
+  message = FALSE,
+  warning = FALSE
+)
+```
+
+## 1. Identity and status
+
+- **DGP ID:** `r params$meta$dgp_id`
+- **Version:** `r params$meta$version`
+- **Status:** `r params$meta$status`
+- **Difficulty:** `r if (!is.null(params$meta$difficulty$stars)) paste0(strrep("*", params$meta$difficulty$stars), " (", params$meta$difficulty$stars, "/5)") else "N/A"`
+- **Stress profile:** `r if (!is.null(params$meta$stress_profile)) paste(purrr::map_chr(names(params$meta$stress_profile), ~ paste0(.x, " = ", params$meta$stress_profile[[.x]])), collapse = "; ") else "N/A"`
+
+## 2. What this DGP stresses
+
+<!-- Describe intent. -->
+
+## 3. Identification assumptions
+
+<!-- List assumptions explicitly. -->
+
+## 4. Mathematical specification
+
+<!-- Provide equations for mu0, treatment effect, propensity, and noise. -->
+
+## 5. Oracle truth definition
+
+<!-- Define every truth quantity and any numerical/Monte Carlo uncertainty. -->
+
+## 6. Visual diagnostics
+
+<!-- Add reproducible plots with explicit seeds. -->
+
+## 7. Empirical validation
+
+<!-- Add light diagnostics demonstrating the declared design behavior. -->
+
+## 8. Failure-mode summary
+
+<!-- Explain expected estimator behavior without turning it into validation. -->
+
+## 9. Implementation reference
+
+<!-- Link the generator versions, registry row, oracle, and Airlock nuances. -->
+
+## 10. Validation checklist
+
+<!-- Record schema, determinism, truth, sidecar, and status checks. -->
+
+## 11. Changelog
+
+<!-- Track dossier changes. -->

@@ -40,7 +40,14 @@ navbar:
           href: dgp/synth_hd_sparse_plm.html
 
 articles:
-  - title: Existing guides
+  - title: Start here
+    contents:
+      - canonical-workflow
+  - title: Extend CausalStress
+    contents:
+      - estimator-extension
+      - native-dgp-contribution
+  - title: Further guides
     contents:
       - benchmarking-with-suites
       - caching-and-resume

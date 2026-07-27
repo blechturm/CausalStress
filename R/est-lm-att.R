@@ -12,6 +12,9 @@
 #' }
 #' For this estimator, \code{ci_method = "default"} maps to \code{"bootstrap"}.
 #'
+#' @return A legacy-compatible estimator result with an `att` estimate and
+#'   optional interval, `qst = NULL`, `cf = NULL`, and CI/provenance `meta`.
+#'
 #' @export
 est_lm_att <- function(df, tau = cs_tau_oracle, config = list()) {
   method_in <- config$ci_method %||% "none"

@@ -1,7 +1,7 @@
 #' Tidy CausalStress run results
 #'
-#' Universal converter that transforms any CausalStress result object
-#' (Single Run, List of Runs, or existing Tibble) into a standard tidy format.
+#' Converts a supported CausalStress single-run result, list of run results, or
+#' existing data frame into the package's flattened run-row format.
 #'
 #' @param x A result object from `cs_run_single()`, `cs_run_seeds()`, or a list thereof.
 #' @return A tibble with standard performance columns.

@@ -8,6 +8,15 @@
 \description{
 A rigorous framework for benchmarking causal inference estimators under controlled conditions. It implements a "Constitutional" architecture that enforces strict data separation ("Airlocks") between estimators and ground truth, preventing registered estimators from receiving runner-owned truth columns. The package features atomic persistence for crash resilience, provenance tracking via Git hashes, and a standardized interface for comparing estimators across diverse synthetic data-generating processes.
 }
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://blechturm.github.io/CausalStress/}
+  \item \url{https://github.com/blechturm/CausalStress}
+  \item Report bugs at \url{https://github.com/blechturm/CausalStress/issues}
+}
+
+}
 \author{
 \strong{Maintainer}: Maximilian Thomasberger \email{max@blechturm.com}
 

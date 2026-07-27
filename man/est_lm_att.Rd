@@ -19,6 +19,10 @@ est_lm_att(df, tau = cs_tau_oracle, config = list())
 }
 For this estimator, \code{ci_method = "default"} maps to \code{"bootstrap"}.}
 }
+\value{
+A legacy-compatible estimator result with an \code{att} estimate and
+optional interval, \code{qst = NULL}, \code{cf = NULL}, and CI/provenance \code{meta}.
+}
 \description{
 Fits a linear model on controls and uses g-computation to estimate ATT.
 }

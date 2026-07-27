@@ -97,9 +97,11 @@ cs_estimator_registry <- function() {
 #' Register an additional estimator at runtime
 #'
 #' This function allows external packages or user code to register new estimators
-#' into the CausalStress estimator registry. Registered estimators must obey the
-#' estimator contract: the `generator` function must accept `(df, config, tau, ...)`
-#' and return a list compatible with `cs_check_estimator_output()`.
+#' into the process-local CausalStress estimator registry. Registered estimators
+#' must obey the estimator contract: the `generator` function must accept
+#' `(df, config, tau, ...)` and return typed `outputs` or a supported legacy
+#' `list(att, qst, meta)` shape. See
+#' `vignette("estimator-extension", package = "CausalStress")`.
 #'
 #' @param estimator_id Character scalar, unique identifier for the estimator.
 #' @param type Character scalar describing the estimator family
@@ -251,7 +253,7 @@ cs_register_estimator <- function(
 #' @return A list with elements:
 #'   - estimator_id: character scalar
 #'   - type: character scalar
-#'   - fn: function(df, tau, config) returning an estimator result
+#'   - generator: function(df, config, tau, ...) returning an estimator result
 #'   - oracle: logical, TRUE if this is an oracle estimator
 #'   - oracle_columns: character vector of eligible oracle columns
 #'   - oracle_default_columns: character vector of default-granted oracle columns

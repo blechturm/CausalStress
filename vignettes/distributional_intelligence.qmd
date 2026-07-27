@@ -1,85 +1,133 @@
 ---
-title: "Distributional Intelligence: Unmasking Hidden Harm"
+title: "Distributional intelligence with QST"
 format: html
 vignette: >
-  %\VignetteIndexEntry{Distributional Intelligence: Unmasking Hidden Harm}
+  %\VignetteIndexEntry{Distributional intelligence with QST}
   %\VignetteEngine{quarto::html}
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+A mean effect and a distributional contrast answer different questions. The
+experimental `synth_qte1` DGP has a sign-changing structural effect. Treatment
+selection changes the composition of the treated group, so a mean ATT summary
+cannot by itself describe the lower and upper parts of the treated
+potential-outcome distributions.
+
+```{r}
+#| label: setup
+#| message: false
 library(CausalStress)
 library(dplyr)
 library(ggplot2)
-run_optional_gengc <- requireNamespace("GenGC", quietly = TRUE) &&
-  identical(Sys.getenv("CAUSALSTRESS_RUN_OPTIONAL_DOCS"), "true")
 ```
 
-# The Danger of the Net Effect
+## Inspect the governed truth
 
-Policymakers often celebrate a small positive Average Treatment Effect (ATT ≈ 0.10) as success. But a net effect can hide harm: a policy can help some while hurting others just as much. Without distributional intelligence, the victims stay invisible.
+Direct DGP output contains potential outcomes for truth construction. Those
+columns are runner-owned truth and are not inputs to an ordinary estimator.
 
-# The Hidden Reality: The S-Curve DGP
+```{r}
+dgp <- dgp_synth_qte1(n = 1000, seed = 42)
 
-`dgp_synth_qte1` encodes this trap. Half the treated units experience **-1**; the other half experience **+1**. A slight selection tilt makes the ATT positive, but the lower quantiles are harmed.
+tibble::tibble(
+  structural_effect = dgp$meta$structural_te,
+  treated = dgp$df$w
+) |>
+  count(treated, structural_effect)
 
-```{r generate-data}
-set.seed(42)
-dgp <- dgp_synth_qte1(n = 2000)
-head(dgp$df)
+cs_true_qst(
+  y0 = dgp$df$y0,
+  y1 = dgp$df$y1,
+  w = dgp$df$w,
+  tau = c(0.10, 0.25, 0.50, 0.75, 0.90)
+)
 ```
 
-# Baseline vs Distributional Estimators
+## ATT-only evidence
 
-## OLS (ATT-only, hides harm)
-```{r run-ols}
-res_ols <- cs_run_single(
-  dgp_id       = "synth_qte1",
+The core linear estimator produces ATT only. Its typed score surface says that
+explicitly; the scalar result must not be presented as a recovered QST curve.
+
+```{r}
+#| warning: false
+att_run <- cs_run_single(
+  dgp_id = "synth_qte1",
   estimator_id = "lm_att",
-  n            = 2000,
-  seed         = 1L,
-  bootstrap    = TRUE,
-  B            = 100
+  n = 500,
+  seed = 1,
+  status = "experimental"
 )
+
+cs_collect_scores(att_run) |>
+  select(estimand_target_id, metric_id, score_status, estimate, truth, error)
 ```
 
-## GenGC (distributional, reveals S-curve)
-```{r run-gengc, eval=run_optional_gengc}
-res_gengc <- cs_run_single(
-  dgp_id       = "synth_qte1",
+## Optional QST estimation
+
+The shipped GenGC adapter is optional. The example runs only when GenGC is
+installed and the environment variable `CAUSALSTRESS_RUN_OPTIONAL_DOCS=true`
+is set. This guard is visible so a rendered article cannot make a skipped
+optional analysis look like successful evidence.
+
+```{r}
+#| label: optional-gengc-status
+run_optional_gengc <- requireNamespace("GenGC", quietly = TRUE) &&
+  identical(tolower(Sys.getenv("CAUSALSTRESS_RUN_OPTIONAL_DOCS")), "true")
+
+if (!run_optional_gengc) {
+  message(
+    "Optional GenGC example skipped. Install GenGC and set ",
+    "CAUSALSTRESS_RUN_OPTIONAL_DOCS=true to execute it."
+  )
+}
+```
+
+```{r}
+#| label: optional-gengc-run
+#| eval: !expr run_optional_gengc
+#| warning: false
+qst_run <- cs_run_single(
+  dgp_id = "synth_qte1",
   estimator_id = "gengc",
-  n            = 2000,
-  seed         = 1L,
-  bootstrap    = TRUE,
-  B            = 100
+  n = 500,
+  seed = 1,
+  status = "experimental",
+  tau = c(0.10, 0.25, 0.50, 0.75, 0.90),
+  config = list(estimand_targets = "qst")
 )
+
+qst_scores <- cs_collect_scores(qst_run)
+qst_scores |>
+  select(estimand_target_id, tau, metric_id, score_status, estimate, truth, error)
+
+cs_plot_qst(cs_collect_qst(cs_tidy(qst_run)))
 ```
 
-## The numbers
-```{r compare-att, eval=run_optional_gengc}
-c(ols_att = res_ols$att$estimate, gengc_att = res_gengc$att$estimate)
+QST estimates below zero at lower tau and above zero at higher tau would be
+evidence of a sign-changing distributional contrast. The article does not claim
+that result when the optional estimator run is skipped.
+
+## Placebo gatekeeper
+
+For QST placebo evidence, a run fails when more than 10% of verified tau
+intervals exclude the null. An estimator fails when more than 10% of its
+verified runs fail. ATT uses its separately supplied coverage threshold; the ATE
+gatekeeper component is currently deferred and returns `UNVERIFIED`.
+
+```{r}
+#| eval: false
+placebo_runs <- cs_run_suite(
+  suite_id = "placebo",
+  estimator_ids = "gengc",
+  n = 1000,
+  seeds = 1:100,
+  status = "experimental",
+  bootstrap = TRUE,
+  B = 500
+)
+
+cs_summarise_gatekeeper(placebo_runs)
 ```
 
-OLS reports a small positive ATT, masking the negative effects in the lower tail. GenGC provides the full curve.
-
-# Visual Proof: The Blue Band
-
-```{r plot-qst, eval=run_optional_gengc}
-qst_df <- dplyr::mutate(res_gengc$qst, dgp_id = "synth_qte1", estimator_id = "gengc")
-cs_plot_qst(qst_df)
-```
-
-The blue ribbon dives below zero at low quantiles—clear evidence of harm—then rises above zero in the upper tail: the S-curve made visible.
-
-# Governance: The Gatekeeper (10/10 Rule)
-
-Gatekeeper guards against false positives: an estimator fails if more than 10% of quantiles exclude zero on placebo data.
-
-```{r gatekeeper, eval=FALSE}
-# Example usage on placebo suite results:
-# placebo_runs <- cs_run_suite("placebo", estimator_ids = c("gengc", "lm_att"), seeds = 1:50)
-# cs_summarise_gatekeeper(placebo_runs)
-```
-
-In practice, run the placebo suite and pass the results to `cs_summarise_gatekeeper()`. Distributional estimators that hallucinate effects will fail the 10/10 rule.
+The gatekeeper needs interval-bearing placebo runs and enough replicates for its
+decision; a point-estimate example is not a pass.

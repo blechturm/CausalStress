@@ -142,7 +142,7 @@ tickets:
     constitutional_check: "Articles I, III, V, and VI no-cross-scoring, Airlock, identity, and persistence"
     test_obligation: "Exported-API-only clean-install workflow covers discovery, runs, typed collection, ATT/ATE/QST, CATE staging, summaries, provenance, persistence, and resume without optional estimators"
     review_gate: "Batch 3 scientific and user-documentation truthfulness review"
-    disposition: open
+    disposition: complete_after_review
 
   - id: "CS-1241"
     title: "Document the user-defined estimator contract"
@@ -154,7 +154,7 @@ tickets:
     constitutional_check: "Article III Airlock and estimator output contract"
     test_obligation: "Public-API minimal estimator demonstrates typed output and documents lifecycle, versioning, targets, legacy shapes, dependencies, CI, Airlock, and failures"
     review_gate: "Batch 3 scientific and user-documentation truthfulness review"
-    disposition: open
+    disposition: complete_after_review
 
   - id: "CS-1242"
     title: "Document native DGP contribution without inventing a public API"
@@ -166,7 +166,7 @@ tickets:
     constitutional_check: "Immutable DGP versions, truth/RNG review, registry status, and X1...Xk naming"
     test_obligation: "Contributor guide covers native generator/sidecar/truth/validation/RNG/status/review and explicitly says no public runtime DGP-registration API or real-data/family support"
     review_gate: "Batch 3 scientific and user-documentation truthfulness review"
-    disposition: open
+    disposition: complete_after_review
 
   - id: "CS-1243"
     title: "Reconcile existing articles, roxygen, and reference truth"
@@ -182,7 +182,7 @@ tickets:
     constitutional_check: "Documentation-only contract repair; no signature, behavior, status, or vocabulary change"
     test_obligation: "Remove stale v0.1.x/qs/shape/target/DGP/parallel/collector/registration claims; preserve CS-1229; regenerate Rd; review every exported page and article"
     review_gate: "Batch 3 scientific and user-documentation truthfulness review"
-    disposition: open
+    disposition: complete_after_review
 
   - id: "CS-1244"
     title: "Validate the complete Quarto/pkgdown publication artifact"

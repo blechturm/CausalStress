@@ -1,0 +1,288 @@
+---
+title: "Canonical workflow: from a governed run to typed scores"
+format: html
+vignette: >
+  %\VignetteIndexEntry{Canonical workflow: from a governed run to typed scores}
+  %\VignetteEngine{quarto::html}
+  %\VignetteEncoding{UTF-8}
+---
+
+This guide is the ordinary CausalStress workflow. It uses exported functions
+and estimators shipped with the package. A run produces estimator outputs and a
+typed score surface; `cs_collect_scores()` is the canonical way to collect that
+surface. The older ATT- and QST-specific collectors remain compatibility
+projections.
+
+```{r}
+#| label: setup
+#| message: false
+library(CausalStress)
+library(dplyr)
+library(ggplot2)
+```
+
+## Discover governed components
+
+Suites are named collections, not a scientific endorsement of every member.
+Inspect the DGP status and estimator requirements before running a study.
+
+```{r}
+suites <- cs_suite_registry()
+suites[, c("suite_id", "description")]
+
+baseline <- cs_get_dgp("synth_baseline")
+baseline[c("dgp_id", "version", "status", "type")]
+
+lm_descriptor <- cs_get_estimator("lm_att")
+lm_descriptor[c(
+  "estimator_id", "type", "oracle", "supports_qst", "version",
+  "source", "requires_pkgs"
+)]
+```
+
+## Run once, then collect typed scores
+
+`cs_run_single()` is the smallest ordinary entry point. The result keeps typed
+estimator `outputs`, canonical `scores`, compatibility projections (`att` and
+`qst`), bootstrap draws when requested, metadata, and provenance.
+
+```{r}
+one_run <- cs_run_single(
+  dgp_id = "synth_baseline",
+  estimator_id = "lm_att",
+  n = 200,
+  seed = 17
+)
+
+names(one_run)
+
+one_scores <- cs_collect_scores(one_run)
+one_scores |>
+  select(
+    estimand_target_id, metric_id, score_status,
+    estimate, truth, error, non_comparable_reason
+  )
+```
+
+Each score row has an `estimand_target_id`. CausalStress compares an estimator
+output only with truth for that same target:
+
+- **ATT** is the mean structural effect among treated units when that mean is a
+  valid target for the DGP regime.
+- **ATE** is the finite-sample mean structural effect over all generated units.
+- **QST** is a quantile-specific distributional contrast among treated units,
+  indexed by `tau`.
+- **CATE** is an explicitly staged target. Wave 1 records whether an estimator
+  produced it, but does not yet score a CATE curve.
+
+Targets are never silently cross-scored. A CATE estimate is not an ATT estimate,
+and an ATT estimate is not a QST estimate.
+
+## Request ATT and ATE explicitly
+
+The built-in oracle is useful for testing benchmark truth plumbing. It is not
+an ordinary estimator: its descriptor permits the runner to grant governed
+`structural_te` through the Airlock.
+
+```{r}
+oracle_run <- cs_run_single(
+  dgp_id = "synth_baseline",
+  estimator_id = "oracle_att",
+  n = 200,
+  seed = 17,
+  config = list(estimand_targets = c("att", "ate"))
+)
+
+cs_collect_scores(oracle_run) |>
+  select(estimand_target_id, metric_id, score_status, estimate, truth, error)
+```
+
+QST truth is defined on potential-outcome distributions. This direct DGP call
+is a truth-definition demonstration; do not pass `y0`, `y1`, `p`, or
+`structural_te` to an ordinary estimator.
+
+```{r}
+truth_example <- dgp_synth_baseline(n = 300, seed = 19)
+cs_true_qst(
+  y0 = truth_example$df$y0,
+  y1 = truth_example$df$y1,
+  w = truth_example$df$w,
+  tau = c(0.25, 0.50, 0.75)
+)
+```
+
+No dependency-free estimator shipped with CausalStress currently produces
+QST. The optional GenGC estimator does. Its example is deliberately opt-in so
+the ordinary article remains executable without optional estimator packages.
+
+```{r}
+#| label: optional-qst-status
+run_optional_qst <- requireNamespace("GenGC", quietly = TRUE) &&
+  identical(tolower(Sys.getenv("CAUSALSTRESS_RUN_OPTIONAL_DOCS")), "true")
+
+if (!run_optional_qst) {
+  message(
+    "Optional QST example skipped. Install GenGC and set ",
+    "CAUSALSTRESS_RUN_OPTIONAL_DOCS=true to run it."
+  )
+}
+```
+
+```{r}
+#| label: optional-qst-run
+#| eval: !expr run_optional_qst
+qst_run <- cs_run_single(
+  dgp_id = "synth_qte1",
+  estimator_id = "gengc",
+  n = 300,
+  seed = 19,
+  status = "experimental",
+  tau = c(0.25, 0.50, 0.75),
+  config = list(estimand_targets = "qst")
+)
+
+cs_collect_scores(qst_run) |>
+  select(estimand_target_id, tau, metric_id, score_status, estimate, truth, error)
+```
+
+## Make staged targets visible
+
+A mixed request can preserve executable ATT evidence while explicitly showing
+that CATE scoring is not implemented. The CATE row is evidence about the
+current contract; it is not an ATT result under another name.
+
+```{r}
+staged <- cs_run_single(
+  dgp_id = "synth_baseline",
+  estimator_id = "lm_att",
+  n = 200,
+  seed = 23,
+  config = list(estimand_targets = c("att", "cate"))
+)
+
+cs_collect_scores(staged) |>
+  select(
+    estimand_target_id, metric_id, score_status,
+    estimate, non_comparable_reason
+  )
+```
+
+## Repeat over seeds and summarize
+
+Use `cs_run_seeds()` for one DGP-estimator pair and `cs_run_grid()` for ordinary
+cross-product work. Keep typed scores for target-aware analysis; use the
+summary helpers only where the target and moment regime make the aggregate
+meaningful.
+
+```{r}
+runs <- cs_run_grid(
+  dgp_ids = "synth_baseline",
+  estimator_ids = c("lm_att", "ipw_att"),
+  n = 200,
+  seeds = 1:3,
+  show_progress = FALSE
+)
+
+typed_scores <- cs_collect_scores(runs)
+typed_scores |>
+  count(estimator_id, estimand_target_id, score_status)
+
+summary <- cs_summarise_runs(runs)
+summary
+```
+
+```{r}
+#| fig-width: 7
+#| fig-height: 4
+cs_plot_att_error(runs)
+```
+
+Do not use mean-based ATT RMSE, coverage, or rankings for
+`synth_heavytail`. That DGP intentionally probes an estimand boundary under
+Cauchy-mixture noise: its governed structural contrast is a signal anchor, not
+a conventional mean potential-outcome ATT. Run ATT estimators there to study
+breakdown, but use QST for valid distributional comparisons rather than an ATT
+shootout.
+
+## Inspect provenance
+
+Scientific identities live in the result metadata and score records;
+non-scientific execution details live in provenance.
+
+```{r}
+cs_meta_flatten(one_run) |>
+  select(
+    dgp_id, dgp_version, estimator_id, estimator_version,
+    config_fingerprint, fit_fingerprint
+  )
+
+cs_provenance(one_run)[c("run_time_dgp", "run_time_est", "run_time_total")]
+```
+
+## Persist completed runs and resume strictly
+
+Persistence is opt-in. Without a `board`, results are returned but not stored.
+With a pins board, completed results are written as RDS-backed pins. Resume is
+also opt-in: `skip_existing = TRUE` reuses only schema-4 artifacts whose
+configuration fingerprint matches exactly. A missing/old schema or a mismatch
+fails closed. `force = TRUE` or `skip_existing = FALSE` recomputes instead.
+
+```{r}
+board_path <- tempfile("causalstress-board-")
+dir.create(board_path)
+board <- pins::board_folder(board_path)
+
+first_pass <- cs_run_seeds(
+  dgp_id = "synth_baseline",
+  estimator_id = "lm_att",
+  n = 150,
+  seeds = 1:2,
+  board = board,
+  show_progress = FALSE
+)
+
+resumed <- cs_run_seeds(
+  dgp_id = "synth_baseline",
+  estimator_id = "lm_att",
+  n = 150,
+  seeds = 1:3,
+  board = board,
+  skip_existing = TRUE,
+  show_progress = FALSE
+)
+
+resumed |>
+  select(seed, config_fingerprint)
+
+cs_audit(board) |>
+  select(dgp_id, estimator_id, n, seed)
+```
+
+Persistence protects completed artifacts, not an in-progress estimator call or
+an entire campaign transaction. Experimental parallel persistence additionally
+uses worker staging followed by controlled single-writer gathering.
+
+## Advanced planned batching
+
+`cs_plan_campaign()` plus `cs_run_batch()` is the advanced lifecycle for
+explicit plans and batch artifacts. It is distinct from ordinary single, seed,
+and grid execution. `cs_run_campaign()` currently supports both a direct grid
+mode and a planned-batch mode; this guide does not redefine or deprecate either
+public contract.
+
+```{r}
+#| eval: false
+plan <- cs_plan_campaign(
+  dgp_list = c("synth_baseline"),
+  estimator_list = c("lm_att", "ipw_att"),
+  n_seeds = 1:100,
+  batch_size = 20,
+  strategy_map = list(defaults = list(n = 1000))
+)
+
+batch_1 <- cs_run_batch(
+  plan = plan,
+  batch_id = 1,
+  staging_dir = "staging_batches"
+)
+```

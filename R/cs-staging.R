@@ -210,9 +210,10 @@ cs_stage_result <- function(result, staging_dir) {
 
 #' Gather staged results and pin them to a board
 #'
-#' Reads all staged RDS files from a directory (produced by workers
-#' using `cs_stage_result`) and writes them to the central board. This
-#' implements the "Reduce" step of the "Map-Reduce" parallel pattern.
+#' Reads all staged RDS files from a directory (produced by workers using
+#' `cs_stage_result`) and writes them to the central board through the
+#' controlling process. Successfully pinned files are removed; a failed file
+#' remains available for retry.
 #'
 #' @param board The target pins board.
 #' @param staging_dir Path to the directory containing worker outputs.

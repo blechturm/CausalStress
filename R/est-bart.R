@@ -14,7 +14,8 @@
 #' @param tau Unused (included for signature compatibility).
 #' @param ... Additional arguments passed to `bartCause::bartc`.
 #'
-#' @return A list compatible with `cs_check_estimator_output()`.
+#' @return A legacy-compatible estimator result containing an `att` estimate
+#'   and optional interval, `qst = NULL`, and CI/provenance `meta`.
 #' @export
 est_bart_att <- function(df, config = list(), tau = cs_tau_oracle, ...) {
   if (!requireNamespace("bartCause", quietly = TRUE)) {

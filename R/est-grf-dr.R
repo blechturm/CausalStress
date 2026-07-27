@@ -5,9 +5,8 @@
 #' "doubly-robust" in the sense of GRF: the causal forest internally uses
 #' orthogonalization with nuisance estimates for propensity and outcome.
 #'
-#' This estimator is **optional** and requires the `grf` package. It is not
-#' part of the core estimator registry by default; instead, it can be
-#' registered via `cs_register_grf_dr_att()`.
+#' This estimator is an optional registry entry and requires the `grf` package.
+#' The descriptor is discoverable without `grf`; execution requires the package.
 #'
 #' @param df Data frame as returned in `dgp$df`, containing at least
 #'   `y`, `w`, and covariates. Covariates are taken as all non-core columns
@@ -23,10 +22,8 @@
 #' @param tau Ignored. Included for API compatibility with other estimators.
 #' @param ... Ignored. Reserved for future extensions.
 #'
-#' @return A list with components:
-#'   - att: tibble with columns `estimand` and `estimate`.
-#'   - qst: `NULL` (this estimator does not provide QST).
-#'   - meta: list with fields `estimator_id`, `oracle`, `supports_qst`.
+#' @return A legacy-compatible estimator result containing an `att` estimate
+#'   and optional interval, `qst = NULL`, `cf = NULL`, and CI/provenance `meta`.
 #'
 #' @export
 est_grf_dr_att <- function(df, config = list(), tau = cs_tau_oracle, ...) {
@@ -243,9 +240,11 @@ est_grf_dr <- function(df, config = list(), tau = cs_tau_oracle, ...) {
 
 #' Register GRF-based ATT estimator in the estimator registry
 #'
-#' This helper registers `est_grf_dr_att` under the id `grf_dr_att` in the
-#' estimator registry, marking it as an optional estimator that requires the
-#' `grf` package. It can be called from user code or from an extension package.
+#' This compatibility helper attempts to register `est_grf_dr_att` under the ID
+#' `grf_dr_att`. Current releases already ship that optional descriptor, so
+#' ordinary use should call the estimator through the runner and does not need
+#' this helper. Like any duplicate registration, calling it when the ID is
+#' already present aborts with `causalstress_registry_error`.
 #'
 #' @return Invisibly, the updated estimator registry.
 #' @export

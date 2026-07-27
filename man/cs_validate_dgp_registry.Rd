@@ -15,6 +15,7 @@ Invisible \code{TRUE} on success.
 }
 \description{
 Checks that \code{cs_dgp_registry()} returns entries with the expected schema,
-required columns, and basic generator properties. Intended primarily as an
-internal guard; in v0.1.3 this is called on package load with warnings only.
+required columns, and basic generator properties. Package startup runs this
+in warning mode unless \code{options(causalstress.validate_on_load = FALSE)} is
+set; CI and release validation should call it with \code{strict = TRUE}.
 }

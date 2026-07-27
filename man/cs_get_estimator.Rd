@@ -15,7 +15,7 @@ A list with elements:
 \itemize{
 \item estimator_id: character scalar
 \item type: character scalar
-\item fn: function(df, tau, config) returning an estimator result
+\item generator: function(df, config, tau, ...) returning an estimator result
 \item oracle: logical, TRUE if this is an oracle estimator
 \item oracle_columns: character vector of eligible oracle columns
 \item oracle_default_columns: character vector of default-granted oracle columns

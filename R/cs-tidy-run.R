@@ -14,7 +14,7 @@
 #'   [cs_run_seeds()], e.g.:
 #'   `dgp_id`, `estimator_id`, `n`, `seed`, `oracle`, `supports_qst`,
 #'   `true_att`, `est_att`, `att_error`, `att_abs_error`,
-#'   `att_ci_lo`, `att_ci_hi`, `boot_covered`, `n_boot_ok`,
+#'   `att_ci_lo`, `att_ci_hi`, `att_covered`, `n_boot_ok`,
 #'   `estimator_pkgs`, `log`, etc.
 #'
 #' @export

@@ -33,26 +33,27 @@
 #'   batch_size = 2,
 #'   campaign_seed = 123,
 #'   strategy_map = list(
-#'     defaults = list(n_boot = 200, ci_method = "bootstrap"),
-#'     overrides = list(ipw_att = list(ci_method = "native"))
+#'     defaults = list(n = 200, n_boot = 200, ci_method = "bootstrap"),
+#'     overrides = list(ipw_att = list(n_boot = 100))
 #'   )
 #' )
 #' plan
 #' \dontrun{
-#' # Run using the plan-based batching engine (v0.1.9)
+#' # Advanced planned-batch execution
 #' cs_run_campaign(
 #'   plan = plan,
 #'   staging_dir = "staging_batches",
-#'   workers = 2
+#'   workers = 2,
+#'   experimental_parallel = TRUE
 #' )
 #'
-#' # Legacy grid runner (v0.1.8 and earlier)
-#' cs_run_campaign(
+#' # Ordinary grid execution uses the dedicated grid entry point
+#' cs_run_grid(
 #'   dgp_ids = c("synth_baseline"),
 #'   estimator_ids = c("lm_att", "ipw_att"),
 #'   seeds = 1:4,
 #'   n = 200,
-#'   defaults = list(ci_method = "bootstrap")
+#'   config = list(ci_method = "bootstrap")
 #' )
 #' }
 cs_plan_campaign <- function(dgp_list,

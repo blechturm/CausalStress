@@ -24,7 +24,8 @@ For this estimator, \code{ci_method = "default"} maps to \code{"native"}.}
 \item{...}{Additional arguments passed to \code{tmle::tmle}.}
 }
 \value{
-A list compatible with \code{cs_check_estimator_output()}.
+A legacy-compatible estimator result containing an \code{att} estimate
+and optional interval, \code{qst = NULL}, and CI/provenance \code{meta}.
 }
 \description{
 Soft-dependency wrapper around \code{tmle::tmle}. The CausalStress estimator

@@ -47,7 +47,8 @@ if (!identical(unname(description[1L, "VignetteBuilder"]), "quarto")) {
 forbidden_rmd <- c(
   if (file.exists("README.Rmd")) "README.Rmd" else character(),
   list.files("vignettes", pattern = "[.]Rmd$", recursive = TRUE, full.names = TRUE),
-  list.files(file.path("inst", "dgp_meta"), pattern = "[.]Rmd$", recursive = TRUE, full.names = TRUE)
+  list.files(file.path("inst", "dgp_meta"), pattern = "[.]Rmd$", recursive = TRUE, full.names = TRUE),
+  list.files(file.path("inst", "templates"), pattern = "[.]Rmd$", recursive = TRUE, full.names = TRUE)
 )
 if (length(forbidden_rmd)) {
   stop("Current long-form sources must be QMD, not Rmd: ", paste(forbidden_rmd, collapse = ", "), call. = FALSE)
@@ -55,8 +56,25 @@ if (length(forbidden_rmd)) {
 
 article_qmd <- list.files("vignettes", pattern = "[.]qmd$", recursive = FALSE, full.names = TRUE)
 dossier_qmd <- list.files(file.path("inst", "dgp_meta"), pattern = "[.]qmd$", recursive = FALSE, full.names = TRUE)
-if (length(article_qmd) != 4L || length(dossier_qmd) != 12L || !file.exists("README.qmd")) {
-  stop("Expected README.qmd, four Quarto articles, and 12 Quarto DGP dossiers.", call. = FALSE)
+required_articles <- file.path(
+  "vignettes",
+  paste0(
+    c(
+      "canonical-workflow", "estimator-extension", "native-dgp-contribution",
+      "benchmarking-with-suites", "caching-and-resume",
+      "distributional_intelligence", "from-run-to-history"
+    ),
+    ".qmd"
+  )
+)
+if (!setequal(article_qmd, required_articles) ||
+    length(dossier_qmd) != 12L ||
+    !file.exists("README.qmd") ||
+    !file.exists(file.path("inst", "templates", "dgp_dossier_v1.qmd"))) {
+  stop(
+    "Expected README.qmd, seven named Quarto articles, the Quarto dossier template, and 12 Quarto DGP dossiers.",
+    call. = FALSE
+  )
 }
 
 article_headers <- vapply(article_qmd, function(path) {
@@ -64,6 +82,19 @@ article_headers <- vapply(article_qmd, function(path) {
 }, character(1))
 if (any(!grepl("VignetteEngine[{]quarto::html[}]", article_headers, fixed = FALSE))) {
   stop("Every package article must use the quarto::html vignette engine.", call. = FALSE)
+}
+
+site_config <- yaml::read_yaml("_pkgdown.yml")
+indexed_articles <- unlist(
+  lapply(site_config$articles, function(group) {
+    if (is.null(group$contents)) character() else group$contents
+  }),
+  use.names = FALSE
+)
+required_article_ids <- tools::file_path_sans_ext(basename(required_articles))
+if (!identical(sort(indexed_articles), sort(required_article_ids)) ||
+    anyDuplicated(indexed_articles)) {
+  stop("Every committed package article must be indexed exactly once in _pkgdown.yml.", call. = FALSE)
 }
 
 readme_source <- paste(readLines("README.qmd", warn = FALSE, encoding = "UTF-8"), collapse = "\n")
@@ -86,8 +117,56 @@ if (any(!vapply(protected_readme, grepl, logical(1), x = readme_source, fixed = 
   stop("CS-1229 protected heavy-tail or oracle-uncertainty prose drifted.", call. = FALSE)
 }
 
+article_sources <- vapply(article_qmd, function(path) {
+  paste(readLines(path, warn = FALSE, encoding = "UTF-8"), collapse = "\n")
+}, character(1))
+rd_files <- list.files("man", pattern = "[.]Rd$", full.names = TRUE)
+rd_sources <- vapply(rd_files, function(path) {
+  paste(readLines(path, warn = FALSE, encoding = "UTF-8"), collapse = "\n")
+}, character(1))
+public_sources <- c(readme_source, article_sources, rd_sources)
+stale_public_claims <- c(
+  "v0.1.", "gate$verdict", "gate$culprits", "results are never just returned",
+  "0 seconds", "Map-Reduce", "Universal converter", "fn: function",
+  "qs::", "qsave(", "qread("
+)
+for (claim in stale_public_claims) {
+  if (any(grepl(claim, public_sources, fixed = TRUE))) {
+    stop("Known stale public documentation claim remains: ", claim, call. = FALSE)
+  }
+}
+
+canonical_source <- article_sources[[file.path("vignettes", "canonical-workflow.qmd")]]
+estimator_source <- article_sources[[file.path("vignettes", "estimator-extension.qmd")]]
+dgp_source <- article_sources[[file.path("vignettes", "native-dgp-contribution.qmd")]]
+required_canonical <- c(
+  "cs_run_single()", "cs_run_grid()", "cs_collect_scores()",
+  "Targets are never silently cross-scored", "CATE scoring is not implemented",
+  "skip_existing = TRUE", "cs_audit(board)"
+)
+required_estimator <- c(
+  "cs_register_estimator()", "process-local", "typed `outputs`",
+  "requires_pkgs", "causalstress_airlock_error"
+)
+required_dgp <- c(
+  "public runtime DGP-registration API", "`X1`, ..., `Xk`",
+  "real-data DGPs", "user-defined families", "cs_validate_dgp()"
+)
+if (any(!vapply(required_canonical, grepl, logical(1), x = canonical_source, fixed = TRUE)) ||
+    any(!vapply(required_estimator, grepl, logical(1), x = estimator_source, fixed = TRUE)) ||
+    any(!vapply(required_dgp, grepl, logical(1), x = dgp_source, fixed = TRUE))) {
+  stop("A required Batch 3 contract statement is missing from the new guides.", call. = FALSE)
+}
+if (grepl("cs_register_dgp[(]", paste(public_sources, collapse = "\n"))) {
+  stop("Documentation must not invent a public runtime DGP-registration function.", call. = FALSE)
+}
+if (!grepl("optional-qst-status", canonical_source, fixed = TRUE) ||
+    !grepl("optional-gengc-status", article_sources[[file.path("vignettes", "distributional_intelligence.qmd")]], fixed = TRUE)) {
+  stop("Optional estimator examples must expose their skipped state.", call. = FALSE)
+}
+
 message(
   "Documentation substrate verified: Quarto CLI ", required[["quarto_cli"]],
   ", quarto R ", required[["quarto_r"]], ", pkgdown ", required[["pkgdown"]],
-  "; README + 4 articles + 12 dossiers are Quarto-only."
+  "; README + 7 articles + dossier template + 12 dossiers are Quarto-only."
 )

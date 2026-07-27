@@ -21,6 +21,10 @@ For this estimator, \code{ci_method = "default"} maps to \code{"bootstrap"}.}
 
 \item{...}{Unused; included for compatibility with runner forwarding.}
 }
+\value{
+A legacy-compatible estimator result with an \code{att} estimate and
+optional interval, \code{qst = NULL}, \code{cf = NULL}, and CI/provenance \code{meta}.
+}
 \description{
 Inverse-probability weighted ATT estimator (IPW-ATT)
 }

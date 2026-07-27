@@ -1,0 +1,185 @@
+---
+title: "Contribute a native synthetic DGP"
+format: html
+vignette: >
+  %\VignetteIndexEntry{Contribute a native synthetic DGP}
+  %\VignetteEngine{quarto::html}
+  %\VignetteEncoding{UTF-8}
+---
+
+> **This is a package-development contribution workflow. CausalStress has no
+> public runtime DGP-registration API.** Users can register estimators at
+> runtime, but a new DGP enters the installed registry only through a reviewed
+> package release.
+
+Native DGPs are governed scientific objects rather than interchangeable data
+factories. Their generator, truth, metadata, report, status, and validation
+evidence must agree before they are added to the package.
+
+```{r}
+#| label: setup
+#| message: false
+library(CausalStress)
+```
+
+## Start from an immutable identity
+
+A DGP is identified by `(dgp_id, version)`. Once released, that pair is
+immutable. A scientific correction, changed distribution, changed truth, or
+changed RNG behavior requires a new version. A same-version performance edit is
+acceptable only when regression evidence proves generated data and truth are
+bitwise identical.
+
+Use one implementation file per conceptual DGP, with explicit versioned
+functions and a convenience wrapper for the latest version. Do not edit an old
+version in place to make a new design look compatible.
+
+## Implement the synthetic-DGP contract
+
+A native synthetic generator accepts `n` and `seed` and returns:
+
+- `df`, containing observed `y`, binary `w`, propensity `p`, potential outcomes
+  `y0` and `y1`, and covariates named consecutively `X1`, ..., `Xk`;
+- scalar `true_att`;
+- `true_qst`, on the governed oracle grid `cs_tau_oracle`; and
+- `meta`, including a length-`n` `structural_te` vector and the governed DGP
+  identity.
+
+Covariates are uppercase, one-based, and gap-free. Names such as `x1`, `X0`, or
+`X1, X3` violate the package contract.
+
+The following is an illustrative constant-shift design skeleton. It is not a
+runtime registration example and does not add a DGP to the registry.
+
+```{r}
+#| eval: false
+dgp_synth_example_v1_0_0 <- function(n, seed) {
+  cs_set_rng(seed)
+
+  X1 <- stats::rnorm(n)
+  X2 <- stats::rbinom(n, size = 1, prob = 0.5)
+  p <- stats::plogis(0.4 * X1 - 0.3 * X2)
+  w <- stats::rbinom(n, size = 1, prob = p)
+
+  epsilon <- stats::rnorm(n)
+  y0 <- 0.5 * X1 + 0.2 * X2 + epsilon
+  structural_te <- rep(1, n)
+  y1 <- y0 + structural_te
+  y <- ifelse(w == 1, y1, y0)
+
+  list(
+    df = data.frame(y, w, p, y0, y1, X1, X2),
+    true_att = cs_true_att(structural_te, w),
+    true_qst = tibble::tibble(tau = cs_tau_oracle, value = 1),
+    meta = list(
+      dgp_id = "synth_example",
+      version = "1.0.0",
+      type = "synthetic",
+      structural_te = structural_te
+    )
+  )
+}
+```
+
+The real implementation must follow the repository's established versioned
+file pattern and the complete Constitution/contract checks; the skeleton is not
+a substitute for those sources.
+
+## Lock RNG behavior
+
+Every generator must establish the governed RNG kind and then set its explicit
+seed. It must not depend on the caller's RNG state, wall-clock time, global
+options, network data, or mutable external files. Repeating the same version,
+`n`, and `seed` must return an identical object. Validation must also leave the
+caller's RNG state intact.
+
+Randomness used to construct an oracle belongs to the reviewed truth method.
+Where common random numbers are used for a quantile contrast, say so precisely:
+they reduce Monte Carlo variance but do not eliminate empirical-quantile
+sampling uncertainty.
+
+## Define truth before interpreting estimators
+
+Document the population or finite-sample object represented by every truth
+field, its oracle algorithm, tau grid, numerical tolerance, and any Monte Carlo
+uncertainty. Do not infer truth from an estimator under evaluation.
+
+Moment regimes matter. In particular, the stable heavy-tail DGP intentionally
+keeps ATT estimators running even though conventional mean potential-outcome ATT
+does not exist under its Cauchy-mixture noise. Its `true_att` is a governed
+structural signal anchor. The breakdown is evidence, not a reason to skip the
+run; mean-based ATT shootout aggregation is invalid there, while QST remains the
+valid distributional comparison.
+
+## Supply both sidecars
+
+Each registered ID has exactly one top-level YAML metadata sidecar and one QMD
+report source in `inst/dgp_meta/`:
+
+```text
+inst/dgp_meta/synth_example.yml
+inst/dgp_meta/synth_example.qmd
+```
+
+The YAML key, QMD parameter/default ID, generator metadata, and registry ID must
+match exactly. The report explains intent, assumptions, mathematical
+specification, truth, diagnostics, failure modes, implementation references,
+validation, and changelog. Start from
+`inst/templates/dgp_dossier_v1.qmd`; do not introduce a new R Markdown report.
+
+The Quarto renderer treats missing, extra, duplicate, mis-keyed, or
+unrenderable sidecars as failures. A native DGP is not complete when only the R
+function exists.
+
+## Register status deliberately
+
+The installed registry is explicit and maintainer-owned. Allowed lifecycle
+states are `experimental`, `stable`, `deprecated`, and `invalidated`; at most
+one version per DGP ID may be stable. New scientific designs normally begin as
+experimental. Stability is a reviewed evidence decision, not the absence of a
+warning. Deprecated or invalidated records remain discoverable with loud status
+semantics so old evidence can still be interpreted.
+
+## Validate through public checks
+
+During development, pass the generator function to `cs_validate_dgp()` over
+multiple seeds. Registry-wide gates additionally validate every installed
+descriptor, sidecar pair, executable metadata record, truth grid, and status
+invariant.
+
+```{r}
+validation <- cs_validate_dgp(
+  dgp_synth_baseline,
+  n = 200,
+  seeds = 1:3,
+  verbose = FALSE
+)
+
+validation[c("valid", "checks")]
+```
+
+Before review, also add deterministic regression fixtures, exact schema tests,
+truth/oracle tests, status-warning tests, and sidecar render evidence appropriate
+to the design. Scientific signatures reproduced from declared metadata are not
+the same as scientific validation; experimental DGPs remain experimental until
+their promotion evidence is accepted.
+
+## Contribution review checklist
+
+1. Assign a unique ID and new immutable version.
+2. Use the governed RNG and prove determinism plus caller-state isolation.
+3. Return the full synthetic schema with `X1...Xk` covariates.
+4. Define ATT and QST truth without estimator leakage and quantify oracle
+   uncertainty where relevant.
+5. Add the explicit registry row and choose a justified status.
+6. Add matching YAML and QMD sidecars and render the dossier in a clean process.
+7. Run focused DGP, registry, scientific-signature, documentation, full-test,
+   lint, and package-check gates.
+8. Obtain independent scientific and code review before the package release.
+
+## Capabilities that remain future work
+
+CausalStress does not yet support real-data DGPs, a public runtime DGP-extension
+API, parameterized DGP families, or user-defined families. Design a native
+synthetic contribution against the current contract without implying those
+future capabilities already exist.

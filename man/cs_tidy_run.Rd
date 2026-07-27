@@ -14,7 +14,7 @@ A tibble with a single row and the same columns as
 \code{\link[=cs_run_seeds]{cs_run_seeds()}}, e.g.:
 \code{dgp_id}, \code{estimator_id}, \code{n}, \code{seed}, \code{oracle}, \code{supports_qst},
 \code{true_att}, \code{est_att}, \code{att_error}, \code{att_abs_error},
-\code{att_ci_lo}, \code{att_ci_hi}, \code{boot_covered}, \code{n_boot_ok},
+\code{att_ci_lo}, \code{att_ci_hi}, \code{att_covered}, \code{n_boot_ok},
 \code{estimator_pkgs}, \code{log}, etc.
 }
 \description{

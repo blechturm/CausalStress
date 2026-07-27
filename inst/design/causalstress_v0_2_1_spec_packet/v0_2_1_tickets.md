@@ -433,7 +433,7 @@ publication. Remote CI remains mandatory after a future authorized push.
   single/grid entry points as ordinary and planned batching as advanced; do not
   make dual-mode `cs_run_campaign()` the conceptual center.
 - **Review gate:** Batch 3 scientific and user-documentation truthfulness review.
-- **Disposition:** open
+- **Disposition:** complete_after_review
 
 ### CS-1241 — Document the user-defined estimator contract
 
@@ -451,7 +451,7 @@ publication. Remote CI remains mandatory after a future authorized push.
   CI behavior, Airlock restrictions, and classed failures. Execute the core
   example from a clean installed package without optional estimators.
 - **Review gate:** Batch 3 scientific and user-documentation truthfulness review.
-- **Disposition:** open
+- **Disposition:** complete_after_review
 
 ### CS-1242 — Document native DGP contribution without inventing a public API
 
@@ -469,7 +469,7 @@ publication. Remote CI remains mandatory after a future authorized push.
   prominently that CausalStress has no public runtime DGP-registration API; do
   not claim support for real-data DGPs or user-defined families.
 - **Review gate:** Batch 3 scientific and user-documentation truthfulness review.
-- **Disposition:** open
+- **Disposition:** complete_after_review
 
 ### CS-1243 — Reconcile existing articles, roxygen, and reference truth
 
@@ -490,7 +490,87 @@ publication. Remote CI remains mandatory after a future authorized push.
   accepted specification. Do not use prose edits to deprecate or redesign the
   dual-mode campaign API.
 - **Review gate:** Batch 3 scientific and user-documentation truthfulness review.
-- **Disposition:** open
+- **Disposition:** complete_after_review
+
+## Batch 3 Implementation Evidence
+
+- **CS-1240:** `canonical-workflow.qmd` is the ordinary exported-API path from
+  suite/DGP/estimator discovery through single and grid execution, canonical
+  typed score collection, target-specific ATT/ATE/QST interpretation, explicit
+  mixed-request CATE staging, summaries/plotting, identities/provenance, and
+  strict RDS-backed persistence/resume. It teaches single/seeds/grid as the
+  ordinary surface and keeps planned batching advanced without deprecating or
+  redesigning either `cs_run_campaign()` mode. QST truth interpretation runs
+  without optional estimators; the optional QST estimator example has a visible
+  installed-package plus environment opt-in guard.
+- **CS-1241:** `estimator-extension.qmd` executes a deliberately simple
+  process-local registered estimator through public APIs and typed output. It
+  documents identity/version lifetime, exact target capabilities and QST
+  coordinates, supported legacy shape, dependency declarations, estimator-
+  owned CI evidence, Airlock grants, and classed boundary failures. Its core
+  path needs no optional estimator package.
+- **CS-1242:** `native-dgp-contribution.qmd` defines a maintainer-reviewed
+  package-development contribution path: immutable `(dgp_id, version)`, the
+  full synthetic schema and uppercase consecutive `X1...Xk`, governed RNG,
+  truth/oracle uncertainty, matching YAML/QMD sidecars, registry lifecycle,
+  validation, and review. It prominently states that no public runtime DGP-
+  registration API, real-data DGP support, parameterized families, or user-
+  defined families exist. The remaining dossier template was migrated from
+  Rmd to executable `inst/templates/dgp_dossier_v1.qmd`.
+- **CS-1243:** The four migrated articles now use current typed collectors,
+  target-specific gatekeeper fields, strict schema-4 resume semantics, RDS
+  staging, explicit experimental status, truthful optional-example guards, and
+  moment-regime limits. The heavytail DGP is no longer put in a mean-based ATT
+  scorecard. README source/output now identify the v0.2.1 documentation surface
+  and link the three new guides. Affected roxygen and generated Rd now describe
+  actual campaign return modes, estimator descriptor/return shapes, registry
+  startup validation, tidy columns, and single-writer gathering. No runtime
+  implementation, export, signature, DGP, truth, RNG, status, or governed
+  vocabulary changed.
+- **Source/index validation:** `tools/ci-docs.R` now requires the seven named
+  package articles, the Quarto dossier template, and 12 Quarto DGP dossiers;
+  rejects current Rmd sources and known stale public claims across README,
+  articles, and generated Rd; requires every package article to be indexed
+  exactly once; preserves the CS-1229 protected prose; and locks the new guide
+  boundary statements. It passed with Quarto CLI 1.9.38, quarto R 1.5.1, and
+  pkgdown 2.2.1.
+- **Executable documentation:** All seven articles rendered from an isolated
+  installed CausalStress 0.2.0 package without optional-document opt-in. The
+  migrated dossier template also rendered with sample parameters. A focused
+  installed-GenGC QST run passed for three tau coordinates, confirming the
+  guarded optional example's current adapter path. The complete pkgdown site
+  built every exported reference page and all seven articles successfully.
+- **Package/runtime gates:** The full test suite passed 1,244 expectations with
+  zero failures and 56 existing governed/optional-estimator warnings. Strict
+  registry structure and executable validation passed 24/24 rows. Governed
+  lint passed with `lint_count=0` and 34 recognized internal-helper false
+  positives. A full-vignette Windows `R CMD build` plus
+  `R CMD check --no-manual` completed in 342.6 seconds with 0 errors, 0 warnings,
+  and 0 notes.
+- **Build-substrate chronology:** The first full-vignette build attempt let a
+  user-library CausalStress 0.1.10 shadow the package under test inside Quarto
+  child sessions, producing missing-current-export errors. No source correction
+  was made for that harness failure. Reordering the isolated current-source
+  CausalStress 0.2.0 library first produced the final 0/0/0 build/check above.
+- **Scope and state:** The unrelated concurrent maintainer edits in
+  `inst/design/horizon.md` remain untouched and outside this batch. Batch 4,
+  push, merge, tag, site publication, and release remain unauthorized.
+
+Independent review returned **APPROVE WITH NON-BLOCKING NOTES**. The reviewer
+independently confirmed the Batch 3 scope, all-comment `R/` diff, unchanged
+signatures/NAMESPACE/DESCRIPTION, the scientific and extension boundaries in
+the three new guides, reconciliation of the four existing articles and README,
+the Quarto-only/indexing checks, all five protected CS-1229 passages, clean
+generated Rd usage, and the validity of the final 0/0/0 build after correcting
+the local stale-library search order. The remaining notes are advisory: remote
+CI is inherently owed after a later authorized commit/push sequence, and the
+release playbook may later document placing the under-test library before user
+libraries for local full-vignette builds. Neither note requires a Batch 3
+correction or executable rerun.
+
+CS-1240 through CS-1243 are `complete_after_review`. This acceptance authorizes
+the Batch 3 commit only, excluding `inst/design/horizon.md`. It does not
+authorize Batch 4, push, merge, tag, site publication, or release.
 
 ## Batch 4 — Integrated Documentation Validation
 

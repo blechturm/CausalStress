@@ -1,136 +1,117 @@
 ---
-title: "Benchmarking with Suites and Visualization"
+title: "Benchmarking with suites and visualization"
 format: html
 vignette: >
-  %\VignetteIndexEntry{Benchmarking with Suites and Visualization}
+  %\VignetteIndexEntry{Benchmarking with suites and visualization}
   %\VignetteEngine{quarto::html}
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r}
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>",
-  fig.width = 7,
-  fig.height = 4
-)
-```
-
-## Introduction
-
-`CausalStress` now provides high-level **Suites** and plotting helpers so you can
-run a curated set of DGPs with a single call and immediately visualize the
-results. This vignette shows how to:
-
-1. Discover and run suites.
-2. Persist results to a pins board.
-3. Visualize placebo performance with the gatekeeper plot.
-4. Inspect runtime metadata for quick performance diagnostics.
-
-We keep the example lightweight so it is fast to run in vignette builds.
+Suites are named collections of DGP IDs. They make repeated benchmark setup
+convenient, but membership is not evidence that a DGP is stable or that every
+aggregate is scientifically meaningful. Inspect registry status and each DGP
+report before designing a study.
 
 ```{r}
+#| label: setup
+#| message: false
 library(CausalStress)
 library(dplyr)
 library(ggplot2)
-library(pins)
 
-# Use a temporary board for this session
-board <- pins::board_temp()
+board_path <- tempfile("causalstress-suite-")
+dir.create(board_path)
+board <- pins::board_folder(board_path)
 ```
 
-## 1. The Suite Concept
-
-A **suite** is a named collection of DGP IDs. You can inspect the suite registry
-and query a specific suite. The `"placebo"` suite is defined dynamically to
-include every DGP whose ID contains `"placebo"`.
+## Discover suites
 
 ```{r}
-# List available suites (compact view)
-cs_suite_registry() %>%
+cs_suite_registry() |>
   select(suite_id, description)
 
-# Retrieve the placebo suite members
 cs_get_suite("placebo")
 ```
 
-## 2. Running a Suite
-
-Run an entire suite with `cs_run_suite()`. We keep the configuration small for
-speed: three seeds, `n = 200`, and a modest bootstrap (`B = 30`). Results are
-pinned automatically so you can resume or audit later.
+The placebo suite currently contains experimental DGPs. The call below requests
+that status explicitly and uses a small bootstrap only to make interval plots
+executable. Increase the number of seeds and bootstrap replicates for scientific
+work.
 
 ```{r}
+#| warning: false
 placebo_runs <- cs_run_suite(
-  suite_id      = "placebo",
-  estimator_ids = c("lm_att", "ipw_att"),
-  n             = 200,
-  seeds         = 1:3,
-  bootstrap     = TRUE,
-  B             = 30,
-  board         = board,
-  skip_existing = TRUE
+  suite_id = "placebo",
+  estimator_ids = "lm_att",
+  n = 150,
+  seeds = 1:2,
+  status = "experimental",
+  bootstrap = TRUE,
+  B = 20,
+  board = board,
+  show_progress = FALSE
 )
 
-# Flatten to a tidy tibble
 placebo_tidy <- cs_tidy(placebo_runs)
+cs_collect_scores(placebo_runs) |>
+  count(estimator_id, estimand_target_id, score_status)
 ```
 
-## 3. Gatekeeper Plot for Placebos
+## Visualize ATT evidence
 
-The gatekeeper plot highlights whether estimators stay near zero on sharp-null
-DGPs. Blue (TRUE) means the ATT CI covers zero; red (FALSE) means failure.
+`cs_plot_placebo()` shows each placebo ATT estimate and interval; color records
+whether the interval covers the sharp-null target. `cs_plot_att_error()` shows
+the finite set of per-run ATT deviations.
 
 ```{r}
-p_gate <- cs_plot_placebo(placebo_tidy) +
-  ggtitle("Gatekeeper Plot: Placebo Suite")
-
-p_gate
+#| fig-width: 7
+#| fig-height: 4
+cs_plot_placebo(placebo_tidy) +
+  ggtitle("Placebo ATT intervals")
 ```
-
-You can create additional visuals. For example, ATT error distributions:
 
 ```{r}
-p_att <- cs_plot_att_error(placebo_tidy) +
-  ggtitle("ATT Error by Estimator (Placebo Suite)")
-
-p_att
+#| fig-width: 7
+#| fig-height: 4
+cs_plot_att_error(placebo_tidy) +
+  ggtitle("ATT deviations in the example runs")
 ```
 
-## 4. Runtime Metadata
+## Interpret the gatekeeper components
 
-Runners now record timing information per run. You can inspect these columns in
-the tidy output to spot slow estimators or DGPs.
-
-```{r}
-placebo_tidy %>%
-  select(dgp_id, estimator_id, seed,
-         run_time_dgp, run_time_est, run_time_total) %>%
-  arrange(desc(run_time_total))
-```
-
-`run_time_dgp` captures DGP generation time, `run_time_est` covers estimator
-execution, and `run_time_total` is the full runtime for the seed. All times are
-in seconds.
-
-## 5. Gatekeeper Summary
-
-To quickly assess placebo performance, use `cs_summarise_gatekeeper()`. It
-computes coverage rates per estimator and pinpoints specific placebo DGPs that
-fall below a coverage threshold (default 0.90).
+`cs_summarise_gatekeeper()` returns separate target-specific components. The ATT
+component compares interval coverage with `threshold`. ATE remains structurally
+present but unverified pending recalibration. For QST, a run fails when more
+than 10% of its tau intervals exclude the placebo truth, and an estimator fails
+when more than 10% of verified runs fail. Missing intervals produce
+`UNVERIFIED`, not a pass.
 
 ```{r}
 gate <- cs_summarise_gatekeeper(placebo_runs, threshold = 0.90)
 
-gate$verdict    # estimator-level pass/fail
-gate$culprits   # specific placebo DGPs below threshold
+gate$att_verdict
+gate$att_culprits
+gate$ate_verdict
+gate$qst_verdict
 ```
 
-## 6. Next Steps
+The two seeds above demonstrate the API; they are far too few to support a
+scientific gatekeeper decision.
 
-- Try other suites such as `"stress"` or `"signal"`.
-- Increase `seeds`, `n`, or `B` for more rigorous campaigns.
-- Use `cs_audit(board)` to review provenance, fingerprints, and git hashes for
-  your stored runs.
+## Inspect execution metadata and persisted evidence
 
-Happy benchmarking!
+```{r}
+placebo_tidy |>
+  select(
+    dgp_id, estimator_id, seed,
+    run_time_dgp, run_time_est, run_time_total
+  ) |>
+  arrange(desc(run_time_total))
+
+cs_audit(board) |>
+  select(dgp_id, estimator_id, seed, fit_fingerprints)
+```
+
+Timing fields are provenance, not scientific identities. Persisted results are
+written only because this example supplied `board`; `skip_existing = TRUE` is a
+separate opt-in for strict fingerprint-checked resume.

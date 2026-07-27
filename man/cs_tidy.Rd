@@ -13,6 +13,6 @@ cs_tidy(x)
 A tibble with standard performance columns.
 }
 \description{
-Universal converter that transforms any CausalStress result object
-(Single Run, List of Runs, or existing Tibble) into a standard tidy format.
+Converts a supported CausalStress single-run result, list of run results, or
+existing data frame into the package's flattened run-row format.
 }

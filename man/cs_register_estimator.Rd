@@ -55,7 +55,9 @@ Invisibly, the updated registry tibble (core + extra).
 }
 \description{
 This function allows external packages or user code to register new estimators
-into the CausalStress estimator registry. Registered estimators must obey the
-estimator contract: the \code{generator} function must accept \verb{(df, config, tau, ...)}
-and return a list compatible with \code{cs_check_estimator_output()}.
+into the process-local CausalStress estimator registry. Registered estimators
+must obey the estimator contract: the \code{generator} function must accept
+\verb{(df, config, tau, ...)} and return typed \code{outputs} or a supported legacy
+\code{list(att, qst, meta)} shape. See
+\code{vignette("estimator-extension", package = "CausalStress")}.
 }

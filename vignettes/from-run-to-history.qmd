@@ -1,179 +1,145 @@
 ---
-title: "from-run-to-history"
+title: "From a run to persisted history"
 format: html
 vignette: >
-  %\VignetteIndexEntry{from-run-to-history}
+  %\VignetteIndexEntry{From a run to persisted history}
   %\VignetteEngine{quarto::html}
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r, include = FALSE}
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>",
-  echo = FALSE,
-  message = FALSE,
-  warning = FALSE
-)
-```
+CausalStress separates execution, optional persistence, typed scoring, and
+audit. A board is required only when results should be stored; without it,
+runners simply return their result objects.
 
-This vignette demonstrates the **Constitutional Workflow** of CausalStress:
-
-1.  **Run:** Execute simulations with strict guarantees.
-
-2.  **Persist:** Save every seed atomically to disk.
-
-3.  **Audit:** Query the history of your experiments.
-
-4.  **Tidy:** Flatten complex results for analysis.
-
-We will compare two estimators (`lm_att`, `ipw_att`) on two data-generating processes (`synth_baseline`, `synth_heavytail`).
-
-## 1. Setup: The Environment
-
-First, we load the package and set up a **Board**. In `CausalStress`, results are never just "returned" to the console—they are persisted to a storage backend (local folder, S3, etc.).
-
-For this tutorial, we use a temporary board.
-
-```{r setup}
+```{r}
+#| label: setup
+#| message: false
 library(CausalStress)
 library(dplyr)
 library(pins)
 
-# In a real project, use board_folder("experiments") or board_s3(...)
-board <- pins::board_temp()
+board_path <- tempfile("causalstress-history-")
+dir.create(board_path)
+board <- board_folder(board_path)
 ```
 
-## 2. The Atomic Building Block: `cs_run_single()`
+## Run and persist one seed
 
-The smallest unit of work in `CausalStress` is a single seed. This function returns a **Rich Object** containing the estimate, bootstrap distribution, and metadata.
+`cs_run_single()` returns typed outputs and scores, compatibility ATT/QST
+projections, optional bootstrap draws, metadata, and provenance. Bootstrap draws
+are present only when the estimator/runner produced them.
 
 ```{r}
-# Run one specific configuration
-run_1 <- cs_run_single(
-  dgp_id       = "synth_baseline",
+one_run <- cs_run_single(
+  dgp_id = "synth_baseline",
   estimator_id = "lm_att",
-  n            = 500,
-  seed         = 123,
-  bootstrap    = TRUE,
-  B            = 100,
-  board        = board  # <--- Persist this run immediately
+  n = 200,
+  seed = 123,
+  board = board
 )
 
-# Inspect the Rich Object (It's a list)
-str(run_1, max.level = 1)
+names(one_run)
+
+cs_collect_scores(one_run) |>
+  select(estimand_target_id, metric_id, score_status, estimate, truth, error)
+
+cs_tidy(one_run) |>
+  select(dgp_id, estimator_id, seed, est_att, att_error)
 ```
 
-While rich objects are great for storage, they are annoying for analysis. We use `cs_tidy()` to flatten them.
+Only the completed result is persisted. The board does not make an in-progress
+estimator call recoverable.
+
+## Scale to an ordinary grid
+
+This small grid uses the finite-moment baseline DGP, so the displayed mean ATT
+error summaries have their ordinary interpretation. Heavy-tail estimand-boundary
+runs should be executed and reported separately, not placed in a mean-based ATT
+RMSE, coverage, or ranking shootout.
 
 ```{r}
-
-run_1 %>%
-cs_tidy() %>%
-  select(dgp_id, estimator_id, seed, est_att, att_ci_width)
-
-```
-
-## 3. Scaling Up: `cs_run_grid()`
-
-Real benchmarks involve running many seeds across many scenarios. `cs_run_grid()` orchestrates this.
-
-Crucially, it supports **Atomic Persistence** and **Crash Recovery**.
-
-```{r}
-
-  # Define the benchmark grid
-# 2 DGPs x 2 Estimators x 5 Seeds = 20 Runs
 runs <- cs_run_grid(
-  dgp_ids       = c("synth_baseline", "synth_heavytail"),
+  dgp_ids = "synth_baseline",
   estimator_ids = c("lm_att", "ipw_att"),
-  n             = 500,
-  seeds         = 1:5,
-  bootstrap     = TRUE,
-  B             = 100,
-  board         = board,        # Save every seed
-  skip_existing = TRUE          # Enable Crash Recovery
+  n = 200,
+  seeds = 1:3,
+  board = board,
+  show_progress = FALSE
 )
-```
 
-### The "Free Lunch" (Crash & Resume)
-
-Because we set `skip_existing = TRUE`, we can re-run the exact same command, and `CausalStress` will detect that the work is already done.
-
-```{r}
-
-
-system.time({
-  runs_resume <- cs_run_grid(
-    dgp_ids       = c("synth_baseline", "synth_heavytail"),
-    estimator_ids = c("lm_att", "ipw_att"),
-    n             = 500,
-    seeds         = 1:5,
-    bootstrap     = TRUE,   # match original config
-    B             = 100,    # match original config
-    board         = board,
-    skip_existing = TRUE
+scorecard <- cs_summarise_runs(runs)
+scorecard |>
+  select(
+    dgp_id, estimator_id, n_runs,
+    mean_error, mean_abs_error, sd_error
   )
-})
 ```
 
-The second run finishes almost instantly. In a real campaign on a cluster, this means you can interrupt and resume your work at any time without losing progress.
+`mean_error` is signed mean deviation, `mean_abs_error` is mean absolute
+deviation, and `sd_error` is the standard deviation across the supplied runs.
+None of those columns is RMSE.
 
-## 4. The Scorecard
+## Resume matching completed work
 
-Once the grid is done, we tidy the results and compute the benchmark metrics.
+Resume is explicit and strict. `skip_existing = TRUE` requires current schema-4
+metadata and an exact configuration fingerprint before reading an existing pin.
+Here all requested records already exist, so the estimators are not rerun.
 
 ```{r}
+resumed <- cs_run_grid(
+  dgp_ids = "synth_baseline",
+  estimator_ids = c("lm_att", "ipw_att"),
+  n = 200,
+  seeds = 1:3,
+  board = board,
+  skip_existing = TRUE,
+  show_progress = FALSE
+)
 
-  # 1. Tidy (Flatten lists to rows)
-runs_tidy <- runs %>%
-        cs_tidy()
-
-# 2. Summarise (Compute Bias, RMSE, Coverage)
-scorecard <- runs_tidy %>%
-        cs_summarise_runs
-
-scorecard %>%
-        select(dgp_id, estimator_id, RMSE = mean_error, Coverage = mean_att_covered)
+resumed |>
+  count(estimator_id)
 ```
 
-## 5. Provenance: The "Time Machine"
+Filesystem reads and validation still take time. A mismatch or historical
+schema fails closed; use `force = TRUE` only when recomputation and replacement
+are intentional.
 
-Imagine you ran an experiment last week, but you forgot which Git commit you used. Or you want to load a specific result from a month ago or a paper you published years ago.
+## Audit and reload persisted evidence
 
-`cs_audit()` turns your `pins` board into a searchable database of your research history.
+`cs_audit()` inventories pins and their recorded identities. It does not turn
+timestamps or runtime logs into scientific identity fields.
 
 ```{r}
 history <- cs_audit(board)
-
-# What have we run so far?
-history %>%
-  select(dgp_id, estimator_id, seed, timestamp, git_hash) %>%
-  head(5)
+history |>
+  select(
+    dgp_id, estimator_id, estimator_version,
+    seed, fit_fingerprints, score_fingerprints, pin_name
+  ) |>
+  head()
 ```
 
-### Loading a specific past run
-
-You can filter this history to find a specific artifact and load it back into R.
+A pins board remains an ordinary persistence boundary, so a selected artifact
+can be loaded with pins and then inspected through CausalStress accessors.
 
 ```{r}
-# "Find that specific run I did for the heavy tail scenario..."
-target <- history %>%
-  filter(dgp_id == "synth_heavytail", estimator_id == "lm_att", seed == 1)
+target <- history |>
+  filter(
+    dgp_id == "synth_baseline",
+    estimator_id == "lm_att",
+    seed == 1
+  ) |>
+  slice(1)
 
-# Load the full rich object
-old_result <- pins::pin_read(board, target$pin_name)
+stored_result <- pin_read(board, target$pin_name)
 
-# Verify it matches
-cs_tidy(old_result)$est_att
+cs_meta_flatten(stored_result) |>
+  select(dgp_id, estimator_id, seed, fit_fingerprint)
+
+cs_provenance(stored_result)[c("run_time_dgp", "run_time_est", "run_time_total")]
 ```
 
-## Summary
-
-This workflow ensures that your research is:
-
-1.  **Safe:** No data leakage (Airlock).
-
-2.  **Durable:** No lost work (Atomic Persistence).
-
-3.  **Reproducible:** Exact provenance tracking (Audit).
+For experimental parallel execution, workers stage completed RDS artifacts and
+the controlling process gathers them through a single-writer path. That is a
+different contract from serial board writes and does not make a whole campaign
+transactional.
