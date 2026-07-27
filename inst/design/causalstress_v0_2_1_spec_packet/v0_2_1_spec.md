@@ -1,6 +1,6 @@
 # CausalStress v0.2.1 Quarto Documentation and Bounded Maintenance Spec
 
-**Status:** ACTIVE — accepted by the maintainer after independent review
+**Status:** FINAL — released and closed 2026-07-27
 **Packet:** `causalstress_v0_2_1_spec_packet`
 **Date opened:** 2026-07-26
 **Branch:** `v0.2.1`
@@ -10,8 +10,8 @@
 **Accepted:** 2026-07-26
 **Independent review:** APPROVE WITH NON-BLOCKING NOTES; N1–N3 are mandatory
 ticket-derivation constraints.
-**Authority:** Active release specification. Implementation remains gated on a
-derived ticket and batch plan receiving independent review; work must then stay
+**Authority:** Historical final release specification. Implementation was gated on a
+derived ticket and batch plan receiving independent review; work then stayed
 within both this specification and the reviewed ticket boundary.
 **Tickets:** Intentionally absent at acceptance. Tickets and a batch plan are
 derived from this committed specification in a separate reviewed change.

@@ -1,6 +1,6 @@
 # CausalStress v0.2.1 Tickets
 
-**Status:** ACTIVE — accepted after independent review
+**Status:** FINAL — all tickets complete; v0.2.1 released 2026-07-27
 **Packet:** `causalstress_v0_2_1_spec_packet`
 **Authority commit:** `0b20f12`
 **Source specification:** `v0_2_1_spec.md`
@@ -681,7 +681,7 @@ publication, or release.
   remain non-publishing previews.
 - **Review gate:** Final release-gate review before merge/tag/publication, then
   maintainer release decision.
-- **Disposition:** open
+- **Disposition:** complete_after_review
 
 **Maintainer decision (2026-07-27):** Publish the v0.2.1 pkgdown site through
 GitHub Pages. This resolves the publication VALUE decision already reserved to
@@ -728,10 +728,10 @@ greenness remains a playbook prerequisite rather than a sibling-workflow query,
 and the remote `github-pages` selected-tag rule remains mandatory before the
 first deployment. Neither note requires a code correction.
 
-The reviewed Pages mechanism may be committed. CS-1245 remains `open` because
-the final release gate, branch/main/tag CI, maintainer release decision,
-GitHub Release, and Pages deployment have not occurred. The review authorizes
-none of those actions.
+At that review checkpoint, the reviewed Pages mechanism could be committed but
+CS-1245 remained `open` because the final release gate, branch/main/tag CI,
+maintainer release decision, GitHub Release, and Pages deployment had not
+occurred. The review authorized none of those actions.
 
 Remote Pages-configuration evidence (2026-07-27):
 
@@ -777,7 +777,7 @@ Independent correction review returned **APPROVE WITH NON-BLOCKING NOTES** on
 2026-07-27. It independently confirmed the platform-specific `GenGC` failure
 diagnosis, the two-line executable scope, the independence of the Pandoc and
 Quarto inputs, unchanged full-vignette check semantics, the restored substrate
-trigger, CS-1245 ownership, YAML/Markdown agreement, and the truthful open
+trigger, CS-1245 ownership, YAML/Markdown agreement, and the then-truthful open
 closeout. The reviewer authorized only committing and pushing the correction
 for fresh branch CI. It did not authorize the final release gate, merge, tag,
 GitHub Release, or Pages deployment. Its lineage note correctly observed that
@@ -808,6 +808,26 @@ package cache for that job only. The site-build cache remains enabled; hard
 dependencies are still resolved and installed; and no runtime, scientific, or
 dependency-declaration behavior changes. Fresh complete branch CI is required
 before merge.
+
+**Final release evidence and disposition (2026-07-27):** The final correction
+head `61bdf0332dd56ce737dc1c1b6bebbf7b2b71ad4f` passed complete branch CI and
+the duplicate pull-request matrix in PR #8. PR #8 merged to `main` as
+`ea4885e7ebc2ce3a226d0d8dc6be068b307c946b`; complete main CI then passed.
+Annotated tag object `638d45239e86cc1fb66e12176a225f6d9ad2ca94` points to that exact merge
+commit, and all four distinct tag-triggered workflows passed before the public,
+non-draft, non-prerelease GitHub Release was created.
+
+The first Pages command used the ambiguous short ref `v0.2.1`, which GitHub
+resolved to the same-named release branch at `61bdf03`. The workflow's tag-ref
+guard failed before dependency installation, artifact packaging, or deployment;
+the run was cancelled. A second dispatch used the fully qualified
+`refs/tags/v0.2.1`, resolved to `ea4885e`, passed the complete site and runtime
+controls, and deployed through the `github-pages` environment. GitHub recorded
+deployment `5631282311` successful, and the public URL returned HTTP 200 with
+v0.2.1 and DGP-report content. The playbook now requires the fully qualified
+tag ref. The maintainer explicitly waived another Claude review, directed the
+playbook sequence, and directed closure of every ticket after publication.
+CS-1245 is complete after that final maintainer review and release decision.
 
 ## Release-Gate Requirement
 

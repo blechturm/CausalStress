@@ -1,6 +1,6 @@
 # CausalStress v0.2.1 Batch Plan
 
-**Status:** ACTIVE — Batches 0–4 and the Batch 5 Pages mechanism complete after review; correction CI is green and the final CS-1245 release gate is active
+**Status:** FINAL — all six batches complete; v0.2.1 released 2026-07-27
 **Packet:** `causalstress_v0_2_1_spec_packet`
 **Authority commit:** `0b20f12`
 **Accepted:** 2026-07-26
@@ -120,10 +120,9 @@ are not authorized in any batch.
 
 ## Batch 5 — Release Gate and Publication
 
-- **State:** Pages publication mechanism complete after independent review;
-  two narrow initial branch-CI corrections are also complete after independent
-  review. Fresh correction CI is pending. Final release-gate execution and
-  remote publication have not started.
+- **State:** Complete. Final local, branch, pull-request, main, and tag gates
+  passed in order; the GitHub Release and exact-tag Pages site were published;
+  CS-1245 is `complete_after_review`.
 - **Purpose:** Record complete final-tree release evidence and publish only in
   the governed order.
 - **Tickets:** CS-1245
@@ -137,5 +136,7 @@ are not authorized in any batch.
 - **Stop condition:** A failed gate is triaged and routed to its owning ticket;
   no test weakening, vignette-ignore flag, premature merge/tag, or external
   publication.
-- **Review checkpoint:** Final pre-merge/tag release-gate review followed by
-  explicit maintainer authorization and final evidence closeout.
+- **Review checkpoint:** Satisfied by the independently reviewed Pages
+  mechanism and initial corrections, the maintainer's explicit waiver of a
+  further Claude review, the explicit release/publication direction, and this
+  final evidence closeout.

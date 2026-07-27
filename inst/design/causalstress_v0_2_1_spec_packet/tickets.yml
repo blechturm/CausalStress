@@ -1,6 +1,6 @@
 version: "0.2.1"
 packet: "causalstress_v0_2_1_spec_packet"
-status: active
+status: final
 authority_commit: "0b20f12"
 accepted: "2026-07-26"
 independent_review: "approve_with_non_blocking_notes_f1_f3_incorporated"
@@ -215,4 +215,4 @@ tickets:
     constitutional_check: "Read release_gate.md first; no known constitutional violation may remain open except by amendment"
     test_obligation: "Record all local Windows/WSL, full-vignette R CMD build/check, test, validation, lint, coverage, substrate, branch/main/tag CI, site, clean-tree, audit, and publication evidence; confirm no vignette-skipping command is release evidence; deploy Pages only by a manual version-matched tag dispatch after green tag CI and maintainer authorization"
     review_gate: "Final release-gate review before merge/tag/publication and maintainer release decision"
-    disposition: open
+    disposition: complete_after_review

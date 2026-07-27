@@ -140,9 +140,15 @@ Run the deployment only after the ordinary tag-triggered CI matrix is green and
 the maintainer has accepted the final release evidence:
 
 ```sh
-gh workflow run pkgdown-site.yaml --ref vX.Y.Z -f deploy_pages=true
+gh workflow run pkgdown-site.yaml --ref refs/tags/vX.Y.Z -f deploy_pages=true
 gh run list --workflow pkgdown-site.yaml --limit 5
 ```
+
+Use the fully qualified tag ref. A merged release branch may have the same
+short name as its tag, and GitHub can resolve a short workflow-dispatch ref to
+the branch. Before trusting the run, verify its `headSha` equals the validated
+tag commit and that the explicit tag-validation step passed. The workflow must
+remain fail-closed when `github.ref_type` is not `tag`.
 
 The deployment job uses the `github-pages` environment, serializes deployments,
 and holds only the documented `pages: write` and `id-token: write` permissions.

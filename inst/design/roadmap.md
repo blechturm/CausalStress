@@ -76,14 +76,15 @@ campaign image, CATE, and parameterized families remain separately planned.
 
 ------------------------------------------------------------------------
 
-## Current Program: v0.2.1 Quarto documentation and bounded maintenance
+## Completed: v0.2.1 Quarto documentation and bounded maintenance
 
-The active `causalstress_v0_2_1_spec_packet/` owns a patch release with two
-purposes: publish the complete Quarto-authored pkgdown documentation surface and
-remove only the five low-risk concepts accepted from the code-simplicity audit.
-It is not a scientific capability release.
+v0.2.1 was published on 2026-07-27 from final packet
+`causalstress_v0_2_1_spec_packet/`. The patch release published the complete
+Quarto-authored pkgdown documentation surface and removed only the five
+low-risk concepts accepted from the code-simplicity audit. It is not a
+scientific capability release.
 
-The accepted six-batch plan owns:
+The completed six-batch plan delivered:
 
 1. governance reconciliation and characterization tests around the duplicated
    per-seed runner paths, with an empty production diff for F1;
@@ -108,11 +109,10 @@ campaign returns an empty tibble, and deprecated-DGP warnings occur once per
 seed-runner call but once per grid task. v0.2.1 records these contracts without
 changing them.
 
-All implementation batches and the governed Pages mechanism are complete after
-review. Branch preflight is green; CS-1245 is the active final release gate and
-must still collect final-tree Windows/WSL, branch, main, tag, GitHub Release,
-and public Pages evidence in that order before this milestone becomes
-completed.
+All implementation batches and the governed Pages mechanism completed after
+review. CS-1245 recorded final-tree Windows/WSL, branch, pull-request, main, and
+tag evidence in order, then published the GitHub Release and exact-tag Pages
+site. Every v0.2.1 ticket is `complete_after_review`; the packet is final.
 
 ------------------------------------------------------------------------
 
@@ -132,17 +132,17 @@ parallel program. It must name consuming studies, dependencies, identity and
 truth requirements, and independent review gates. This roadmap does not decide
 that sequence in advance.
 
-The active v0.2.1 packet now owns the separately versioned documentation
-release. Its native-DGP guide is contributor-facing and must not advertise a
-public runtime DGP-extension API. Completion of v0.2.1 does not decide the
-families-versus-CATE value gate above.
+The final v0.2.1 packet owns the historical documentation-release boundary. Its
+native-DGP guide is contributor-facing and does not advertise a public runtime
+DGP-extension API. Completion of v0.2.1 did not decide the families-versus-CATE
+value gate above.
 
 ------------------------------------------------------------------------
 
 ## Parallel & deferred tracks
 
-Tracked in `horizon.md`; these do not gate the current v0.2.1 release unless the
-active packet explicitly names them and may otherwise proceed independently:
+Tracked in `horizon.md`; these did not gate the completed v0.2.1 release and
+require separate activation before implementation:
 
 - **GenGC bootstrap** stabilization (estimator-side, no contract change).
 - **Gatekeeper recalibration RFC** — pass/fail calibration, difficulty tiers, and
@@ -174,5 +174,5 @@ active packet explicitly names them and may otherwise proceed independently:
 - Continuous breakdown-curve / "kill-plot" studies built on the RFC-3 families
   (the methodological payoff the stable foundation enables).
 - Sensitivity-analysis design as a DGP stress-axis RFC, if still desired.
-- Further documentation beyond the accepted v0.2.1 site and article boundary,
-  routed by user need after that release.
+- Further documentation beyond the released v0.2.1 site and article boundary,
+  routed by user need.

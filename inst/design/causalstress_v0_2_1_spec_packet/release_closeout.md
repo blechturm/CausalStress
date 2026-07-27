@@ -1,19 +1,24 @@
 # CausalStress v0.2.1 Release Closeout
 
-**Status:** OPEN — final v0.2.1 release candidate under validation
-**Date closed:** TBD
+**Status:** FINAL
+**Gate state:** All local, branch, pull-request, main, and tag gates passed in
+playbook order; the GitHub Release and exact-tag GitHub Pages site are public.
+**Date closed:** 2026-07-27
 **Release candidate commit:** `9031c0d3353be7d9b3462695ff7749f04ca541b4`
+**Released commit:** `ea4885e7ebc2ce3a226d0d8dc6be068b307c946b`
+**Annotated tag object:** `638d45239e86cc1fb66e12176a225f6d9ad2ca94`
 
-This closeout is an active evidence record, not release authorization. The
-initial branch push below predates the v0.2.1 version/date/NEWS update and final
-local gates; none of its results are represented as final-tree release evidence.
+This closeout is the final evidence record for CausalStress v0.2.1. Earlier
+preflight and failed attempts are retained below because they explain the
+release-gate corrections; only the explicitly named final branch, main, tag,
+release, and Pages evidence authorized publication.
 
 ## Shipped
 
 | Ticket | Evidence |
 | --- | --- |
-| CS-1230--CS-1244 | Complete after their recorded independent reviews; final release-gate acceptance audit remains pending. |
-| CS-1245 | Open. The Pages mechanism passed independent review, remote setup is verified in `v0_2_1_tickets.md`, and all release-gate corrections are documented below. Fresh complete branch CI is pending. |
+| CS-1230--CS-1244 | Complete after their recorded independent reviews and included in the released tree. |
+| CS-1245 | Complete after final maintainer review and release decision. All governed gates and publication steps passed in order; the maintainer explicitly waived another Claude review. |
 
 ## Initial Branch-CI Preflight — 2026-07-27
 
@@ -263,11 +268,29 @@ actually clean documentation-tooling boundary. This changes no package code,
 dependency declaration, scientific behavior, or release authority. Fresh
 complete branch CI is required before merge.
 
+## Final Remote Release Evidence
+
+| Boundary | Exact ref | Workflow evidence | Result |
+| --- | --- | --- | --- |
+| Corrected release branch | `61bdf0332dd56ce737dc1c1b6bebbf7b2b71ad4f` | [R CMD check](https://github.com/blechturm/CausalStress/actions/runs/30309108768), [test/validation/substrate](https://github.com/blechturm/CausalStress/actions/runs/30309108753), [coverage/lint](https://github.com/blechturm/CausalStress/actions/runs/30309108802), [pkgdown/runtime control](https://github.com/blechturm/CausalStress/actions/runs/30309108769) | All success; the corrected documentation-free runtime control and complete 121-page site build passed. |
+| Pull request | [PR #8](https://github.com/blechturm/CausalStress/pull/8), head `61bdf03` | [R CMD check](https://github.com/blechturm/CausalStress/actions/runs/30309818277), [test/validation/substrate](https://github.com/blechturm/CausalStress/actions/runs/30309818269), [coverage/lint](https://github.com/blechturm/CausalStress/actions/runs/30309818303), [pkgdown/runtime control](https://github.com/blechturm/CausalStress/actions/runs/30309818289) | All success; PR was clean and mergeable before merge. |
+| Main/default branch | `ea4885e7ebc2ce3a226d0d8dc6be068b307c946b` | [R CMD check](https://github.com/blechturm/CausalStress/actions/runs/30310688480), [test/validation/substrate](https://github.com/blechturm/CausalStress/actions/runs/30310688494), [coverage/lint](https://github.com/blechturm/CausalStress/actions/runs/30310688466), [pkgdown/runtime control](https://github.com/blechturm/CausalStress/actions/runs/30310688486) | All success before tag creation. |
+| Annotated tag | Tag object `638d45239e86cc1fb66e12176a225f6d9ad2ca94`, peeling to `ea4885e7ebc2ce3a226d0d8dc6be068b307c946b` | [R CMD check](https://github.com/blechturm/CausalStress/actions/runs/30311589419), [test/validation/substrate](https://github.com/blechturm/CausalStress/actions/runs/30311589416), [coverage/lint](https://github.com/blechturm/CausalStress/actions/runs/30311589386), [pkgdown/runtime control](https://github.com/blechturm/CausalStress/actions/runs/30311589376) | Four distinct tag-triggered workflows succeeded before publication; the tag was not moved. |
+| GitHub Release | `v0.2.1` | [CausalStress v0.2.1](https://github.com/blechturm/CausalStress/releases/tag/v0.2.1) | Public, non-draft, and non-prerelease; published 2026-07-27 at 22:53:50 UTC. |
+| Rejected Pages dispatch | Short ref `v0.2.1` resolved to release-branch head `61bdf03` | [run 30312379765](https://github.com/blechturm/CausalStress/actions/runs/30312379765) | Tag-ref validation failed before dependency installation, artifact packaging, or deployment; the run was cancelled. This is expected fail-closed evidence, not a package failure. |
+| Exact-tag Pages dispatch | Fully qualified `refs/tags/v0.2.1`, head `ea4885e` | [run 30312434833](https://github.com/blechturm/CausalStress/actions/runs/30312434833), deployment `5631282311` | Tag validation, complete site build, runtime-without-documentation-tooling, Pages artifact, and `github-pages` deployment all succeeded. |
+| Public site | `https://blechturm.github.io/CausalStress/` | GitHub deployment state `success`; direct HTTPS request after deployment | HTTP 200; page contains the CausalStress title, v0.2.1 content, and DGP-report links. |
+
+The ambiguous-dispatch evidence produced one process correction: the playbook
+now requires `--ref refs/tags/vX.Y.Z` and verification that the run `headSha`
+equals the validated tag commit. The existing workflow guard was preserved
+because it prevented publication from the wrong ref exactly as designed.
+
 ## Deferred
 
-| Ticket/Finding | Rationale | Destination |
-| --- | --- | --- |
-| Final CS-1245 release gates | Version/date/NEWS are being prepared; final-tree local/remote gates remain pending. | Active CS-1245 release gate |
+No v0.2.1 ticket or release-gate finding remains deferred. Future capabilities
+and maintenance already routed to `roadmap.md` and `horizon.md` remain outside
+this final packet rather than open work within it.
 
 ## Rejected
 
@@ -279,13 +302,13 @@ complete branch CI is required before merge.
 
 | Gate | Evidence | Result |
 | --- | --- | --- |
-| R CMD check | Final Windows and WSL source build/check passed with all Quarto vignettes; branch/main/tag evidence pending | Pending remote sequence |
-| Validation suite | Final Windows and WSL strict/certification validation passed; branch/main/tag evidence pending | Pending remote sequence |
-| Full test suite | Final Windows and WSL suites passed; branch/main/tag evidence pending | Pending remote sequence |
-| Documentation and site | Final pinned Windows/WSL rehearsals passed; remote branch/main/tag preview and public Pages deployment pending | Pending remote/publication sequence |
-| Coverage and lint | Final Windows coverage 82.53% and lint 0; final branch/main/tag signals pending | Pending remote sequence |
+| R CMD check | Final Windows and WSL source build/check plus branch, PR, main, and tag matrices passed with all Quarto vignettes | Pass |
+| Validation suite | Final Windows/WSL validation plus branch, PR, main, and tag validation workflows passed | Pass |
+| Full test suite | Final Windows/WSL suites plus branch, PR, main, and tag test workflows passed | Pass |
+| Documentation and site | Pinned Windows/WSL rehearsals, branch/PR/main/tag previews, exact-tag Pages deployment, and public HTTP verification passed | Pass |
+| Coverage and lint | Final Windows coverage 82.53% and lint 0; branch, PR, main, and tag coverage/lint workflows passed | Pass |
 | Acceptance criteria | Packet-wide assertions and reviewed batch dispositions checked as recorded above | Pass |
 | Audit routing | Historical deep audit, simplicity audit, scientific pass 2, and horizon destinations reconciled as recorded above | Pass |
-| README planning state | Governance README names the active CS-1245 final gate; generated README now contains v0.2.1 example output | Pass for candidate; final packet-state update pending |
+| README planning state | Governance README and roadmap classify v0.2.1 as final/completed; generated README contains v0.2.1 example output | Pass |
 | Known constitutional violations | Constitution v2.0.1, contracts, tests, and routed findings checked | Pass: none known open or deferred |
-| Reproducibility substrate | Final Windows and Ubuntu substrate evidence recorded above; branch/main/tag artifacts pending | Pending remote sequence |
+| Reproducibility substrate | Final Windows/Ubuntu evidence plus branch, PR, main, and tag substrate artifacts passed | Pass |
