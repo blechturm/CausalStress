@@ -373,12 +373,12 @@ signal early instead of absorbing it as a one-off later:
   population-descriptor axis for the registry, adjacent to but distinct from
   the composition-derivative entry's contrast_type axis.
 - **Sensitivity parameters are not estimands.** The Gaussian `rho` is a known
-  selection–outcome dependence parameter in the S0 oracle DGP, while the v0.5
+  selection–outcome dependence parameter in the S0 oracle DGP, while the v0.7
   analysis varies four observable-law exponential-tilt `gamma` parameters as
   an explicitly imposed pattern-mixture relaxation, evaluated through weighted
   empirical CDFs and compared with collapsed binary missingness. Nested widths
-  are descriptive; the decision contrast is a collapsed robust-negative sign
-  versus a pattern-specific envelope that includes a nonnegative gap, under the
+  are descriptive; the decision contrast requires `collapsed_upper<=-0.01`
+  versus `two_pattern_upper>=0.01`, under the
   same equal-range independently varying relaxation. Neither object
   is an estimand, and the `gamma` values are not inferred from `rho`. Pointwise
   oracle-gap coverage is not model-family containment. Empirical work
